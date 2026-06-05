@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+__MACOSX/
+*.log
+database/*.sqlite
+client/node_modules/
+client/dist/
+
+# Keep media uploads but ignore exact files inside if needed
+!client/public/media/
