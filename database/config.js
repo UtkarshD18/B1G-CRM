@@ -1,26 +1,60 @@
-const mysql = require('mysql2')
+const mysql = require("mysql2");
+const env = require("../env");
 
-const con = mysql.createPool({
-    connectionLimit: 1000,
-    host: process.env.DBHOST || "localhost",
-    port: process.env.DBPORT || 3306,
-    user: process.env.DBUSER,
-    password: process.env.DBPASS,
-    database: process.env.DBNAME,
-    charset: 'utf8mb4'
-})
+/**
+ * MySQL Connection Pool Configuration
+ * Manages database connections with proper error handling
+ */
+const pool = mysql.createPool({
+  connectionLimit: 100,
+  waitForConnections: true,
+  queueLimit: 0,
+  host: env.DB_HOST,
+  port: env.DB_PORT,
+  user: env.DB_USER,
+  password: env.DB_PASSWORD,
+  database: env.DB_NAME,
+  charset: "utf8mb4",
+  timezone: "+00:00",
+  supportBigNumbers: true,
+  bigNumberStrings: true,
+  decimalNumbers: true,
+});
 
-
-con.getConnection((err) => {
-    if (err) {
-        console.log({
-            err: err,
-            msg: "Database connected error"
-        })
-        return
-    } else {
-        console.log('Database has been connected')
+// Test the connection
+pool.getConnection((err, connection) => {
+  if (err) {
+    if (err.code === "PROTOCOL_CONNECTION_LOST") {
+      console.error("Database connection was closed.");
     }
-})
+    if (err.code === "PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR") {
+      console.error("Database had a fatal error.");
+    }
+    if (err.code === "PROTOCOL_ENQUEUE_AFTER_CLOSE") {
+      console.error("Database connection was forcibly closed.");
+    }
+    console.error("❌ Database Connection Error:", err.message);
+    process.exit(1);
+  } else {
+    if (connection) {
+      connection.release();
+      console.log("✓ Database connection established successfully");
+    }
+  }
+});
 
-module.exports = con
+// Handle pool errors
+pool.on("error", (err) => {
+  console.error("❌ Unexpected pool error:", err);
+  if (err.code === "PROTOCOL_CONNECTION_LOST") {
+    console.error("Database connection was closed.");
+  }
+  if (err.code === "PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR") {
+    console.error("Database had a fatal error.");
+  }
+  if (err.code === "PROTOCOL_ENQUEUE_AFTER_CLOSE") {
+    console.error("Database connection was forcibly closed.");
+  }
+});
+
+module.exports = pool;
