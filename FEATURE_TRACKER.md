@@ -11,9 +11,13 @@
 ## Core Infrastructure
 - [x] 🟢 Frontend App Shell & Routing (3-portal architecture laid out in React)
 - [~] 🟡 Global Styling & Figma Tokens (Dark mode, base colors starting)
+- [x] 🟢 Frontend Testing Infrastructure (Jest + React Testing Library configured in `client/`)
+- [x] 🟢 Local Dependency Bootstrap (`npm install` completed for root and `client/`)
+- [x] 🟢 React Profiler Hook (opt-in local performance logging)
+- [x] 🟢 Live Reference App Audit (`REFERENCE_APP_AUDIT.md` maps public, admin, and user portals against the repo)
 
 ## Admin Portal Features
-- [ ] ðŸ”´ Dashboard (Stats: AI Agents, Active Chats, Tasks, WA Accounts, Charts)
+- [~] ðŸŸ¡ Dashboard (Stats: AI Agents, Active Chats, Tasks, WA Accounts, Charts)
 - [~] ðŸŸ¡ Manage Plans
 - [~] ðŸŸ¡ Manage Users
 - [~] ðŸŸ¡ Orders
@@ -39,8 +43,8 @@
 
 ## User Portal Features
 - [~] ðŸŸ¡ Authentication (Login, Social Auth, Signup)
-- [ ] ðŸ”´ Dashboard (User Stats)
-- [~] ðŸŸ¡ Inbox (Omnichannel: WA, IG)
+- [~] ðŸŸ¡ Dashboard (User Stats)
+- [x] 🟢 Inbox (Omnichannel: WA, IG)
 - [ ] ðŸ”´ Kanban 
 - [ ] ðŸ”´ WhatsApp Forms
 - [ ] ðŸ”´ Link Instagram (NEW)
@@ -50,7 +54,7 @@
 - [ ] ðŸ”´ WhatsApp Warmer
 - [ ] ðŸ”´ Rest API
 - [ ] ðŸ”´ Link Meta WhatsApp
-- [~] ðŸŸ¡ Automation Flows (React Flow Node Builder)
+- [x] 🟢 Automation Flows (React Flow Node Builder)
 - [~] ðŸŸ¡ WA Chatbot
 - [~] ðŸŸ¡ Create Meta Template
 - [~] ðŸŸ¡ Send Campaign
@@ -66,11 +70,11 @@
 - [ ] ðŸ”´ Webhook Automation
 - [ ] ðŸ”´ Webhook Logs
 - [ ] ðŸ”´ Web Notification
-- [~] ðŸŸ¡ Agent Login / Auto-login
-- [~] ðŸŸ¡ Agent Task
+- [x] 🟢 Agent Login / Auto-login
+- [x] 🟢 Agent Task
 - [ ] ðŸ”´ Chat Widget
 
 ## Agent Portal Features
-- [~] ðŸŸ¡ Agent Auth (Login)
-- [~] ðŸŸ¡ Restricted Inbox (Only assigned chats)
-- [~] ðŸŸ¡ Agent Tasks View
+- [x] 🟢 Agent Auth (Login)
+- [x] 🟢 Restricted Inbox (Only assigned chats)
+- [x] 🟢 Agent Tasks View

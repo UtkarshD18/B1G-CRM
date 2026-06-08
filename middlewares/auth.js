@@ -1,0 +1,117 @@
+const { query } = require("../database/dbpromise");
+const { extractToken, getTokenRole, verifyToken } = require("../utils/auth");
+const logger = require("../utils/logger");
+
+function authError(res, status, msg, code) {
+  return res.status(status).json({
+    success: false,
+    msg,
+    code,
+  });
+}
+
+function getDecodedToken(req) {
+  const authHeader = req.headers.authorization;
+  const token = extractToken(authHeader);
+
+  if (!authHeader) {
+    return { error: "NO_AUTH_HEADER" };
+  }
+
+  if (!token) {
+    return { error: "INVALID_TOKEN_FORMAT" };
+  }
+
+  return { decoded: verifyToken(token) };
+}
+
+async function validateUser(req, res, next) {
+  try {
+    const { decoded, error } = getDecodedToken(req);
+    if (error === "NO_AUTH_HEADER") {
+      return authError(res, 401, "Authorization header missing", error);
+    }
+    if (error) {
+      return authError(res, 401, "Invalid token format", error);
+    }
+    if (getTokenRole(decoded) !== "user") {
+      return authError(res, 403, "Invalid user type", "INVALID_USER_TYPE");
+    }
+
+    const users = await query("SELECT * FROM user WHERE uid = ?", [decoded.uid]);
+    if (!users.length) {
+      return authError(res, 401, "User not found", "USER_NOT_FOUND");
+    }
+
+    req.decode = decoded;
+    req.user = users[0];
+    next();
+  } catch (error) {
+    logger.error("User validation error", { error: error.message });
+    return authError(res, 401, "Invalid token", "INVALID_TOKEN");
+  }
+}
+
+async function validateAgent(req, res, next) {
+  try {
+    const { decoded, error } = getDecodedToken(req);
+    if (error === "NO_AUTH_HEADER") {
+      return authError(res, 401, "Authorization header missing", error);
+    }
+    if (error) {
+      return authError(res, 401, "Invalid token format", error);
+    }
+    if (getTokenRole(decoded) !== "agent") {
+      return authError(res, 403, "Invalid agent type", "INVALID_AGENT_TYPE");
+    }
+
+    const agents = await query("SELECT * FROM agents WHERE uid = ?", [
+      decoded.uid,
+    ]);
+    if (!agents.length) {
+      return authError(res, 401, "Agent not found", "AGENT_NOT_FOUND");
+    }
+
+    req.decode = decoded;
+    req.agent = agents[0];
+    next();
+  } catch (error) {
+    logger.error("Agent validation error", { error: error.message });
+    return authError(res, 401, "Invalid token", "INVALID_TOKEN");
+  }
+}
+
+async function adminValidator(req, res, next) {
+  try {
+    const { decoded, error } = getDecodedToken(req);
+    if (error === "NO_AUTH_HEADER") {
+      return authError(res, 401, "Authorization header missing", error);
+    }
+    if (error) {
+      return authError(res, 401, "Invalid token format", error);
+    }
+    if (getTokenRole(decoded) !== "admin") {
+      return authError(res, 403, "Invalid admin type", "INVALID_ADMIN_TYPE");
+    }
+
+    const admins = await query("SELECT * FROM admin WHERE uid = ?", [
+      decoded.uid,
+    ]);
+    if (!admins.length) {
+      return authError(res, 401, "Admin not found", "ADMIN_NOT_FOUND");
+    }
+
+    req.decode = decoded;
+    req.admin = admins[0];
+    next();
+  } catch (error) {
+    logger.error("Admin validation error", { error: error.message });
+    return authError(res, 401, "Invalid token", "INVALID_TOKEN");
+  }
+}
+
+module.exports = {
+  validateUser,
+  validateAgent,
+  adminValidator,
+};

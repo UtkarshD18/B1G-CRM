@@ -1,22 +1,55 @@
 require("dotenv").config();
+
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
-// const { initializeSocket } = require("./socket.js");
-const { runCampaign } = require("./loops/campaignLoop.js");
+const rateLimit = require("express-rate-limit");
 const nodeCleanup = require("node-cleanup");
+const path = require("path");
+const fs = require("fs");
+
+const env = require("./env");
+const logger = require("./utils/logger");
+const { errorHandler } = require("./middlewares/errorHandler");
+const { runCampaign } = require("./loops/campaignLoop.js");
 const { init, cleanup } = require("./helper/addon/qr");
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(express.json());
-app.use(fileUpload());
+app.use(express.json({ limit: env.MAX_FILE_SIZE }));
+app.use(express.urlencoded({ limit: env.MAX_FILE_SIZE, extended: true }));
 
-// routers
+app.use(
+  cors({
+    origin: env.FRONTEND_URL,
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
+
+app.use(
+  fileUpload({
+    limits: { fileSize: env.MAX_FILE_SIZE },
+    abortOnLimit: true,
+    responseOnLimit: "File size exceeds the limit",
+  })
+);
+
+app.use((req, res, next) => {
+  logger.debug(`${req.method} ${req.path}`);
+  next();
+});
+
+app.use(
+  "/api/",
+  rateLimit({
+    windowMs: env.RATE_LIMIT_WINDOW_MS,
+    max: env.RATE_LIMIT_MAX_REQUESTS,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
+
 const userRoute = require("./routes/user");
 app.use("/api/user", userRoute);
 
@@ -29,8 +62,8 @@ app.use("/api/admin", adminRoute);
 const phonebookRoute = require("./routes/phonebook");
 app.use("/api/phonebook", phonebookRoute);
 
-const chat_flowRoute = require("./routes/chatFlow");
-app.use("/api/chat_flow", chat_flowRoute);
+const chatFlowRoute = require("./routes/chatFlow");
+app.use("/api/chat_flow", chatFlowRoute);
 
 const inboxRoute = require("./routes/inbox");
 app.use("/api/inbox", inboxRoute);
@@ -53,26 +86,96 @@ app.use("/api/agent", agentRoute);
 const qrRoute = require("./routes/qr");
 app.use("/api/qr", qrRoute);
 
-const path = require("path");
-
-const currentDir = process.cwd();
-
-app.use(express.static(path.resolve(currentDir, "./client/public")));
-
-app.get("*", function (request, response) {
-  response.sendFile(path.resolve(currentDir, "./client/public", "index.html"));
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    msg: "Server is healthy",
+    timestamp: new Date().toISOString(),
+    version: env.appVersion,
+    environment: env.NODE_ENV,
+  });
 });
 
-const server = app.listen(process.env.PORT || 3010, () => {
-  console.log(`WaCrm server is running on port ${process.env.PORT}`);
-  init();
+app.get("/api/status", (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: "running",
+    version: env.appVersion,
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+const currentDir = process.cwd();
+const publicDir = path.resolve(currentDir, "./client/public");
+const indexPath = path.resolve(publicDir, "index.html");
+
+app.use(express.static(publicDir));
+
+app.get("*", (req, res) => {
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+
+  return res.status(404).json({
+    success: false,
+    msg: "Frontend not found. Run: cd client && npm run build",
+  });
+});
+
+app.use(errorHandler);
+
+const server = app.listen(env.PORT, () => {
+  logger.info("B1G CRM server started", {
+    port: env.PORT,
+    environment: env.NODE_ENV,
+    version: env.appVersion,
+  });
+
+  try {
+    init();
+    logger.info("QR handler initialized");
+  } catch (err) {
+    logger.error("QR initialization failed", { error: err.message });
+  }
+
   setTimeout(() => {
-    runCampaign();
+    try {
+      runCampaign();
+      logger.info("Campaign loop started");
+    } catch (err) {
+      logger.error("Campaign loop failed", { error: err.message });
+    }
   }, 1000);
 });
 
-// Initialize Socket.IO after server is running
 const io = require("./socket").initializeSocket(server);
-module.exports = io;
+
+function shutdown(signal) {
+  logger.info(`${signal} received, shutting down`);
+  server.close(() => {
+    cleanup();
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught exception", {
+    error: err.message,
+    stack: err.stack,
+  });
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled rejection", {
+    reason: reason instanceof Error ? reason.message : String(reason),
+  });
+});
 
 nodeCleanup(cleanup);
+
+module.exports = { app, server, io };
