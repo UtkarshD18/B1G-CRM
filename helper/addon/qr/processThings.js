@@ -63,7 +63,7 @@ async function updateProfileMysql({
 }
 
 // -----------------------------------------------------------------------------
-// Update or insert a chat into MySQL.
+// Update or insert a chat into PostgreSQL.
 async function updateChatInMysql({
   chatId,
   uid,
@@ -520,7 +520,7 @@ async function processMessageQr({
       getSession,
     });
 
-    // Update chat in MySQL with the latest message.
+    // Update chat in PostgreSQL with the latest message.
     if (data?.latestMessages?.length > 0) {
       const { latestMessages, newMessage } = data;
       const lastObj = latestMessages[latestMessages.length - 1];

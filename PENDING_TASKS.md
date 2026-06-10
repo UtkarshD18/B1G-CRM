@@ -50,7 +50,7 @@
 
 #### Backend Foundation Files
 
-- ✅ **database/config.js** - MySQL connection pool
+- ✅ **database/config.js** - PostgreSQL connection pool
   - Pool configuration: 100 concurrent connections
   - Error handling: PROTOCOL_CONNECTION_LOST, PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR
   - Proper connection validation
@@ -642,7 +642,7 @@
   - docker-compose.yml with services:
     - Backend service
     - Frontend service
-    - MySQL service
+    - PostgreSQL service
     - Redis service (optional)
   - Environment variable handling
 

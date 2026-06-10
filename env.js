@@ -5,11 +5,11 @@ const PORT = Number(process.env.PORT || 3010);
 const SOCKET_PORT = Number(process.env.SOCKET_PORT || 3002);
 const NODE_ENV = process.env.NODE_ENV || "development";
 
-const DB_HOST = process.env.PGHOST || process.env.DBHOST || "127.0.0.1";
-const DB_USER = process.env.PGUSER || process.env.DBUSER || "b1gcrm";
-const DB_PASSWORD = process.env.PGPASSWORD || process.env.DBPASS || "";
-const DB_NAME = process.env.PGDATABASE || process.env.DBNAME || "b1gcrm";
-const DB_PORT = Number(process.env.PGPORT || process.env.DBPORT || 5432);
+const PGHOST = process.env.PGHOST || "127.0.0.1";
+const PGUSER = process.env.PGUSER || "b1gcrm";
+const PGPASSWORD = process.env.PGPASSWORD || "";
+const PGDATABASE = process.env.PGDATABASE || "b1gcrm";
+const PGPORT = Number(process.env.PGPORT || 5432);
 const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
 
 const JWT_SECRET =
@@ -88,11 +88,11 @@ module.exports = {
   PORT,
   SOCKET_PORT,
   NODE_ENV,
-  DB_HOST,
-  DB_USER,
-  DB_PASSWORD,
-  DB_NAME,
-  DB_PORT,
+  PGHOST,
+  PGUSER,
+  PGPASSWORD,
+  PGDATABASE,
+  PGPORT,
   DATABASE_URL,
   JWT_SECRET,
   JWT_EXPIRY,

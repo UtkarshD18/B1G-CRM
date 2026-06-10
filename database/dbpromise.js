@@ -1,6 +1,6 @@
 const pool = require("./config");
 
-function quoteLegacyIdentifiers(sql) {
+function normalizePostgresSql(sql) {
   return sql
     .replace(/`/g, '"')
     .replace(/\bFROM\s+user\b/gi, 'FROM "user"')
@@ -19,7 +19,7 @@ function prepareQuery(sql, values = []) {
   let valueIndex = 0;
   let output = "";
 
-  const normalizedSql = quoteLegacyIdentifiers(sql);
+  const normalizedSql = normalizePostgresSql(sql);
 
   for (let index = 0; index < normalizedSql.length; index += 1) {
     const char = normalizedSql[index];
@@ -76,7 +76,7 @@ function prepareQuery(sql, values = []) {
 
 async function query(sql, values = []) {
   if (!sql) {
-    return "No sql provided";
+    throw new Error("SQL query is required");
   }
 
   const { sql: preparedSql, params } = prepareQuery(sql, values);
@@ -85,7 +85,10 @@ async function query(sql, values = []) {
     const result = await pool.query(preparedSql, params);
     return result.rows;
   } catch (err) {
-    console.log(err);
+    console.error("PostgreSQL query failed", {
+      sql: preparedSql,
+      error: err.message,
+    });
     throw err;
   }
 }

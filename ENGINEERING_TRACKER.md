@@ -12,6 +12,8 @@
 | React profiling hook | Done | `AppProfiler` wraps the React root and logs timings when enabled. |
 | Test coverage reporting | Done | `npm run test:coverage` added in `client/`. |
 | Live reference app audit | Done | Public site, admin portal, and user portal were inspected and mapped in `REFERENCE_APP_AUDIT.md`. |
+| Modular frontend structure | Done | `App.jsx` is now a small bootstrap; routes, layouts, shared helpers, and portal pages live in dedicated modules. |
+| Database standardization | Done | PostgreSQL is the single supported database; obsolete SQL driver dependencies were removed and docs/schema/env examples now use PostgreSQL. |
 | Backend automated tests | Pending | Server-side tests are still missing. |
 | CI test execution | Pending | No GitHub Actions or other CI validation is configured yet. |
 | Portal feature implementation | In Progress | Product features remain tracked in `FEATURE_TRACKER.md`. |
@@ -42,7 +44,7 @@
 
 ## Remaining Engineering Work
 
-- Rebuild the current placeholder `client` UI into the public site plus the three authenticated portals documented in `REFERENCE_APP_AUDIT.md`.
+- Replace remaining placeholder portal modules with fully wired production screens documented in `REFERENCE_APP_AUDIT.md`.
 - Add frontend tests around real layouts, auth guards, and API integration once those modules exist.
 - Decide whether backend tests should use Jest as well or a separate integration-focused stack such as Supertest on top of Express.
 - Add CI so `client` lint and Jest checks run automatically on pushes and pull requests.

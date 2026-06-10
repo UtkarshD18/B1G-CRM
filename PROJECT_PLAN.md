@@ -90,7 +90,7 @@ To run this parallelly across a 3-person team, the workload is distributed as fo
 ---
 
 ## 6. Development Guidelines for AI Context
-*   **Backend:** Already heavily built-out (Express/MySQL). Focus on matching missing fields and verifying foreign keys.
+*   **Backend:** Express with PostgreSQL as the single supported database. Focus on matching missing fields and verifying foreign keys.
 *   **Frontend:** The current `/client/public/index.html` is a redirect. A complete new frontend must replace it.
 *   **APIs:** Rely on `routes/user.js`, `routes/admin.js`, and `routes/agent.js` as the source of truth for available operations.
 
@@ -106,7 +106,7 @@ To run this parallelly across a 3-person team, the workload is distributed as fo
 *   `database/`, `functions/`, `helper/`, `helpers/`, and `loops/` support persistence, business logic, utilities, and recurring jobs.
 
 ### Frontend
-*   `client/` is a Vite React SPA with portal shell routing in `src/App.jsx`.
+*   `client/` is a Vite React SPA with a modular portal structure under `src/routes`, `src/layouts`, `src/pages`, `src/components`, and `src/shared`.
 *   Jest and React Testing Library are now the baseline frontend test stack.
 *   `client/src/profiler.jsx` provides opt-in React Profiler logging controlled by `VITE_ENABLE_REACT_PROFILER=true`.
 *   `REFERENCE_APP_AUDIT.md` now captures the confirmed live sitemap, commercial flow, and parity gaps versus this repo.

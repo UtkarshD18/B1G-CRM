@@ -6,11 +6,11 @@ const pool = new Pool(
   connectionString
     ? { connectionString }
     : {
-        host: process.env.PGHOST || process.env.DBHOST || "127.0.0.1",
-        port: Number(process.env.PGPORT || process.env.DBPORT || 5432),
-        user: process.env.PGUSER || process.env.DBUSER,
-        password: process.env.PGPASSWORD || process.env.DBPASS,
-        database: process.env.PGDATABASE || process.env.DBNAME,
+        host: process.env.PGHOST || "127.0.0.1",
+        port: Number(process.env.PGPORT || 5432),
+        user: process.env.PGUSER || "b1gcrm",
+        password: process.env.PGPASSWORD || "",
+        database: process.env.PGDATABASE || "b1gcrm",
       }
 );
 

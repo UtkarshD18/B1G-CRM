@@ -9,12 +9,12 @@ A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichann
 - [REFERENCE_APP_AUDIT.md](./REFERENCE_APP_AUDIT.md): Live-app sitemap and parity matrix against the local repo.
 
 ## Tech Stack
-- **Backend:** Node.js, Express, MySQL, Socket.IO, WhatsApp Web/Cloud API integration.
+- **Backend:** Node.js, Express, PostgreSQL, Socket.IO, WhatsApp Web/Cloud API integration.
 - **Frontend:** React (Vite SPA) - *In Progress*
 
 ## Requirements
 - Node.js (v18+)
-- MySQL
+- PostgreSQL 16+
 
 ## Getting Started
 
@@ -51,7 +51,7 @@ A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichann
 |-- client/          React + Vite SPA for admin, user, and agent portals
 |-- routes/          Express route modules for CRM features
 |-- middlewares/     Role validation and request middleware
-|-- database/        MySQL configuration helpers
+|-- database/        PostgreSQL schema and connection helpers
 |-- functions/       Backend function handlers
 |-- helper/          Legacy helper modules
 |-- helpers/         Active helper modules for inbox, websockets, and addons

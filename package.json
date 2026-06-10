@@ -28,7 +28,6 @@
     "mime-types": "^2.1.35",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.45",
-    "mysql2": "^3.9.2",
     "node-cleanup": "^2.1.2",
     "node-fetch": "^2.6.9",
     "nodemailer": "^6.9.1",
