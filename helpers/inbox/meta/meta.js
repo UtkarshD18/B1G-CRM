@@ -9,6 +9,7 @@ const {
   updateMessageObjectInFile,
   addObjectToFile,
 } = require("../../../functions/function");
+const env = require("../../../env");
 
 function getCurrentTimestampInTimeZone(timezone) {
   const currentTimeInZone = moment.tz(timezone);
@@ -67,7 +68,7 @@ async function processMediaMsg(type, messages, uid) {
     if (!fileName) return null;
 
     const content = {
-      link: `${process.env.FRONTENDURI}/meta-media/${fileName}`,
+      link: `${env.FRONTEND_URL}/meta-media/${fileName}`,
     };
     if (messages[0]?.[type]?.caption)
       content.caption = messages[0][type].caption;

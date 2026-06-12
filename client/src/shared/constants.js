@@ -13,6 +13,7 @@ export const USER_MODULES = [
   'Agent Login',
   'Agent Task',
   'Chat Widget',
+  'Billing and Checkout',
   'Manage Webhooks',
 ]
 

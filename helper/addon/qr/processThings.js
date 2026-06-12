@@ -12,6 +12,7 @@ const {
 const { mergeArraysWithPhonebook } = require("../../socket/function");
 const mime = require("mime-types");
 const { fetchProfileUrl, fetchPersonPresence } = require("./control");
+const env = require("../../../env");
 
 function timeoutPromise(promise, ms) {
   const timeout = new Promise(
@@ -329,7 +330,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "image",
         image: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
           caption: img.caption || "",
@@ -342,7 +343,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "video",
         video: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
           caption: vid.caption || "",
@@ -355,7 +356,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "audio",
         audio: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
         },
@@ -385,7 +386,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "document",
         document: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
           caption: doc.caption || doc.title || "",

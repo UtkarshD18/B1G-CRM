@@ -13,10 +13,34 @@ A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichann
 - **Frontend:** React (Vite SPA) - *In Progress*
 
 ## Requirements
-- Node.js (v18+)
+- Node.js (v20.19+ recommended)
 - PostgreSQL 16+
 
 ## Getting Started
+
+### Docker Setup
+
+The Docker setup is in the repository root:
+
+- `Dockerfile` builds the production Node/Express app and Vite client.
+- `docker-compose.yml` starts both the app and PostgreSQL.
+- `.dockerignore` keeps local secrets out of the image build context.
+
+```bash
+cp .env.example .env
+# Fill PGPASSWORD, JWT_SECRET, and REFRESH_TOKEN_SECRET in .env.
+docker compose up --build
+```
+
+PostgreSQL is started by the `postgres` service in `docker-compose.yml`. On the first run it loads `database/postgres-local-schema.sql`. The app connects to that database through environment variables read by `env.js` and used by `database/config.js`.
+
+Access points after Docker starts:
+
+- App/API: `http://localhost:3010`
+- Health check: `http://localhost:3010/api/health`
+- PostgreSQL from host: `localhost:5432` with the `PGUSER`, `PGPASSWORD`, and `PGDATABASE` values from `.env`
+
+### Manual Setup
 
 1. **Install Backend Dependencies**
    ```bash
@@ -28,7 +52,7 @@ A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichann
 
 3. **Start the Express Server**
    ```bash
-   npm start
+   npm run dev
    ```
 
 4. **Start the Frontend (React Vite)**

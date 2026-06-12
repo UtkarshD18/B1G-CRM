@@ -14,6 +14,7 @@ import AdminOrdersPage from '../pages/admin/Orders'
 import AdminSettingsPage from '../pages/admin/Settings'
 import UserDashboardPage from '../pages/user/Dashboard'
 import UserInboxPage from '../pages/user/Inbox'
+import UserKanbanPage from '../pages/user/Kanban'
 import UserContactsPage from '../pages/user/Contacts'
 import UserCampaignsPage from '../pages/user/Campaigns'
 import UserAutomationFlowsPage from '../pages/user/AutomationFlows'
@@ -22,8 +23,130 @@ import UserIntegrationsPage from '../pages/user/Integrations'
 import UserAgentPage from '../pages/user/AgentLogin'
 import UserTaskPage from '../pages/user/AgentTask'
 import UserChatWidgetPage from '../pages/user/ChatWidget'
+import UserBillingPage from '../pages/user/Billing'
+import UserDeveloperApiPage from '../pages/user/DeveloperApi'
+import UserMetaTemplatesPage from '../pages/user/MetaTemplates'
 import UserSettingsPage from '../pages/user/Settings'
 import AgentDashboardPage from '../pages/agent/Dashboard'
+import ReferenceModulePage from '../pages/ReferenceModulePage'
+
+export const ADMIN_REFERENCE_ROUTES = [
+  { path: 'dashboard', component: 'dashboard' },
+  { path: 'manage-plans', component: 'plans' },
+  { path: 'manage-users', component: 'users' },
+  { path: 'orders', component: 'orders' },
+  { path: 'settings', component: 'settings' },
+  { path: 'front-partner', component: 'settings' },
+  { path: 'faq', component: 'settings' },
+  { path: 'manage-page', component: 'settings' },
+  { path: 'testimonial', component: 'settings' },
+  { path: 'contact-form', component: 'settings' },
+  { path: 'payment-gateways', component: 'settings' },
+  { path: 'social-login', component: 'settings' },
+  { path: 'site-settings', component: 'settings' },
+  { path: 'smtp', component: 'settings' },
+  { path: 'web-theme', component: 'settings' },
+  { path: 'translation', component: 'settings' },
+  { path: 'update-web', component: 'settings' },
+  { path: 'wa-link', component: 'planned', title: 'WA Links Data' },
+  { path: 'flow-builder-template', component: 'planned', title: 'Flowbuilder Template' },
+  { path: 'qr-plugin-settings', component: 'planned', title: 'QR Plugin Settings' },
+  { path: 'instagram-config', component: 'planned', title: 'Instagram Config' },
+  { path: 'web-notification', component: 'planned', title: 'Web Notification' },
+  { path: 'send-web-push', component: 'planned', title: 'Manual Web Push' },
+  { path: 'embed-config', component: 'planned', title: 'WA Embed Login' },
+  { path: 'telegram-config', component: 'planned', title: 'Telegram Config' },
+]
+
+export const USER_REFERENCE_ROUTES = [
+  { path: 'dashboard', component: 'dashboard' },
+  { path: 'inbox', component: 'inbox' },
+  { path: 'contacts', component: 'contacts' },
+  { path: 'phonebook', component: 'contacts' },
+  { path: 'campaigns', component: 'campaigns' },
+  { path: 'send-campaign', component: 'campaigns' },
+  { path: 'campaign-dashboard', component: 'campaigns' },
+  { path: 'automation-flows', component: 'flows' },
+  { path: 'chatbot', component: 'chatbot' },
+  { path: 'wa-chatbot', component: 'chatbot' },
+  { path: 'integrations', component: 'integrations' },
+  { path: 'add-whatsapp-qr', component: 'integrations' },
+  { path: 'link-meta-whatsapp', component: 'integrations' },
+  { path: 'link-instagram', component: 'integrations' },
+  { path: 'agent-login', component: 'agents' },
+  { path: 'agent-task', component: 'tasks' },
+  { path: 'chat-widget', component: 'widget' },
+  { path: 'billing', component: 'billing' },
+  { path: 'api-dashboard', component: 'developerApi' },
+  { path: 'rest-api', component: 'developerApi' },
+  { path: 'conversational-api', component: 'developerApi' },
+  { path: 'template-api', component: 'developerApi' },
+  { path: 'manage-webhooks', component: 'developerApi' },
+  { path: 'settings', component: 'settings' },
+  { path: 'kanban', component: 'kanban' },
+  { path: 'kabnan', component: 'kanban' },
+  { path: 'whatsapp-forms', component: 'planned', title: 'WhatsApp Forms' },
+  { path: 'insta-dm-bot', component: 'planned', title: 'Instagram DM Bot' },
+  { path: 'insta-comment-dm', component: 'planned', title: 'Instagram Comment DM' },
+  { path: 'whatsapp-warmer', component: 'planned', title: 'WhatsApp Warmer' },
+  { path: 'create-meta-template', component: 'metaTemplates' },
+  { path: 'create-call-flow', component: 'planned', title: 'Create Call Flow' },
+  { path: 'wa-call-logs', component: 'planned', title: 'WA Call Logs' },
+  { path: 'setup-wa-calls', component: 'planned', title: 'Setup WA Calls' },
+  { path: 'webhook-automation', component: 'planned', title: 'Webhook Automation' },
+  { path: 'webhook-logs', component: 'planned', title: 'Webhook Logs' },
+  { path: 'telegram-sessions', component: 'planned', title: 'Telegram Sessions' },
+  { path: 'web-notification', component: 'planned', title: 'Web Notification' },
+]
+
+const adminRouteComponents = {
+  dashboard: AdminDashboardPage,
+  plans: AdminPlansPage,
+  users: AdminUsersPage,
+  orders: AdminOrdersPage,
+  settings: AdminSettingsPage,
+}
+
+const userRouteComponents = {
+  dashboard: UserDashboardPage,
+  inbox: UserInboxPage,
+  kanban: UserKanbanPage,
+  contacts: UserContactsPage,
+  campaigns: UserCampaignsPage,
+  flows: UserAutomationFlowsPage,
+  chatbot: UserChatBotPage,
+  integrations: UserIntegrationsPage,
+  agents: UserAgentPage,
+  tasks: UserTaskPage,
+  widget: UserChatWidgetPage,
+  billing: UserBillingPage,
+  developerApi: UserDeveloperApiPage,
+  metaTemplates: UserMetaTemplatesPage,
+  settings: UserSettingsPage,
+}
+
+function renderReferenceRoutes(routes, area, components) {
+  return routes.map((route) => {
+    if (route.component === 'planned') {
+      return (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={
+            <ReferenceModulePage
+              area={area}
+              title={route.title}
+              dependencies={['Data model', 'API contract', 'Production UI']}
+            />
+          }
+        />
+      )
+    }
+
+    const Component = components[route.component]
+    return <Route key={route.path} path={route.path} element={<Component />} />
+  })
+}
 
 function AppRoutes() {
   return (
@@ -78,11 +201,7 @@ function AppRoutes() {
         }
       >
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboardPage />} />
-        <Route path="manage-plans" element={<AdminPlansPage />} />
-        <Route path="manage-users" element={<AdminUsersPage />} />
-        <Route path="orders" element={<AdminOrdersPage />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
+        {renderReferenceRoutes(ADMIN_REFERENCE_ROUTES, 'admin module', adminRouteComponents)}
       </Route>
 
       <Route
@@ -94,17 +213,7 @@ function AppRoutes() {
         }
       >
         <Route index element={<Navigate to="/user/dashboard" replace />} />
-        <Route path="dashboard" element={<UserDashboardPage />} />
-        <Route path="inbox" element={<UserInboxPage />} />
-        <Route path="contacts" element={<UserContactsPage />} />
-        <Route path="campaigns" element={<UserCampaignsPage />} />
-        <Route path="automation-flows" element={<UserAutomationFlowsPage />} />
-        <Route path="chatbot" element={<UserChatBotPage />} />
-        <Route path="integrations" element={<UserIntegrationsPage />} />
-        <Route path="agent-login" element={<UserAgentPage />} />
-        <Route path="agent-task" element={<UserTaskPage />} />
-        <Route path="chat-widget" element={<UserChatWidgetPage />} />
-        <Route path="settings" element={<UserSettingsPage />} />
+        {renderReferenceRoutes(USER_REFERENCE_ROUTES, 'user module', userRouteComponents)}
       </Route>
 
       <Route

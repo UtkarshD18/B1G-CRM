@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../../shared/api'
 
 function UserSignupPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const selectedPlanId = searchParams.get('plan') || ''
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -30,7 +32,7 @@ function UserSignupPage() {
         return
       }
 
-      navigate('/user/login', { replace: true })
+      navigate('/user/login?next=/user/billing', { replace: true })
     } catch (error) {
       setStatus(error.message || 'Signup failed')
     } finally {
@@ -45,6 +47,7 @@ function UserSignupPage() {
           <span className="eyebrow">tenant onboarding</span>
           <h1>Create a CRM workspace</h1>
           <p>Match the live pre-purchase funnel with a real signup path instead of a dead shell.</p>
+          {selectedPlanId ? <p>Selected plan: {selectedPlanId}</p> : null}
         </div>
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>

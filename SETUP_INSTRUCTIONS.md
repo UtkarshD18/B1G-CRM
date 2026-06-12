@@ -10,7 +10,7 @@ B1G CRM is a comprehensive WhatsApp/Omnichannel CRM SaaS with three distinct por
 
 ## Prerequisites
 
-- **Node.js** v18+ LTS
+- **Node.js** v20.19+ LTS
 - **npm or yarn**
 - **PostgreSQL** v16+ or Docker
 - **Git**
@@ -28,35 +28,31 @@ Edit `.env` with your configuration:
 
 ```env
 # Database
-DATABASE_URL=postgres://b1gcrm:b1gcrm_local_dev@127.0.0.1:5432/b1gcrm
+DATABASE_URL=
 PGHOST=127.0.0.1
 PGPORT=5432
 PGUSER=b1gcrm
-PGPASSWORD=b1gcrm_local_dev
+PGPASSWORD=
 PGDATABASE=b1gcrm
 
 # JWT
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_SECRET=
+REFRESH_TOKEN_SECRET=
 JWT_EXPIRY=7d
 
 # Server
 PORT=3010
 NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:3010
+CORS_ORIGINS=http://localhost:5173,http://localhost:3010
 ```
 
 ### 2. Database Setup
 
 ```bash
-# Start local PostgreSQL with Docker
-docker run --name b1gcrm-postgres \
-  -e POSTGRES_USER=b1gcrm \
-  -e POSTGRES_PASSWORD=b1gcrm_local_dev \
-  -e POSTGRES_DB=b1gcrm \
-  -p 5432:5432 \
-  -d postgres:16
-
-# Load the local compatibility schema and seed users
-docker exec -i b1gcrm-postgres psql -U b1gcrm -d b1gcrm < database/postgres-local-schema.sql
+# Start PostgreSQL and the app with Docker Compose
+docker compose up --build
 ```
 
 ### 3. Install Dependencies
@@ -68,7 +64,7 @@ npm install
 ### 4. Start Backend Server
 
 ```bash
-npm start
+npm run dev
 # Server runs on http://localhost:3010
 # Automatically restarts on file changes (nodemon)
 ```
@@ -93,7 +89,7 @@ Edit `.env.local`:
 
 ```env
 VITE_API_URL=http://localhost:3010/api
-VITE_SOCKET_URL=ws://localhost:3002
+VITE_SOCKET_URL=http://localhost:3010
 ```
 
 ### 2. Install Dependencies
@@ -164,11 +160,10 @@ Response:
 ```bash
 curl -X POST http://localhost:3010/api/user/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "password": "password123"
-  }'
+  -d @login-payload.example.json
 ```
+
+Create `login-payload.example.json` locally with your own seeded development login. Do not commit real or example passwords.
 
 #### Using Token
 
@@ -393,7 +388,7 @@ Upload directory: `client/public/media/`
 ### Docker
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ### Manual Deployment
@@ -401,9 +396,6 @@ docker-compose up --build
 ```bash
 # Build frontend
 cd client && npm run build
-
-# Copy build to static folder
-cp -r dist/* ../server/public/
 
 # Start production server
 NODE_ENV=production PORT=3010 npm start
@@ -413,10 +405,11 @@ NODE_ENV=production PORT=3010 npm start
 
 ```env
 NODE_ENV=production
-JWT_SECRET=use-strong-random-key
-DATABASE_URL=postgres://user:password@host:5432/database
-STRIPE_API_KEY=sk_live_xxx
-WHATSAPP_API_TOKEN=xxx
+JWT_SECRET=
+REFRESH_TOKEN_SECRET=
+DATABASE_URL=
+STRIPE_API_KEY=
+WHATSAPP_API_TOKEN=
 ```
 
 ## Monitoring & Logging

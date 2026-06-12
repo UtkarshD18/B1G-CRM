@@ -7,6 +7,7 @@ function normalizePostgresSql(sql) {
     .replace(/\bINTO\s+user\b/gi, 'INTO "user"')
     .replace(/\bUPDATE\s+user\b/gi, 'UPDATE "user"')
     .replace(/\bJOIN\s+user\b/gi, 'JOIN "user"')
+    .replace(/\buser\./gi, '"user".')
     .replace(/JSON_UNQUOTE\(JSON_EXTRACT\(([^,]+),\s*'\$\.([^']+)'\)\)/gi, "($1::jsonb ->> '$2')");
 }
 

@@ -102,12 +102,16 @@ To run this parallelly across a 3-person team, the workload is distributed as fo
 *   `server.js` boots the Express app.
 *   `socket.js` and `websocket.js` handle real-time message transport.
 *   `routes/` contains the main feature APIs, including `admin`, `user`, `agent`, `inbox`, `chatFlow`, `broadcast`, `phonebook`, and QR flows.
+*   `/api/chat_flow` now tenant-scopes flow save/detail/activity operations and persists bot-ready node/edge JSON for WA Chatbot handoff.
+*   WA Chatbot runtime diagnostics are stored in PostgreSQL and exposed through `/api/chatbot/get_logs`.
 *   `middlewares/` contains auth and plan validation middleware.
 *   `database/`, `functions/`, `helper/`, `helpers/`, and `loops/` support persistence, business logic, utilities, and recurring jobs.
 
 ### Frontend
 *   `client/` is a Vite React SPA with a modular portal structure under `src/routes`, `src/layouts`, `src/pages`, `src/components`, and `src/shared`.
 *   Jest and React Testing Library are now the baseline frontend test stack.
+*   User Automation Flows includes a bot-ready template generator, JSON editor, save/load/delete, activity inspection, and RTL coverage.
+*   User WA Chatbot includes CRUD targeting, all-chat/selected-chat mode, status controls, and runtime diagnostics.
 *   `client/src/profiler.jsx` provides opt-in React Profiler logging controlled by `VITE_ENABLE_REACT_PROFILER=true`.
 *   `REFERENCE_APP_AUDIT.md` now captures the confirmed live sitemap, commercial flow, and parity gaps versus this repo.
 

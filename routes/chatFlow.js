@@ -17,7 +17,7 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
   try {
     const { title, nodes, edges, flowId } = req.body;
     if (!title) {
-      return req.json({
+      return res.json({
         success: false,
         msg: "Please give a title to the flow",
       });
@@ -28,9 +28,10 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
     }
 
     // checking existing
-    const checkExisted = await query(`SELECT * FROM flow WHERE flow_id = ?`, [
-      flowId,
-    ]);
+    const checkExisted = await query(
+      `SELECT * FROM flow WHERE uid = ? AND flow_id = ?`,
+      [req.decode.uid, flowId]
+    );
 
     const nodepath = `${__dirname}/../flow-json/nodes/${req.decode.uid}/${flowId}.json`;
     const edgepath = `${__dirname}/../flow-json/edges/${req.decode.uid}/${flowId}.json`;
@@ -39,8 +40,9 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
     await writeJsonToFile(edgepath, edges);
 
     if (checkExisted.length > 0) {
-      await query(`UPDATE flow SEt title = ? WHERE flow_id = ?`, [
+      await query(`UPDATE flow SET title = ? WHERE uid = ? AND flow_id = ?`, [
         title,
+        req.decode.uid,
         flowId,
       ]);
     } else {
@@ -103,6 +105,15 @@ router.post("/get_by_flow_id", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Flow id missing" });
     }
 
+    const getFlow = await query(
+      `SELECT * FROM flow WHERE uid = ? AND flow_id = ?`,
+      [req.decode.uid, flowId]
+    );
+
+    if (getFlow.length < 1) {
+      return res.json({ success: false, msg: "Flow was not found" });
+    }
+
     const nodePath = `${__dirname}/../flow-json/nodes/${req.decode.uid}/${flowId}.json`;
     const edgePath = `${__dirname}/../flow-json/edges/${req.decode.uid}/${flowId}.json`;
 
@@ -124,6 +135,10 @@ router.post("/get_activity", validateUser, checkPlan, async (req, res) => {
       `SELECT * FROM flow WHERE uid = ? AND flow_id = ?`,
       [req.decode.uid, flowId]
     );
+
+    if (getFlow.length < 1) {
+      return res.json({ success: false, msg: "Flow was not found" });
+    }
 
     // Parse prevent and ai lists from the database
     const prevent = getFlow[0]?.prevent_list
@@ -160,17 +175,23 @@ router.post("/remove_number_from_activity", validateUser, async (req, res) => {
   try {
     const { type, number, flowId } = req.body;
 
-    const [flow] = await query(`SELECT * FROM flow WHERE flow_id = ?`, [
-      flowId,
-    ]);
+    const [flow] = await query(
+      `SELECT * FROM flow WHERE uid = ? AND flow_id = ?`,
+      [req.decode.uid, flowId]
+    );
+
+    if (!flow) {
+      return res.json({ success: false, msg: "Flow was not found" });
+    }
 
     if (type == "AI") {
       // removing from ai arr
       const aiArr = flow?.ai_list ? JSON.parse(flow?.ai_list) : [];
       const updatedArr = aiArr?.filter((x) => x.senderNumber !== number);
 
-      await query(`UPDATE flow SET ai_list = ? WHERE flow_id = ?`, [
+      await query(`UPDATE flow SET ai_list = ? WHERE uid = ? AND flow_id = ?`, [
         JSON.stringify(updatedArr),
+        req.decode.uid,
         flowId,
       ]);
     } else if (type == "DISABLED") {
@@ -182,8 +203,9 @@ router.post("/remove_number_from_activity", validateUser, async (req, res) => {
         (x) => x.senderNumber !== number
       );
 
-      await query(`UPDATE flow SET prevent_list = ? WHERE flow_id = ?`, [
+      await query(`UPDATE flow SET prevent_list = ? WHERE uid = ? AND flow_id = ?`, [
         JSON.stringify(updatedPreventArr),
+        req.decode.uid,
         flowId,
       ]);
     }

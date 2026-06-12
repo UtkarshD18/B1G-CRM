@@ -4,6 +4,7 @@ const axios = require("axios");
 const randomstring = require("randomstring");
 const path = require("path");
 const moment = require("moment");
+const env = require("../../../env");
 
 async function updateChatInMysql({
   chatId,
@@ -133,7 +134,7 @@ async function processMediaMsg(type, messages, uid) {
     if (!fileName) return null;
 
     const content = {
-      link: `${process.env.FRONTENDURI}/meta-media/${fileName}`,
+      link: `${env.FRONTEND_URL}/meta-media/${fileName}`,
     };
     if (messages[0]?.[type]?.caption)
       content.caption = messages[0][type].caption;

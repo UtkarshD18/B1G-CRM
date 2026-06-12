@@ -11,6 +11,7 @@ const fs = require("fs");
 const env = require("./env");
 const logger = require("./utils/logger");
 const { errorHandler } = require("./middlewares/errorHandler");
+const { runMigrations } = require("./database/migrate");
 const { runCampaign } = require("./loops/campaignLoop.js");
 const { init, cleanup } = require("./helper/addon/qr");
 
@@ -21,7 +22,7 @@ app.use(express.urlencoded({ limit: env.MAX_FILE_SIZE, extended: true }));
 
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: env.CORS_ORIGINS,
     credentials: true,
     optionsSuccessStatus: 200,
   })
@@ -107,9 +108,15 @@ app.get("/api/status", (req, res) => {
 });
 
 const currentDir = process.cwd();
-const publicDir = path.resolve(currentDir, "./client/public");
+const clientDistDir = path.resolve(currentDir, "./client/dist");
+const clientPublicDir = path.resolve(currentDir, "./client/public");
+const publicDir = fs.existsSync(path.join(clientDistDir, "index.html"))
+  ? clientDistDir
+  : clientPublicDir;
 const indexPath = path.resolve(publicDir, "index.html");
 
+app.use("/media", express.static(path.join(clientPublicDir, "media")));
+app.use("/static", express.static(path.join(clientPublicDir, "static")));
 app.use(express.static(publicDir));
 
 app.get("*", (req, res) => {
@@ -125,35 +132,58 @@ app.get("*", (req, res) => {
 
 app.use(errorHandler);
 
-const server = app.listen(env.PORT, () => {
-  logger.info("B1G CRM server started", {
-    port: env.PORT,
-    environment: env.NODE_ENV,
-    version: env.appVersion,
-  });
+const runtime = {
+  app,
+  server: null,
+  io: null,
+};
 
+async function startServer() {
   try {
-    init();
-    logger.info("QR handler initialized");
+    await runMigrations({ logger });
+
+    runtime.server = app.listen(env.PORT, () => {
+      logger.info("B1G CRM server started", {
+        port: env.PORT,
+        environment: env.NODE_ENV,
+        version: env.appVersion,
+      });
+
+      try {
+        init();
+        logger.info("QR handler initialized");
+      } catch (err) {
+        logger.error("QR initialization failed", { error: err.message });
+      }
+
+      setTimeout(() => {
+        try {
+          runCampaign();
+          logger.info("Campaign loop started");
+        } catch (err) {
+          logger.error("Campaign loop failed", { error: err.message });
+        }
+      }, 1000);
+    });
+
+    runtime.io = require("./socket").initializeSocket(runtime.server);
   } catch (err) {
-    logger.error("QR initialization failed", { error: err.message });
+    logger.error("Server startup failed", {
+      error: err.message,
+      stack: err.stack,
+    });
+    process.exit(1);
   }
-
-  setTimeout(() => {
-    try {
-      runCampaign();
-      logger.info("Campaign loop started");
-    } catch (err) {
-      logger.error("Campaign loop failed", { error: err.message });
-    }
-  }, 1000);
-});
-
-const io = require("./socket").initializeSocket(server);
+}
 
 function shutdown(signal) {
   logger.info(`${signal} received, shutting down`);
-  server.close(() => {
+  if (!runtime.server) {
+    cleanup();
+    process.exit(0);
+  }
+
+  runtime.server.close(() => {
     cleanup();
     process.exit(0);
   });
@@ -178,4 +208,6 @@ process.on("unhandledRejection", (reason) => {
 
 nodeCleanup(cleanup);
 
-module.exports = { app, server, io };
+startServer();
+
+module.exports = runtime;

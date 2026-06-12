@@ -97,6 +97,9 @@ function PublicSite() {
                 <div className="plan-price">{formatMoney(Number(plan.price || 0))}</div>
                 <p className="plan-period">{plan.plan_duration_in_days}-day access window</p>
                 <p>{plan.short_description || 'Plan details will be expanded from the admin portal.'}</p>
+                <Link className="primary-button" to={`/user/signup?plan=${encodeURIComponent(plan.id || '')}`}>
+                  {Number(plan.price || 0) > 0 ? 'Choose plan' : 'Start free trial'}
+                </Link>
               </article>
             ))}
           </div>

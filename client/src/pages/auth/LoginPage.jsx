@@ -12,6 +12,15 @@ function LoginPage({ role, title, subtitle, endpoint, allowSignup = false }) {
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(false)
 
+  function getNextPath() {
+    const nextPath = searchParams.get('next')
+    if (nextPath && nextPath.startsWith(`/${role}/`)) {
+      return nextPath
+    }
+
+    return `/${role}/dashboard`
+  }
+
   useEffect(() => {
     const incomingToken = searchParams.get('token')
     if (!incomingToken) {
@@ -20,7 +29,7 @@ function LoginPage({ role, title, subtitle, endpoint, allowSignup = false }) {
 
     setRoleToken(role, incomingToken)
     setSearchParams({}, { replace: true })
-    navigate(`/${role}/dashboard`, { replace: true })
+    navigate(getNextPath(), { replace: true })
   }, [navigate, role, searchParams, setRoleToken, setSearchParams])
 
   async function handleSubmit(event) {
@@ -40,7 +49,7 @@ function LoginPage({ role, title, subtitle, endpoint, allowSignup = false }) {
       }
 
       setRoleToken(role, result.token)
-      navigate(`/${role}/dashboard`, { replace: true })
+      navigate(getNextPath(), { replace: true })
     } catch (error) {
       setStatus(error.message || 'Login failed')
     } finally {

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { query } = require('../database/dbpromise')
+const env = require('../env')
 
 const validateUser = async (req, res, next) => {
     try {
@@ -9,7 +10,7 @@ const validateUser = async (req, res, next) => {
         }
 
 
-        jwt.verify(token.split(' ')[1], process.env.JWTKEY, async (err, decode) => {
+        jwt.verify(token.split(' ')[1], env.JWT_SECRET, async (err, decode) => {
             if (err) {
                 return res.json({
                     success: 0,

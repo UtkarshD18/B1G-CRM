@@ -94,3 +94,43 @@ export function formatRelativeTimestamp(value) {
   const date = new Date(timestamp * 1000)
   return date.toLocaleString()
 }
+
+export function formatDateTime(value) {
+  if (!value) {
+    return 'N/A'
+  }
+
+  const numeric = Number(value)
+  const date = Number.isFinite(numeric) ? new Date(numeric) : new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value)
+  }
+
+  return date.toLocaleString()
+}
+
+export function parseStoredJson(value, fallback = null) {
+  if (!value) {
+    return fallback
+  }
+
+  if (typeof value === 'object') {
+    return value
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    return fallback
+  }
+}
+
+export function summarizePlan(value) {
+  const plan = parseStoredJson(value, null)
+  if (!plan) {
+    return 'Unassigned'
+  }
+
+  return plan.title || `${plan.plan_duration_in_days || 0} days`
+}

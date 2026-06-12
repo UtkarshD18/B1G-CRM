@@ -9,14 +9,19 @@ export const ADMIN_NAV = [
 export const USER_NAV = [
   { label: 'Dashboard', path: '/user/dashboard' },
   { label: 'Inbox', path: '/user/inbox' },
+  { label: 'Kanban', path: '/user/kanban' },
   { label: 'Contacts', path: '/user/contacts' },
   { label: 'Campaigns', path: '/user/campaigns' },
   { label: 'Automation Flows', path: '/user/automation-flows' },
   { label: 'ChatBot', path: '/user/chatbot' },
+  { label: 'Meta Templates', path: '/user/create-meta-template' },
   { label: 'Integrations', path: '/user/integrations' },
+  { label: 'Meta WhatsApp', path: '/user/link-meta-whatsapp' },
   { label: 'Agent Login', path: '/user/agent-login' },
   { label: 'Agent Task', path: '/user/agent-task' },
   { label: 'Chat Widget', path: '/user/chat-widget' },
+  { label: 'Billing', path: '/user/billing' },
+  { label: 'API & Webhooks', path: '/user/api-dashboard' },
   { label: 'Settings', path: '/user/settings' },
 ]
 
