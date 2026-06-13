@@ -56,7 +56,7 @@
 - [~] ðŸŸ¡ Rest API (dashboard/docs/key generation wired; usage analytics pending)
 - [~] ðŸŸ¡ Link Meta WhatsApp (Cloud API credential form, readiness panel, and backend verification wired; embedded signup/OAuth pending)
 - [~] ðŸŸ¡ Billing / Checkout (Stripe UI wired; PayPal/Razorpay/Paystack SDK handoff pending)
-- [~] Automation Flows (bot-ready template generator, JSON editor, save/load/delete, and activity inspection wired; full drag/drop React Flow canvas pending)
+- [~] Automation Flows (React Flow visual canvas, runtime-compatible node palette, bot-ready template generator, JSON editor, save/load/delete, and activity inspection wired; advanced branching templates pending)
 - [~] WA Chatbot (flow-based bot CRUD, all-chat vs selected-chat targeting, tenant-scoped backend validation, status controls, and runtime diagnostics wired; visual flow builder handoff and advanced execution analytics pending)
 - [~] ðŸŸ¡ Create Meta Template (UI wired to Meta create/list/delete, media header upload, variable examples, quick reply/URL/phone buttons, and dynamic URL examples; approval diagnostics pending)
 - [~] Send Campaign (approved template picker, audience contact count, variable mapping, and safer creation validation wired; advanced pacing/preview pending)
@@ -68,7 +68,7 @@
 - [~] ðŸŸ¡ Conversational API (sample/docs wired to `/api/v1/send-message`)
 - [~] ðŸŸ¡ Template API (sample/docs wired to `/api/v1/send_templet`)
 - [~] ðŸŸ¡ API Dashboard (readiness cards and endpoint docs wired)
-- [~] ðŸŸ¡ Manage Webhooks (tenant webhook URL exposed; rule CRUD pending)
+- [~] ðŸŸ¡ Manage Webhooks (tenant webhook URL, scoped rule CRUD API, and rule builder UI wired; execution engine and logs pending)
 - [ ] ðŸ”´ Webhook Automation
 - [ ] ðŸ”´ Webhook Logs
 - [ ] ðŸ”´ Web Notification

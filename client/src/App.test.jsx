@@ -82,7 +82,7 @@ function setAuthToken(role) {
 }
 
 function mockApiResponses() {
-  global.fetch = jest.fn(async (input) => {
+  global.fetch = jest.fn(async (input, init = {}) => {
     const url = String(input)
 
     if (url.endsWith('/api/user/get_me')) {
@@ -268,6 +268,47 @@ function mockApiResponses() {
       return jsonResponse({
         success: true,
         msg: 'Chatbot was updated',
+      })
+    }
+
+    if (url.includes('/api/webhooks/rules/delete')) {
+      return jsonResponse({
+        success: true,
+        msg: 'Webhook rule deleted',
+      })
+    }
+
+    if (url.includes('/api/webhooks/rules/update')) {
+      return jsonResponse({
+        success: true,
+        msg: 'Webhook rule updated',
+      })
+    }
+
+    if (url.includes('/api/webhooks/rules') && init?.method === 'POST') {
+      return jsonResponse({
+        success: true,
+        msg: 'Webhook rule created',
+      })
+    }
+
+    if (url.includes('/api/webhooks/rules')) {
+      return jsonResponse({
+        success: true,
+        data: [
+          {
+            id: 3,
+            name: 'Route pricing leads',
+            source: 'external',
+            event_type: 'message',
+            match_field: 'body.text',
+            match_operator: 'contains',
+            match_value: 'pricing',
+            action_type: 'tag_chat',
+            action_payload: JSON.stringify({ tag: 'Lead' }),
+            active: 1,
+          },
+        ],
       })
     }
 
@@ -539,6 +580,38 @@ describe('App routing shell', () => {
     expect(await screen.findByText('REST API, template API, and webhook setup')).toBeInTheDocument()
     expect(await screen.findByText('Webhook endpoint')).toBeInTheDocument()
     expect(await screen.findByText(/\/api\/v1\/send-message/)).toBeInTheDocument()
+    expect(await screen.findByText('Webhook automation rules')).toBeInTheDocument()
+    expect(await screen.findByText('Route pricing leads')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Rule name'), {
+      target: { value: 'VIP checkout route' },
+    })
+    fireEvent.change(screen.getByLabelText('Match value'), {
+      target: { value: 'checkout' },
+    })
+    fireEvent.change(screen.getByLabelText('Action payload JSON'), {
+      target: { value: JSON.stringify({ status: 'pending' }) },
+    })
+    fireEvent.change(screen.getByLabelText('Action type'), {
+      target: { value: 'set_status' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create rule' }))
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/webhooks/rules'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"name":"VIP checkout route"'),
+        }),
+      )
+    })
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/webhooks/rules'),
+      expect.objectContaining({
+        body: expect.stringContaining('"action_type":"set_status"'),
+      }),
+    )
   })
 
   test('renders focused Meta WhatsApp linking and saves verified credentials', async () => {
@@ -762,6 +835,23 @@ describe('App routing shell', () => {
     expect(await screen.findByText('Bot-ready flow draft generated.')).toBeInTheDocument()
     expect(screen.getByLabelText('Nodes JSON').value).toContain('Here is the pricing menu.')
     expect(screen.getByLabelText('Edges JSON').value).toContain('"sourceHandle": "pricing"')
+    expect(await screen.findByText('Visual flow canvas')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Text reply' }))
+
+    expect(await screen.findByText('Text reply node added.')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Message body'), {
+      target: { value: 'Visual editor reply' },
+    })
+    expect(screen.getByLabelText('Nodes JSON').value).toContain('Visual editor reply')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quick replies' }))
+
+    expect(await screen.findByText('Quick replies node added.')).toBeInTheDocument()
+    fireEvent.change(screen.getByDisplayValue('Pricing, Book demo'), {
+      target: { value: 'Sales, Support' },
+    })
+    expect(screen.getByLabelText('Nodes JSON').value).toContain('"title": "Sales"')
 
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'Pricing auto reply' },

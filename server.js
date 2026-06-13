@@ -81,6 +81,9 @@ app.use("/api/broadcast", broadcastRoute);
 const apiRoute = require("./routes/apiv2");
 app.use("/api/v1", apiRoute);
 
+const webhookRoute = require("./routes/webhooks");
+app.use("/api/webhooks", webhookRoute);
+
 const agentRoute = require("./routes/agent");
 app.use("/api/agent", agentRoute);
 

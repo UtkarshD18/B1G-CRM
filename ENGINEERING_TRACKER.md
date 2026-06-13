@@ -14,7 +14,8 @@
 | Live reference app audit | Done | Public site, admin portal, and user portal were inspected and mapped in `REFERENCE_APP_AUDIT.md`. |
 | Modular frontend structure | Done | `App.jsx` is now a small bootstrap; routes, layouts, shared helpers, and portal pages live in dedicated modules. |
 | Database standardization | Done | PostgreSQL is the single supported database; obsolete SQL driver dependencies were removed and docs/schema/env examples now use PostgreSQL. |
-| Automation flow RTL coverage | Done | Bot-ready flow generation and save handoff are covered in `client/src/App.test.jsx`. |
+| Automation flow RTL coverage | Done | React Flow canvas sync, node palette serialization, bot-ready flow generation, and save handoff are covered in `client/src/App.test.jsx`. |
+| Webhook rule CRUD coverage | Done | Tenant webhook rule listing and creation are covered in `client/src/App.test.jsx`. |
 | Backend automated tests | Pending | Server-side tests are still missing. |
 | CI test execution | Pending | No GitHub Actions or other CI validation is configured yet. |
 | Portal feature implementation | In Progress | Product features remain tracked in `FEATURE_TRACKER.md`. |

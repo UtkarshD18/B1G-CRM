@@ -34,6 +34,18 @@ function buildTemplateSample(apiKey) {
   })
 }
 
+const defaultWebhookRule = {
+  name: '',
+  source: 'external',
+  event_type: 'message',
+  match_field: 'body.text',
+  match_operator: 'contains',
+  match_value: 'pricing',
+  action_type: 'tag_chat',
+  action_payload: prettyJson({ tag: 'Lead' }),
+  active: true,
+}
+
 function UserDeveloperApiPage() {
   const { tokens } = useAuth()
   const decoded = decodeTokenPayload(tokens.user)
@@ -41,6 +53,9 @@ function UserDeveloperApiPage() {
   const [profile, setProfile] = useState(null)
   const [apiKey, setApiKey] = useState('')
   const [copied, setCopied] = useState('')
+  const [webhookRules, setWebhookRules] = useState([])
+  const [ruleForm, setRuleForm] = useState(defaultWebhookRule)
+  const [editingRuleId, setEditingRuleId] = useState('')
 
   const baseUrl = getDisplayBaseUrl()
   const webhookUrl = `${baseUrl}/api/inbox/webhook/${decoded?.uid || ':uid'}`
@@ -50,7 +65,10 @@ function UserDeveloperApiPage() {
   const loadProfile = useCallback(async () => {
     setStatus('Loading API workspace...')
     try {
-      const result = await apiRequest('/api/user/get_me', { token: tokens.user })
+      const [result, rulesResult] = await Promise.all([
+        apiRequest('/api/user/get_me', { token: tokens.user }),
+        apiRequest('/api/webhooks/rules', { token: tokens.user }),
+      ])
       if (!result?.success) {
         setStatus(result?.msg || 'Unable to load API profile')
         return
@@ -58,6 +76,7 @@ function UserDeveloperApiPage() {
 
       setProfile(result.data || null)
       setApiKey(result.data?.api_key || '')
+      setWebhookRules(Array.isArray(rulesResult?.data) ? rulesResult.data : [])
       setStatus('')
     } catch (error) {
       setStatus(error.message || 'Unable to load API workspace')
@@ -81,6 +100,82 @@ function UserDeveloperApiPage() {
       setStatus('API key generated.')
     } catch (error) {
       setStatus(error.message || 'Unable to generate API key')
+    }
+  }
+
+  async function saveWebhookRule(event) {
+    event.preventDefault()
+
+    let parsedPayload
+    try {
+      parsedPayload = JSON.parse(ruleForm.action_payload || '{}')
+    } catch {
+      setStatus('Action payload must be valid JSON.')
+      return
+    }
+
+    setStatus(editingRuleId ? 'Updating webhook rule...' : 'Creating webhook rule...')
+    try {
+      const endpoint = editingRuleId ? '/api/webhooks/rules/update' : '/api/webhooks/rules'
+      const result = await apiRequest(endpoint, {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          ...ruleForm,
+          id: editingRuleId || undefined,
+          active: ruleForm.active,
+          action_payload: parsedPayload,
+        },
+      })
+
+      if (!result?.success) {
+        setStatus(result?.msg || 'Unable to save webhook rule')
+        return
+      }
+
+      setRuleForm(defaultWebhookRule)
+      setEditingRuleId('')
+      await loadProfile()
+      setStatus(result.msg || 'Webhook rule saved.')
+    } catch (error) {
+      setStatus(error.message || 'Unable to save webhook rule')
+    }
+  }
+
+  function editWebhookRule(rule) {
+    setEditingRuleId(rule.id)
+    setRuleForm({
+      name: rule.name || '',
+      source: rule.source || 'external',
+      event_type: rule.event_type || 'message',
+      match_field: rule.match_field || 'body.text',
+      match_operator: rule.match_operator || 'contains',
+      match_value: rule.match_value || '',
+      action_type: rule.action_type || 'tag_chat',
+      action_payload: prettyJson(JSON.parse(rule.action_payload || '{}')),
+      active: Number(rule.active) !== 0,
+    })
+    setStatus('Webhook rule loaded for editing.')
+  }
+
+  async function deleteWebhookRule(rule) {
+    setStatus('Deleting webhook rule...')
+    try {
+      const result = await apiRequest('/api/webhooks/rules/delete', {
+        method: 'POST',
+        token: tokens.user,
+        body: { id: rule.id },
+      })
+
+      if (!result?.success) {
+        setStatus(result?.msg || 'Unable to delete webhook rule')
+        return
+      }
+
+      await loadProfile()
+      setStatus(result.msg || 'Webhook rule deleted.')
+    } catch (error) {
+      setStatus(error.message || 'Unable to delete webhook rule')
     }
   }
 
@@ -116,8 +211,13 @@ function UserDeveloperApiPage() {
         ready: Boolean(decoded?.uid),
         detail: decoded?.uid ? 'Ready for Meta/webhook setup' : 'Login token missing uid',
       },
+      {
+        label: 'Webhook rules',
+        ready: webhookRules.length > 0,
+        detail: webhookRules.length ? `${webhookRules.length} rule(s) configured` : 'Create rule-based automation',
+      },
     ],
-    [apiKey, decoded?.uid, profile?.plan, profile?.plan_expire],
+    [apiKey, decoded?.uid, profile?.plan, profile?.plan_expire, webhookRules.length],
   )
 
   return (
@@ -178,6 +278,137 @@ function UserDeveloperApiPage() {
         </div>
       </div>
 
+      <div className="panel form-panel">
+        <div className="panel-header">
+          <h2>Webhook automation rules</h2>
+        </div>
+        <form className="form-panel" onSubmit={saveWebhookRule}>
+          <div className="form-grid">
+            <label>
+              Rule name
+              <input
+                value={ruleForm.name}
+                onChange={(event) => setRuleForm({ ...ruleForm, name: event.target.value })}
+                placeholder="Route pricing leads"
+              />
+            </label>
+            <label>
+              Source
+              <select value={ruleForm.source} onChange={(event) => setRuleForm({ ...ruleForm, source: event.target.value })}>
+                <option value="external">External</option>
+                <option value="meta">Meta</option>
+                <option value="shopify">Shopify</option>
+                <option value="wordpress">WordPress</option>
+              </select>
+            </label>
+            <label>
+              Event type
+              <input value={ruleForm.event_type} onChange={(event) => setRuleForm({ ...ruleForm, event_type: event.target.value })} />
+            </label>
+            <label>
+              Match field
+              <input value={ruleForm.match_field} onChange={(event) => setRuleForm({ ...ruleForm, match_field: event.target.value })} />
+            </label>
+            <label>
+              Match operator
+              <select
+                value={ruleForm.match_operator}
+                onChange={(event) => setRuleForm({ ...ruleForm, match_operator: event.target.value })}
+              >
+                <option value="contains">Contains</option>
+                <option value="equals">Equals</option>
+                <option value="starts_with">Starts with</option>
+                <option value="exists">Exists</option>
+              </select>
+            </label>
+            <label>
+              Match value
+              <input value={ruleForm.match_value} onChange={(event) => setRuleForm({ ...ruleForm, match_value: event.target.value })} />
+            </label>
+            <label>
+              Action type
+              <select value={ruleForm.action_type} onChange={(event) => setRuleForm({ ...ruleForm, action_type: event.target.value })}>
+                <option value="tag_chat">Tag chat</option>
+                <option value="set_status">Set chat status</option>
+                <option value="assign_agent">Assign agent</option>
+                <option value="start_flow">Start flow</option>
+                <option value="send_webhook">Send webhook</option>
+              </select>
+            </label>
+            <label>
+              Rule active
+              <input
+                type="checkbox"
+                checked={ruleForm.active}
+                onChange={(event) => setRuleForm({ ...ruleForm, active: event.target.checked })}
+              />
+            </label>
+          </div>
+          <label>
+            Action payload JSON
+            <textarea
+              rows={5}
+              value={ruleForm.action_payload}
+              onChange={(event) => setRuleForm({ ...ruleForm, action_payload: event.target.value })}
+            />
+          </label>
+          <div className="action-row">
+            <button className="primary-button" type="submit">
+              {editingRuleId ? 'Update rule' : 'Create rule'}
+            </button>
+            <button
+              className="secondary-button dark-text"
+              type="button"
+              onClick={() => {
+                setEditingRuleId('')
+                setRuleForm(defaultWebhookRule)
+              }}
+            >
+              Reset rule
+            </button>
+          </div>
+        </form>
+
+        <div className="compact-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Rule</th>
+                <th>Match</th>
+                <th>Action</th>
+                <th>Status</th>
+                <th>Manage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {webhookRules.map((rule) => (
+                <tr key={rule.id}>
+                  <td>{rule.name}</td>
+                  <td>{`${rule.match_field} ${rule.match_operator} ${rule.match_value || ''}`}</td>
+                  <td>{rule.action_type}</td>
+                  <td>{Number(rule.active) === 0 ? 'Paused' : 'Active'}</td>
+                  <td>
+                    <div className="action-row">
+                      <button className="mini-button" type="button" onClick={() => editWebhookRule(rule)}>
+                        Edit
+                      </button>
+                      <button className="mini-button subtle-danger" type="button" onClick={() => deleteWebhookRule(rule)}>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!webhookRules.length ? (
+                <tr>
+                  <td colSpan="5">No webhook rules configured yet.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div className="two-column-grid">
         <div className="panel form-panel">
           <div className="panel-header">
@@ -213,7 +444,6 @@ function UserDeveloperApiPage() {
           <h2>What is still pending</h2>
         </div>
         <ul className="signal-list">
-          <li>Webhook automation rules need their own database model and rule builder UI.</li>
           <li>Webhook logs need persistent request logging before a log viewer can be accurate.</li>
           <li>API analytics need counters around `/api/v1` traffic before charts can be real.</li>
         </ul>

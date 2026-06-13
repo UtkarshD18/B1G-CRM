@@ -935,6 +935,17 @@ th {
   gap: 8px;
 }
 
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.flow-palette {
+  max-width: 640px;
+}
+
 .subtle-danger {
   border-color: rgba(163, 43, 43, 0.2);
   color: #8f2b2b;
@@ -1007,6 +1018,81 @@ th {
 
 .workflow-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.flow-canvas-panel {
+  min-width: 0;
+}
+
+.flow-builder-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.36fr);
+  gap: 16px;
+  min-height: 460px;
+}
+
+.flow-canvas {
+  min-height: 460px;
+  border: 1px solid #d9e1e4;
+  border-radius: 18px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.flow-canvas .react-flow__node {
+  border: 1px solid rgba(16, 33, 45, 0.18);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #10212d;
+  font-weight: 800;
+  box-shadow: 0 14px 34px rgba(16, 33, 45, 0.12);
+}
+
+.flow-canvas .react-flow__node-input {
+  border-color: rgba(0, 163, 137, 0.45);
+}
+
+.flow-canvas .react-flow__edge-textbg {
+  fill: #10212d;
+}
+
+.flow-canvas .react-flow__edge-text {
+  fill: #f8f3eb;
+  font-weight: 800;
+}
+
+.flow-inspector {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  border: 1px solid #d9e1e4;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 16px;
+}
+
+.flow-inspector h3 {
+  margin: 0;
+  color: #10212d;
+  font-size: 1rem;
+}
+
+.flow-inspector label {
+  display: grid;
+  gap: 8px;
+  color: #365261;
+  font-weight: 800;
+}
+
+.flow-inspector input,
+.flow-inspector textarea {
+  width: 100%;
+  border: 1px solid #c5d0d6;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #10212d;
+  padding: 12px 14px;
+  resize: vertical;
 }
 
 .readiness-row {
@@ -1157,6 +1243,10 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .flow-builder-grid {
+    grid-template-columns: 1fr;
+  }
+
   .media-composer {
     grid-template-columns: 1fr 1fr;
   }
@@ -1199,6 +1289,11 @@ th {
 
   .template-button-row {
     grid-template-columns: 1fr;
+  }
+
+  .flow-canvas,
+  .flow-builder-grid {
+    min-height: 380px;
   }
 
   .hero-section {
