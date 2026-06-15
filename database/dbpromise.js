@@ -1,19 +1,98 @@
-const con = require('./config')
+const pool = require("./config");
 
-function query(sql, arr) {
-    return new Promise((resolve, reject) => {
-        if (!sql || !arr) {
-            return resolve("No sql provided")
-        }
-        con.query(sql, arr, (err, result) => {
-            if (err) {
-                console.log(err)
-                return reject(err)
-            } else {
-                return resolve(result)
-            }
-        })
-    })
+function normalizePostgresSql(sql) {
+  return sql
+    .replace(/`/g, '"')
+    .replace(/\bFROM\s+user\b/gi, 'FROM "user"')
+    .replace(/\bINTO\s+user\b/gi, 'INTO "user"')
+    .replace(/\bUPDATE\s+user\b/gi, 'UPDATE "user"')
+    .replace(/\bJOIN\s+user\b/gi, 'JOIN "user"')
+    .replace(/\buser\./gi, '"user".')
+    .replace(/JSON_UNQUOTE\(JSON_EXTRACT\(([^,]+),\s*'\$\.([^']+)'\)\)/gi, "($1::jsonb ->> '$2')");
 }
 
-exports.query = query   
+function isBulkValues(sql, index) {
+  return /VALUES\s*$/i.test(sql.slice(0, index));
+}
+
+function prepareQuery(sql, values = []) {
+  const params = [];
+  let valueIndex = 0;
+  let output = "";
+
+  const normalizedSql = normalizePostgresSql(sql);
+
+  for (let index = 0; index < normalizedSql.length; index += 1) {
+    const char = normalizedSql[index];
+
+    if (char !== "?") {
+      output += char;
+      continue;
+    }
+
+    const value = values[valueIndex];
+    valueIndex += 1;
+
+    if (Array.isArray(value) && isBulkValues(normalizedSql, index)) {
+      const rows = value;
+      if (rows.length === 0) {
+        output += "(NULL)";
+        continue;
+      }
+
+      output += rows
+        .map((row) => {
+          const cells = Array.isArray(row) ? row : [row];
+          const placeholders = cells.map((cell) => {
+            params.push(cell);
+            return `$${params.length}`;
+          });
+          return `(${placeholders.join(",")})`;
+        })
+        .join(",");
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        output += "NULL";
+        continue;
+      }
+
+      output += value
+        .map((item) => {
+          params.push(item);
+          return `$${params.length}`;
+        })
+        .join(",");
+      continue;
+    }
+
+    params.push(value);
+    output += `$${params.length}`;
+  }
+
+  return { sql: output, params };
+}
+
+async function query(sql, values = []) {
+  if (!sql) {
+    throw new Error("SQL query is required");
+  }
+
+  const { sql: preparedSql, params } = prepareQuery(sql, values);
+
+  try {
+    const result = await pool.query(preparedSql, params);
+    return result.rows;
+  } catch (err) {
+    console.error("PostgreSQL query failed", {
+      sql: preparedSql,
+      error: err.message,
+    });
+    throw err;
+  }
+}
+
+exports.query = query;
+exports.prepareQuery = prepareQuery;

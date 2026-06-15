@@ -21,10 +21,11 @@ const { recoverEmail } = require("../emails/returnEmails.js");
 const moment = require("moment");
 const jwt = require("jsonwebtoken");
 const { getMetaTempletByName } = require("../loops/loopFunctions.js");
+const env = require("../env.js");
 
 function decodeToken(token) {
   return new Promise((resolve) => {
-    jwt.verify(token, process.env.JWTKEY, async (err, decode) => {
+    jwt.verify(token, env.JWT_SECRET, async (err, decode) => {
       if (err) {
         return resolve({
           success: false,
@@ -44,7 +45,11 @@ function decodeToken(token) {
       }
 
       if (getUser[0]?.api_key !== token) {
-        return res.json({ success: false, msg: "Token was expired." });
+        resolve({
+          success: false,
+          data: {},
+          message: "Token was expired.",
+        });
       } else {
         resolve({
           success: true,

@@ -39,6 +39,7 @@ How SaaS Users connect their external websites/systems to this CRM:
 *   Clean up `__MACOSX`, `.DS_Store`, and unnecessary generated template files from the current folder.
 *   Structure the `./client` directory as a pure React SPA (React + Vite only). We will NOT use Next.js or other SSR frameworks.
 *   Setup environment variable handling for frontend (`VITE_API_URL`).
+*   Establish frontend engineering guardrails: Jest, React Testing Library, baseline tests, and an opt-in React Profiler workflow for local performance checks.
 
 ### Phase 2: Frontend App Shell & Auth (Figma Execution)
 *   **UI/UX Reference:** Exact match to the corporate B2B SaaS aesthetics and UX of `https://crm.oneoftheprojects.com`. 
@@ -89,6 +90,33 @@ To run this parallelly across a 3-person team, the workload is distributed as fo
 ---
 
 ## 6. Development Guidelines for AI Context
-*   **Backend:** Already heavily built-out (Express/MySQL). Focus on matching missing fields and verifying foreign keys.
+*   **Backend:** Express with PostgreSQL as the single supported database. Focus on matching missing fields and verifying foreign keys.
 *   **Frontend:** The current `/client/public/index.html` is a redirect. A complete new frontend must replace it.
 *   **APIs:** Rely on `routes/user.js`, `routes/admin.js`, and `routes/agent.js` as the source of truth for available operations.
+
+---
+
+## 7. Current Repository Snapshot
+
+### Backend
+*   `server.js` boots the Express app.
+*   `socket.js` and `websocket.js` handle real-time message transport.
+*   `routes/` contains the main feature APIs, including `admin`, `user`, `agent`, `inbox`, `chatFlow`, `broadcast`, `phonebook`, and QR flows.
+*   `/api/chat_flow` now tenant-scopes flow save/detail/activity operations and persists bot-ready node/edge JSON for WA Chatbot handoff.
+*   WA Chatbot runtime diagnostics are stored in PostgreSQL and exposed through `/api/chatbot/get_logs`.
+*   `/api/webhooks/rules` now provides tenant-scoped webhook automation rule CRUD for the developer/API dashboard.
+*   `middlewares/` contains auth and plan validation middleware.
+*   `database/`, `functions/`, `helper/`, `helpers/`, and `loops/` support persistence, business logic, utilities, and recurring jobs.
+
+### Frontend
+*   `client/` is a Vite React SPA with a modular portal structure under `src/routes`, `src/layouts`, `src/pages`, `src/components`, and `src/shared`.
+*   Jest and React Testing Library are now the baseline frontend test stack.
+*   User Automation Flows includes a React Flow visual canvas, runtime-compatible node palette, bot-ready template generator, JSON editor, save/load/delete, activity inspection, and RTL coverage.
+*   User WA Chatbot includes CRUD targeting, all-chat/selected-chat mode, status controls, and runtime diagnostics.
+*   User API & Webhooks includes API-key readiness, endpoint samples, webhook URL copy, and webhook rule CRUD.
+*   `client/src/profiler.jsx` provides opt-in React Profiler logging controlled by `VITE_ENABLE_REACT_PROFILER=true`.
+*   `REFERENCE_APP_AUDIT.md` now captures the confirmed live sitemap, commercial flow, and parity gaps versus this repo.
+
+### Documentation and Tracking
+*   `FEATURE_TRACKER.md` remains the product-feature checklist.
+*   `ENGINEERING_TRACKER.md` tracks engineering enablement, completed tooling work, and remaining setup tasks.

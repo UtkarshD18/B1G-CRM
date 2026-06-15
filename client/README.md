@@ -1,16 +1,24 @@
-# React + Vite
+# Client App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the React + Vite SPA for the CRM admin, user, and agent portals.
 
-Currently, two official plugins are available:
+## Commands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- `npm run dev`: start the Vite dev server.
+- `npm run build`: create a production build.
+- `npm run lint`: run the client ESLint config.
+- `npm test`: run Jest once.
+- `npm run test:watch`: run Jest in watch mode.
+- `npm run test:coverage`: generate Jest coverage output.
 
-## React Compiler
+## Testing Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Jest runs the test environment with `jsdom`.
+- React Testing Library is the baseline for rendering and interaction tests.
+- Shared setup lives in `src/test/setupTests.js`.
 
-## Expanding the ESLint configuration
+## React Profiler
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Enable profiler logging with `VITE_ENABLE_REACT_PROFILER=true npm run dev`.
+- The root app is wrapped by `src/profiler.jsx`.
+- Timing metrics are printed with `console.table(...)` only when the env var is enabled.
