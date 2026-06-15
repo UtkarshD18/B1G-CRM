@@ -35,7 +35,8 @@ const moment = require("moment");
 const fetch = require("node-fetch");
 const jwt = require("jsonwebtoken");
 const { checkQr } = require("../helper/addon/qr/index.js");
-const { addON } = require("../env.js");
+const env = require("../env.js");
+const { addON } = env;
 
 // facebook login
 router.post("/login_with_facebook", async (req, res) => {
@@ -93,7 +94,7 @@ router.post("/login_with_facebook", async (req, res) => {
             password: hasPass,
             email: email,
           },
-          process.env.JWTKEY,
+          env.JWT_SECRET,
           {}
         );
 
@@ -106,7 +107,7 @@ router.post("/login_with_facebook", async (req, res) => {
             password: getUser[0].password,
             email: getUser[0].email,
           },
-          process.env.JWTKEY,
+          env.JWT_SECRET,
           {}
         );
         res.json({
@@ -157,7 +158,7 @@ router.post("/login_with_google", async (req, res) => {
             password: hasPass,
             email: email,
           },
-          process.env.JWTKEY,
+          env.JWT_SECRET,
           {}
         );
 
@@ -170,7 +171,7 @@ router.post("/login_with_google", async (req, res) => {
             password: getUser[0].password,
             email: getUser[0].email,
           },
-          process.env.JWTKEY,
+          env.JWT_SECRET,
           {}
         );
         res.json({
@@ -262,7 +263,7 @@ router.post("/login", async (req, res) => {
           password: userFind[0].password,
           email: userFind[0].email,
         },
-        process.env.JWTKEY,
+        env.JWT_SECRET,
         {}
       );
       res.json({
@@ -295,7 +296,7 @@ router.post("/return_media_url", validateUser, async (req, res) => {
       }
     });
 
-    const url = `${process.env.FRONTENDURI}/media/${filename}`;
+    const url = `${env.FRONTEND_URL}/media/${filename}`;
     res.json({ success: true, url });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });
@@ -537,7 +538,7 @@ router.post("/update_meta", validateUser, async (req, res) => {
       !waba_id ||
       !business_account_id ||
       !access_token ||
-      !business_account_id ||
+      !business_phone_number_id ||
       !app_id
     ) {
       return res.json({ success: false, msg: "Please fill all the fields" });
@@ -788,7 +789,7 @@ router.post("/return_media_url_meta", validateUser, async (req, res) => {
         return res.json({ success: false, msg: "Please check your meta API" });
       }
 
-      const url = `${process.env.FRONTENDURI}/media/${filename}`;
+      const url = `${env.FRONTEND_URL}/media/${filename}`;
 
       await query(
         `INSERT INTO meta_templet_media (uid, templet_name, meta_hash, file_name) VALUES (?,?,?,?)`,
@@ -893,9 +894,9 @@ router.post("/create_stripe_session", validateUser, async (req, res) => {
       payment_method_types: ["card"],
       line_items: productStripe,
       mode: "payment",
-      success_url: `${process.env.BACKURI}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
-      cancel_url: `${process.env.BACKURI}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
-      locale: process.env.STRIPE_LANG || "en",
+      success_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
+      cancel_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
+      locale: env.STRIPE_LANG,
     });
 
     await query(`UPDATE orders SET s_token = ? WHERE data = ?`, [
@@ -1078,7 +1079,7 @@ function returnHtmlRes(msg) {
   const html = `<!DOCTYPE html>
     <html>
     <head>
-      <meta http-equiv="refresh" content="5;url=${process.env.FRONTENDURI}/user">
+      <meta http-equiv="refresh" content="5;url=${env.FRONTEND_URL}/user">
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -1395,11 +1396,11 @@ router.post("/send_resovery", async (req, res) => {
         password: checkEmailValid[0]?.password,
         role: "user",
       },
-      process.env.JWTKEY,
+      env.JWT_SECRET,
       {}
     );
 
-    const recpveryUrl = `${process.env.FRONTENDURI}/recovery-user/${jsontoken}`;
+    const recpveryUrl = `${env.FRONTEND_URL}/recovery-user/${jsontoken}`;
 
     const getHtml = recoverEmail(appName, recpveryUrl);
 
@@ -1474,7 +1475,7 @@ router.get("/generate_api_keys", validateUser, async (req, res) => {
   try {
     const token = sign(
       { uid: req.decode.uid, role: "user" },
-      process.env.JWTKEY,
+      env.JWT_SECRET,
       {}
     );
 
@@ -1686,7 +1687,7 @@ router.get("/widget", async (req, res) => {
 
     res.send(
       returnWidget(
-        `${process.env.FRONTENDURI}/media/${getWidget[0]?.logo}`,
+        `${env.FRONTEND_URL}/media/${getWidget[0]?.logo}`,
         getWidget[0]?.size,
         url,
         getWidget[0]?.place
@@ -1743,7 +1744,7 @@ router.post("/auto_agent_login", validateUser, async (req, res) => {
         email: agentFind[0].email,
         owner_uid: agentFind[0]?.owner_uid,
       },
-      process.env.JWTKEY,
+      env.JWT_SECRET,
       {}
     );
 

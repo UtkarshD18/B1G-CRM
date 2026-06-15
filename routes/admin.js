@@ -14,6 +14,7 @@ const {
 } = require("../functions/function.js");
 const moment = require("moment");
 const { recoverEmail } = require("../emails/returnEmails.js");
+const env = require("../env.js");
 
 router.post("/login", async (req, res) => {
   try {
@@ -43,7 +44,7 @@ router.post("/login", async (req, res) => {
           password: userFind[0].password,
           email: userFind[0].email,
         },
-        process.env.JWTKEY,
+        env.JWT_SECRET,
         {}
       );
       res.json({
@@ -138,6 +139,54 @@ router.post("/del_plan", adminValidator, async (req, res) => {
   }
 });
 
+// edit plan
+router.post("/edit_plan", adminValidator, async (req, res) => {
+  try {
+    const {
+      id,
+      title,
+      short_description,
+      allow_tag,
+      allow_note,
+      allow_chatbot,
+      contact_limit,
+      allow_api,
+      is_trial,
+      price,
+      price_strike,
+      plan_duration_in_days,
+    } = req.body;
+
+    if (!id || !title || !short_description || !plan_duration_in_days) {
+      return res.json({ success: false, msg: "Please fill details" });
+    }
+
+    await query(
+      `UPDATE plan SET title = ?, short_description = ?, allow_tag = ?, allow_note = ?, allow_chatbot = ?,
+            contact_limit = ?, allow_api = ?, is_trial = ?, price = ?, price_strike = ?, plan_duration_in_days = ? WHERE id = ?`,
+      [
+        title,
+        short_description,
+        allow_tag ? 1 : 0,
+        allow_note ? 1 : 0,
+        allow_chatbot ? 1 : 0,
+        parseInt(contact_limit || 0),
+        allow_api ? 1 : 0,
+        is_trial ? 1 : 0,
+        is_trial ? 0 : price || 0,
+        price_strike || 0,
+        parseInt(plan_duration_in_days || 1),
+        id,
+      ]
+    );
+
+    res.json({ success: true, msg: "Plan was updated" });
+  } catch (err) {
+    res.json({ success: false, msg: "something went wrong" });
+    console.log(err);
+  }
+});
+
 // get all users
 router.get("/get_users", adminValidator, async (req, res) => {
   try {
@@ -171,29 +220,28 @@ router.post("/update_user", adminValidator, async (req, res) => {
       return res.json({ msg: "This email is already taken by another user" });
     }
 
-    if (newPassword) {
-      const findUserByUid = await query(`SELECT * FROM user WHERE uid = ?`, [
-        uid,
-      ]);
-      if (findUserByUid.length === 0) {
-        return res.json({ msg: "User not found" });
-      }
-    } else {
-      if (newPassword) {
-        const hashpass = await bcrypt.hash(newPassword, 10);
-
-        await query(
-          `UPDATE user SET name = ?, email = ?, password = ?, mobile_with_country_code = ? WHERE uid = ?`,
-          [name, email, hashpass, mobile_with_country_code, uid]
-        );
-      } else {
-        await query(
-          `UPDATE user SET name = ?, email = ?, mobile_with_country_code = ? WHERE uid = ?`,
-          [name, email, mobile_with_country_code, uid]
-        );
-      }
-      res.json({ msg: "User was updated", success: true });
+    const findUserByUid = await query(`SELECT * FROM user WHERE uid = ?`, [
+      uid,
+    ]);
+    if (findUserByUid.length === 0) {
+      return res.json({ success: false, msg: "User not found" });
     }
+
+    if (newPassword) {
+      const hashpass = await bcrypt.hash(newPassword, 10);
+
+      await query(
+        `UPDATE user SET name = ?, email = ?, password = ?, mobile_with_country_code = ? WHERE uid = ?`,
+        [name, email, hashpass, mobile_with_country_code, uid]
+      );
+    } else {
+      await query(
+        `UPDATE user SET name = ?, email = ?, mobile_with_country_code = ? WHERE uid = ?`,
+        [name, email, mobile_with_country_code, uid]
+      );
+    }
+
+    res.json({ msg: "User was updated", success: true });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong" });
     console.log(err);
@@ -502,7 +550,7 @@ router.post("/auto_login", adminValidator, async (req, res) => {
         password: user[0].password,
         email: user[0].email,
       },
-      process.env.JWTKEY,
+      env.JWT_SECRET,
       {}
     );
     console.log(token);
@@ -866,11 +914,11 @@ router.post("/send_resovery", async (req, res) => {
         password: checkEmailValid[0]?.password,
         role: "admin",
       },
-      process.env.JWTKEY,
+      env.JWT_SECRET,
       {}
     );
 
-    const recpveryUrl = `${process.env.FRONTENDURI}/recovery-admin/${jsontoken}`;
+    const recpveryUrl = `${env.FRONTEND_URL}/recovery-admin/${jsontoken}`;
 
     const getHtml = recoverEmail(appName, recpveryUrl);
 

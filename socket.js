@@ -2,6 +2,7 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken"); // Make sure to install this package (npm install jsonwebtoken)
 const { processSocketEvent } = require("./helper/socket");
+const env = require("./env");
 
 // Module-level variable to store the io instance.
 let ioInstance = null;
@@ -15,7 +16,7 @@ function initializeSocket(server) {
   // Create a new Socket.IO server with basic CORS settings.
   ioInstance = new Server(server, {
     cors: {
-      origin: "*", // In production, restrict this to your client URL.
+      origin: env.CORS_ORIGINS,
       methods: ["GET", "POST"],
     },
   });
@@ -29,9 +30,9 @@ function initializeSocket(server) {
     let decodedValue = {};
     if (userToken) {
       try {
-        decodedValue = jwt.decode(userToken);
+        decodedValue = jwt.verify(userToken, env.JWT_SECRET);
       } catch (error) {
-        console.error("Error decoding token:", error);
+        console.error("Error verifying token:", error.message);
       }
     }
 

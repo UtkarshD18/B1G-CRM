@@ -12,6 +12,7 @@ const {
 const { mergeArraysWithPhonebook } = require("../../socket/function");
 const mime = require("mime-types");
 const { fetchProfileUrl, fetchPersonPresence } = require("./control");
+const env = require("../../../env");
 
 function timeoutPromise(promise, ms) {
   const timeout = new Promise(
@@ -63,7 +64,7 @@ async function updateProfileMysql({
 }
 
 // -----------------------------------------------------------------------------
-// Update or insert a chat into MySQL.
+// Update or insert a chat into PostgreSQL.
 async function updateChatInMysql({
   chatId,
   uid,
@@ -329,7 +330,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "image",
         image: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
           caption: img.caption || "",
@@ -342,7 +343,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "video",
         video: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
           caption: vid.caption || "",
@@ -355,7 +356,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "audio",
         audio: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
         },
@@ -385,7 +386,7 @@ async function processBaileysMsg({
       msgContext = {
         type: "document",
         document: {
-          link: `${process.env.FRONTENDURI}/meta-media/${
+          link: `${env.FRONTEND_URL}/meta-media/${
             downloadResult.success ? downloadResult.fileName : ""
           }`,
           caption: doc.caption || doc.title || "",
@@ -520,7 +521,7 @@ async function processMessageQr({
       getSession,
     });
 
-    // Update chat in MySQL with the latest message.
+    // Update chat in PostgreSQL with the latest message.
     if (data?.latestMessages?.length > 0) {
       const { latestMessages, newMessage } = data;
       const lastObj = latestMessages[latestMessages.length - 1];

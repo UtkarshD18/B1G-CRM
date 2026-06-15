@@ -2,6 +2,7 @@ const socketIO = require("socket.io");
 const randomstring = require("randomstring");
 const jwt = require("jsonwebtoken");
 const { processWs } = require("./helpers/ws/ws");
+const env = require("./env");
 
 // Store all Socket.IO connections in a Map
 const connections = new Map();
@@ -13,12 +14,10 @@ const connections = new Map();
 function initializeWebSocket(server) {
   const io = socketIO(server, {
     cors: {
-      origin: process.env.FRONTENDURI,
+      origin: env.CORS_ORIGINS,
       methods: ["GET", "POST"],
     },
   });
-
-  const jwtSecret = process.env.JWTKEY;
 
   // Middleware for authentication
   io.use((socket, next) => {
@@ -28,7 +27,7 @@ function initializeWebSocket(server) {
     if (!token) return next(new Error("Unauthorized"));
 
     try {
-      let user = jwt.verify(token, jwtSecret);
+      let user = jwt.verify(token, env.JWT_SECRET);
       if (agent === "true") {
         user = { ...user, uid: user?.owner_uid, agent_uid: user?.uid };
       }
