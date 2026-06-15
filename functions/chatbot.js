@@ -222,7 +222,7 @@ async function completeTools({
       }
     }
 
-    // adding disabling chat to mysql for chat
+    // adding disabling chat to PostgreSQL for chat
     if (k?.type == "DISABLE_CHAT") {
       const getChat = await query(
         `SELECT * FROM chats WHERE chat_id = ? AND uid = ?`,
@@ -383,7 +383,7 @@ async function manupulateAiForAll({
     if (k?.data?.msgContent?.assignAi) {
       console.log("this chat is assigned to ai");
       if (findIncomingNumber?.length < 1) {
-        // Updating MySQL flow and adding sender number to AI array
+        // Updating PostgreSQL flow and adding sender number to AI array
         const pusObj = {
           senderNumber: senderNumber,
           k,

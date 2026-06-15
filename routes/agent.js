@@ -32,6 +32,7 @@ const {
 } = require("../middlewares/plan.js");
 const { recoverEmail } = require("../emails/returnEmails.js");
 const moment = require("moment");
+const env = require("../env.js");
 
 // adding agent
 router.post("/add_agent", validateUser, checkPlan, async (req, res) => {
@@ -285,7 +286,7 @@ router.post("/login", async (req, res) => {
           email: agentFind[0].email,
           owner_uid: agentFind[0]?.owner_uid,
         },
-        process.env.JWTKEY,
+        env.JWT_SECRET,
         {}
       );
       res.json({
@@ -497,7 +498,7 @@ router.post("/return_media_url", validateAgent, async (req, res) => {
       }
     });
 
-    const url = `${process.env.FRONTENDURI}/media/${filename}`;
+    const url = `${env.FRONTEND_URL}/media/${filename}`;
     res.json({ success: true, url });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });

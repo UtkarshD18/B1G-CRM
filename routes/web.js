@@ -14,7 +14,6 @@ const randomstring = require("randomstring");
 const path = require("path");
 const { appVersion, addON } = require("../env.js");
 const bcrypt = require("bcrypt");
-const mysql = require("mysql2/promise");
 const { getConnectionsByUid } = require("../socket.js");
 const { checkQr } = require("../helper/addon/qr/index.js");
 
@@ -378,12 +377,9 @@ router.post("/update_app", async (req, res) => {
       });
     }
 
-    const connection = await mysql.createConnection({
-      host: process.env.DBHOST || "localhost",
-      user: process.env.DBUSER,
-      password: process.env.DBPASS,
-      database: process.env.DBNAME,
-    });
+    const connection = {
+      query: (sql) => query(sql, []),
+    };
 
     if (queries && JSON.parse(queries)?.length > 0) {
       const parsedQueries = JSON.parse(queries);

@@ -182,20 +182,20 @@ function checkIfKeyHasValue(obj) {
   }
 }
 
-async function getVariablesObj({ uniqueId, mysqlFlowData, sentence }) {
+async function getVariablesObj({ uniqueId, flowStateData, sentence }) {
   try {
-    // const [mysqlFlowData] = await query(
+    // const [flowStateData] = await query(
     //   `SELECT * FROM flow_data WHERE uniqueId = ?`,
     //   [uniqueId]
     // );
 
-    // console.log({ other: mysqlFlowData?.other, mysqlFlowData });
+    // console.log({ other: flowStateData?.other, flowStateData });
 
-    let variables = mysqlFlowData?.inputs
-      ? JSON.parse(mysqlFlowData?.inputs)
+    let variables = flowStateData?.inputs
+      ? JSON.parse(flowStateData?.inputs)
       : {};
-    if (mysqlFlowData?.other === "take_input") {
-      const inputNodeData = JSON.parse(mysqlFlowData?.last_node);
+    if (flowStateData?.other === "take_input") {
+      const inputNodeData = JSON.parse(flowStateData?.last_node);
       const keyValue = inputNodeData?.data?.variableName;
       const regxData = inputNodeData?.data?.useRegEx
         ? inputNodeData?.data?.regex
@@ -231,10 +231,10 @@ async function sendMessageMeta({
   incomingMessage,
   uid,
   chatId,
-  mysqlFlowData,
+  flowStateData,
 }) {
   try {
-    const { disabled } = mysqlFlowData;
+    const { disabled } = flowStateData;
 
     if (disabled) {
       if (!hasDatePassedInTimezone(disabled)) {
@@ -292,7 +292,7 @@ async function processTakeInput({
   chatId,
   incomingMessage,
   uid,
-  mysqlFlowData,
+  flowStateData,
   connectedNode,
   uniqueId,
   nodes,
@@ -311,7 +311,7 @@ async function processTakeInput({
       chatId,
       incomingMessage,
       uid,
-      mysqlFlowData,
+      flowStateData,
       connectedNode,
       uniqueId,
       nodes,
@@ -329,7 +329,7 @@ async function processMakeRequest({
   chatId,
   incomingMessage,
   uid,
-  mysqlFlowData,
+  flowStateData,
   connectedNode,
   uniqueId,
   nodes,
@@ -362,7 +362,7 @@ async function processMakeRequest({
       chatId,
       incomingMessage,
       uid,
-      mysqlFlowData,
+      flowStateData,
       connectedNode,
       uniqueId,
       nodes,
@@ -381,7 +381,7 @@ async function processAssignAgent({
   chatId,
   incomingMessage,
   uid,
-  mysqlFlowData,
+  flowStateData,
   connectedNode,
   uniqueId,
   nodes,
@@ -408,7 +408,7 @@ async function processAssignAgent({
       chatId,
       incomingMessage,
       uid,
-      mysqlFlowData,
+      flowStateData,
       connectedNode,
       uniqueId,
       nodes,
@@ -427,7 +427,7 @@ async function processDisableChat({
   chatId,
   incomingMessage,
   uid,
-  mysqlFlowData,
+  flowStateData,
   connectedNode,
   uniqueId,
   nodes,
@@ -456,7 +456,7 @@ async function processDisableChat({
       chatId,
       incomingMessage,
       uid,
-      mysqlFlowData,
+      flowStateData,
       connectedNode,
       uniqueId,
       nodes,
@@ -475,7 +475,7 @@ async function processCondition({
   chatId,
   incomingMessage,
   uid,
-  mysqlFlowData,
+  flowStateData,
   connectedNode,
   uniqueId,
   nodes,
@@ -516,7 +516,7 @@ async function processCondition({
           msgContext: { text: { body: eqCode } },
         },
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode: forEqual,
         uniqueId,
         nodes,
@@ -536,7 +536,7 @@ async function processCondition({
           msgContext: { text: { body: notEqCode } },
         },
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode: forNotEqual,
         uniqueId,
         nodes,
@@ -581,9 +581,9 @@ async function processFlow({
   nodes,
   edges,
   sentence,
-  mysqlFlowData,
+  flowStateData,
 }) {
-  const { disabled } = mysqlFlowData;
+  const { disabled } = flowStateData;
 
   console.log("Process flow ran");
 
@@ -602,16 +602,16 @@ async function processFlow({
   const msgContent = connectedNode?.data?.msgContent;
 
   const [result] = await query(`SELECT * FROM flow_data WHERE id = ?`, [
-    mysqlFlowData.id,
+    flowStateData.id,
   ]);
 
   console.log({ nodeType });
 
-  mysqlFlowData = result || mysqlFlowData;
+  flowStateData = result || flowStateData;
 
   const variables = await getVariablesObj({
     uniqueId,
-    mysqlFlowData,
+    flowStateData,
     sentence,
   });
 
@@ -632,7 +632,7 @@ async function processFlow({
         chatId,
         incomingMessage,
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode,
         uniqueId,
         nodes,
@@ -649,7 +649,7 @@ async function processFlow({
         chatId,
         incomingMessage,
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode,
         uniqueId,
         nodes,
@@ -666,7 +666,7 @@ async function processFlow({
         chatId,
         incomingMessage,
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode,
         uniqueId,
         nodes,
@@ -683,7 +683,7 @@ async function processFlow({
         chatId,
         incomingMessage,
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode,
         uniqueId,
         nodes,
@@ -700,7 +700,7 @@ async function processFlow({
         chatId,
         incomingMessage,
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode,
         uniqueId,
         nodes,
@@ -717,7 +717,7 @@ async function processFlow({
         chatId,
         incomingMessage,
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode,
         uniqueId,
         nodes,
@@ -734,7 +734,7 @@ async function processFlow({
         chatId,
         incomingMessage,
         uid,
-        mysqlFlowData,
+        flowStateData,
         connectedNode,
         uniqueId,
         nodes,
@@ -758,7 +758,7 @@ async function forwardToNextNode({
   chatId,
   incomingMessage,
   uid,
-  mysqlFlowData,
+  flowStateData,
   connectedNode,
   uniqueId,
   nodes,
@@ -798,7 +798,7 @@ async function forwardToNextNode({
         nodes,
         edges,
         sentence,
-        mysqlFlowData,
+        flowStateData,
       });
     } else {
       console.log("No newNode found");
@@ -819,17 +819,17 @@ async function metaChatBotInit({
 }) {
   const userData = userDataMysql;
 
-  let [mysqlFlowData] = await query(
+  let [flowStateData] = await query(
     `SELECT * FROM flow_data WHERE uniqueId = ?`,
     [uniqueId]
   );
 
-  if (!mysqlFlowData) {
+  if (!flowStateData) {
     await query(
       `INSERT INTO flow_data (chatId, uid, uniqueId) VALUES (?,?,?)`,
       [chatId, uid, uniqueId]
     );
-    mysqlFlowData = {};
+    flowStateData = {};
   }
 
   let connectedNodes;
@@ -838,19 +838,19 @@ async function metaChatBotInit({
   // Get messageBody from getConnectedNodes
   ({ messageBody } = getConnectedNodes(incomingMessage, edges, nodes));
 
-  if (mysqlFlowData?.other === "take_input") {
+  if (flowStateData?.other === "take_input") {
     // Assign connectedNodes from getConnectedNodesForNode
-    const lastNode = JSON.parse(mysqlFlowData?.last_node);
+    const lastNode = JSON.parse(flowStateData?.last_node);
     ({ connectedNodes } = getConnectedNodesForNode(lastNode, edges, nodes));
 
     // await query(`UPDATE flow_data SET other = ? WHERE uniqueId = ?`, [
     //   null,
     //   uniqueId,
     // ]);
-  } else if (mysqlFlowData?.ai_data) {
+  } else if (flowStateData?.ai_data) {
     console.log("Chat was transferred to AI agent");
 
-    const parsedAIData = JSON.parse(mysqlFlowData?.ai_data);
+    const parsedAIData = JSON.parse(flowStateData?.ai_data);
     connectedNodes = parsedAIData ? [parsedAIData] : [];
   } else {
     // Assign connectedNodes from getConnectedNodes
@@ -870,7 +870,7 @@ async function metaChatBotInit({
       nodes,
       edges,
       sentence: messageBody,
-      mysqlFlowData,
+      flowStateData,
     });
 
     await query(`UPDATE flow_data SET last_node = ? WHERE uniqueId = ?`, [

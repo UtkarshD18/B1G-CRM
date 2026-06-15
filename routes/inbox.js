@@ -118,6 +118,32 @@ router.post("/get_convo", validateUser, async (req, res) => {
   }
 });
 
+// change tenant chat ticket status
+router.post("/change_chat_ticket_status", validateUser, async (req, res) => {
+  try {
+    const { status, chatId } = req.body;
+    const allowedStatuses = ["open", "pending", "solved"];
+
+    if (!chatId || !allowedStatuses.includes(status)) {
+      return res.json({ success: false, msg: "Invalid chat status request" });
+    }
+
+    const result = await query(
+      `UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ? RETURNING chat_id`,
+      [status, chatId, req.decode.uid]
+    );
+
+    if (result.length < 1) {
+      return res.json({ success: false, msg: "Chat was not found" });
+    }
+
+    res.json({ success: true, msg: "Chat status updated" });
+  } catch (err) {
+    console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
 // adding webhook
 router.get("/webhook/:uid", async (req, res) => {
   try {

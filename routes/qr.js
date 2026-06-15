@@ -156,6 +156,11 @@ router.post("/del_instance", validateUser, async (req, res) => {
       uniqueId,
       req.decode.uid,
     ]);
+
+    res.json({
+      success: true,
+      msg: "QR instance was deleted",
+    });
   } catch (err) {
     console.error(err);
     res.json({

@@ -10,6 +10,8 @@ const mime = require("mime-types");
 const nodemailer = require("nodemailer");
 const unzipper = require("unzipper");
 const { destributeTaskFlow } = require("./chatbot");
+const { recordChatbotLog } = require("./chatbotDiagnostics");
+const env = require("../env");
 
 function executeQueries(queries, connection) {
   return new Promise(async (resolve) => {
@@ -62,47 +64,28 @@ function getReply(nodes, edges, incomingWord) {
 }
 
 async function runChatbot(i, incomingMsg, uid, senderNumber, toName) {
-  const chatbot = i;
-  const forAll = i?.for_all > 0 ? true : false;
-
-  if (!forAll) {
-    // checking if number is there
-    const numberArr = JSON.parse(chatbot?.chats);
+  try {
+    const chatbot = i;
+    const forAll = i?.for_all > 0 ? true : false;
     const chatId = convertNumberToRandomString(senderNumber || "");
     const flow = JSON.parse(i?.flow);
+    const origin = JSON.parse(i?.origin || "{}")?.code || "META";
+    const selectedTargets = JSON.parse(chatbot?.chats || "[]");
 
-    if (numberArr.includes(senderNumber)) {
-      const nodePath = `${__dirname}/../flow-json/nodes/${uid}/${flow?.flow_id}.json`;
-      const edgePath = `${__dirname}/../flow-json/edges/${uid}/${flow?.flow_id}.json`;
-
-      const nodes = readJsonFromFile(nodePath);
-      const edges = readJsonFromFile(edgePath);
-
-      if (nodes.length > 0 && edges.length > 0) {
-        const answer = getReply(nodes, edges, incomingMsg);
-
-        if (answer.length > 0) {
-          for (const k of answer) {
-            await destributeTaskFlow({
-              uid: uid,
-              k: k,
-              chatbotFromMysq: chatbot,
-              toName: toName,
-              senderNumber,
-              sendMetaMsg,
-              chatId,
-              nodes,
-              edges,
-              incomingMsg,
-              flowData: flow,
-            });
-          }
-        }
-      }
+    if (!forAll && !selectedTargets.includes(chatId)) {
+      await recordChatbotLog({
+        uid,
+        chatbot,
+        flow,
+        senderNumber,
+        senderName: toName,
+        incomingMessage: incomingMsg,
+        origin,
+        status: "skipped",
+        detail: { reason: "chat_not_selected", chatId },
+      });
+      return;
     }
-  } else {
-    const chatId = convertNumberToRandomString(senderNumber || "");
-    const flow = JSON.parse(i?.flow);
 
     const nodePath = `${__dirname}/../flow-json/nodes/${uid}/${flow?.flow_id}.json`;
     const edgePath = `${__dirname}/../flow-json/edges/${uid}/${flow?.flow_id}.json`;
@@ -110,29 +93,64 @@ async function runChatbot(i, incomingMsg, uid, senderNumber, toName) {
     const nodes = readJsonFromFile(nodePath);
     const edges = readJsonFromFile(edgePath);
 
-    if (nodes.length > 0 && edges.length > 0) {
-      const answer = getReply(nodes, edges, incomingMsg);
+    if (nodes.length < 1 || edges.length < 1) {
+      await recordChatbotLog({
+        uid,
+        chatbot,
+        flow,
+        senderNumber,
+        senderName: toName,
+        incomingMessage: incomingMsg,
+        origin,
+        status: "skipped",
+        detail: { reason: "flow_definition_missing", chatId },
+      });
+      return;
+    }
 
-      console.log({ answer2: JSON.stringify(answer) });
+    const answer = getReply(nodes, edges, incomingMsg);
 
-      if (answer.length > 0) {
-        for (const k of answer) {
-          await destributeTaskFlow({
-            uid: uid,
-            k: k,
-            chatbotFromMysq: chatbot,
-            toName: toName,
-            senderNumber,
-            sendMetaMsg,
-            chatId,
-            nodes,
-            edges,
-            incomingMsg,
-            flowData: flow,
-          });
-        }
+    await recordChatbotLog({
+      uid,
+      chatbot,
+      flow,
+      senderNumber,
+      senderName: toName,
+      incomingMessage: incomingMsg,
+      origin,
+      matched: answer.length > 0,
+      status: answer.length > 0 ? "matched" : "no_match",
+      detail: { reply_count: answer.length, chatId, for_all: forAll },
+    });
+
+    if (answer.length > 0) {
+      for (const k of answer) {
+        await destributeTaskFlow({
+          uid: uid,
+          k: k,
+          chatbotFromMysq: chatbot,
+          toName: toName,
+          senderNumber,
+          sendMetaMsg,
+          chatId,
+          nodes,
+          edges,
+          incomingMsg,
+          flowData: flow,
+        });
       }
     }
+  } catch (err) {
+    await recordChatbotLog({
+      uid,
+      chatbot: i,
+      senderNumber,
+      senderName: toName,
+      incomingMessage: incomingMsg,
+      status: "error",
+      detail: { error: err.message },
+    });
+    console.log(err);
   }
 }
 
@@ -325,7 +343,7 @@ async function saveWebhookConversation(body, uid) {
       saveMessage(body, uid, "image", {
         type: "image",
         image: {
-          link: `${process.env.FRONTENDURI}/meta-media/${fileName}`,
+          link: `${env.FRONTEND_URL}/meta-media/${fileName}`,
           caption:
             body?.entry[0]?.changes[0]?.value?.messages[0]?.image?.caption ||
             "",
@@ -361,7 +379,7 @@ async function saveWebhookConversation(body, uid) {
       saveMessage(body, uid, "video", {
         type: "video",
         video: {
-          link: `${process.env.FRONTENDURI}/meta-media/${fileName}`,
+          link: `${env.FRONTEND_URL}/meta-media/${fileName}`,
           caption:
             body?.entry[0]?.changes[0]?.value?.messages[0]?.video?.caption,
         },
@@ -397,7 +415,7 @@ async function saveWebhookConversation(body, uid) {
       saveMessage(body, uid, "document", {
         type: "document",
         document: {
-          link: `${process.env.FRONTENDURI}/meta-media/${fileName}`,
+          link: `${env.FRONTEND_URL}/meta-media/${fileName}`,
           caption:
             body?.entry[0]?.changes[0]?.value?.messages[0]?.document?.caption,
         },
@@ -432,7 +450,7 @@ async function saveWebhookConversation(body, uid) {
       saveMessage(body, uid, "audio", {
         type: "audio",
         audio: {
-          link: `${process.env.FRONTENDURI}/meta-media/${fileName}`,
+          link: `${env.FRONTEND_URL}/meta-media/${fileName}`,
         },
       });
     }
@@ -1261,7 +1279,7 @@ async function sendMetatemplet(
             link: dynamicMedia
               ? dynamicMedia
               : getMedia.length > 0
-              ? `${process.env.FRONTENDURI}/media/${getMedia[0]?.file_name}`
+              ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
               : getHeader[0].example?.header_handle[0],
           },
         },
@@ -1284,7 +1302,7 @@ async function sendMetatemplet(
             link: dynamicMedia
               ? dynamicMedia
               : getMedia.length > 0
-              ? `${process.env.FRONTENDURI}/media/${getMedia[0]?.file_name}`
+              ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
               : getHeader[0].example?.header_handle[0],
           },
         },
@@ -1307,7 +1325,7 @@ async function sendMetatemplet(
             link: dynamicMedia
               ? dynamicMedia
               : getMedia.length > 0
-              ? `${process.env.FRONTENDURI}/media/${getMedia[0]?.file_name}`
+              ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
               : getHeader[0].example?.header_handle[0],
             filename: "document",
           },
@@ -1893,9 +1911,6 @@ function replacePlaceholders(template, data) {
 }
 
 const rzCapturePayment = (paymentId, amount, razorpayKey, razorpaySecret) => {
-  // Disable SSL certificate validation
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
   const auth =
     "Basic " +
     Buffer.from(razorpayKey + ":" + razorpaySecret).toString("base64");

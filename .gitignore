@@ -1,9 +1,17 @@
 node_modules/
 .env
+.env.*
+!.env.example
 .env.local
+!.env.local.example
+!client/.env.local.example
 .DS_Store
 __MACOSX/
 *.log
+logs/
+*.pem
+*.key
+*.crt
 database/*.sqlite
 client/node_modules/
 client/dist/

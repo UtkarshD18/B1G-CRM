@@ -37,7 +37,16 @@ router.post('/add', validateUser, checkPlan, checkContactLimit, async (req, res)
 // get by uid 
 router.get('/get_by_uid', validateUser, async (req, res) => {
     try {
-        const data = await query(`SELECT * FROM phonebook WHERE uid = ?`, [req.decode.uid])
+        const data = await query(`
+            SELECT phonebook.*, COUNT(contact.id)::int AS contact_count
+            FROM phonebook
+            LEFT JOIN contact
+                ON contact.phonebook_id = phonebook.id
+                AND contact.uid = phonebook.uid
+            WHERE phonebook.uid = ?
+            GROUP BY phonebook.id
+            ORDER BY phonebook.created_at DESC
+        `, [req.decode.uid])
         res.json({ data, success: true })
     } catch (err) {
         res.json({ success: false, msg: "something went wrong" })
@@ -50,7 +59,7 @@ router.post('/del_phonebook', validateUser, async (req, res) => {
     try {
         const { id } = req.body
 
-        await query(`DELETE FROM phonebook WHERE id = ?`, [id])
+        await query(`DELETE FROM phonebook WHERE id = ? AND uid = ?`, [id, req.decode.uid])
         await query(`DELETE FROM contact WHERE phonebook_id = ? AND uid = ?`, [id, req.decode.uid])
 
         res.json({ success: true, msg: "Phonebook was deleted" })

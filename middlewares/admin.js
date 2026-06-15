@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { query } = require('../database/dbpromise')
+const env = require('../env')
 
 const adminValidator = async (req, res, next) => {
     try {
@@ -8,7 +9,7 @@ const adminValidator = async (req, res, next) => {
             return res.json({ msg: "No token found", token: token, logout: true })
         }
 
-        jwt.verify(token.split(' ')[1], process.env.JWTKEY, async (err, decode) => {
+        jwt.verify(token.split(' ')[1], env.JWT_SECRET, async (err, decode) => {
             if (err) {
                 return res.json({
                     success: 0,
