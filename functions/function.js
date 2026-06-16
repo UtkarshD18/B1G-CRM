@@ -1561,29 +1561,29 @@ function getUserSignupsByMonth(users) {
   // Create signups by month for paid users
   const paidSignupsByMonth = months.map((month, monthIndex) => {
     const usersInMonth = paidUsers.filter((user) => {
-      const userDate = new Date(user.createdAt);
+      const userDate = new Date(user.createdat || user.created_at);
       return (
         userDate.getMonth() === monthIndex &&
         userDate.getFullYear() === currentYear
       );
     });
-    const numberOfSignups = usersInMonth.length;
+    const count = usersInMonth.length;
     const userEmails = usersInMonth.map((user) => user.email);
-    return { month, numberOfSignups, userEmails, paid: true };
+    return { month, count, userEmails, paid: true };
   });
 
   // Create signups by month for unpaid users
   const unpaidSignupsByMonth = months.map((month, monthIndex) => {
     const usersInMonth = unpaidUsers.filter((user) => {
-      const userDate = new Date(user.createdAt);
+      const userDate = new Date(user.createdat || user.created_at);
       return (
         userDate.getMonth() === monthIndex &&
         userDate.getFullYear() === currentYear
       );
     });
-    const numberOfSignups = usersInMonth.length;
+    const count = usersInMonth.length;
     const userEmails = usersInMonth.map((user) => user.email);
-    return { month, numberOfSignups, userEmails, paid: false };
+    return { month, count, userEmails, paid: false };
   });
 
   return { paidSignupsByMonth, unpaidSignupsByMonth };
@@ -1609,14 +1609,14 @@ function getUserOrderssByMonth(orders) {
   const signupsByMonth = Array.from({ length: 12 }, (_, monthIndex) => {
     const month = months[monthIndex];
     const ordersInMonth = orders.filter((user) => {
-      const userDate = new Date(user.createdAt);
+      const userDate = new Date(user.createdat || user.created_at);
       return (
         userDate.getMonth() === monthIndex &&
         userDate.getFullYear() === currentYear
       );
     });
-    const numberOfOders = ordersInMonth.length;
-    return { month, numberOfOders };
+    const count = ordersInMonth.length;
+    return { month, count };
   });
   return signupsByMonth;
 }
