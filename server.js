@@ -12,6 +12,7 @@ const env = require("./env");
 const logger = require("./utils/logger");
 const { errorHandler } = require("./middlewares/errorHandler");
 const { runMigrations } = require("./database/migrate");
+const { seedDevCredentials } = require("./database/seed-dev");
 const { runCampaign } = require("./loops/campaignLoop.js");
 const { init, cleanup } = require("./helper/addon/qr");
 
@@ -144,6 +145,7 @@ const runtime = {
 async function startServer() {
   try {
     await runMigrations({ logger });
+    await seedDevCredentials({ logger });
 
     runtime.server = app.listen(env.PORT, () => {
       logger.info("B1G CRM server started", {

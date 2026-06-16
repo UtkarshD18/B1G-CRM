@@ -487,7 +487,7 @@ function AdminSettingsPage() {
                   <td>{lead.name}</td>
                   <td>{lead.email}</td>
                   <td>{lead.mobile}</td>
-                  <td>{formatDateTime(lead.createdAt)}</td>
+                  <td>{formatDateTime(lead.createdat || lead.created_at)}</td>
                   <td>
                     <button
                       className="mini-button subtle-danger"

@@ -1,19 +1,21 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 
 function LoginPage({ role, title, subtitle, endpoint, allowSignup = false }) {
   const { setRoleToken } = useAuth()
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(false)
+  const tokenHandled = useRef(false)
 
   function getNextPath() {
-    const nextPath = searchParams.get('next')
+    const params = new URLSearchParams(location.search)
+    const nextPath = params.get('next')
     if (nextPath && nextPath.startsWith(`/${role}/`)) {
       return nextPath
     }
@@ -22,15 +24,16 @@ function LoginPage({ role, title, subtitle, endpoint, allowSignup = false }) {
   }
 
   useEffect(() => {
-    const incomingToken = searchParams.get('token')
-    if (!incomingToken) {
+    const params = new URLSearchParams(location.search)
+    const incomingToken = params.get('token')
+    if (!incomingToken || tokenHandled.current) {
       return
     }
 
+    tokenHandled.current = true
     setRoleToken(role, incomingToken)
-    setSearchParams({}, { replace: true })
     navigate(getNextPath(), { replace: true })
-  }, [navigate, role, searchParams, setRoleToken, setSearchParams])
+  }, [location.search, role])
 
   async function handleSubmit(event) {
     event.preventDefault()

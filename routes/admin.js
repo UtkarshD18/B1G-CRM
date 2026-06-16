@@ -621,7 +621,7 @@ router.get("/get_orders", adminValidator, async (req, res) => {
                 orders.amount,
                 orders.data,
                 orders.s_token,
-                orders.createdAt AS orderCreatedAt,
+                orders.createdat AS "orderCreatedAt",
                 user.role,
                 user.name,
                 user.email,
@@ -632,7 +632,7 @@ router.get("/get_orders", adminValidator, async (req, res) => {
                 user.plan_expire,
                 user.trial,
                 user.api_key,
-                user.createdAt AS userCreatedAt
+                user.createdat AS "userCreatedAt"
             FROM orders
             LEFT JOIN user ON orders.uid = user.uid
         `,
@@ -1074,6 +1074,23 @@ router.post("/update_rtl", adminValidator, async (req, res) => {
   } catch (err) {
     console.log(err);
     res.json({ msg: "Something went wrong", err, success: false });
+  }
+});
+
+// delete user
+router.post("/del_user", adminValidator, async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.json({ success: false, msg: "User ID is required" });
+    }
+
+    await query(`DELETE FROM user WHERE id = ?`, [id]);
+    res.json({ success: true, msg: "User was deleted" });
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false, msg: "something went wrong" });
   }
 });
 
