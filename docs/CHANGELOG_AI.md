@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-17 - Database Schema Realignment & Synchronization
+
+| Field | Details |
+| --- | --- |
+| Feature | Aligned pre-existing database schemas via migration 009; synchronized canonical schema files with all migrations. |
+| Files changed | `database/migrations/009_fix_user_schema.sql`, `database/schema.sql`, `database/postgres-local-schema.sql`, `docs/CURRENT_STATUS.md`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Resolves user portal runtime errors related to missing role column and plan integer casting. Synchronizes local schema blueprints with active database migrations. |
+| Breaking changes | None. |
+| Migration notes | Run `npm run db:migrate` to apply the alignment migration. |
+
 ## 2026-06-15 - AI Handoff System Redesign
 
 | Field | Details |

@@ -1,6 +1,6 @@
 # Feature Tracker
 
-Last audited: 2026-06-15
+Last audited: 2026-06-17
 
 Status legend:
 
@@ -16,7 +16,7 @@ Status legend:
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
 | Express app bootstrap | Complete | Middleware, route mounts, migrations, static serving, sockets, campaign loop. | Better 404 API handling. | `server.js` | Express, PostgreSQL, Socket.IO | Medium |
-| PostgreSQL migration runner | Complete | Applies sorted SQL migrations with `schema_migrations`. | Reconcile `schema.sql` with migrations. | `database/migrate.js`, `database/migrations/*` | `pg` | Medium |
+| PostgreSQL migration runner | Complete | Applies sorted SQL migrations with `schema_migrations`. Realigned and synced `schema.sql` files with migrations. | Add new migrations as product schema evolves. | `database/migrate.js`, `database/migrations/*` | `pg` | Medium |
 | Query adapter | Complete | Converts `?` placeholders to PostgreSQL params. | More SQL compatibility tests. | `database/dbpromise.js` | PostgreSQL | Medium |
 | Docker deployment | Complete | App + PostgreSQL compose, production build, healthcheck. | Persist `meta-media` if needed. | `Dockerfile`, `docker-compose.yml` | Docker, Node 20, Postgres 16 | Low |
 | Frontend app shell | Complete | React routes, protected portal layout, public site. | Responsive/UI polish as product evolves. | `client/src/routes/AppRoutes.jsx`, `client/src/layouts/PortalLayout.jsx` | React, Router | Medium |

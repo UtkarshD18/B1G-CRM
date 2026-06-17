@@ -1,13 +1,13 @@
 # Roadmap
 
-Last audited: 2026-06-15
+Last audited: 2026-06-17
 
 ## Priority 1 - Stabilize Foundations
 
 | Work | Why | Files |
 | --- | --- | --- |
 | Add backend tests for auth, tenant isolation, and core routes. | Current backend has no test suite. | `routes/*`, `middlewares/*`, new test setup |
-| Reconcile database schema docs/files. | `database/schema.sql` is incomplete compared with migrations. | `database/schema.sql`, `database/migrations/*`, `docs/DATABASE.md` |
+| [Completed] Reconcile database schema docs/files. | Done (synced schema files with migrations 000-009). | `database/schema.sql`, `database/migrations/*`, `docs/DATABASE.md` |
 | Harden auth tokens. | Active login routes omit expiry and include password hashes. | `routes/user.js`, `routes/admin.js`, `routes/agent.js`, `middlewares/*` |
 | Audit public mutating routes. | Install/update/theme/language writes can be dangerous in production. | `routes/web.js` |
 | Decide QR product path. | QR API/UI exists, implementation is stubbed. | `routes/qr.js`, `helper/addon/qr/*`, `client/src/pages/user/Integrations.jsx` |

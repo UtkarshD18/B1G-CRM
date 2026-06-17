@@ -1,6 +1,6 @@
 # Project Context
 
-Last audited: 2026-06-15
+Last audited: 2026-06-17
 
 ## Overview
 
@@ -17,7 +17,7 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 
 | Metric | Value |
 | --- | --- |
-| Estimated completion | 68% |
+| Estimated completion | 70% |
 | Current phase | Feature completion, hardening, and legacy cleanup. |
 | Overall state | Strong foundation with several production gaps. |
 
@@ -26,12 +26,12 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 | Field | Value |
 | --- | --- |
 | Current branch | `__AUTO_BRANCH__` |
-| Current sprint | `__AUTO_SPRINT__` |
-| Current priority | `__AUTO_PRIORITY__` |
-| Current feature in progress | `__AUTO_FEATURE__` |
-| Last completed feature | `__AUTO_LAST_COMPLETED__` |
-| Recommended next task | `__AUTO_NEXT_TASK__` |
-| Known blockers | `__AUTO_BLOCKERS__` |
+| Current sprint | `Database schema synchronization` |
+| Current priority | `Ensure canonical schemas match migrations and validate alignment migrations.` |
+| Current feature in progress | `Safe, idempotent schema synchronization (migration 009)` |
+| Last completed feature | `Database schema realignment & validation` |
+| Recommended next task | `Complete reference CRM validation and continue with planned features.` |
+| Known blockers | `None` |
 
 ## Architecture Summary
 

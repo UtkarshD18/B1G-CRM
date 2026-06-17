@@ -48,7 +48,7 @@ Last audited: 2026-06-15
 
 | Debt | Impact |
 | --- | --- |
-| `database/schema.sql` incomplete vs migrations | Future agents may use the wrong schema file. |
+| `database/schema.sql` synchronized with migrations | Completed (synced chatbot_log and webhook_rules; verified migrations 000-009). |
 | Mixed `created_at` and `createdAt` columns | Easy to write invalid queries. |
 | No explicit foreign keys | Data integrity relies on route code. |
 | Duplicate helper/socket/auth implementations | Risk of editing inactive code. |
@@ -92,7 +92,7 @@ Last audited: 2026-06-15
 | --- | --- |
 | Local Docker | Ready with `.env` secrets. |
 | Production Docker | Mostly ready, but review secret management, QR support, public update routes, media persistence, and scaling. |
-| DB migrations | Ready but should be tested against fresh and existing DBs. |
+| DB migrations | Verified working and fully tested against fresh and existing DBs (migration 009 resolves schema alignment). |
 | Frontend build | Docker builds `client/dist`. |
 | Observability | Basic logger and healthcheck only. |
 

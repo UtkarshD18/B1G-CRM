@@ -15,6 +15,8 @@ logs/
 database/*.sqlite
 client/node_modules/
 client/dist/
-
+.aider*
+.continue/
+.gemini/
 # Keep media uploads but ignore exact files inside if needed
 !client/public/media/
