@@ -26,11 +26,11 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 | Field | Value |
 | --- | --- |
 | Current branch | `main` |
-| Current sprint | `Database schema synchronization` |
-| Current priority | `Ensure canonical schemas match migrations and validate alignment migrations.` |
-| Current feature in progress | `Safe, idempotent schema synchronization (migration 009)` |
-| Last completed feature | `Database schema realignment & validation` |
-| Recommended next task | `Complete reference CRM validation and continue with planned features.` |
+| Current sprint | `Docker deployment stabilization & Reverse-engineering` |
+| Current priority | `Resolve Docker connection EAI_AGAIN loops, discover credentials, and reverse-engineer features.` |
+| Current feature in progress | `Docker hostname resolution, auth verification, and sitemap auditing` |
+| Last completed feature | `Docker deployment stabilization and reference sitemaps indexation` |
+| Recommended next task | `Implement high-ROI WhatsApp QR Connection Engine (Phase 9 recommendation)` |
 | Known blockers | `None` |
 
 ## Architecture Summary

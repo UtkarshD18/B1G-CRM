@@ -90,9 +90,9 @@ Last audited: 2026-06-15
 
 | Area | Status |
 | --- | --- |
-| Local Docker | Ready with `.env` secrets. |
+| Local Docker | **Healthy & Verified** (resolved container network desync and EAI_AGAIN resolution loops). |
 | Production Docker | Mostly ready, but review secret management, QR support, public update routes, media persistence, and scaling. |
-| DB migrations | Verified working and fully tested against fresh and existing DBs (migration 009 resolves schema alignment). |
+| DB migrations | **Verified & Completed** (migrations 000-009 tested and run cleanly against fresh and existing volumes). |
 | Frontend build | Docker builds `client/dist`. |
 | Observability | Basic logger and healthcheck only. |
 

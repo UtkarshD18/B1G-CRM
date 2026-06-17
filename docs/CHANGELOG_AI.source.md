@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-17 - Docker Stabilization & Reference CRM Audit
+
+| Field | Details |
+| --- | --- |
+| Feature | Resolved container hostname resolution loops (\`EAI_AGAIN\`), verified multi-portal authentication lifecycle, indexed reachable routes, and generated the reference CRM reverse-engineering index. |
+| Files changed | \`docker-compose.yml\`, \`DOCKER_ROOT_CAUSE.md\`, \`WORKING_PAGES.md\`, \`TOP_20_GAPS.md\`, \`docs/reference-pages/*\`, \`docs/PROJECT_CONTEXT.source.md\`, \`docs/CURRENT_STATUS.md\`, \`docs/CHANGELOG_AI.source.md\`. |
+| Impact | Resolves container startup failures, establishes clean multi-portal API reachability, and provides a feature-parity roadmap to implement CRM capabilities. |
+| Breaking changes | None. |
+| Migration notes | Start backend services using \`docker compose down --remove-orphans && docker compose up -d\`. |
+
 ## 2026-06-17 - Database Schema Realignment & Synchronization
 
 | Field | Details |

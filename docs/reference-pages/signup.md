@@ -1,0 +1,21 @@
+# Reference Page Audit — Signup
+
+- **URL:** `https://crm.oneoftheprojects.com/user/login` (Note: `/user/signup` results in a 404 error; registration is managed via React state on the main login route)
+- **Page Purpose:** User registration card to create a new tenant workspace.
+- **Page Layout:** Two-pane split layout. Left: branding and value proposition. Right: interactive signup card.
+- **Form Fields:**
+  - Email Address (Input Type: text/email)
+  - Password (Input Type: password, with show/hide visibility toggle)
+  - Full Name (Input Type: text)
+  - Mobile Number (Input Type: text, helper text: "Include country code, e.g. +1 234 567 8900")
+  - Terms Agreement Checkbox (Required)
+- **Action Buttons:**
+  - "Continue with Google" (OAuth signup)
+  - "Continue with Facebook" (OAuth signup)
+  - "Create Account with email" (Submit button)
+  - "Sign in" (Link to toggle back to the login card state)
+- **Workflows:**
+  - Transition to Signup: Clicking "Get started free" on the homepage or "Create Account" on the login card transitions the React UI state to display registration fields.
+  - Manual Signup: User fills all details, checks the agreement checkbox, and submits.
+  - OAuth: Social signup.
+  - Switch to Login: Clicking "Sign in" returns the view to the login card.
