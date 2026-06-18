@@ -138,32 +138,44 @@ function UserTaskPage() {
           <div className="panel-header">
             <h2>Current tasks</h2>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Agent</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map((task) => (
-                <tr key={task.id}>
-                  <td>{task.title}</td>
-                  <td>{task.agent_email}</td>
-                  <td>{task.status}</td>
-                  <td>{task.createdAt || 'N/A'}</td>
-                  <td>
-                    <button className="mini-button subtle-danger" type="button" onClick={() => deleteTask(task.id)}>
-                      Delete
-                    </button>
-                  </td>
+          {!tasks.length ? (
+            <div className="empty-onboarding-card">
+              <h3>No agent tasks available</h3>
+              <p>To assign follow-up tasks to your agent team:</p>
+              <ol>
+                <li>Go to the <strong>Agent Management</strong> page (Agent login) and register your support agents.</li>
+                <li>Return to this page, enter the task title, description, select an agent, and click Add task.</li>
+                <li>Agents can log in using their dedicated agent portal to view and complete their assigned tasks.</li>
+              </ol>
+            </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Agent</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tasks.map((task) => (
+                  <tr key={task.id}>
+                    <td>{task.title}</td>
+                    <td>{task.agent_email}</td>
+                    <td>{task.status}</td>
+                    <td>{task.createdAt || 'N/A'}</td>
+                    <td>
+                      <button className="mini-button subtle-danger" type="button" onClick={() => deleteTask(task.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

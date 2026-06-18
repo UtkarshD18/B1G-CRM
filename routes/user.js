@@ -22,6 +22,7 @@ const {
   generateWhatsAppURL,
   rzCapturePayment,
   validateFacebookToken,
+  writeJsonToFile,
 } = require("../functions/function.js");
 const { sign } = require("jsonwebtoken");
 const validateUser = require("../middlewares/user.js");
@@ -1849,6 +1850,306 @@ router.post("/auto_agent_login", validateUser, async (req, res) => {
   } catch (err) {
     console.log(err);
     res.json({ msg: "something went wrong", err });
+  }
+});
+
+// seed demo crm data
+router.post("/seed_demo_data", validateUser, async (req, res) => {
+  try {
+    const pbName = "Demo Leads Phonebook";
+    // Insert phonebook
+    let pbId;
+    const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [req.decode.uid, pbName]);
+    if (existingPb.length > 0) {
+      pbId = existingPb[0].id;
+    } else {
+      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [req.decode.uid, pbName]);
+      if (insertPb && insertPb.length > 0) {
+        pbId = insertPb[0].id;
+      } else {
+        const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [req.decode.uid, pbName]);
+        pbId = getPb[0]?.id;
+      }
+    }
+
+    if (!pbId) {
+      return res.json({ success: false, msg: "Failed to initialize demo phonebook" });
+    }
+
+    // 10 Contacts
+    const contacts = [
+      { name: "Aarav Mehta", mobile: "+919999900001", var1: "VIP", var2: "Retail", var3: "Mumbai", var4: "Interested", var5: "Ref-01" },
+      { name: "Diya Sharma", mobile: "+919999900002", var1: "Regular", var2: "Wholesale", var3: "Delhi", var4: "FollowUp", var5: "Ref-02" },
+      { name: "Kabir Singh", mobile: "+919999900003", var1: "New", var2: "Retail", var3: "Bangalore", var4: "Interested", var5: "Ref-03" },
+      { name: "Ananya Goel", mobile: "+919999900004", var1: "VIP", var2: "Enterprise", var3: "Hyderabad", var4: "Active", var5: "Ref-04" },
+      { name: "Vivaan Shah", mobile: "+919999900005", var1: "Inactive", var2: "Retail", var3: "Pune", var4: "Cold", var5: "Ref-05" },
+      { name: "Ira Patel", mobile: "+919999900006", var1: "Regular", var2: "Retail", var3: "Ahmedabad", var4: "Interested", var5: "Ref-06" },
+      { name: "Reyansh Gupta", mobile: "+919999900007", var1: "VIP", var2: "Enterprise", var3: "Chennai", var4: "Negotiation", var5: "Ref-07" },
+      { name: "Myra Sen", mobile: "+919999900008", var1: "New", var2: "Retail", var3: "Kolkata", var4: "FollowUp", var5: "Ref-08" },
+      { name: "Arjun Verma", mobile: "+919999900009", var1: "VIP", var2: "Wholesale", var3: "Jaipur", var4: "Interested", var5: "Ref-09" },
+      { name: "Sai Reddy", mobile: "+919999900010", var1: "Regular", var2: "Retail", var3: "Kochi", var4: "Warm", var5: "Ref-10" }
+    ];
+
+    for (const c of contacts) {
+      const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [req.decode.uid, c.mobile]);
+      if (checkContact.length === 0) {
+        await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1, var2, var3, var4, var5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+          req.decode.uid,
+          pbId,
+          pbName,
+          c.name,
+          c.mobile,
+          c.var1,
+          c.var2,
+          c.var3,
+          c.var4,
+          c.var5
+        ]);
+      }
+    }
+
+    // 1 Campaign
+    const broadcastId = "bc_demo_" + randomstring.generate(6);
+    const existingBc = await query(`SELECT * FROM broadcast WHERE uid = ? AND title = ?`, [req.decode.uid, "Demo Launch Campaign"]);
+    if (existingBc.length === 0) {
+      await query(`INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
+        broadcastId,
+        req.decode.uid,
+        "Demo Launch Campaign",
+        JSON.stringify({ name: "demo_welcome_template", language: "en_US", category: "UTILITY" }),
+        JSON.stringify({ id: pbId, name: pbName }),
+        "COMPLETED",
+        new Date(),
+        "Asia/Kolkata"
+      ]);
+
+      // Seed 10 logs for campaign analytics
+      const deliveryStatuses = ["read", "delivered", "read", "failed", "read", "delivered", "sent", "read", "read", "delivered"];
+      const errors = [null, null, null, "Meta rate limit reached", null, null, null, null, null, null];
+      for (let i = 0; i < contacts.length; i++) {
+        await query(`INSERT INTO broadcast_log (uid, broadcast_id, templet_name, sender_mobile, send_to, delivery_status, example, contact, meta_msg_id, delivery_time, err) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+          req.decode.uid,
+          broadcastId,
+          "demo_welcome_template",
+          "+12025550184",
+          contacts[i].mobile,
+          deliveryStatuses[i],
+          JSON.stringify([contacts[i].name]),
+          JSON.stringify(contacts[i]),
+          "wamid." + randomstring.generate(16),
+          Date.now() - (i * 3600 * 1000),
+          errors[i]
+        ]);
+      }
+    }
+
+    // 1 Flow
+    const flowId = "flow_demo_welcome";
+    const flowTitle = "Demo Welcome Visual Flow";
+    const existingFlow = await query(`SELECT * FROM flow WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+    if (existingFlow.length === 0) {
+      await query(`INSERT INTO flow (uid, flow_id, title) VALUES (?, ?, ?)`, [
+        req.decode.uid,
+        flowId,
+        flowTitle
+      ]);
+    }
+    const nodes = [
+      { id: "1", type: "START", data: { label: "Start Trigger" } },
+      { id: "2", type: "MESSAGE", data: { label: "Send Welcome Text" } }
+    ];
+    const edges = [
+      { id: "e1-2", source: "1", target: "2" }
+    ];
+    const nodepath = path.join(__dirname, `../flow-json/nodes/${req.decode.uid}/${flowId}.json`);
+    const edgepath = path.join(__dirname, `../flow-json/edges/${req.decode.uid}/${flowId}.json`);
+    await writeJsonToFile(nodepath, nodes);
+    await writeJsonToFile(edgepath, edges);
+
+    // 1 Chatbot
+    const existingBot = await query(`SELECT * FROM chatbot WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+    let botId;
+    if (existingBot.length > 0) {
+      botId = existingBot[0].id;
+    } else {
+      const insertBot = await query(`INSERT INTO chatbot (uid, title, for_all, chats, flow, flow_id, active, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [
+        req.decode.uid,
+        "Demo Welcome Autopilot",
+        1,
+        "[]",
+        JSON.stringify({ id: flowId, flow_id: flowId, title: flowTitle }),
+        flowId,
+        1,
+        JSON.stringify({ title: "Meta", code: "META", data: {} })
+      ]);
+      if (insertBot && insertBot.length > 0) {
+        botId = insertBot[0].id;
+      } else {
+        const getBot = await query(`SELECT id FROM chatbot WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+        botId = getBot[0]?.id;
+      }
+    }
+
+    // Seed chatbot logs for diagnostics
+    const incomingMessages = ["hi", "hello", "need help", "get price", "operator"];
+    const matchedStatuses = [1, 1, 1, 0, 1];
+    const logStatuses = ["replied", "replied", "replied", "unmatched", "escalated"];
+    const details = [
+      { reply_count: 1 },
+      { reply_count: 1 },
+      { reply_count: 2 },
+      { reason: "No matching text intent block" },
+      { reason: "Assigned to human agent" }
+    ];
+    for (let i = 0; i < incomingMessages.length; i++) {
+      await query(`INSERT INTO chatbot_log (uid, chatbot_id, chatbot_title, flow_id, sender_number, sender_name, incoming_message, origin, matched, status, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        req.decode.uid,
+        botId || 999,
+        "Demo Welcome Autopilot",
+        flowId,
+        contacts[i].mobile,
+        contacts[i].name,
+        incomingMessages[i],
+        "META",
+        matchedStatuses[i],
+        logStatuses[i],
+        JSON.stringify(details[i])
+      ]);
+    }
+
+    // 1 Agent
+    const agentEmail = `demo_agent_${req.decode.uid.slice(0, 6)}@example.com`;
+    const agentUid = `agent_${randomstring.generate(8)}`;
+    const existingAgent = await query(`SELECT * FROM agents WHERE owner_uid = ? AND email = ?`, [req.decode.uid, agentEmail]);
+    let actualAgentUid;
+    if (existingAgent.length > 0) {
+      actualAgentUid = existingAgent[0].uid;
+    } else {
+      const hasPass = await bcrypt.hash("Agent@123", 10);
+      await query(`INSERT INTO agents (owner_uid, uid, email, password, role, name, comments, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
+        req.decode.uid,
+        agentUid,
+        agentEmail,
+        hasPass,
+        "agent",
+        "Demo Agent",
+        "Demo workspace agent account",
+        1
+      ]);
+      actualAgentUid = agentUid;
+    }
+
+    // 1 Task
+    const existingTask = await query(`SELECT * FROM agent_task WHERE owner_uid = ? AND uid = ?`, [req.decode.uid, actualAgentUid]);
+    if (existingTask.length === 0) {
+      await query(`INSERT INTO agent_task (owner_uid, uid, title, description, status) VALUES (?, ?, ?, ?, ?)`, [
+        req.decode.uid,
+        actualAgentUid,
+        "Follow up with Aarav Mehta",
+        "Aarav is marked as VIP Retail client. Contact him to discuss custom integration discount pricing options.",
+        "PENDING"
+      ]);
+    }
+
+    // 3 Conversations
+    const sampleChats = [
+      {
+        chatId: "demo-chat-wa-1",
+        senderName: "Jane Doe",
+        senderMobile: "+19998887701",
+        origin: "META",
+        tag: "lead",
+        note: "Interested in Enterprise pricing plan.",
+        messages: [
+          {
+            type: "text",
+            metaChatId: "msg-wa-1",
+            msgContext: { type: "text", text: { body: "Hello! I am trying to connect my business phone." } },
+            timestamp: Math.floor(Date.now() / 1000) - 3600,
+            senderName: "Jane Doe",
+            senderMobile: "+19998887701",
+            status: "received",
+            star: false,
+            route: "INCOMING",
+            context: "",
+            origin: "META"
+          }
+        ]
+      },
+      {
+        chatId: "demo-chat-qr-2",
+        senderName: "John Smith",
+        senderMobile: "+19998887702",
+        origin: "QR",
+        tag: "support",
+        note: "Struggling with setting up templates.",
+        messages: [
+          {
+            type: "text",
+            metaChatId: "msg-qr-2",
+            msgContext: { type: "text", text: { body: "Hi, can you verify why my campaign status says PAUSED?" } },
+            timestamp: Math.floor(Date.now() / 1000) - 1800,
+            senderName: "John Smith",
+            senderMobile: "+19998887702",
+            status: "received",
+            star: false,
+            route: "INCOMING",
+            context: "",
+            origin: "QR"
+          }
+        ]
+      },
+      {
+        chatId: "demo-chat-insta-3",
+        senderName: "Alice Brown",
+        senderMobile: "demo-chat-insta-3",
+        origin: "instagram",
+        tag: "general",
+        note: "Asking about European delivery options.",
+        messages: [
+          {
+            type: "text",
+            metaChatId: "msg-insta-3",
+            msgContext: { type: "text", text: { body: "Hey! Do you offer bulk discounts on custom orders?" } },
+            timestamp: Math.floor(Date.now() / 1000) - 600,
+            senderName: "Alice Brown",
+            senderMobile: "demo-chat-insta-3",
+            status: "received",
+            star: false,
+            route: "INCOMING",
+            context: "",
+            origin: "instagram"
+          }
+        ]
+      }
+    ];
+
+    for (const sc of sampleChats) {
+      const checkChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [sc.chatId, req.decode.uid]);
+      if (checkChat.length === 0) {
+        await query(`INSERT INTO chats (chat_id, uid, last_message_came, sender_name, sender_mobile, last_message, is_opened, chat_status, chat_note, chat_tags, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+          sc.chatId,
+          req.decode.uid,
+          sc.messages[0].timestamp,
+          sc.senderName,
+          sc.senderMobile,
+          JSON.stringify(sc.messages[0]),
+          0,
+          "open",
+          sc.note,
+          JSON.stringify([sc.tag]),
+          sc.origin
+        ]);
+      }
+
+      const convPath = path.join(__dirname, `../conversations/inbox/${req.decode.uid}/${sc.chatId}.json`);
+      await writeJsonToFile(convPath, sc.messages);
+    }
+
+    res.json({ success: true, msg: "Demo CRM workspace successfully seeded!" });
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false, msg: "something went wrong", error: err.message });
   }
 });
 

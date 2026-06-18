@@ -1,0 +1,20 @@
+[
+  {
+    "type": "text",
+    "metaChatId": "mock-mid-initial",
+    "msgContext": {
+      "type": "text",
+      "text": {
+        "body": "Hello inbox test"
+      }
+    },
+    "timestamp": 1781819375,
+    "senderName": "Insta Inbox User",
+    "senderMobile": "test-insta-chat-id-999",
+    "status": "received",
+    "star": false,
+    "route": "INCOMING",
+    "context": "",
+    "origin": "instagram"
+  }
+]
