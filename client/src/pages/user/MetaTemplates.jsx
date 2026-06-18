@@ -798,50 +798,58 @@ function UserMetaTemplatesPage() {
           <h2>Meta templates</h2>
           <span className="status-chip">{templates.length} loaded</span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Category</th>
-              <th>Language</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {templates.map((template) => (
-              <tr key={template.id || template.name}>
-                <td>{template.name}</td>
-                <td>{statusTone(template.status)}</td>
-                <td>{template.category || 'N/A'}</td>
-                <td>{template.language || 'N/A'}</td>
-                <td>
-                  <div className="action-row">
-                    <button
-                      className="mini-button"
-                      type="button"
-                      onClick={() => editTemplate(template)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="mini-button subtle-danger"
-                      type="button"
-                      onClick={() => deleteTemplate(template.name)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {!templates.length ? (
+        {!templates.length ? (
+          <div className="empty-onboarding-card">
+            <h3>No Meta templates available</h3>
+            <p>To create and submit your first message template to Meta for review:</p>
+            <ol>
+              <li>Enter a unique, lowercase <strong>Template name</strong> (e.g., <code>order_shipment_update</code>) using only letters, numbers, and underscores.</li>
+              <li>Provide your message body in the <strong>Body text</strong> block, using numbered variables like <code>{`{{1}}`}</code> or <code>{`{{2}}`}</code> for dynamic fields.</li>
+              <li>Add up to 3 <strong>Template buttons</strong> (like Quick Replies or custom URL buttons with dynamic tokens) to boost interaction rates.</li>
+              <li>Provide realistic sample data for any variables, upload optional media files if required, and click <strong>Submit to Meta</strong>.</li>
+            </ol>
+          </div>
+        ) : (
+          <table>
+            <thead>
               <tr>
-                <td colSpan="5">No templates loaded from Meta yet.</td>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Category</th>
+                <th>Language</th>
+                <th />
               </tr>
-            ) : null}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {templates.map((template) => (
+                <tr key={template.id || template.name}>
+                  <td>{template.name}</td>
+                  <td>{statusTone(template.status)}</td>
+                  <td>{template.category || 'N/A'}</td>
+                  <td>{template.language || 'N/A'}</td>
+                  <td>
+                    <div className="action-row">
+                      <button
+                        className="mini-button"
+                        type="button"
+                        onClick={() => editTemplate(template)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="mini-button subtle-danger"
+                        type="button"
+                        onClick={() => deleteTemplate(template.name)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

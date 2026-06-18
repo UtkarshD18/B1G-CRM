@@ -342,80 +342,92 @@ function UserContactsPage() {
         </button>
       </form>
 
-      <div className="two-column-grid">
-        <div className="panel table-panel">
-          <div className="panel-header">
-            <h2>Phonebooks</h2>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>ID</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {phonebooks.map((phonebook) => (
-                <tr key={phonebook.id}>
-                  <td>{phonebook.name}</td>
-                  <td>{phonebook.id}</td>
-                  <td>
-                    <button
-                      className="mini-button subtle-danger"
-                      type="button"
-                      onClick={() => deletePhonebook(phonebook.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {!phonebooks.length ? (
+        <div className="empty-onboarding-card">
+          <h3>No phonebooks or contacts available</h3>
+          <p>To start organizing your audience for campaigns and inbox customer context:</p>
+          <ol>
+            <li>Use the <strong>Create phonebook</strong> form above to initialize a contact list.</li>
+            <li>Select the phonebook in the <strong>Import CSV</strong> panel to bulk import contacts, or use the <strong>Add single contact</strong> form below.</li>
+            <li>CSV uploads should use the header structure: <code>name, mobile, var1, var2, var3, var4, var5</code>.</li>
+          </ol>
         </div>
+      ) : (
+        <div className="two-column-grid">
+          <div className="panel table-panel">
+            <div className="panel-header">
+              <h2>Phonebooks</h2>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>ID</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {phonebooks.map((phonebook) => (
+                  <tr key={phonebook.id}>
+                    <td>{phonebook.name}</td>
+                    <td>{phonebook.id}</td>
+                    <td>
+                      <button
+                        className="mini-button subtle-danger"
+                        type="button"
+                        onClick={() => deletePhonebook(phonebook.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        <div className="panel table-panel">
-          <div className="panel-header">
-            <h2>Contacts</h2>
-            <button className="mini-button subtle-danger" type="button" onClick={deleteSelectedContacts}>
-              Delete selected
-            </button>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th />
-                <th>Name</th>
-                <th>Mobile</th>
-                <th>Phonebook</th>
-                <th>Variables</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contacts.map((contact) => (
-                <tr key={contact.id}>
-                  <td>
-                    <input
-                      checked={selectedIds.includes(contact.id)}
-                      type="checkbox"
-                      onChange={() => toggleContact(contact.id)}
-                    />
-                  </td>
-                  <td>{contact.name || 'N/A'}</td>
-                  <td>{contact.mobile}</td>
-                  <td>{contact.phonebook_name || contact.phonebook_id}</td>
-                  <td>
-                    {[contact.var1, contact.var2, contact.var3, contact.var4, contact.var5]
-                      .filter(Boolean)
-                      .join(', ') || 'None'}
-                  </td>
+          <div className="panel table-panel">
+            <div className="panel-header">
+              <h2>Contacts</h2>
+              <button className="mini-button subtle-danger" type="button" onClick={deleteSelectedContacts}>
+                Delete selected
+              </button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th />
+                  <th>Name</th>
+                  <th>Mobile</th>
+                  <th>Phonebook</th>
+                  <th>Variables</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {contacts.map((contact) => (
+                  <tr key={contact.id}>
+                    <td>
+                      <input
+                        checked={selectedIds.includes(contact.id)}
+                        type="checkbox"
+                        onChange={() => toggleContact(contact.id)}
+                      />
+                    </td>
+                    <td>{contact.name || 'N/A'}</td>
+                    <td>{contact.mobile}</td>
+                    <td>{contact.phonebook_name || contact.phonebook_id}</td>
+                    <td>
+                      {[contact.var1, contact.var2, contact.var3, contact.var4, contact.var5]
+                        .filter(Boolean)
+                        .join(', ') || 'None'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -435,8 +435,20 @@ function UserIntegrationsPage() {
       ) : null}
 
       {mode === 'instagram' ? (
-        <div className="two-column-grid">
-          <form className="panel form-panel" onSubmit={saveInsta}>
+        <>
+          {!instaKeys && (
+            <div className="empty-onboarding-card">
+              <h3>No Instagram accounts linked</h3>
+              <p>To connect your Instagram Business account to B1GCRM:</p>
+              <ol>
+                <li>Enter your <strong>Instagram Business Account ID</strong> and <strong>Username</strong>.</li>
+                <li>Provide the Facebook Page or User <strong>Access Token</strong> with permissions for <code>instagram_basic</code> and <code>instagram_manage_messages</code>.</li>
+                <li>Click <strong>Connect Account</strong>, or use the <strong>Simulate OAuth Flow</strong> button to test inbox capabilities first.</li>
+              </ol>
+            </div>
+          )}
+          <div className="two-column-grid">
+            <form className="panel form-panel" onSubmit={saveInsta}>
             <div className="panel-header">
               <div>
                 <h2>Instagram Business account connection</h2>
@@ -555,7 +567,8 @@ function UserIntegrationsPage() {
             )}
           </div>
         </div>
-      ) : null}
+      </>
+    ) : null}
 
       {showQrAndApiPanels ? (
         <>
@@ -600,57 +613,70 @@ function UserIntegrationsPage() {
             <div className="panel-header">
               <h2>QR instances</h2>
             </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>ID</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {instances.map((instance) => {
-                  const uniqueId = instance.uniqueid || instance.uniqueId || instance.unique_id
-                  let qrImg = null
-                  if (instance.status === 'SCAN_QR' && instance.other) {
-                    try {
-                      const parsed = typeof instance.other === 'string' ? JSON.parse(instance.other) : instance.other
-                      if (parsed?.qr) {
-                        qrImg = parsed.qr
+            {!instances.length ? (
+              <div className="empty-onboarding-card">
+                <h3>No WhatsApp QR instances configured</h3>
+                <p>To connect a WhatsApp device via QR code scanner (Baileys/Web JS):</p>
+                <ol>
+                  <li>Enter a title (e.g. <code>Support Desk WA</code>) and leave the generated Unique ID.</li>
+                  <li>Click <strong>Create QR instance</strong>.</li>
+                  <li>Wait a few seconds for the instance status to change to <code>SCAN_QR</code>.</li>
+                  <li>Scan the generated QR code using your WhatsApp mobile app under Link a Device.</li>
+                </ol>
+              </div>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>ID</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {instances.map((instance) => {
+                    const uniqueId = instance.uniqueid || instance.uniqueId || instance.unique_id
+                    let qrImg = null
+                    if (instance.status === 'SCAN_QR' && instance.other) {
+                      try {
+                        const parsed = typeof instance.other === 'string' ? JSON.parse(instance.other) : instance.other
+                        if (parsed?.qr) {
+                          qrImg = parsed.qr
+                        }
+                      } catch (e) {
+                        console.error(e)
                       }
-                    } catch (e) {
-                      console.error(e)
                     }
-                  }
-                  return (
-                    <tr key={uniqueId}>
-                      <td>{instance.title}</td>
-                      <td>
-                        <div>
-                          <strong>{instance.status || 'Created'}</strong>
-                          {qrImg && (
-                            <div style={{ marginTop: '8px' }}>
-                              <img src={qrImg} alt="Scan QR" style={{ width: '128px', height: '128px', border: '1px solid #ccc', borderRadius: '4px' }} />
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td>{uniqueId}</td>
-                      <td>
-                        <button
-                          className="mini-button subtle-danger"
-                          type="button"
-                          onClick={() => deleteQr(uniqueId)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={uniqueId}>
+                        <td>{instance.title}</td>
+                        <td>
+                          <div>
+                            <strong>{instance.status || 'Created'}</strong>
+                            {qrImg && (
+                              <div style={{ marginTop: '8px' }}>
+                                <img src={qrImg} alt="Scan QR" style={{ width: '128px', height: '128px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td>{uniqueId}</td>
+                        <td>
+                          <button
+                            className="mini-button subtle-danger"
+                            type="button"
+                            onClick={() => deleteQr(uniqueId)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
         </>
       ) : null}
