@@ -11,8 +11,8 @@
   "database": {
     "chatsTable": {
       "found": true,
-      "lastMessage": "{\"type\":\"text\",\"metaChatId\":\"mock-msg-id-qB6TNbqogUl54WME\",\"msgContext\":{\"type\":\"text\",\"text\":{\"preview_url\":true,\"body\":\"Hello from agent@example.com via REST API!\"}},\"reaction\":\"\",\"timestamp\":1781805675,\"senderName\":\"John Doe\",\"senderMobile\":\"1234567890\",\"status\":\"sent\",\"star\":false,\"route\":\"OUTGOING\",\"agent\":\"agent@example.com\"}",
-      "lastMessageCame": "1781805675",
+      "lastMessage": "{\"type\":\"text\",\"metaChatId\":\"mock-msg-id-2j6nTSbouiQ3Q5nr\",\"msgContext\":{\"type\":\"text\",\"text\":{\"preview_url\":true,\"body\":\"Hello from agent@example.com via REST API!\"}},\"reaction\":\"\",\"timestamp\":1781819454,\"senderName\":\"John Doe\",\"senderMobile\":\"1234567890\",\"status\":\"sent\",\"star\":false,\"route\":\"OUTGOING\",\"agent\":\"agent@example.com\"}",
+      "lastMessageCame": "1781819454",
       "origin": "META"
     }
   },

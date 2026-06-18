@@ -46,7 +46,7 @@ NODE_ENV=production
 PGHOST=staging-db.crm.internal
 PGPORT=5432
 PGUSER=b1gcrm_stage
-PGPASSWORD=SuperSecureStagePassword99!
+PGPASSWORD=your_staging_database_password_here
 PGDATABASE=b1gcrm_staging
 PGSSL=true
 
@@ -63,8 +63,8 @@ API_BASE_URL=https://staging-api.crm.oneoftheprojects.com/api
 
 # AWS S3 Configurations (Staging bucket)
 S3_ENABLED=true
-AWS_ACCESS_KEY=CHANGE_ME
-AWS_SECRET_KEY=wJalrXUak7eVIJBNEXAMPLETKEY
+AWS_ACCESS_KEY=your_aws_access_key_id_here
+AWS_SECRET_KEY=your_aws_secret_access_key_here
 AWS_S3_BUCKET=staging-b1g-crm-media
 AWS_REGION=us-east-1
 
@@ -72,7 +72,7 @@ AWS_REGION=us-east-1
 SMTP_HOST=smtp.example.com
 SMTP_PORT=2525
 SMTP_USER=mailtrap_stage_user
-SMTP_PASSWORD=mailtrap_stage_pass
+SMTP_PASSWORD=your_mailtrap_staging_smtp_password_here
 SMTP_FROM_EMAIL=no-reply@staging.crm.oneoftheprojects.com
 ```
 
@@ -86,7 +86,7 @@ NODE_ENV=production
 PGHOST=production-db.crm.internal
 PGPORT=5432
 PGUSER=b1gcrm_prod
-PGPASSWORD=UltimateProductionDBPassphrase2026!!!
+PGPASSWORD=your_production_database_password_here
 PGDATABASE=b1gcrm_production
 PGSSL=true
 
@@ -103,8 +103,8 @@ API_BASE_URL=https://crm.oneoftheprojects.com/api
 
 # AWS S3 Configurations (Production Assets)
 S3_ENABLED=true
-AWS_ACCESS_KEY=CHANGE_ME
-AWS_SECRET_KEY=wJalr_PRODUCTION_SECRET_KEY
+AWS_ACCESS_KEY=your_production_aws_access_key_id_here
+AWS_SECRET_KEY=your_production_aws_secret_access_key_here
 AWS_S3_BUCKET=prod-b1gcrm-media-bucket
 AWS_REGION=us-east-1
 
@@ -116,7 +116,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=apikey
-SMTP_PASSWORD=SG.production_sendgrid_key_here
+SMTP_PASSWORD=your_sendgrid_production_api_key_here
 SMTP_FROM_EMAIL=alerts@crm.oneoftheprojects.com
 ```
 
