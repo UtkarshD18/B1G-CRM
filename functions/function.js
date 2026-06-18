@@ -1446,6 +1446,12 @@ async function getMetaNumberDetail(
   budiness_phone_number_id,
   bearerToken
 ) {
+  if (env.MOCK_META_DELIVERY || budiness_phone_number_id === 'mock-phone-id') {
+    return {
+      display_phone_number: "+1234567890",
+      id: budiness_phone_number_id || "mock-phone-id"
+    };
+  }
   const url = `https://graph.facebook.com/${apiVersion}/${budiness_phone_number_id}`;
   const options = {
     method: "GET",

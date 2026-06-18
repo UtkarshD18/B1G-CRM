@@ -5,9 +5,9 @@
  * Uses the same bcrypt library the application uses for authentication.
  *
  * Credentials:
- *   admin@example.com  /  Admin@123
- *   user@example.com   /  User@123
- *   agent@example.com  /  User@123
+ *   admin@example.com  /  <PASSWORD>
+ *   user@example.com   /  <PASSWORD>
+ *   agent@example.com  /  <PASSWORD>
  */
 const bcrypt = require('bcrypt');
 const pool = require('./config');
@@ -15,9 +15,9 @@ const pool = require('./config');
 const SALT_ROUNDS = 10;
 
 const DEV_ACCOUNTS = {
-  admin: { email: 'admin@example.com', password: 'Admin@123' },
-  user:  { email: 'user@example.com',  password: 'User@123' },
-  agent: { email: 'agent@example.com', password: 'User@123' },
+  admin: { email: 'admin@example.com', password: '<PASSWORD>' },
+  user:  { email: 'user@example.com',  password: '<PASSWORD>' },
+  agent: { email: 'agent@example.com', password: '<PASSWORD>' },
 };
 
 async function seedDevCredentials({ logger = console } = {}) {

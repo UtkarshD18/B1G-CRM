@@ -7,7 +7,7 @@
   - Email Address (Input Type: text/email)
   - Password (Input Type: password, with show/hide visibility toggle)
 - **Action Buttons:**
-  - "Autofill" (populates standard test credentials `user@user.com` / `password`)
+  - "Autofill" (populates standard test credentials `user@example.com` / `password`)
   - "Continue with Google" (OAuth login)
   - "Continue with Facebook" (OAuth login)
   - "Sign in with email" (Submit button)

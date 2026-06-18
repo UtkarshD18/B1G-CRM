@@ -136,11 +136,11 @@ Confirmed live routes use `https://crm.oneoftheprojects.com/user?page=<slug>`.
 - The repo supports auto-login tokens for agent impersonation from the tenant workspace.
 
 Repo evidence:
-- [routes/agent.js](/home/shadow/projects/B1GCRM/routes/agent.js:36)
-- [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:1520)
-- [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:1733)
-- [middlewares/agent.js](/home/shadow/projects/B1GCRM/middlewares/agent.js:4)
-- [socket.js](/home/shadow/projects/B1GCRM/socket.js:23)
+- [routes/agent.js](routes/agent.js:36)
+- [routes/user.js](routes/user.js:1520)
+- [routes/user.js](routes/user.js:1733)
+- [middlewares/agent.js](middlewares/agent.js:4)
+- [socket.js](socket.js:23)
 
 ## 6. Parity Matrix: Live App vs Repo
 
@@ -155,30 +155,30 @@ Status legend:
 | --- | --- | --- | --- |
 | Marketing homepage | Present | Frontend missing | Local `client` does not contain the public site yet. |
 | Pricing cards | Present | Partial | Plans exist in backend; public pricing UI is missing locally. |
-| Tenant signup/login | Present | Backend present, frontend missing | [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:194), [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:236) |
-| Free trial activation | Present | Backend present | [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:1327) |
+| Tenant signup/login | Present | Backend present, frontend missing | [routes/user.js](routes/user.js:194), [routes/user.js](routes/user.js:236) |
+| Free trial activation | Present | Backend present | [routes/user.js](routes/user.js:1327) |
 | Paid checkout | Present | Backend present, frontend missing | Stripe, PayPal, Razorpay, Paystack exist in `routes/user.js`. |
 
 ### Admin portal
 
 | Area | Live app | Repo status | Notes |
 | --- | --- | --- | --- |
-| Admin auth | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:18) |
-| Dashboard | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:776) |
-| Manage Plans | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:61) |
-| Manage Users | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:142) |
-| Orders | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:565) |
-| Front Partners | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:307), [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:335) |
-| FAQ | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:359) |
-| Manage Pages | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:406) |
-| Testimonial | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:520) |
-| Contact Form leads | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:602) |
+| Admin auth | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:18) |
+| Dashboard | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:776) |
+| Manage Plans | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:61) |
+| Manage Users | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:142) |
+| Orders | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:565) |
+| Front Partners | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:307), [routes/admin.js](routes/admin.js:335) |
+| FAQ | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:359) |
+| Manage Pages | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:406) |
+| Testimonial | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:520) |
+| Contact Form leads | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:602) |
 | Payment Gateways | Present | Backend partial | Live UI includes MercadoPago, but current admin update route does not clearly persist MercadoPago fields. |
 | Flowbuilder Template | Present | Backend unclear/partial | Tracker and live UI expose it, but local route coverage is not yet obvious. |
 | Theme Settings | Present | Backend partial | Local tracker expects it; exact route coverage is not yet clearly represented in the current backend snapshot. |
-| Social Login | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:979) |
+| Social Login | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:979) |
 | Site Settings | Present | Backend partial | `web_public` exists, but the live screen is richer than the current documented local plan. |
-| SMTP | Present | Backend present, frontend missing | [routes/admin.js](/home/shadow/projects/B1GCRM/routes/admin.js:700) |
+| SMTP | Present | Backend present, frontend missing | [routes/admin.js](routes/admin.js:700) |
 | Web Translation | Present | Backend partial | Translation asset exists locally, but full admin editing flow is not confirmed in backend routes. |
 | Update Web | Present | Backend partial | Live screen exists; local route coverage needs fuller audit. |
 | QR Plugin Settings | Present | Backend partial | Related QR support exists, but exact admin config surface is not fully mapped locally. |
@@ -192,7 +192,7 @@ Status legend:
 
 | Area | Live app | Repo status | Notes |
 | --- | --- | --- | --- |
-| User auth | Present | Backend present, frontend missing | [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:194), [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:236) |
+| User auth | Present | Backend present, frontend missing | [routes/user.js](routes/user.js:194), [routes/user.js](routes/user.js:236) |
 | Dashboard | Present | Backend partial, frontend missing | Live dashboard exists; local dashboard endpoint coverage needs fuller audit. |
 | Inbox | Present | Backend present, frontend missing | `routes/inbox.js`, `socket.js`, helper inbox flows exist. |
 | Kanban | Present | Backend unclear/partial | Live menu exists; local implementation is not obvious yet. |
@@ -215,15 +215,15 @@ Status legend:
 | Webhooks | Present | Backend present, frontend missing | Webhook hooks are referenced in plan and inbox helpers. |
 | Telegram Sessions | Present | Backend unclear/partial | Live menu exists; local support not yet fully confirmed. |
 | Web Notification | Present | Backend unclear/partial | Live-only confirmation so far. |
-| Agent Login | Present | Backend present, frontend missing | [routes/agent.js](/home/shadow/projects/B1GCRM/routes/agent.js:36), [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:1733) |
-| Agent Task | Present | Backend present, frontend missing | [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:1520) |
-| Chat Widget | Present | Backend present, frontend missing | [routes/user.js](/home/shadow/projects/B1GCRM/routes/user.js:1580) |
+| Agent Login | Present | Backend present, frontend missing | [routes/agent.js](routes/agent.js:36), [routes/user.js](routes/user.js:1733) |
+| Agent Task | Present | Backend present, frontend missing | [routes/user.js](routes/user.js:1520) |
+| Chat Widget | Present | Backend present, frontend missing | [routes/user.js](routes/user.js:1580) |
 
 ### Agent portal
 
 | Area | Live app | Repo status | Notes |
 | --- | --- | --- | --- |
-| Agent auth | Present | Backend present, frontend missing | [routes/agent.js](/home/shadow/projects/B1GCRM/routes/agent.js:255) |
+| Agent auth | Present | Backend present, frontend missing | [routes/agent.js](routes/agent.js:255) |
 | Restricted inbox | Present by architecture | Backend present, frontend missing | Agent middleware and `agent_chats` linkage exist. |
 | Agent tasks | Present by architecture | Backend present, frontend missing | Task creation and owner/agent linkage exist. |
 | Exact agent UI parity | Unknown | Frontend missing | Agent live portal needs a dedicated crawl after auto-login or agent credentials are obtained from the tenant flow. |
