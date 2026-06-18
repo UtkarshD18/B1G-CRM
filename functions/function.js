@@ -1060,6 +1060,115 @@ function sendAPIMessage(obj, waNumId, waToken) {
 function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
   return new Promise(async (resolve) => {
     try {
+      // First check if target chat is an Instagram chat
+      let isInstagram = false;
+      if (chatId) {
+        const [chat] = await query(
+          `SELECT * FROM chats WHERE chat_id = ? AND uid = ?`,
+          [chatId, uid]
+        );
+        if (chat?.origin?.toLowerCase() === "instagram") {
+          isInstagram = true;
+        }
+      }
+
+      if (isInstagram) {
+        const [api] = await query(`SELECT * FROM instagram_api WHERE uid = ?`, [uid]);
+        if (!api || !api?.access_token || !api?.instagram_business_account_id) {
+          return resolve({ success: false, msg: "Please link your Instagram Business Account first." });
+        }
+
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+
+        let mockMsgId = 'mock-insta-msg-id-' + randomstring.generate(16);
+        let success = true;
+        let errMsg = "";
+
+        if (!env.MOCK_META_DELIVERY && !api.access_token.startsWith("mock_")) {
+          try {
+            const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${api.access_token}`;
+            let instagramMessagePayload = {};
+            if (msgObj.type === "text") {
+              instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || "" };
+            } else if (msgObj.type === "image") {
+              instagramMessagePayload = {
+                attachment: {
+                  type: "image",
+                  payload: { url: msgObj.image?.link || msgObj.image?.url }
+                }
+              };
+            } else if (msgObj.type === "video") {
+              instagramMessagePayload = {
+                attachment: {
+                  type: "video",
+                  payload: { url: msgObj.video?.link || msgObj.video?.url }
+                }
+              };
+            } else if (msgObj.type === "document" || msgObj.type === "file") {
+              instagramMessagePayload = {
+                attachment: {
+                  type: "file",
+                  payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link }
+                }
+              };
+            } else {
+              instagramMessagePayload = { text: JSON.stringify(msgObj) };
+            }
+
+            const payload = {
+              recipient: { id: toNumber },
+              message: instagramMessagePayload
+            };
+
+            const response = await fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+            if (data?.error) {
+              success = false;
+              errMsg = data?.error?.message;
+            } else if (data?.message_id) {
+              mockMsgId = data.message_id;
+            } else {
+              success = false;
+              errMsg = JSON.stringify(data);
+            }
+          } catch (e) {
+            success = false;
+            errMsg = e.toString();
+          }
+        }
+
+        if (!success) {
+          return resolve({ success: false, msg: errMsg });
+        }
+
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: mockMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+        };
+
+        const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+        );
+
+        return resolve({ success: true, id: mockMsgId });
+      }
+
       if (env.MOCK_META_DELIVERY) {
         const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
         const userTimezone = getCurrentTimestampInTimeZone(

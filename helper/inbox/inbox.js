@@ -153,4 +153,4 @@ async function processMessage({
   }
 }
 
-module.exports = { processMessage };
+module.exports = { processMessage, updateChatListSocket };

@@ -5,6 +5,7 @@ const {
   returnMsgObjAfterAddingKey,
   sendMetaMsg,
   sendQrMsg,
+  sendInstagramMsg,
 } = require("./function");
 const { readJSONFile } = require("../../functions/function.js");
 const { addObjectToFile } = require("../../functions/function.js");
@@ -499,6 +500,12 @@ function processSocketEvent({
           to: senderMobile,
           uid: agent ? connectionInfo?.decodedValue?.owner_uid : uid,
           chatInfo,
+        });
+      } else if (chatInfo?.origin?.toLowerCase() === "instagram") {
+        sendMsg = await sendInstagramMsg({
+          msgObj: msgCon,
+          to: senderMobile,
+          uid: agent ? connectionInfo?.decodedValue?.owner_uid : uid,
         });
       } else {
         sendMsg = await sendMetaMsg({

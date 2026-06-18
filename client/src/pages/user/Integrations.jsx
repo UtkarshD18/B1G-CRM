@@ -102,6 +102,16 @@ function UserIntegrationsPage() {
   const [instances, setInstances] = useState([])
   const [qrForm, setQrForm] = useState({ title: '', uniqueId: randomId() })
 
+  // Instagram credentials states
+  const [instaKeys, setInstaKeys] = useState(null)
+  const [instaForm, setInstaForm] = useState({
+    instagram_business_account_id: '',
+    access_token: '',
+    username: '',
+    name: '',
+    app_id: '',
+  })
+
   const metaReadiness = useMemo(() => buildMetaReadiness(meta), [meta])
   const readyMetaCount = metaReadiness.filter((item) => item.ready).length
   const metaReady = readyMetaCount === metaReadiness.length
@@ -121,22 +131,27 @@ function UserIntegrationsPage() {
     },
     instagram: {
       title: 'Link Instagram',
-      text: 'Prepare the Instagram channel surface while the backend account-linking contract is finalized.',
+      text: 'Configure and link the tenant Instagram Business Account for unified inbox direct-messaging and chatbot automations.',
     },
   }[mode]
 
   const loadIntegrations = useCallback(async () => {
     setStatus('Loading integrations...')
     try {
-      const [metaResult, profileResult, qrResult] = await Promise.all([
+      const [metaResult, profileResult, qrResult, instaResult] = await Promise.all([
         apiRequest('/api/user/get_meta_keys', { token: tokens.user }),
         apiRequest('/api/user/get_me', { token: tokens.user }),
         apiRequest('/api/qr/get_all', { token: tokens.user }),
+        apiRequest('/api/instagram/get_keys', { token: tokens.user }),
       ])
 
       setMeta((current) => ({ ...current, ...(metaResult?.data || {}) }))
       setApiKey(profileResult?.data?.api_key || '')
       setInstances(Array.isArray(qrResult?.data) ? qrResult.data : [])
+      setInstaKeys(instaResult?.data || null)
+      if (instaResult?.data) {
+        setInstaForm(instaResult.data)
+      }
       setStatus('')
     } catch (error) {
       setStatus(error.message || 'Unable to load integrations')
@@ -146,6 +161,67 @@ function UserIntegrationsPage() {
   useEffect(() => {
     loadIntegrations()
   }, [loadIntegrations])
+
+  async function saveInsta(event) {
+    if (event) event.preventDefault()
+    setStatus('Saving Instagram credentials...')
+    try {
+      const result = await apiRequest('/api/instagram/save_keys', {
+        method: 'POST',
+        token: tokens.user,
+        body: instaForm,
+      })
+
+      if (!result?.success) {
+        setStatus(result?.msg || 'Unable to connect Instagram')
+        return
+      }
+
+      setStatus('Instagram connected successfully.')
+      loadIntegrations()
+    } catch (error) {
+      setStatus(error.message || 'Unable to connect Instagram')
+    }
+  }
+
+  async function disconnectInsta() {
+    setStatus('Disconnecting Instagram...')
+    try {
+      const result = await apiRequest('/api/instagram/disconnect', {
+        method: 'POST',
+        token: tokens.user,
+      })
+
+      if (!result?.success) {
+        setStatus(result?.msg || 'Unable to disconnect Instagram')
+        return
+      }
+
+      setInstaForm({
+        instagram_business_account_id: '',
+        access_token: '',
+        username: '',
+        name: '',
+        app_id: '',
+      })
+      setInstaKeys(null)
+      setStatus('Instagram disconnected.')
+      loadIntegrations()
+    } catch (error) {
+      setStatus(error.message || 'Unable to disconnect Instagram')
+    }
+  }
+
+  function simulateInstagramOAuth() {
+    setInstaForm({
+      instagram_business_account_id: 'insta-business-acct-mock',
+      access_token: 'mock_token_' + randomId(),
+      username: 'mock_instagram_business',
+      name: 'Mock Instagram Page',
+      app_id: 'mock-app-id-123',
+    })
+    setStatus('OAuth simulation successful. Click Save to complete connection.')
+  }
 
   useEffect(() => {
     const hasGeneratingOrScan = instances.some(
@@ -359,27 +435,124 @@ function UserIntegrationsPage() {
       ) : null}
 
       {mode === 'instagram' ? (
-        <div className="panel form-panel">
-          <div className="panel-header">
-            <h2>Instagram business messaging</h2>
-            <span className="status-chip">Pending</span>
-          </div>
-          <div className="readiness-list">
-            <div className="readiness-row ready">
-              <span>Ready</span>
-              <strong>Route</strong>
-              <small>/user/link-instagram</small>
+        <div className="two-column-grid">
+          <form className="panel form-panel" onSubmit={saveInsta}>
+            <div className="panel-header">
+              <div>
+                <h2>Instagram Business account connection</h2>
+                <p>{instaKeys ? 'Credentials are saved and active.' : 'Configure credentials or use simulated OAuth connect.'}</p>
+              </div>
+              <span className={classNames('status-chip', instaKeys ? 'ready' : '')}>
+                {instaKeys ? 'Connected' : 'Disconnected'}
+              </span>
             </div>
-            <div className="readiness-row blocked">
-              <span>Missing</span>
-              <strong>Backend contract</strong>
-              <small>Instagram account linking, token storage, and webhook mapping are not implemented yet.</small>
+
+            <div className="form-grid">
+              <label>
+                Instagram Business Account ID
+                <input
+                  type="text"
+                  value={instaForm.instagram_business_account_id || ''}
+                  onChange={(event) => setInstaForm({ ...instaForm, instagram_business_account_id: event.target.value })}
+                  placeholder="e.g. 17841401234567890"
+                  required
+                />
+              </label>
+
+              <label>
+                Username
+                <input
+                  type="text"
+                  value={instaForm.username || ''}
+                  onChange={(event) => setInstaForm({ ...instaForm, username: event.target.value })}
+                  placeholder="e.g. my_business_insta"
+                  required
+                />
+              </label>
+
+              <label>
+                Display Name (Optional)
+                <input
+                  type="text"
+                  value={instaForm.name || ''}
+                  onChange={(event) => setInstaForm({ ...instaForm, name: event.target.value })}
+                  placeholder="e.g. My Business Page"
+                />
+              </label>
+
+              <label>
+                App ID (Optional)
+                <input
+                  type="text"
+                  value={instaForm.app_id || ''}
+                  onChange={(event) => setInstaForm({ ...instaForm, app_id: event.target.value })}
+                  placeholder="e.g. 1234567890"
+                />
+              </label>
+
+              <label>
+                Access Token
+                <input
+                  type={showToken ? 'text' : 'password'}
+                  value={instaForm.access_token || ''}
+                  onChange={(event) => setInstaForm({ ...instaForm, access_token: event.target.value })}
+                  placeholder="Page Access Token / User Token"
+                  required
+                />
+              </label>
             </div>
-            <div className="readiness-row blocked">
-              <span>Missing</span>
-              <strong>Inbox channel adapter</strong>
-              <small>Inbound Instagram DM normalization is still pending.</small>
+
+            <div className="action-row">
+              <button className="primary-button" type="submit">
+                {instaKeys ? 'Save Settings' : 'Connect Account'}
+              </button>
+              <button className="secondary-button dark-text" type="button" onClick={() => setShowToken((value) => !value)}>
+                {showToken ? 'Hide token' : 'Show token'}
+              </button>
+              {!instaKeys && (
+                <button className="secondary-button dark-text" type="button" onClick={simulateInstagramOAuth}>
+                  Simulate OAuth Flow
+                </button>
+              )}
+              {instaKeys && (
+                <button className="mini-button subtle-danger" type="button" onClick={disconnectInsta}>
+                  Disconnect
+                </button>
+              )}
             </div>
+          </form>
+
+          <div className="panel form-panel">
+            <div className="panel-header">
+              <h2>Connection readiness</h2>
+            </div>
+            <div className="readiness-list">
+              <div className={classNames('readiness-row', instaKeys ? 'ready' : 'blocked')}>
+                <span>{instaKeys ? 'Ready' : 'Pending'}</span>
+                <strong>Webhook Receiver</strong>
+                <small>
+                  {tokens.user ? `Webhook URI: /api/instagram/webhook/${tokens.user}` : 'Requires user session token'}
+                </small>
+              </div>
+              <div className={classNames('readiness-row', instaForm.instagram_business_account_id ? 'ready' : 'blocked')}>
+                <span>{instaForm.instagram_business_account_id ? 'Ready' : 'Missing'}</span>
+                <strong>Business Account ID</strong>
+                <small>{instaForm.instagram_business_account_id || 'Missing ID'}</small>
+              </div>
+              <div className={classNames('readiness-row', instaForm.access_token ? 'ready' : 'blocked')}>
+                <span>{instaForm.access_token ? 'Ready' : 'Missing'}</span>
+                <strong>Access Token</strong>
+                <small>{maskSecret(instaForm.access_token)}</small>
+              </div>
+            </div>
+            {instaKeys && (
+              <div className="meta-block" style={{ marginTop: '16px' }}>
+                <p><strong>Connected Account:</strong></p>
+                <p>Username: @{instaKeys.username}</p>
+                <p>Display Name: {instaKeys.name}</p>
+                <p>Business ID: {instaKeys.instagram_business_account_id}</p>
+              </div>
+            )}
           </div>
         </div>
       ) : null}
