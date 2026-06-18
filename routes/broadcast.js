@@ -9,6 +9,7 @@ const {
 const { sign } = require("jsonwebtoken");
 const validateUser = require("../middlewares/user.js");
 const { checkPlan } = require("../middlewares/plan.js");
+const env = require("../env");
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MAX_TREND_DAYS = 31;
@@ -260,6 +261,16 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
 
     if (getPhonebook.length < 1) {
       return res.json({ success: false, msg: "Invalid phonebook provided" });
+    }
+
+    if (env.MOCK_META_DELIVERY) {
+      const checkMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+      if (checkMeta.length < 1) {
+        await query(
+          `INSERT INTO meta_api (uid, business_phone_number_id, access_token, waba_id) VALUES (?, ?, ?, ?)`,
+          [req.decode.uid, 'mock-phone-id', 'mock-token', 'mock-waba-id']
+        );
+      }
     }
 
     const getMetaAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [

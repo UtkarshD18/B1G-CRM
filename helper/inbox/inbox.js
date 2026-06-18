@@ -9,6 +9,7 @@ const { mergeArraysWithPhonebook } = require("../socket/function");
 const { processMetaMessage } = require("./meta");
 const { metaChatbotInit } = require("../chatbot/meta");
 const { processMessageQr } = require("../addon/qr/processThings");
+const { processWebhookRules } = require("../webhooks/engine");
 
 async function updateChatListSocket({ connectionInfo }) {
   try {
@@ -141,10 +142,11 @@ async function processMessage({
     });
     // console.dir({ latestConversation }, { depth: null });
 
-    // chatbot init
+    // chatbot init and webhooks evaluation
     // console.log({ latestConversation });
     if (latestConversation?.newMessage && uid) {
       metaChatbotInit({ latestConversation, uid, origin });
+      processWebhookRules({ latestConversation, uid, origin });
     }
   } catch (err) {
     console.log(err);

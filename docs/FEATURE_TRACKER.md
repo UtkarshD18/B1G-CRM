@@ -1,6 +1,6 @@
 # Feature Tracker
 
-Last audited: 2026-06-17
+Last audited: 2026-06-18
 
 Status legend:
 
@@ -19,7 +19,7 @@ Status legend:
 | PostgreSQL migration runner | Complete | Applies sorted SQL migrations with `schema_migrations`. Realigned and synced `schema.sql` files with migrations. | Add new migrations as product schema evolves. | `database/migrate.js`, `database/migrations/*` | `pg` | Medium |
 | Query adapter | Complete | Converts `?` placeholders to PostgreSQL params. | More SQL compatibility tests. | `database/dbpromise.js` | PostgreSQL | Medium |
 | Docker deployment | Complete | App + PostgreSQL compose, production build, healthcheck. | Persist `meta-media` if needed. | `Dockerfile`, `docker-compose.yml` | Docker, Node 20, Postgres 16 | Low |
-| Frontend app shell | Complete | React routes, protected portal layout, public site. | Responsive/UI polish as product evolves. | `client/src/routes/AppRoutes.jsx`, `client/src/layouts/PortalLayout.jsx` | React, Router | Medium |
+| Frontend app shell | Complete | React routes, portal layouts, public site. Fixed contrast issues and button collisions in Sprint 1. | Keep refining custom components as product evolves. | `client/src/routes/AppRoutes.jsx`, `client/src/layouts/PortalLayout.jsx` | React, Router | Medium |
 | Frontend tests | Partial | Jest/RTL configured; app tests exist. | Keep coverage updated for new workflows. | `client/jest.config.cjs`, `client/src/App.test.jsx` | Jest, RTL | Medium |
 | Backend tests | Planned | None found. | Add route/unit tests. | Root `package.json` | TBD | High |
 | AI docs system | Complete | `/docs` plus `CLAUDE.md` created. | Maintain after every successful change. | `docs/*`, `CLAUDE.md` | AI workflow discipline | Medium |
@@ -40,7 +40,7 @@ Status legend:
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
 | Dashboard | Partial | Metrics API and page exist. | More analytics and error states. | `routes/admin.js`, `client/src/pages/admin/Dashboard.jsx` | PostgreSQL | Medium |
-| Manage plans | Partial | CRUD API and page exist. | Validation polish, plan compatibility checks. | `routes/admin.js`, `client/src/pages/admin/Plans.jsx` | PostgreSQL | Medium |
+| Manage plans | Partial | CRUD API and page exist. | Validation polish, plan edit route bug. | `routes/admin.js`, `client/src/pages/admin/Plans.jsx` | PostgreSQL | Medium |
 | Manage users | Partial | List/update/delete/plan/auto-login. | Safer deletion and audit trail. | `routes/admin.js`, `client/src/pages/admin/Users.jsx` | PostgreSQL, JWT | High |
 | Orders | Partial | Orders API/page exists. | Payment-specific detail views. | `routes/admin.js`, `client/src/pages/admin/Orders.jsx` | Billing providers | Medium |
 | CMS settings | Partial | Public settings, pages, FAQ, testimonial, contact leads. | Complete production CMS UX. | `routes/admin.js`, `routes/web.js`, `client/src/pages/admin/Settings.jsx` | File uploads, PostgreSQL | Medium |
@@ -59,19 +59,19 @@ Status legend:
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
 | Dashboard | Partial | Tenant metrics route/page. | Better charts and loading/error states. | `routes/user.js`, `client/src/pages/user/Dashboard.jsx` | PostgreSQL | Medium |
-| Inbox | Partial | Chat list/conversation/send APIs and socket handlers. | Align REST/socket paths, harden message history, media persistence. | `routes/inbox.js`, `socket.js`, `helper/socket/*`, `client/src/pages/user/Inbox.jsx` | Meta API, filesystem | High |
+| Inbox | Complete | Chat list/conversation/send APIs, socket handlers, and inline media rendering (images, videos, audio, documents). | Refine/align REST and socket paths further if needed. | `routes/inbox.js`, `socket.js`, `helper/socket/*`, `client/src/pages/user/Inbox.jsx` | Meta API, filesystem | High |
 | Kanban | Partial | Chat status grouped view and status route. | Drag/drop polish. | `routes/inbox.js`, `client/src/pages/user/Kanban.jsx` | PostgreSQL | Medium |
-| Contacts/phonebook | Partial | Phonebook CRUD, contact CRUD, CSV import. | Import validation and dedupe polish. | `routes/phonebook.js`, `client/src/pages/user/Contacts.jsx` | csv-parser | Medium |
+| Contacts/phonebook | Complete/partial | Phonebook CRUD, Phonebook Rename API (POST /update), Contact CRUD, Contact Edit API (POST /update_contact), and CSV import. | Import validation and dedupe polish. | `routes/phonebook.js`, `client/src/pages/user/Contacts.jsx` | csv-parser | Medium |
 | Meta WhatsApp link | Partial | Credential form, validation, key storage. | Embedded signup/OAuth not complete. | `routes/user.js`, `client/src/pages/user/Integrations.jsx` | Meta Graph API | High |
 | WhatsApp QR | Partial/stubbed | UI/routes/table exist. | Real QR session implementation needed. | `routes/qr.js`, `helper/addon/qr/*`, `client/src/pages/user/Integrations.jsx` | Baileys | High |
 | Instagram link | Planned | Placeholder route/tab exists. | Implement provider auth and message ingest. | `client/src/pages/user/Integrations.jsx` | Instagram API | High |
 | Automation flows | Partial | React Flow page, save/load/delete/activity APIs. | Advanced branching templates and runtime validation. | `routes/chatFlow.js`, `client/src/pages/user/AutomationFlows.jsx` | `@xyflow/react`, filesystem | High |
 | WA chatbot | Partial | CRUD, selected/all chats, active status, diagnostics. | Full visual runtime parity and analytics. | `routes/chatbot.js`, `functions/chatbot.js`, `helper/chatbot/*`, `client/src/pages/user/ChatBot.jsx` | Meta API, flow JSON | High |
 | Meta templates | Partial | Create/list/delete/upload media APIs and page. | Approval diagnostics and more validation. | `routes/user.js`, `client/src/pages/user/MetaTemplates.jsx` | Meta Graph API | High |
-| Campaigns | Partial | Create/list/status/delete/logs/dashboard and loop. | Pacing, retry, preview, cancellation safety. | `routes/broadcast.js`, `loops/*`, `client/src/pages/user/Campaigns.jsx` | Meta API, PostgreSQL | High |
+| Campaigns | Complete/partial | Create/list/status/delete/logs/dashboard, recursive daemon loop, and Campaign Local Simulation mode (MOCK_META_DELIVERY). | Pacing, retry, and validation controls under live production keys. | `routes/broadcast.js`, `loops/*`, `client/src/pages/user/Campaigns.jsx` | Meta API, PostgreSQL | High |
 | Billing | Partial | Plans/free trial/Stripe UI flow. | Complete provider SDK UX and reconciliation. | `routes/user.js`, `client/src/pages/user/Billing.jsx` | Stripe, PayPal, Razorpay, Paystack | High |
 | API dashboard | Partial | API key generation and samples. | Usage analytics. | `routes/apiv2.js`, `routes/user.js`, `client/src/pages/user/DeveloperApi.jsx` | JWT, Meta API | Medium |
-| Webhook rules | Partial | Rule CRUD API and UI. | Execution engine/logs. | `routes/webhooks.js`, `client/src/pages/user/DeveloperApi.jsx` | PostgreSQL | Medium |
+| Webhook rules | Complete | Rule CRUD API, UI, rules execution engine, target POST dispatches, and persistent webhook logs. | Usage analytics dashboard. | `routes/webhooks.js`, `client/src/pages/user/DeveloperApi.jsx`, `helper/webhooks/engine.js` | PostgreSQL | Medium |
 | Agent login management | Complete/partial | Agent creation/list and auto-login token. | Edit/delete polish and audits. | `routes/agent.js`, `routes/user.js`, `client/src/pages/user/AgentLogin.jsx` | JWT, bcrypt | Medium |
 | Agent tasks | Complete/partial | Create/list/delete tenant tasks; agent can complete. | Better task states. | `routes/user.js`, `routes/agent.js`, `client/src/pages/user/AgentTask.jsx` | PostgreSQL | Medium |
 | Chat widget | Partial | Create/list/delete and public widget render route. | Analytics/logo UX. | `routes/user.js`, `client/src/pages/user/ChatWidget.jsx` | File uploads | Medium |

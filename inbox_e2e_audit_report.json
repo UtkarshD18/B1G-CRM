@@ -1,0 +1,7 @@
+{
+  "upload": {
+    "success": true,
+    "url": "http://localhost:3010/media/kE8GvEWkOfU3r3gL6DvCKWTuuxBiiPvV.txt"
+  },
+  "error": "Parse Error: Expected HTTP/, RTSP/ or ICE/"
+}

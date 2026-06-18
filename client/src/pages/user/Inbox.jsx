@@ -454,7 +454,59 @@ function UserInboxPage() {
                     key={`${message.metaChatId || message.timestamp || 'message'}-${index}`}
                   >
                     <span>{message.route === 'OUTGOING' ? 'You' : message.senderName || 'Contact'}</span>
-                    <strong>{normalizeConversationMessage(message)}</strong>
+                    {message.type === 'image' ? (
+                      <div className="message-media">
+                        <img
+                          src={message.msgContext?.image?.link || message.msgContext?.image?.url || message.msgContext?.link}
+                          alt={message.msgContext?.image?.caption || 'Image'}
+                          style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', display: 'block', marginTop: '4px' }}
+                        />
+                        {message.msgContext?.image?.caption && (
+                          <strong style={{ display: 'block', marginTop: '4px' }}>
+                            {message.msgContext.image.caption}
+                          </strong>
+                        )}
+                      </div>
+                    ) : message.type === 'video' ? (
+                      <div className="message-media">
+                        <video
+                          src={message.msgContext?.video?.link || message.msgContext?.video?.url || message.msgContext?.link}
+                          controls
+                          style={{ maxWidth: '100%', maxHeight: '240px', borderRadius: '8px', display: 'block', marginTop: '4px' }}
+                        />
+                        {message.msgContext?.video?.caption && (
+                          <strong style={{ display: 'block', marginTop: '4px' }}>
+                            {message.msgContext.video.caption}
+                          </strong>
+                        )}
+                      </div>
+                    ) : message.type === 'document' ? (
+                      <div className="message-media">
+                        <a
+                          href={message.msgContext?.document?.link || message.msgContext?.document?.url || message.msgContext?.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: '#1ea085', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}
+                        >
+                          📄 Download Document
+                        </a>
+                        {message.msgContext?.document?.caption && (
+                          <strong style={{ display: 'block', marginTop: '4px' }}>
+                            {message.msgContext.document.caption}
+                          </strong>
+                        )}
+                      </div>
+                    ) : message.type === 'audio' ? (
+                      <div className="message-media">
+                        <audio
+                          src={message.msgContext?.audio?.link || message.msgContext?.audio?.url || message.msgContext?.link}
+                          controls
+                          style={{ maxWidth: '100%', display: 'block', marginTop: '4px' }}
+                        />
+                      </div>
+                    ) : (
+                      <strong>{normalizeConversationMessage(message)}</strong>
+                    )}
                     <small>{formatRelativeTimestamp(message.timestamp)}</small>
                   </article>
                 ))

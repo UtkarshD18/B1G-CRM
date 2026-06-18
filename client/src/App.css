@@ -70,17 +70,19 @@
 }
 
 .hero-copy p,
-.auth-copy p,
+.sidebar-copy {
+  color: rgba(243, 241, 235, 0.78);
+}
+
 .page-header p,
 .feature-card p,
 .pricing-card p,
 .chooser-card p,
-.sidebar-copy,
 .dashboard-card span,
 .status-line,
 .empty-state,
 .panel p {
-  color: rgba(243, 241, 235, 0.78);
+  color: #506371;
 }
 
 .hero-panel,
@@ -123,6 +125,11 @@
   flex-wrap: wrap;
 }
 
+td .action-row {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .primary-button,
 .secondary-button,
 .mini-button {
@@ -130,6 +137,7 @@
   border-radius: 999px;
   cursor: pointer;
   font: inherit;
+  white-space: nowrap;
   transition:
     transform 0.15s ease,
     opacity 0.15s ease,
@@ -550,6 +558,12 @@ th {
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.channel-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .channel-tab {
@@ -791,8 +805,8 @@ th {
 }
 
 .media-composer {
-  display: grid;
-  grid-template-columns: minmax(100px, 130px) minmax(150px, 1fr) minmax(150px, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   border-top: 1px solid rgba(16, 33, 45, 0.1);
@@ -800,20 +814,41 @@ th {
   padding-top: 12px;
 }
 
-.media-composer select,
-.media-composer input {
-  width: 100%;
+.media-composer select {
+  flex: 1 1 120px;
+  min-width: 0;
   border: 1px solid #c5d0d6;
   border-radius: 14px;
   padding: 12px 14px;
   box-sizing: border-box;
   font: inherit;
   background: #ffffff;
-  min-width: 0;
 }
 
 .media-composer input[type="file"] {
+  flex: 1 1 180px;
+  min-width: 0;
+  border: 1px solid #c5d0d6;
+  border-radius: 14px;
   padding: 10px 12px;
+  box-sizing: border-box;
+  font: inherit;
+  background: #ffffff;
+}
+
+.media-composer input[type="text"] {
+  flex: 2 1 200px;
+  min-width: 0;
+  border: 1px solid #c5d0d6;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  font: inherit;
+  background: #ffffff;
+}
+
+.media-composer button {
+  flex: 0 0 auto;
 }
 
 .inbox-context-panel {
@@ -1178,6 +1213,14 @@ th {
   display: grid;
   place-items: center;
   padding: 32px 16px;
+}
+
+.auth-copy h1 {
+  color: #10212d !important;
+}
+
+.auth-copy p {
+  color: #365261 !important;
 }
 
 .auth-card {

@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const { sendMetatemplet } = require("../functions/function");
+const env = require("../env");
 
 function replaceVariables(obj, arr) {
   const replacedArr = arr.map((item) => {
@@ -22,6 +23,17 @@ function replaceVariables(obj, arr) {
 }
 
 async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
+  if (env.MOCK_META_DELIVERY || metaKeys?.access_token === 'mock-token') {
+    return {
+      data: [
+        {
+          name: name,
+          language: "en",
+          components: []
+        }
+      ]
+    };
+  }
   const url = `https://graph.facebook.com/v18.0/${metaKeys?.waba_id}/message_templates?name=${name}`;
   const options = {
     method: "GET",
@@ -67,6 +79,13 @@ function removeNulls(arr) {
 }
 
 async function sendMessage(message, metaKeys) {
+  if (env.MOCK_META_DELIVERY || metaKeys?.access_token === 'mock-token') {
+    return {
+      success: true,
+      msgId: "mock-msg-id-" + Math.random().toString(36).substring(7),
+      msg: "sent"
+    };
+  }
   const templetName = message?.templet_name;
   const templet = await getMetaTempletByName(templetName, metaKeys);
   const contact = JSON.parse(message?.contact);

@@ -1,6 +1,6 @@
 # Project Context
 
-Last audited: 2026-06-17
+Last audited: 2026-06-18
 
 ## Overview
 
@@ -17,7 +17,7 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 
 | Metric | Value |
 | --- | --- |
-| Estimated completion | 70% |
+| Estimated completion | 75% |
 | Current phase | Feature completion, hardening, and legacy cleanup. |
 | Overall state | Strong foundation with several production gaps. |
 
@@ -26,11 +26,11 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 | Field | Value |
 | --- | --- |
 | Current branch | `main` |
-| Current sprint | `Docker deployment stabilization & Reverse-engineering` |
-| Current priority | `Resolve Docker connection EAI_AGAIN loops, discover credentials, and reverse-engineer features.` |
-| Current feature in progress | `Docker hostname resolution, auth verification, and sitemap auditing` |
-| Last completed feature | `Docker deployment stabilization and reference sitemaps indexation` |
-| Recommended next task | `Implement high-ROI WhatsApp QR Connection Engine (Phase 9 recommendation)` |
+| Current sprint | `Sprint 5 Preparation & AI Operating Manual Integration` |
+| Current priority | `Documentation synchronization and final reports collation.` |
+| Current feature in progress | `None` |
+| Last completed feature | `Integrated permanent AI operating manual (SKILLS.md), compiled audit confidence review, and drafted Sprint 5 execution plan.` |
+| Recommended next task | `Sprint 5 Task 1: Fix Admin Plan edit route collision.` |
 | Known blockers | `None` |
 
 ## Architecture Summary
@@ -135,17 +135,16 @@ Primary route groups:
 
 Priority order:
 
-1. Make QR functionality real or remove the UI surface.
-2. Add backend test coverage for critical routes and migrations.
-3. Reduce duplicate helper/auth/socket implementations.
-4. Harden file-mutating public routes.
-5. Fill the remaining portal placeholders shown in `FEATURE_TRACKER.md`.
+1. Fix Admin Plan definitions edit route bug.
+2. Implement Webhook Rules execution engine.
+3. Replace QR stubs with a functional Baileys session connector.
+4. Add backend test coverage for critical routes and migrations.
+5. Reduce duplicate helper/auth/socket implementations.
 
 ## Current Blockers
 
 - No backend test suite.
 - QR helper no-ops.
-- Some supporting docs still reflect older multi-doc AI workflows.
 
 ## Technical Debt
 
@@ -190,10 +189,10 @@ Priority order:
 
 ## Suggested Next Tasks
 
-1. Add backend tests around auth, inbox, and migrations.
-2. Replace or hide QR surfaces until the helper is functional.
-3. Normalize auth middleware and token shape.
-4. Introduce foreign keys where safe.
+1. Fix Admin Plan update collision.
+2. Connect visual chatbot execution engine rules listener.
+3. Replace QR stubs with functional Baileys socket connector.
+4. Add backend tests around auth, inbox, and migrations.
 5. Separate long-running campaign work from the web process.
 
 ## Definition Of Done
@@ -218,7 +217,7 @@ Priority order:
 | Area | Health |
 | --- | --- |
 | Product coverage | Strong foundation, still shipping partial features. |
-| Docs hygiene | Improved by this handoff redesign, but legacy docs remain supporting references. |
+| Docs hygiene | Excellent, primary context and changelog updated. |
 | Test coverage | Frontend baseline only. |
 | Deployment | Local Docker ready, production hardening still needed. |
 | Current risk | Medium, mainly due to QR stubs, auth debt, and missing backend tests. |

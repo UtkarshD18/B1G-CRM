@@ -1,0 +1,57 @@
+{
+  "crud": {
+    "create": {
+      "name": "Audit Webhook Rule 1781780243259",
+      "successResponse": true,
+      "persistedInDb": true,
+      "row": {
+        "id": 7,
+        "uid": "local-user-uid",
+        "name": "Audit Webhook Rule 1781780243259",
+        "source": "external",
+        "event_type": "message",
+        "match_field": "body.text",
+        "match_operator": "contains",
+        "match_value": "hello",
+        "action_type": "send_webhook",
+        "action_payload": "{\"url\":\"https://example.com/webhook\",\"method\":\"POST\"}",
+        "active": 1,
+        "createdat": "2026-06-18T10:57:23.262Z",
+        "updatedat": "2026-06-18T10:57:23.262Z"
+      }
+    },
+    "read": {
+      "success": true,
+      "count": 1,
+      "containsAuditRule": true
+    },
+    "update": {
+      "successResponse": true,
+      "updatedRow": {
+        "id": 7,
+        "uid": "local-user-uid",
+        "name": "Audit Webhook Rule 1781780243259 Updated",
+        "source": "external",
+        "event_type": "message",
+        "match_field": "body.text",
+        "match_operator": "equals",
+        "match_value": "hi",
+        "action_type": "tag_chat",
+        "action_payload": "{\"tag\":\"customer\"}",
+        "active": 0,
+        "createdat": "2026-06-18T10:57:23.262Z",
+        "updatedat": "2026-06-18T10:57:23.283Z"
+      },
+      "activeValInDb": 0
+    },
+    "delete": {
+      "successResponse": true,
+      "removedFromDb": true
+    }
+  },
+  "trigger": {
+    "engineStatus": "Missing",
+    "webhookLogsTableExists": true,
+    "reason": "No hooks or event listeners exist in the incoming message pipeline to query or execute webhook_rules actions. The only references to the webhook_rules table in the codebase are in routes/webhooks.js (CRUD) and SQL migration files."
+  }
+}

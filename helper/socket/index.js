@@ -300,28 +300,18 @@ function processSocketEvent({
       const { chatId, agentUid, unAssign } = payload.data;
 
       console.log({ chatId, agentUid, unAssign });
-      // return;
 
-      if (unAssign) {
+      // Clean up any existing assignments for this chat to prevent duplicate rows
+      await query(
+        `DELETE FROM agent_chats WHERE chat_id = ? AND owner_uid = ?`,
+        [chatId, uid]
+      );
+
+      if (chatId && agentUid && !unAssign) {
         await query(
-          `DELETE FROM agent_chats WHERE chat_id = ? AND owner_uid = ?`,
-          [chatId, uid]
+          `INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)`,
+          [uid, agentUid, chatId]
         );
-      }
-
-      if (chatId && agentUid) {
-        // checking if there is already assigned
-        const getOnce = await query(
-          `SELECT * FROM agent_chats WHERE chat_id = ? AND owner_uid = ? AND uid = ?`,
-          [chatId, uid, agentUid]
-        );
-
-        if (getOnce?.length < 1) {
-          await query(
-            `INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)`,
-            [uid, agentUid, chatId]
-          );
-        }
       }
     } catch (err) {
       console.error(err);

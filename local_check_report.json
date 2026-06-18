@@ -1,0 +1,218 @@
+{
+  "admin": [
+    {
+      "slug": "dashboard",
+      "status": "Loaded",
+      "title": "Operational SaaS overview",
+      "inputs": 0,
+      "buttons": 1,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nADMIN DASHBOARD\nOperational SaaS overview\n\nTENANTS\n\n3\nTotal user accounts\n\nORDERS\n\n0\nTransactions recorded\n\nCONTACT LEADS\n\n0\nPublic site inquiries\nPai"
+    },
+    {
+      "slug": "manage-plans",
+      "status": "Loaded",
+      "title": "Pricing and entitlement controls",
+      "inputs": 11,
+      "buttons": 8,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nMANAGE PLANS\nPricing and entitlement controls\n\nCreate, edit, and remove plans used by signup, billing, and tenant access checks.\n\nCreate plan\nTitle\nPr"
+    },
+    {
+      "slug": "manage-users",
+      "status": "Loaded",
+      "title": "Tenant roster and plan assignment",
+      "inputs": 4,
+      "buttons": 13,
+      "tables": 1,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nMANAGE USERS\nTenant roster and plan assignment\n\nEdit tenant profiles, assign plans, delete users, or open a tenant session.\n\nSelect a user to edit\nNam"
+    },
+    {
+      "slug": "orders",
+      "status": "Loaded",
+      "title": "Recent transactions",
+      "inputs": 0,
+      "buttons": 1,
+      "tables": 1,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nORDERS\nRecent transactions\nCUSTOMER\tAMOUNT\tMODE\tCREATED"
+    },
+    {
+      "slug": "settings",
+      "status": "Loaded",
+      "title": "SaaS configuration workspace",
+      "inputs": 10,
+      "buttons": 8,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nADMIN SETTINGS\nSaaS configuration workspace\n\nManage the operational settings already exposed by the backend.\n\nWeb\nPayments\nSMTP\nCMS\nLeads\nSocial\nPubli"
+    }
+  ],
+  "user": [
+    {
+      "slug": "dashboard",
+      "status": "Loaded",
+      "title": "Tenant operations snapshot",
+      "inputs": 0,
+      "buttons": 1,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nUSER DASHBOARD\nTenant opera"
+    },
+    {
+      "slug": "inbox",
+      "status": "Loaded",
+      "title": "Omnichannel operator inbox",
+      "inputs": 4,
+      "buttons": 9,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nINBOX\nOmnichannel operator "
+    },
+    {
+      "slug": "kanban",
+      "status": "Loaded",
+      "title": "Chat Kanban",
+      "inputs": 0,
+      "buttons": 2,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nKANBAN\nChat Kanban\n\nOperati"
+    },
+    {
+      "slug": "contacts",
+      "status": "Loaded",
+      "title": "Phonebooks and contact records",
+      "inputs": 11,
+      "buttons": 8,
+      "tables": 2,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nCONTACTS\nPhonebooks and con"
+    },
+    {
+      "slug": "campaigns",
+      "status": "Loaded",
+      "title": "Broadcast campaign workspace",
+      "inputs": 0,
+      "buttons": 2,
+      "tables": 2,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nCAMPAIGNS\nBroadcast campaig"
+    },
+    {
+      "slug": "automation-flows",
+      "status": "Loaded",
+      "title": "Real flow CRUD over `/api/chat_flow`",
+      "inputs": 3,
+      "buttons": 17,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nAUTOMATION FLOWS\nReal flow "
+    },
+    {
+      "slug": "wa-chatbot",
+      "status": "Loaded",
+      "title": "Chatbot automation over saved flows",
+      "inputs": 2,
+      "buttons": 6,
+      "tables": 2,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nCHATBOT\nChatbot automation "
+    },
+    {
+      "slug": "integrations",
+      "status": "Loaded",
+      "title": "Integration control center",
+      "inputs": 7,
+      "buttons": 8,
+      "tables": 1,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nINTEGRATIONS\nIntegration co"
+    },
+    {
+      "slug": "agent-login",
+      "status": "Loaded",
+      "title": "Tenant-managed staff accounts",
+      "inputs": 4,
+      "buttons": 4,
+      "tables": 1,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nAGENT LOGIN\nTenant-managed "
+    },
+    {
+      "slug": "agent-task",
+      "status": "Loaded",
+      "title": "Task queue assigned to tenant agents",
+      "inputs": 1,
+      "buttons": 3,
+      "tables": 1,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nAGENT TASK\nTask queue assig"
+    },
+    {
+      "slug": "chat-widget",
+      "status": "Loaded",
+      "title": "Chat widget workspace",
+      "inputs": 4,
+      "buttons": 5,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nCHAT WIDGET\nChat widget wor"
+    },
+    {
+      "slug": "billing",
+      "status": "Loaded",
+      "title": "Plans, trial, and checkout",
+      "inputs": 0,
+      "buttons": 5,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nBILLING\nPlans, trial, and c"
+    },
+    {
+      "slug": "api-dashboard",
+      "status": "Loaded",
+      "title": "REST API, template API, and webhook setup",
+      "inputs": 5,
+      "buttons": 9,
+      "tables": 1,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nAPI DASHBOARD\nREST API, tem"
+    },
+    {
+      "slug": "settings",
+      "status": "Loaded",
+      "title": "Tenant profile, plan, and API settings",
+      "inputs": 5,
+      "buttons": 4,
+      "tables": 0,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nChat Widget\nBilling\nAPI & Webhooks\nSettings\nSign out\nSETTINGS\nTenant profile, pl"
+    }
+  ],
+  "agent": [
+    {
+      "slug": "dashboard",
+      "status": "Loaded",
+      "title": "Restricted staff portal",
+      "inputs": 1,
+      "buttons": 2,
+      "tables": 2,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nAgent Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nWorkspace\nAssigned Chats\nSign out\nAGENT WORKSPACE\nRestricted staff portal\n\nReady for direct auto-login from the tenant `Agent Login` screen.\n\nAGENT\n\nLocal Agent\nagent@example.com\n\nASSIGNED CHATS\n\n0\nScoped to own"
+    },
+    {
+      "slug": "chats",
+      "status": "Loaded",
+      "title": "Restricted staff portal",
+      "inputs": 1,
+      "buttons": 2,
+      "tables": 2,
+      "classification": "Placeholder",
+      "textSnippet": "B1GCRM\nAgent Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nWorkspace\nAssigned Chats\nSign out\nAGENT WORKSPACE\nRestricted staff portal\n\nReady for direct auto-login from the tenant `Agent Login` screen.\n\nAGENT\n\nLocal Agent\nagent@example.com\n\nASSIGNED CHATS\n\n0\nScoped to own"
+    }
+  ]
+}
