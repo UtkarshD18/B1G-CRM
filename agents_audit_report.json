@@ -1,24 +1,24 @@
 {
   "agentCreate": {
-    "name": "Audit Agent 1781780212565",
-    "email": "audit-agent-1781780212565@example.com",
+    "name": "Audit Agent 1781819340140",
+    "email": "audit-agent-1781819340140@example.com",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 9,
+      "id": 15,
       "owner_uid": "local-user-uid",
-      "uid": "Vbhc5BfJWioZo83yBnJHH4H63Xn3xFCQ",
-      "email": "audit-agent-1781780212565@example.com",
+      "uid": "UOeJifXErqMWw5KgKkShIug4FP9mgALR",
+      "email": "audit-agent-1781819340140@example.com",
       "password": "[HIDDEN]",
       "role": "agent",
-      "name": "Audit Agent 1781780212565",
+      "name": "Audit Agent 1781819340140",
       "mobile": "+919876543210",
       "comments": "Audit temp comments",
       "is_active": 1,
-      "created_at": "2026-06-18T10:56:52.608Z",
-      "updated_at": "2026-06-18T10:56:52.608Z",
-      "createdat": "2026-06-18T10:56:52.608Z",
-      "updatedat": "2026-06-18T10:56:52.608Z"
+      "created_at": "2026-06-18T21:49:00.184Z",
+      "updated_at": "2026-06-18T21:49:00.184Z",
+      "createdat": "2026-06-18T21:49:00.184Z",
+      "updatedat": "2026-06-18T21:49:00.184Z"
     }
   },
   "agentLogin": {
@@ -26,19 +26,19 @@
     "tokenReturned": true
   },
   "taskAssign": {
-    "title": "Audit Task 1781780212666",
+    "title": "Audit Task 1781819340248",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 6,
+      "id": 10,
       "owner_uid": "local-user-uid",
-      "uid": "Vbhc5BfJWioZo83yBnJHH4H63Xn3xFCQ",
-      "title": "Audit Task 1781780212666",
+      "uid": "UOeJifXErqMWw5KgKkShIug4FP9mgALR",
+      "title": "Audit Task 1781819340248",
       "description": "Please complete the parity check validation",
       "status": "PENDING",
       "agent_comments": null,
-      "createdat": "2026-06-18T10:56:52.668Z",
-      "updatedat": "2026-06-18T10:56:52.668Z"
+      "createdat": "2026-06-18T21:49:00.251Z",
+      "updatedat": "2026-06-18T21:49:00.251Z"
     }
   },
   "taskComplete": {
