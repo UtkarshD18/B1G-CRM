@@ -108,6 +108,9 @@ router.get("/get_chats", validateUser, async (req, res) => {
 router.post("/get_convo", validateUser, async (req, res) => {
   try {
     const { chatId } = req.body;
+    if (!chatId) {
+      return res.json({ success: false, msg: "chatId is required" });
+    }
 
     const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
     const data = readJSONFile(filePath, 100);

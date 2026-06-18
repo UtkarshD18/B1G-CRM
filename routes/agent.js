@@ -108,10 +108,10 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
   try {
     const { agentUid, activeness } = req.body;
 
-    await query(`UPDATE agents SET is_active = ? WHERE uid = ?`, [
-      activeness ? 1 : 0,
-      agentUid,
-    ]);
+    const result = await query(
+      `UPDATE agents SET is_active = ? WHERE uid = ? AND owner_uid = ?`,
+      [activeness ? 1 : 0, agentUid, req.decode.uid]
+    );
 
     res.json({
       success: true,
@@ -123,11 +123,19 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
   }
 });
 
-// del user
+// del agent
 router.post("/del_agent", validateUser, async (req, res) => {
   try {
     const { uid } = req.body;
     await query(`DELETE FROM agents WHERE uid = ? AND owner_uid = ?`, [
+      uid,
+      req.decode.uid,
+    ]);
+    await query(`DELETE FROM agent_chats WHERE uid = ? AND owner_uid = ?`, [
+      uid,
+      req.decode.uid,
+    ]);
+    await query(`DELETE FROM agent_task WHERE uid = ? AND owner_uid = ?`, [
       uid,
       req.decode.uid,
     ]);
@@ -210,7 +218,19 @@ router.post("/update_agent_in_chat", validateUser, async (req, res) => {
   try {
     const { assignAgent, chatId, agentUid } = req.body;
 
+    // Verify ownership of the chat (must exist and belong to the user)
+    const chatExists = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [chatId, req.decode.uid]);
+    if (chatExists.length < 1) {
+      return res.json({ success: false, msg: "Chat was not found" });
+    }
+
     if (assignAgent?.email) {
+      // Verify ownership of the agent
+      const agentExists = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [assignAgent.uid, req.decode.uid]);
+      if (agentExists.length < 1) {
+        return res.json({ success: false, msg: "Agent was not found" });
+      }
+
       await query(
         `DELETE FROM agent_chats WHERE owner_uid = ? AND chat_id = ?`,
         [req.decode?.uid, chatId]
@@ -712,6 +732,36 @@ router.post("/change_chat_ticket_status", validateAgent, async (req, res) => {
       success: true,
       msg: "Chat status updated",
     });
+  } catch (err) {
+    console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// save chat note
+router.post("/save_note", validateAgent, async (req, res) => {
+  try {
+    const { chatId, note } = req.body;
+    if (!chatId) {
+      return res.json({ success: false, msg: "chatId is required" });
+    }
+    await query("UPDATE chats SET chat_note = ? WHERE chat_id = ? AND uid = ?", [
+      note,
+      chatId,
+      req.decode.owner_uid
+    ]);
+    res.json({ success: true, msg: "Note updated" });
+  } catch (err) {
+    res.json({ success: false, msg: "something went wrong" });
+    console.log(err);
+  }
+});
+
+// get templets for agent
+router.get("/get_templets", validateAgent, async (req, res) => {
+  try {
+    const data = await query("SELECT * FROM templets WHERE uid = ?", [req.decode.owner_uid]);
+    res.json({ data, success: true });
   } catch (err) {
     console.log(err);
     res.json({ err, success: false, msg: "Something went wrong" });

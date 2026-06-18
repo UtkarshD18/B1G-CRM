@@ -25,7 +25,7 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 
 | Field | Value |
 | --- | --- |
-| Current branch | `main` |
+| Current branch | `sprint5-runtime-verification` |
 | Current sprint | `Sprint 5 Preparation & AI Operating Manual Integration` |
 | Current priority | `Documentation synchronization and final reports collation.` |
 | Current feature in progress | `None` |

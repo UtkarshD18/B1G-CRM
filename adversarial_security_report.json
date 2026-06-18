@@ -1,0 +1,216 @@
+[
+  {
+    "attackType": "Cross-Tenant Rule Update",
+    "endpoint": "/webhooks/rules/update",
+    "payload": {
+      "id": 10
+    },
+    "expectedOutcome": "Fail to update rule",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Webhook rule was not found"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Rule Delete",
+    "endpoint": "/webhooks/rules/delete",
+    "payload": {
+      "id": 10
+    },
+    "expectedOutcome": "Fail to delete rule",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Webhook rule was not found"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Template Update",
+    "endpoint": "/templet/update",
+    "payload": {
+      "id": 9
+    },
+    "expectedOutcome": "Fail to update template",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Template not found"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Template Delete",
+    "endpoint": "/templet/del_templets",
+    "payload": {
+      "selected": [
+        9
+      ]
+    },
+    "expectedOutcome": "Template persists in T1's list",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": true,
+      "msg": "Template(s) was deleted"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Chatbot Update",
+    "endpoint": "/chatbot/update_chatbot",
+    "payload": {
+      "id": 5
+    },
+    "expectedOutcome": "Fail to update chatbot",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Please subscribe a plan to proceed this."
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Chatbot Delete",
+    "endpoint": "/chatbot/del_chatbot",
+    "payload": {
+      "id": 5
+    },
+    "expectedOutcome": "Chatbot persists in T1's list",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": true,
+      "msg": "Chatbot was deleted"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Flow Delete",
+    "endpoint": "/chat_flow/del_flow",
+    "payload": {
+      "flowId": "t1-flow-id-1781808275707"
+    },
+    "expectedOutcome": "Flow persists in T1's list",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": true,
+      "msg": "Flow was deleted"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant PB Rename",
+    "endpoint": "/phonebook/update",
+    "payload": {
+      "id": 13
+    },
+    "expectedOutcome": "Fail to update phonebook",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Phonebook not found"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Contact Edit",
+    "endpoint": "/phonebook/update_contact",
+    "payload": {
+      "id": 18
+    },
+    "expectedOutcome": "Fail to update contact",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Contact not found"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Contact Delete",
+    "endpoint": "/phonebook/del_contacts",
+    "payload": {
+      "selected": [
+        18
+      ]
+    },
+    "expectedOutcome": "Contact persists in DB",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": true,
+      "msg": "Contact(s) was deleted"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant PB Delete",
+    "endpoint": "/phonebook/del_phonebook",
+    "payload": {
+      "id": 13
+    },
+    "expectedOutcome": "Phonebook persists in DB",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": true,
+      "msg": "Phonebook was deleted"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Agent Activeness Update",
+    "endpoint": "/agent/change_agent_activeness",
+    "payload": {
+      "agentUid": "MWxh9078Y4rChwlpwQdvdJ64ftXnzLPZ"
+    },
+    "expectedOutcome": "Agent remains active",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": true,
+      "msg": "Success"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Agent Assignment update_agent_in_chat",
+    "endpoint": "/agent/update_agent_in_chat",
+    "payload": {
+      "agentUid": "MWxh9078Y4rChwlpwQdvdJ64ftXnzLPZ"
+    },
+    "expectedOutcome": "Ownership verification check",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Chat was not found"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Agent Delete",
+    "endpoint": "/agent/del_agent",
+    "payload": {
+      "uid": "MWxh9078Y4rChwlpwQdvdJ64ftXnzLPZ"
+    },
+    "expectedOutcome": "Agent persists in T1's list",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": true,
+      "msg": "Agent was deleted"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Cross-Tenant Task Delete",
+    "endpoint": "/user/del_task_for_agent",
+    "payload": {
+      "id": 7
+    },
+    "expectedOutcome": "Task persists in T1's list",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "msg": "Task was deleted",
+      "success": true
+    },
+    "passed": true
+  }
+]
