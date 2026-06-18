@@ -1,0 +1,20 @@
+{
+  "steps": {
+    "textMessagePersisted": true,
+    "agentAssignedInDb": true,
+    "imagePersisted": true,
+    "docPersisted": true,
+    "agentAssignedChatVisible": true,
+    "agentReplySuccess": true,
+    "agentReplyPersisted": true
+  },
+  "database": {
+    "chatsTable": {
+      "found": true,
+      "lastMessage": "{\"type\":\"text\",\"metaChatId\":\"mock-msg-id-qB6TNbqogUl54WME\",\"msgContext\":{\"type\":\"text\",\"text\":{\"preview_url\":true,\"body\":\"Hello from agent@example.com via REST API!\"}},\"reaction\":\"\",\"timestamp\":1781805675,\"senderName\":\"John Doe\",\"senderMobile\":\"1234567890\",\"status\":\"sent\",\"star\":false,\"route\":\"OUTGOING\",\"agent\":\"agent@example.com\"}",
+      "lastMessageCame": "1781805675",
+      "origin": "META"
+    }
+  },
+  "errors": []
+}

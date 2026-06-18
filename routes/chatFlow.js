@@ -83,6 +83,12 @@ router.post("/del_flow", validateUser, async (req, res) => {
       id,
     ]);
 
+    // Update chatbots using this flow to prevent runtime execution errors
+    await query(
+      `UPDATE chatbot SET flow_id = NULL, active = 0 WHERE flow_id = ? AND uid = ?`,
+      [flowId, req.decode.uid]
+    );
+
     const nodePath = `${__dirname}/../flow-json/nodes/${req.decode.uid}/${flowId}.json`;
     const edgePath = `${__dirname}/../flow-json/edges/${req.decode.uid}/${flowId}.json`;
 

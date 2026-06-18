@@ -2,6 +2,8 @@ const router = require("express").Router();
 const { query } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+const path = require("path");
 const {
   isValidEmail,
   getFileExtension,
@@ -618,6 +620,32 @@ router.post("/add_meta_templet", validateUser, checkPlan, async (req, res) => {
   try {
     console.log(JSON.stringify(req.body));
 
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      }
+      const newTemplate = {
+        name: req.body.name,
+        language: req.body.language || "en_US",
+        category: req.body.category || "UTILITY",
+        status: "APPROVED",
+        components: req.body.components || []
+      };
+      const idx = mockTemplates.findIndex(t => t.name === newTemplate.name);
+      if (idx >= 0) {
+        mockTemplates[idx] = newTemplate;
+      } else {
+        mockTemplates.push(newTemplate);
+      }
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      return res.json({
+        msg: "Templet was added and waiting for the review",
+        success: true,
+      });
+    }
+
     const getAPIKEYS = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -654,6 +682,28 @@ router.post("/add_meta_templet", validateUser, checkPlan, async (req, res) => {
 // get user meta templet
 router.get("/get_my_meta_templets", validateUser, async (req, res) => {
   try {
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      } else {
+        mockTemplates = [
+          {
+            name: "order_update",
+            language: "en_US",
+            category: "UTILITY",
+            status: "APPROVED",
+            components: [
+              { type: "BODY", text: "Hello {{1}}, your order {{2}} has been shipped." }
+            ]
+          }
+        ];
+        fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      }
+      return res.json({ success: true, data: mockTemplates });
+    }
+
     const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -689,6 +739,21 @@ router.post("/del_meta_templet", validateUser, async (req, res) => {
   try {
     const { name } = req.body;
 
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      }
+      mockTemplates = mockTemplates.filter(t => t.name !== name);
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      return res.json({
+        success: true,
+        data: mockTemplates,
+        msg: "Templet was deleted",
+      });
+    }
+
     const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -718,6 +783,38 @@ router.post("/del_meta_templet", validateUser, async (req, res) => {
         msg: "Templet was deleted",
       });
     }
+  } catch (err) {
+    res.json({ success: false, msg: "something went wrong", err });
+    console.log(err);
+  }
+});
+
+// update meta templet
+router.post("/update_meta_templet", validateUser, async (req, res) => {
+  try {
+    const { name, language, category, components } = req.body;
+
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      }
+      const idx = mockTemplates.findIndex(t => t.name === name);
+      if (idx < 0) {
+        return res.json({ success: false, msg: "Template not found" });
+      }
+      mockTemplates[idx] = {
+        ...mockTemplates[idx],
+        language: language || mockTemplates[idx].language,
+        category: category || mockTemplates[idx].category,
+        components: components || mockTemplates[idx].components
+      };
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      return res.json({ success: true, msg: "Template was updated successfully" });
+    }
+
+    res.json({ success: false, msg: "Direct template updates are not supported by the Meta API. Please delete and recreate the template." });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });
     console.log(err);

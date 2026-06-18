@@ -34,6 +34,75 @@ function createDefaultForm() {
   }
 }
 
+function populateFormFromTemplate(template) {
+  const nextForm = createDefaultForm()
+  nextForm.name = template.name
+  nextForm.language = template.language || 'en_US'
+  nextForm.category = template.category || 'UTILITY'
+
+  const components = template.components || []
+
+  const header = components.find((c) => c.type === 'HEADER')
+  if (header) {
+    nextForm.headerFormat = header.format || 'NONE'
+    if (header.format === 'TEXT') {
+      nextForm.headerText = header.text || ''
+      if (header.example?.header_text) {
+        const variables = extractTemplateVariables(header.text)
+        variables.forEach((variable, idx) => {
+          nextForm.headerExampleValues[variable] = header.example.header_text[idx] || ''
+        })
+      }
+    } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(header.format)) {
+      nextForm.mediaHash = header.example?.header_handle?.[0] || ''
+      nextForm.mediaUrl = ''
+    }
+  }
+
+  const body = components.find((c) => c.type === 'BODY')
+  if (body) {
+    nextForm.bodyText = body.text || ''
+    if (body.example?.body_text?.[0]) {
+      const variables = extractTemplateVariables(body.text)
+      variables.forEach((variable, idx) => {
+        nextForm.bodyExampleValues[variable] = body.example.body_text[0][idx] || ''
+      })
+    }
+  }
+
+  const footer = components.find((c) => c.type === 'FOOTER')
+  if (footer) {
+    nextForm.footerText = footer.text || ''
+  }
+
+  const buttonsComp = components.find((c) => c.type === 'BUTTONS')
+  if (buttonsComp && Array.isArray(buttonsComp.buttons)) {
+    nextForm.buttons = buttonsComp.buttons.map((button) => {
+      const btn = {
+        type: button.type || 'QUICK_REPLY',
+        text: button.text || '',
+        url: button.url || '',
+        urlExampleValues: {},
+        phone_number: button.phone_number || '',
+      }
+
+      if (button.type === 'URL' && button.url) {
+        const variables = extractTemplateVariables(button.url)
+        if (variables.length && Array.isArray(button.example)) {
+          variables.forEach((variable, idx) => {
+            btn.urlExampleValues[variable] = button.example[idx] || ''
+          })
+        }
+      }
+      return btn
+    })
+  } else {
+    nextForm.buttons = []
+  }
+
+  return nextForm
+}
+
 function normalizeTemplateName(value) {
   return value
     .trim()
@@ -229,6 +298,19 @@ function UserMetaTemplatesPage() {
   const [mediaFile, setMediaFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [uploadingMedia, setUploadingMedia] = useState(false)
+  const [editingTemplateName, setEditingTemplateName] = useState(null)
+
+  function editTemplate(template) {
+    setEditingTemplateName(template.name)
+    setForm(populateFormFromTemplate(template))
+    setStatus(`Loaded template "${template.name}" for editing.`)
+  }
+
+  function cancelEdit() {
+    setEditingTemplateName(null)
+    setForm(createDefaultForm())
+    setStatus('')
+  }
 
   const payload = useMemo(
     () => ({
@@ -304,25 +386,28 @@ function UserMetaTemplatesPage() {
     }
 
     setSubmitting(true)
-    setStatus('Submitting template to Meta...')
+    const isEdit = !!editingTemplateName
+    setStatus(isEdit ? 'Updating template...' : 'Submitting template to Meta...')
     try {
-      const result = await apiRequest('/api/user/add_meta_templet', {
+      const endpoint = isEdit ? '/api/user/update_meta_templet' : '/api/user/add_meta_templet'
+      const result = await apiRequest(endpoint, {
         method: 'POST',
         token: tokens.user,
         body: payload,
       })
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to create Meta template')
+        setStatus(result?.msg || `Unable to ${isEdit ? 'update' : 'create'} Meta template`)
         return
       }
 
       setForm(createDefaultForm())
+      setEditingTemplateName(null)
       setMediaFile(null)
-      setStatus(result.msg || 'Template submitted for Meta review.')
+      setStatus(result.msg || (isEdit ? 'Template updated successfully.' : 'Template submitted for Meta review.'))
       loadTemplates()
     } catch (error) {
-      setStatus(error.message || 'Unable to create Meta template')
+      setStatus(error.message || `Unable to ${isEdit ? 'update' : 'create'} Meta template`)
     } finally {
       setSubmitting(false)
     }
@@ -465,8 +550,13 @@ function UserMetaTemplatesPage() {
 
       <div className="two-column-grid">
         <form className="panel form-panel" onSubmit={createTemplate}>
-          <div className="panel-header">
-            <h2>Template request</h2>
+          <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>{editingTemplateName ? `Edit template: ${editingTemplateName}` : 'Template request'}</h2>
+            {editingTemplateName && (
+              <button className="secondary-button" type="button" onClick={cancelEdit}>
+                Cancel Edit
+              </button>
+            )}
           </div>
           <div className="form-grid">
             <label>
@@ -475,6 +565,7 @@ function UserMetaTemplatesPage() {
                 value={form.name}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
                 placeholder="order_update"
+                disabled={!!editingTemplateName}
               />
             </label>
             <label>
@@ -689,7 +780,7 @@ function UserMetaTemplatesPage() {
             {!form.buttons.length ? <p className="muted-copy">No buttons added.</p> : null}
           </div>
           <button className="primary-button" type="submit" disabled={submitting}>
-            {submitting ? 'Submitting...' : 'Submit to Meta'}
+            {submitting ? 'Submitting...' : (editingTemplateName ? 'Update Template' : 'Submit to Meta')}
           </button>
         </form>
 
@@ -725,13 +816,22 @@ function UserMetaTemplatesPage() {
                 <td>{template.category || 'N/A'}</td>
                 <td>{template.language || 'N/A'}</td>
                 <td>
-                  <button
-                    className="mini-button subtle-danger"
-                    type="button"
-                    onClick={() => deleteTemplate(template.name)}
-                  >
-                    Delete
-                  </button>
+                  <div className="action-row">
+                    <button
+                      className="mini-button"
+                      type="button"
+                      onClick={() => editTemplate(template)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="mini-button subtle-danger"
+                      type="button"
+                      onClick={() => deleteTemplate(template.name)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

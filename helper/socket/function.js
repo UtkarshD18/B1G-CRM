@@ -3,6 +3,7 @@ const path = require("path");
 const { query } = require("../../database/dbpromise");
 const fetch = require("node-fetch");
 const mime = require("mime-types");
+const env = require("../../env");
 
 function mergeArraysWithPhonebook(chatArray, phonebookArray) {
   // Iterate through the chat array and enrich with phonebook data
@@ -167,6 +168,9 @@ function returnMsgObjAfterAddingKey(overrides = {}) {
 
 async function sendMetaMsg({ uid, to, msgObj }) {
   try {
+    if (env.MOCK_META_DELIVERY) {
+      return { success: true, id: "mock-msg-id-" + Math.random().toString(36).substring(2, 15) };
+    }
     const [api] = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
     if (!api || !api?.access_token || !api?.business_phone_number_id) {
       return { success: false, msg: "Please add your meta API keys" };

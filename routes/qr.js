@@ -64,10 +64,24 @@ router.post("/gen_qr", validateUser, checkPlan, async (req, res) => {
       });
     }
 
-    await query(
-      `INSERT INTO instance (uid, title, uniqueId, status) VALUES (?,?,?,?)`,
-      [req.decode.uid, title, uniqueId, "GENERATING"]
-    );
+    const [existing] = await query("SELECT * FROM instance WHERE uniqueId = ?", [uniqueId]);
+    if (existing) {
+      if (existing.uid !== req.decode.uid) {
+        return res.json({
+          success: false,
+          msg: "This instance ID is already in use by another user.",
+        });
+      }
+      await query(
+        "UPDATE instance SET title = ?, status = ? WHERE uniqueId = ?",
+        [title, "GENERATING", uniqueId]
+      );
+    } else {
+      await query(
+        `INSERT INTO instance (uid, title, uniqueId, status) VALUES (?,?,?,?)`,
+        [req.decode.uid, title, uniqueId, "GENERATING"]
+      );
+    }
 
     await createSession(
       uniqueId,
@@ -104,13 +118,14 @@ router.get("/get_all", validateUser, async (req, res) => {
 
     // Process each instance
     for (let instance of instances) {
-      const check = getSession(instance.uniqueId);
+      const instId = instance.uniqueid || instance.uniqueId;
+      const check = getSession(instId);
 
-      if (!check) {
-        // If no session, update status to "INACTIVE"
+      if (!check && instance.status === "CONNECTED") {
+        // If no session and status was CONNECTED, update status to "INACTIVE"
         await query(`UPDATE instance SET status = ? WHERE uniqueId = ?`, [
           "INACTIVE",
-          instance.uniqueId,
+          instId,
         ]);
         instance.status = "INACTIVE"; // Update status in response as well
       }
@@ -145,7 +160,7 @@ router.post("/del_instance", validateUser, async (req, res) => {
 
     if (session) {
       try {
-        await session.logout();
+        session.end();
       } catch {
       } finally {
         deleteSession(uniqueId);

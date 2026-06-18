@@ -147,6 +147,25 @@ function UserIntegrationsPage() {
     loadIntegrations()
   }, [loadIntegrations])
 
+  useEffect(() => {
+    const hasGeneratingOrScan = instances.some(
+      (inst) => inst.status === 'GENERATING' || inst.status === 'SCAN_QR'
+    )
+    if (!hasGeneratingOrScan) {
+      return undefined
+    }
+
+    const interval = setInterval(() => {
+      apiRequest('/api/qr/get_all', { token: tokens.user })
+        .then((qrResult) => {
+          setInstances(Array.isArray(qrResult?.data) ? qrResult.data : [])
+        })
+        .catch((err) => console.error(err))
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [instances, tokens.user])
+
   async function saveMeta(event) {
     event.preventDefault()
     const payload = normalizeMetaPayload(meta)
@@ -419,11 +438,31 @@ function UserIntegrationsPage() {
               </thead>
               <tbody>
                 {instances.map((instance) => {
-                  const uniqueId = instance.uniqueId || instance.unique_id
+                  const uniqueId = instance.uniqueid || instance.uniqueId || instance.unique_id
+                  let qrImg = null
+                  if (instance.status === 'SCAN_QR' && instance.other) {
+                    try {
+                      const parsed = typeof instance.other === 'string' ? JSON.parse(instance.other) : instance.other
+                      if (parsed?.qr) {
+                        qrImg = parsed.qr
+                      }
+                    } catch (e) {
+                      console.error(e)
+                    }
+                  }
                   return (
                     <tr key={uniqueId}>
                       <td>{instance.title}</td>
-                      <td>{instance.status || 'Created'}</td>
+                      <td>
+                        <div>
+                          <strong>{instance.status || 'Created'}</strong>
+                          {qrImg && (
+                            <div style={{ marginTop: '8px' }}>
+                              <img src={qrImg} alt="Scan QR" style={{ width: '128px', height: '128px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td>{uniqueId}</td>
                       <td>
                         <button

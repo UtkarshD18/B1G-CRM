@@ -1060,6 +1060,35 @@ function sendAPIMessage(obj, waNumId, waToken) {
 function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
   return new Promise(async (resolve) => {
     try {
+      if (env.MOCK_META_DELIVERY) {
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+        const mockMsgId = 'mock-msg-id-' + randomstring.generate(16);
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: mockMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+        };
+
+        const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId]
+        );
+
+        await query(`UPDATE chats SET is_opened = ? WHERE chat_id = ?`, [
+          1,
+          chatId,
+        ]);
+
+        return resolve({ success: true, id: mockMsgId });
+      }
+
       const getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         uid,
       ]);

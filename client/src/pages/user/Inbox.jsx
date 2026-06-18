@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
-import { API_BASE, apiFormRequest, apiRequest } from '../../shared/api'
+import { API_BASE, apiFormRequest, apiFormRequestWithProgress, apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 import { classNames, decodeTokenPayload, formatRelativeTimestamp, normalizeConversationMessage } from '../../shared/format'
+import { FaWhatsapp, FaInstagram, FaTelegram, FaGlobe, FaFacebook } from 'react-icons/fa'
 
 const channelFilters = [
   { key: 'all', label: 'All' },
@@ -101,6 +102,37 @@ function getTicketLabel(chat) {
   return 'Open'
 }
 
+function getChannelIcon(chat) {
+  const origin = String(chat?.origin || chat?.channel || '').toLowerCase()
+  if (origin === 'meta') {
+    return <FaFacebook className="platform-icon meta" title="Meta" />
+  }
+  if (origin === 'qr') {
+    return <FaWhatsapp className="platform-icon qr" title="WhatsApp QR" />
+  }
+  if (origin.includes('insta') || origin.includes('instagram')) {
+    return <FaInstagram className="platform-icon instagram" title="Instagram" />
+  }
+  if (origin.includes('telegram')) {
+    return <FaTelegram className="platform-icon telegram" title="Telegram" />
+  }
+  if (origin.includes('widget') || origin.includes('web')) {
+    return <FaGlobe className="platform-icon website" title="Website" />
+  }
+  return <FaWhatsapp className="platform-icon whatsapp" title="WhatsApp" />
+}
+
+function parseTags(tagsField) {
+  if (!tagsField) return []
+  if (Array.isArray(tagsField)) return tagsField
+  try {
+    const parsed = JSON.parse(tagsField)
+    return Array.isArray(parsed) ? parsed : [parsed]
+  } catch {
+    return String(tagsField).split(',').map((t) => t.trim()).filter(Boolean)
+  }
+}
+
 function UserInboxPage() {
   const { tokens } = useAuth()
   const socketRef = useRef(null)
@@ -124,6 +156,25 @@ function UserInboxPage() {
   const [mediaCaption, setMediaCaption] = useState('')
   const [mediaBusy, setMediaBusy] = useState(false)
   const [mediaInputKey, setMediaInputKey] = useState(0)
+  const [templates, setTemplates] = useState([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploading, setUploading] = useState(false)
+
+  const loadTemplatesList = useCallback(async () => {
+    try {
+      const result = await apiRequest('/api/templet/get_templets', { token: tokens.user })
+      if (result?.success && Array.isArray(result.data)) {
+        setTemplates(result.data)
+      }
+    } catch (error) {
+      console.error('Failed to load templates', error)
+    }
+  }, [tokens.user])
+
+  useEffect(() => {
+    loadTemplatesList()
+  }, [loadTemplatesList])
 
   function openChat(chat) {
     if (!socketRef.current || !chat?.chat_id) {
@@ -297,6 +348,32 @@ function UserInboxPage() {
     }, 800)
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      sendMessage(event)
+    }
+  }
+
+  const handleTemplateChange = (event) => {
+    const templetId = event.target.value
+    setSelectedTemplateId(templetId)
+    if (!templetId) return
+    const selectedTemp = templates.find((t) => String(t.id) === String(templetId))
+    if (selectedTemp) {
+      let text = ''
+      try {
+        const parsedContent = typeof selectedTemp.content === 'string'
+          ? JSON.parse(selectedTemp.content)
+          : selectedTemp.content
+        text = parsedContent?.body || parsedContent?.text || String(parsedContent || '')
+      } catch {
+        text = String(selectedTemp.content || '')
+      }
+      setMessageDraft(text)
+    }
+  }
+
   async function sendMedia() {
     if (!selectedChat?.chat_id || !socketRef.current || !mediaFile || mediaBusy) {
       return
@@ -305,12 +382,15 @@ function UserInboxPage() {
     const formData = new FormData()
     formData.append('file', mediaFile)
     setMediaBusy(true)
+    setUploading(true)
+    setUploadProgress(0)
     setStatus('Uploading media...')
 
     try {
-      const upload = await apiFormRequest('/api/user/return_media_url', {
+      const upload = await apiFormRequestWithProgress('/api/user/return_media_url', {
         token: tokens.user,
         formData,
+        onProgress: (percent) => setUploadProgress(percent),
       })
 
       if (!upload?.success || !upload?.url) {
@@ -345,6 +425,7 @@ function UserInboxPage() {
       setStatus(error.message || 'Unable to send media')
     } finally {
       setMediaBusy(false)
+      setUploading(false)
     }
   }
 
@@ -373,7 +454,14 @@ function UserInboxPage() {
         <aside className="inbox-rail">
           <div className="inbox-rail-header">
             <h2>Chats</h2>
-            <span>{visibleChats.length}</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span>{visibleChats.length}</span>
+              {chats.filter((c) => c.is_opened === 0).length > 0 && (
+                <span className="unread-indicator-badge" title={`${chats.filter((c) => c.is_opened === 0).length} unread`}>
+                  {chats.filter((c) => c.is_opened === 0).length}
+                </span>
+              )}
+            </div>
           </div>
           <div className="channel-tabs" aria-label="Channel filter">
             {channelFilters.map((filter) => (
@@ -396,31 +484,65 @@ function UserInboxPage() {
             <select value={filterType} onChange={(event) => setFilterType(event.target.value)}>
               <option value="all">All</option>
               <option value="read">Read</option>
-              <option value="unread">Unread</option>
+              <option value="unread">Unread {chats.filter((c) => c.is_opened === 0).length > 0 ? `(${chats.filter((c) => c.is_opened === 0).length})` : ''}</option>
             </select>
           </div>
           <div className="chat-list">
-            {visibleChats.map((chat) => (
-              <button
-                className={classNames(
-                  'wa-chat-row',
-                  selectedChat?.chat_id === chat.chat_id ? 'active' : '',
-                )}
-                key={chat.chat_id}
-                type="button"
-                onClick={() => openChat(chat)}
-              >
-                <span className="wa-avatar">{getInitials(getContactName(chat))}</span>
-                <span className="wa-chat-main">
-                  <strong>{getContactName(chat)}</strong>
-                  <span>{chat.last_message || 'No messages yet.'}</span>
-                </span>
-                <span className="wa-chat-meta">
-                  <small>{formatRelativeTimestamp(chat.last_message_came)}</small>
-                  <em>{getChannelLabel(chat)}</em>
-                </span>
-              </button>
-            ))}
+            {visibleChats.map((chat) => {
+              const tags = parseTags(chat.chat_tags)
+              return (
+                <button
+                  className={classNames(
+                    'wa-chat-row',
+                    selectedChat?.chat_id === chat.chat_id ? 'active' : '',
+                  )}
+                  key={chat.chat_id}
+                  type="button"
+                  onClick={() => openChat(chat)}
+                >
+                  <span className="wa-avatar">{getInitials(getContactName(chat))}</span>
+                  <span className="wa-chat-main">
+                    <strong>{getContactName(chat)}</strong>
+                    <span>{chat.last_message || 'No messages yet.'}</span>
+                    {tags.length > 0 && (
+                      <div className="chat-card-tags">
+                        {tags.map((tag, idx) => {
+                          const title = typeof tag === 'object' ? tag?.title : tag
+                          const hex = typeof tag === 'object' ? tag?.hex : '#1ea085'
+                          return (
+                            <span
+                              key={idx}
+                              className="chat-card-tag"
+                              style={{
+                                backgroundColor: hex + '1a',
+                                color: hex,
+                                border: `1px solid ${hex}33`,
+                              }}
+                            >
+                              {title}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
+                    {chat.agent_name && (
+                      <span className="chat-card-agent-badge">
+                        Agent: {chat.agent_name}
+                      </span>
+                    )}
+                  </span>
+                  <span className="wa-chat-meta">
+                    <small>{formatRelativeTimestamp(chat.last_message_came)}</small>
+                    <em>{getChannelIcon(chat)}</em>
+                    {chat.is_opened === 0 && (
+                      <span className="unread-indicator-badge" style={{ marginTop: '4px' }}>
+                        1
+                      </span>
+                    )}
+                  </span>
+                </button>
+              )
+            })}
             {!visibleChats.length ? <p className="empty-state">No chats match this filter.</p> : null}
           </div>
         </aside>
@@ -432,7 +554,21 @@ function UserInboxPage() {
                 <span className="wa-avatar large">{getInitials(getContactName(selectedChat))}</span>
                 <div>
                   <h2>{getContactName(selectedChat)}</h2>
-                  <p>{getContactNumber(selectedChat)} · {getChannelLabel(selectedChat)} · {getTicketLabel(selectedChat)}</p>
+                  <p style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', margin: 0 }}>
+                    <span>{getContactNumber(selectedChat)}</span>
+                    <span>·</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {getChannelIcon(selectedChat)} {getChannelLabel(selectedChat)}
+                    </span>
+                    <span>·</span>
+                    <span>{getTicketLabel(selectedChat)}</span>
+                    <span>·</span>
+                    {chatAssignAgent?.name ? (
+                      <span className="agent-badge">Assigned: {chatAssignAgent.name}</span>
+                    ) : (
+                      <span className="agent-badge unassigned">Unassigned</span>
+                    )}
+                  </p>
                 </div>
               </>
             ) : (
@@ -515,16 +651,40 @@ function UserInboxPage() {
               )}
             </div>
             <form className="wa-composer" onSubmit={sendMessage}>
-              <input
+              {templates.length > 0 && (
+                <select
+                  className="quick-reply-select"
+                  value={selectedTemplateId}
+                  onChange={handleTemplateChange}
+                  aria-label="Quick reply template select"
+                >
+                  <option value="">Quick Reply</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <textarea
                 value={messageDraft}
                 onChange={(event) => setMessageDraft(event.target.value)}
-                placeholder={selectedChat ? 'Type a WhatsApp reply' : 'Open a chat before replying'}
+                onKeyDown={handleKeyDown}
+                placeholder={selectedChat ? 'Type a WhatsApp reply (Enter to send, Shift+Enter for new line)' : 'Open a chat before replying'}
                 disabled={!selectedChat}
+                className="wa-composer-textarea"
+                rows={1}
               />
               <button className="primary-button" type="submit" disabled={!selectedChat || !messageDraft.trim()}>
                 Send
               </button>
             </form>
+            {uploading && (
+              <div className="upload-progress-container" style={{ margin: '0 24px 8px 24px' }}>
+                <div className="upload-progress-bar" style={{ width: `${uploadProgress}%` }} />
+                <span className="upload-progress-text">{uploadProgress}% uploaded</span>
+              </div>
+            )}
             <div className="media-composer" aria-label="Media composer">
               <select
                 aria-label="Media type"

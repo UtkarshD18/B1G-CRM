@@ -196,7 +196,7 @@ router.get('/get_uid_contacts', validateUser, async (req, res) => {
 router.post('/del_contacts', validateUser, async (req, res) => {
     try {
 
-        await query(`DELETE FROM contact WHERE id IN (?)`, [req.body.selected])
+        await query(`DELETE FROM contact WHERE id IN (?) AND uid = ?`, [req.body.selected, req.decode.uid])
         res.json({ success: true, msg: "Contact(s) was deleted" })
 
     } catch (err) {
@@ -212,6 +212,12 @@ router.post('/update', validateUser, async (req, res) => {
 
         if (!id || !name) {
             return res.json({ success: false, msg: "Phonebook ID and name are required" })
+        }
+
+        // Verify ownership first
+        const pbExists = await query(`SELECT * FROM phonebook WHERE id = ? AND uid = ?`, [id, req.decode.uid])
+        if (pbExists.length < 1) {
+            return res.json({ success: false, msg: "Phonebook not found" })
         }
 
         // Check for duplicate name
@@ -237,6 +243,12 @@ router.post('/update_contact', validateUser, async (req, res) => {
 
         if (!id || !mobile) {
             return res.json({ success: false, msg: "Contact ID and mobile are required" })
+        }
+
+        // Verify ownership
+        const contactExists = await query(`SELECT * FROM contact WHERE id = ? AND uid = ?`, [id, req.decode.uid])
+        if (contactExists.length < 1) {
+            return res.json({ success: false, msg: "Contact not found" })
         }
 
         await query(

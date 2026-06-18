@@ -168,6 +168,11 @@ router.post("/rules/delete", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Webhook rule was not found" });
     }
 
+    await query(`DELETE FROM webhook_logs WHERE rule_id = ? AND uid = ?`, [
+      id,
+      req.decode.uid,
+    ]);
+
     res.json({ success: true, msg: "Webhook rule deleted" });
   } catch (err) {
     console.log(err);

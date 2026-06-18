@@ -24,9 +24,12 @@ async function updateChatListSocket({ connectionInfo }) {
       if (assignedChats.length) {
         const chatIds = assignedChats.map(({ chat_id }) => chat_id);
         chats = await query(
-          `SELECT * FROM chats 
-           WHERE chat_id IN (?) AND uid = ? 
-           ORDER BY last_message_came DESC 
+          `SELECT c.*, a.name AS agent_name, a.email AS agent_email
+           FROM chats c
+           LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
+           LEFT JOIN agents a ON ac.uid = a.uid
+           WHERE c.chat_id IN (?) AND c.uid = ? 
+           ORDER BY c.last_message_came DESC 
            LIMIT ?`,
           [
             chatIds,
@@ -37,9 +40,12 @@ async function updateChatListSocket({ connectionInfo }) {
       }
     } else {
       chats = await query(
-        `SELECT * FROM chats 
-         WHERE uid = ? 
-         ORDER BY last_message_came DESC 
+        `SELECT c.*, a.name AS agent_name, a.email AS agent_email
+         FROM chats c
+         LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
+         LEFT JOIN agents a ON ac.uid = a.uid
+         WHERE c.uid = ? 
+         ORDER BY c.last_message_came DESC 
          LIMIT ?`,
         [uid, limit]
       );
@@ -94,9 +100,12 @@ function processSocketEvent({
             { depth: null }
           );
           chats = await query(
-            `SELECT * FROM chats 
-             WHERE chat_id IN (?) AND uid = ? 
-             ORDER BY last_message_came DESC 
+            `SELECT c.*, a.name AS agent_name, a.email AS agent_email
+             FROM chats c
+             LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
+             LEFT JOIN agents a ON ac.uid = a.uid
+             WHERE c.chat_id IN (?) AND c.uid = ? 
+             ORDER BY c.last_message_came DESC 
              LIMIT ?`,
             [
               chatIds,
@@ -107,9 +116,12 @@ function processSocketEvent({
         }
       } else {
         chats = await query(
-          `SELECT * FROM chats 
-           WHERE uid = ? 
-           ORDER BY last_message_came DESC 
+          `SELECT c.*, a.name AS agent_name, a.email AS agent_email
+           FROM chats c
+           LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
+           LEFT JOIN agents a ON ac.uid = a.uid
+           WHERE c.uid = ? 
+           ORDER BY c.last_message_came DESC 
            LIMIT ?`,
           [uid, limit]
         );
@@ -136,9 +148,9 @@ function processSocketEvent({
       // Build extra condition based on filterType
       let extraCondition = "";
       if (filterType === "read") {
-        extraCondition = " AND is_opened = 1 ";
+        extraCondition = " AND c.is_opened = 1 ";
       } else if (filterType === "unread") {
-        extraCondition = " AND is_opened = 0 ";
+        extraCondition = " AND c.is_opened = 0 ";
       }
 
       // Build search condition if a search string is provided
@@ -146,11 +158,11 @@ function processSocketEvent({
       let searchParams = [];
       if (search.trim() !== "") {
         searchCondition = ` AND (
-          sender_name LIKE ?
-          OR sender_mobile LIKE ?
-          OR last_message LIKE ?
-          OR chat_note LIKE ?
-          OR JSON_UNQUOTE(JSON_EXTRACT(chat_tags, '$.title')) LIKE ?
+          c.sender_name LIKE ?
+          OR c.sender_mobile LIKE ?
+          OR c.last_message LIKE ?
+          OR c.chat_note LIKE ?
+          OR JSON_UNQUOTE(JSON_EXTRACT(c.chat_tags, '$.title')) LIKE ?
         )`;
         const likeSearch = `%${search}%`;
         searchParams = [
@@ -172,12 +184,15 @@ function processSocketEvent({
         if (assignedChats.length) {
           const chatIds = assignedChats.map(({ chat_id }) => chat_id);
           chats = await query(
-            `SELECT * FROM chats 
-             WHERE chat_id IN (?)
-             AND uid = ? 
+            `SELECT c.*, a.name AS agent_name, a.email AS agent_email
+             FROM chats c
+             LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
+             LEFT JOIN agents a ON ac.uid = a.uid
+             WHERE c.chat_id IN (?)
+             AND c.uid = ? 
              ${extraCondition}
              ${searchCondition}
-             ORDER BY last_message_came DESC 
+             ORDER BY c.last_message_came DESC 
              LIMIT 20`,
             [
               chatIds,
@@ -188,11 +203,14 @@ function processSocketEvent({
         }
       } else {
         chats = await query(
-          `SELECT * FROM chats 
-           WHERE uid = ?
+          `SELECT c.*, a.name AS agent_name, a.email AS agent_email
+           FROM chats c
+           LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
+           LEFT JOIN agents a ON ac.uid = a.uid
+           WHERE c.uid = ?
            ${extraCondition}
            ${searchCondition}
-           ORDER BY last_message_came DESC 
+           ORDER BY c.last_message_came DESC 
            LIMIT 20`,
           [uid, ...searchParams]
         );
@@ -263,12 +281,12 @@ function processSocketEvent({
           [agent ? connectionInfo?.decodedValue?.owner_uid : uid]
         );
         const agents = await query(`SELECT * FROM agents WHERE owner_uid = ?`, [
-          uid,
+          agent ? connectionInfo?.decodedValue?.owner_uid : uid,
         ]);
 
         const [chatAssignAgent] = await query(
           `SELECT * FROM agent_chats WHERE chat_id = ? AND owner_uid = ?`,
-          [chat?.chat_id, uid]
+          [chat?.chat_id, agent ? connectionInfo?.decodedValue?.owner_uid : uid]
         );
 
         const onChatSelectData = {
@@ -296,21 +314,22 @@ function processSocketEvent({
 
   socket.on("assign_agent_to_chat", async (payload) => {
     try {
-      const { uid, id } = connectionInfo;
+      const { uid, id, agent } = connectionInfo;
       const { chatId, agentUid, unAssign } = payload.data;
+      const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
 
       console.log({ chatId, agentUid, unAssign });
 
       // Clean up any existing assignments for this chat to prevent duplicate rows
       await query(
         `DELETE FROM agent_chats WHERE chat_id = ? AND owner_uid = ?`,
-        [chatId, uid]
+        [chatId, ownerUid]
       );
 
       if (chatId && agentUid && !unAssign) {
         await query(
           `INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)`,
-          [uid, agentUid, chatId]
+          [ownerUid, agentUid, chatId]
         );
       }
     } catch (err) {
@@ -336,14 +355,15 @@ function processSocketEvent({
   socket.on("add_label", async (payload) => {
     try {
       const { label, hex } = payload?.data;
-      const { uid, id } = connectionInfo;
+      const { uid, id, agent } = connectionInfo;
+      const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
       if (!label || !hex) {
         sendToSocketId(id, { msg: "Please provide Label" }, "error");
         return;
       }
 
       const labelsData = await query(`SELECT * FROM chat_tags WHERE uid = ?`, [
-        uid,
+        ownerUid,
       ]);
 
       const allLablesTitles = labelsData?.map((x) => x.title);
@@ -353,14 +373,14 @@ function processSocketEvent({
       }
 
       await query(`INSERT INTO chat_tags (uid, hex, title) VALUES (?,?,?)`, [
-        uid,
+        ownerUid,
         hex,
         label,
       ]);
 
       const labelsDataNew = await query(
         `SELECT * FROM chat_tags WHERE uid = ?`,
-        [uid]
+        [ownerUid]
       );
 
       // updating labels to client
@@ -373,13 +393,14 @@ function processSocketEvent({
   socket.on("on_label_delete", async (payload) => {
     try {
       const { labelId } = payload?.data;
-      const { uid, id } = connectionInfo;
+      const { uid, id, agent } = connectionInfo;
+      const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
       await query(`DELETE FROM chat_tags WHERE id = ?`, [labelId]);
 
       // updating label
       const labelsDataNew = await query(
         `SELECT * FROM chat_tags WHERE uid = ?`,
-        [uid]
+        [ownerUid]
       );
 
       // updating labels to client
@@ -392,7 +413,8 @@ function processSocketEvent({
   socket.on("set_chat_label", async (payload) => {
     try {
       const { labelData, chatIdRow } = payload?.data;
-      const { uid, id } = connectionInfo;
+      const { uid, id, agent } = connectionInfo;
+      const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
 
       if (!labelData || !chatIdRow) {
         return sendToSocketId(id, { msg: "Invalid request" }, "error");
@@ -415,14 +437,14 @@ function processSocketEvent({
 
       // updating chat list
       // Send the latest chat list to all sockets of the user.
-      const socketConnections = getConnectionsByUid(uid) || [];
+      const socketConnections = getConnectionsByUid(ownerUid) || [];
 
       socketConnections.forEach(async (socket) => {
         const updateChatSocketData = await updateChatListSocket({
           connectionInfo: socket,
         });
 
-        sendToUid(uid, updateChatSocketData, "update_chat_list");
+        sendToUid(ownerUid, updateChatSocketData, "update_chat_list");
         console.log("Chat update sent to socket");
       });
 
@@ -492,11 +514,24 @@ function processSocketEvent({
       }
 
       if (sendMsg?.id) {
-        const chatPath = `${__dirname}/../../conversations/inbox/${
-          agent ? connectionInfo?.decodedValue?.owner_uid : uid
-        }/${selectedChat?.chat_id}.json`;
+        const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
+        const chatPath = `${__dirname}/../../conversations/inbox/${ownerUid}/${selectedChat?.chat_id}.json`;
         const msgObjNew = { ...msgObj, metaChatId: sendMsg?.id };
         addObjectToFile(msgObjNew, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
+          [userTimezone, JSON.stringify(msgObjNew), 1, selectedChat?.chat_id]
+        );
+
+        // Send the latest chat list to all sockets of the user.
+        const socketConnections = getConnectionsByUid(ownerUid) || [];
+        socketConnections.forEach(async (socketConn) => {
+          const updateChatSocketData = await updateChatListSocket({
+            connectionInfo: socketConn,
+          });
+          sendToUid(ownerUid, updateChatSocketData, "update_chat_list");
+        });
       }
 
       console.dir({ sendMsg }, { depth: null });
