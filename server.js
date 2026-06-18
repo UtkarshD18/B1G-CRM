@@ -18,7 +18,12 @@ const { init, cleanup } = require("./helper/addon/qr");
 
 const app = express();
 
-app.use(express.json({ limit: env.MAX_FILE_SIZE }));
+app.use(express.json({
+  limit: env.MAX_FILE_SIZE,
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ limit: env.MAX_FILE_SIZE, extended: true }));
 
 app.use(
@@ -90,6 +95,9 @@ app.use("/api/agent", agentRoute);
 
 const qrRoute = require("./routes/qr");
 app.use("/api/qr", qrRoute);
+
+const instagramRoute = require("./routes/instagram");
+app.use("/api/instagram", instagramRoute);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
