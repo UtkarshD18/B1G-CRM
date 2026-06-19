@@ -1,7 +1,12 @@
 {
   "upload": {
     "success": true,
-    "url": "http://localhost:3010/media/kE8GvEWkOfU3r3gL6DvCKWTuuxBiiPvV.txt"
+    "url": "http://localhost:3010/media/hAhD0DSsr7RSnhdo2AgsmZwnTBgfsstT.txt"
   },
-  "error": "Parse Error: Expected HTTP/, RTSP/ or ICE/"
+  "verification": {
+    "reachabilityStatus": 200,
+    "contentMatches": true,
+    "diskStoragePath": "/home/shadow/projects/B1GCRM/client/public/media/hAhD0DSsr7RSnhdo2AgsmZwnTBgfsstT.txt",
+    "existsOnDisk": false
+  }
 }

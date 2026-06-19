@@ -1,14 +1,14 @@
 {
   "phonebook": {
     "create": {
-      "name": "Audit PB 1781819307247",
+      "name": "Audit PB 1781863800799",
       "persisted": true,
       "row": {
-        "id": 16,
+        "id": 27,
         "uid": "local-user-uid",
-        "name": "Audit PB 1781819307247",
-        "created_at": "2026-06-18T21:48:27.337Z",
-        "updated_at": "2026-06-18T21:48:27.337Z"
+        "name": "Audit PB 1781863800799",
+        "created_at": "2026-06-19T10:10:00.885Z",
+        "updated_at": "2026-06-19T10:10:00.885Z"
       }
     },
     "edit": {
@@ -18,28 +18,28 @@
       "syncedInContactsDb": true
     },
     "delete": {
-      "persisted": true
+      "persisted": false
     }
   },
   "contact": {
     "create": {
-      "name": "Audit Contact 1781819309395",
-      "mobile": "+912607872149",
+      "name": "Audit Contact 1781863802959",
+      "mobile": "+915489190175",
       "persisted": true,
       "row": {
-        "id": 1022,
+        "id": 1069,
         "uid": "local-user-uid",
-        "phonebook_id": 16,
-        "phonebook_name": "Audit PB 1781819307247",
-        "name": "Audit Contact 1781819309395",
-        "mobile": "+912607872149",
+        "phonebook_id": 27,
+        "phonebook_name": "Audit PB 1781863800799",
+        "name": "Audit Contact 1781863802959",
+        "mobile": "+915489190175",
         "var1": "val1",
         "var2": "",
         "var3": "",
         "var4": "",
         "var5": "",
-        "created_at": "2026-06-18T21:48:29.465Z",
-        "updated_at": "2026-06-18T21:48:29.465Z"
+        "created_at": "2026-06-19T10:10:03.032Z",
+        "updated_at": "2026-06-19T10:10:03.032Z"
       }
     },
     "edit": {

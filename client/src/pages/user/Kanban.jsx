@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
-import { formatRelativeTimestamp } from '../../shared/format'
+import { formatRelativeTimestamp, normalizeConversationMessage, parseStoredJson } from '../../shared/format'
+import { FaWhatsapp, FaInstagram, FaTelegram, FaGlobe, FaFacebook } from 'react-icons/fa'
 
 const columns = [
   { key: 'open', title: 'Open' },
@@ -15,11 +16,40 @@ function normalizeStatus(value) {
 }
 
 function getChatTitle(chat) {
-  return chat.phonebook?.name || chat.name || chat.sender_name || chat.sender_mobile || chat.mobile || 'Unknown contact'
+  return chat.contact?.name || chat.sender_name || chat.name || chat.sender_mobile || chat.mobile || 'Unknown contact'
 }
 
 function getChatNumber(chat) {
   return chat.sender_mobile || chat.mobile || chat.number || 'No number'
+}
+
+function getChannelIcon(chat) {
+  const origin = String(chat?.origin || chat?.channel || '').toLowerCase()
+  if (origin === 'meta') {
+    return <FaFacebook className="platform-icon meta" title="Meta" />
+  }
+  if (origin === 'qr') {
+    return <FaWhatsapp className="platform-icon qr" title="WhatsApp QR" />
+  }
+  if (origin.includes('insta') || origin.includes('instagram')) {
+    return <FaInstagram className="platform-icon instagram" title="Instagram" />
+  }
+  if (origin.includes('telegram')) {
+    return <FaTelegram className="platform-icon telegram" title="Telegram" />
+  }
+  if (origin.includes('widget') || origin.includes('web')) {
+    return <FaGlobe className="platform-icon website" title="Website" />
+  }
+  return <FaWhatsapp className="platform-icon whatsapp" title="WhatsApp" />
+}
+
+function formatLastMessage(lastMessage) {
+  if (!lastMessage) return 'No messages yet.'
+  const parsed = parseStoredJson(lastMessage)
+  if (parsed) {
+    return normalizeConversationMessage(parsed)
+  }
+  return lastMessage
 }
 
 function UserKanbanPage() {
@@ -112,19 +142,32 @@ function UserKanbanPage() {
             </div>
             <div className="kanban-card-list">
               {(groupedChats[column.key] || []).map((chat) => (
-                <article className="kanban-card" key={chat.chat_id}>
-                  <strong>{getChatTitle(chat)}</strong>
-                  <span>{getChatNumber(chat)}</span>
-                  <p>{chat.last_message || 'No recent message.'}</p>
-                  <small>{formatRelativeTimestamp(chat.last_message_came)}</small>
-                  <div className="action-row">
-                    {columns
-                      .filter((target) => target.key !== column.key)
-                      .map((target) => (
-                        <button className="mini-button dark-text" type="button" key={target.key} onClick={() => moveChat(chat, target.key)}>
-                          Move to {target.title}
-                        </button>
-                      ))}
+                <article className="kanban-card" key={chat.chat_id} style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong style={{ fontSize: '0.95rem' }}>{getChatTitle(chat)}</strong>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {getChannelIcon(chat)}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{getChatNumber(chat)}</span>
+                  <p style={{ margin: '4px 0', fontSize: '0.85rem', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {formatLastMessage(chat.last_message)}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <span>{chat.agent_name ? `Agent: ${chat.agent_name}` : 'Unassigned'}</span>
+                    <small>{formatRelativeTimestamp(chat.last_message_came)}</small>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                    <span className="status-chip" style={{ fontSize: '0.7rem', padding: '2px 6px' }}>{normalizeStatus(chat.chat_status)}</span>
+                    <div className="action-row" style={{ display: 'flex', gap: '4px' }}>
+                      {columns
+                        .filter((target) => target.key !== column.key)
+                        .map((target) => (
+                          <button className="mini-button dark-text" type="button" key={target.key} onClick={() => moveChat(chat, target.key)} style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
+                            {target.title}
+                          </button>
+                        ))}
+                    </div>
                   </div>
                 </article>
               ))}
@@ -138,3 +181,4 @@ function UserKanbanPage() {
 }
 
 export default UserKanbanPage
+

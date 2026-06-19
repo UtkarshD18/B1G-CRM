@@ -86,7 +86,13 @@ router.post("/webhook/:uid", async (req, res) => {
 router.get("/get_chats", validateUser, async (req, res) => {
   try {
     let data = [];
-    data = await query(`SELECT * FROM chats WHERE uid = ?`, [req.decode.uid]);
+    data = await query(
+      `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
+       FROM chats c 
+       LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
+       WHERE c.uid = ?`,
+      [req.decode.uid]
+    );
     const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
       req.decode.uid,
     ]);

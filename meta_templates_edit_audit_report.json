@@ -1,0 +1,29 @@
+{
+  "create": {
+    "name": "mock_temp_1781862209241",
+    "successResponse": true,
+    "persisted": true,
+    "data": {
+      "name": "mock_temp_1781862209241",
+      "language": "en_US",
+      "category": "UTILITY",
+      "status": "APPROVED",
+      "components": [
+        {
+          "type": "BODY",
+          "text": "Hello {{1}}, original mock meta content."
+        }
+      ]
+    }
+  },
+  "update": {
+    "name": "mock_temp_1781862209241",
+    "successResponse": true,
+    "categoryUpdated": true,
+    "contentUpdated": true
+  },
+  "delete": {
+    "successResponse": true,
+    "removed": true
+  }
+}

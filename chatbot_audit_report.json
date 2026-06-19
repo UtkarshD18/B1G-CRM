@@ -1,20 +1,20 @@
 {
   "create": {
-    "title": "Audit Chatbot 1781819337016",
+    "title": "Audit Chatbot 1781869873924",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 30,
+      "id": 52,
       "uid": "local-user-uid",
-      "title": "Audit Chatbot 1781819337016",
+      "title": "Audit Chatbot 1781869873924",
       "for_all": 1,
       "chats": "[]",
-      "flow": "{\"id\":37,\"uid\":\"local-user-uid\",\"flow_id\":\"audit-flow-1781819336997\",\"title\":\"Audit Flow for Bot 1781819336997\",\"prevent_list\":null,\"ai_list\":null,\"createdat\":\"2026-06-18T21:48:57.001Z\",\"updatedat\":\"2026-06-18T21:48:57.001Z\"}",
-      "flow_id": "audit-flow-1781819336997",
+      "flow": "{\"id\":83,\"uid\":\"local-user-uid\",\"flow_id\":\"audit-flow-1781869873891\",\"title\":\"Audit Flow for Bot 1781869873891\",\"prevent_list\":null,\"ai_list\":null,\"createdat\":\"2026-06-19T11:51:13.897Z\",\"updatedat\":\"2026-06-19T11:51:13.897Z\"}",
+      "flow_id": "audit-flow-1781869873891",
       "active": 1,
       "origin": "{\"title\":\"Meta\",\"code\":\"META\",\"data\":{}}",
-      "createdat": "2026-06-18T21:48:57.019Z",
-      "updatedat": "2026-06-18T21:48:57.019Z"
+      "createdat": "2026-06-19T11:51:13.928Z",
+      "updatedat": "2026-06-19T11:51:13.928Z"
     }
   },
   "disable": {
@@ -27,7 +27,7 @@
   },
   "read": {
     "success": true,
-    "count": 5,
+    "count": 3,
     "containsAuditBot": true
   },
   "delete": {

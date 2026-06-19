@@ -2,6 +2,7 @@ const axios = require('axios');
 const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const queryDb = async (sql, params = []) => {
   const client = new Client({
@@ -68,12 +69,7 @@ const queryDb = async (sql, params = []) => {
       ]
     );
 
-    // Initialize conversation JSON file on disk
-    const conversationsDir = path.resolve(__dirname, `conversations/inbox/${tenantUid}`);
-    if (!fs.existsSync(conversationsDir)) {
-      fs.mkdirSync(conversationsDir, { recursive: true });
-    }
-    const chatFilePath = path.join(conversationsDir, `${instaChatId}.json`);
+    // Initialize conversation JSON file inside the docker container
     const initialHistory = [
       {
         type: 'text',
@@ -89,7 +85,10 @@ const queryDb = async (sql, params = []) => {
         origin: 'instagram'
       }
     ];
-    fs.writeFileSync(chatFilePath, JSON.stringify(initialHistory, null, 2));
+
+    const escapedJson = JSON.stringify(initialHistory).replace(/'/g, "'\\''");
+    execSync(`docker exec b1gcrm-app-1 mkdir -p /app/conversations/inbox/${tenantUid}`);
+    execSync(`docker exec b1gcrm-app-1 node -e 'const fs=require(\"fs\"); fs.writeFileSync(\"/app/conversations/inbox/${tenantUid}/${instaChatId}.json\", \`${escapedJson}\`)'`);
 
     // 4. Retrieve chat lists from backend and verify Instagram chat rendering property
     console.log('Fetching chats list from inbox endpoints...');
@@ -188,8 +187,10 @@ const queryDb = async (sql, params = []) => {
     // 10. Clean up
     console.log('Cleaning up tests...');
     await queryDb('DELETE FROM chats WHERE chat_id = $1 AND uid = $2', [instaChatId, tenantUid]);
-    if (fs.existsSync(chatFilePath)) {
-      fs.unlinkSync(chatFilePath);
+    try {
+      execSync(`docker exec b1gcrm-app-1 rm -f /app/conversations/inbox/${tenantUid}/${instaChatId}.json`);
+    } catch (e) {
+      console.warn('Failed to delete container file:', e.message);
     }
     await axios.post('http://localhost:3010/api/instagram/disconnect', {}, { headers });
 

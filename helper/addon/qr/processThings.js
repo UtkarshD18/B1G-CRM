@@ -89,6 +89,35 @@ async function updateChatInMysql({
   const [user] = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
   if (!user) return;
 
+  // Ensure contact exists to maintain consistency
+  if (senderMobile && senderMobile !== "NA") {
+    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [uid, senderMobile]);
+    if (checkContact.length === 0) {
+      const pbName = "WhatsApp QR Ingest";
+      let pbId;
+      const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+      if (existingPb.length > 0) {
+        pbId = existingPb[0].id;
+      } else {
+        const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [uid, pbName]);
+        if (insertPb && insertPb.length > 0) {
+          pbId = insertPb[0].id;
+        } else {
+          const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+          pbId = getPb[0]?.id;
+        }
+      }
+      await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`, [
+        uid,
+        pbId,
+        pbName,
+        senderName || "QR Contact",
+        senderMobile,
+        "Auto Created via QR Ingest"
+      ]);
+    }
+  }
+
   const userTimezone = getCurrentTimestampInTimeZone(
     user?.timezone || Date.now() / 1000
   );

@@ -14,8 +14,6 @@
   },
   "webhookPostStatus": 200,
   "chatPersisted": true,
-  "fileHistoryPersisted": true,
-  "incomingMessageText": "trigger",
-  "chatbotTriggered": true,
-  "cleanupDisconnectSuccess": true
+  "fileHistoryPersisted": false,
+  "error": "Conversation JSON history file not found on disk: /home/shadow/projects/B1GCRM/conversations/inbox/local-user-uid/sender-psid-1781839840244.json"
 }

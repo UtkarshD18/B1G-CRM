@@ -121,6 +121,9 @@ function UserContactsPage() {
 
       setPhonebookName('')
       setStatus('Phonebook created.')
+      if (result?.data) {
+        setPhonebooks((current) => [result.data, ...current])
+      }
       loadContactsData()
       window.setTimeout(() => setStatus(''), 3000)
     } catch (error) {

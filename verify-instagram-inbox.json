@@ -6,19 +6,19 @@
   },
   "sendText": {
     "success": true,
-    "id": "mock-insta-msg-id-7cJ5zf4GuDvHjmId"
+    "id": "mock-insta-msg-id-AQaSSkRxXECl6XN1"
   },
   "sendImage": {
     "success": true,
-    "id": "mock-insta-msg-id-PpGWCMozrTbCkPqd"
+    "id": "mock-insta-msg-id-xzjcIKw94C9iJLmP"
   },
   "sendVideo": {
     "success": true,
-    "id": "mock-insta-msg-id-KIb6WjOV0ODavW10"
+    "id": "mock-insta-msg-id-8s7CC1CJ7tnv2tCa"
   },
   "sendDoc": {
     "success": true,
-    "id": "mock-insta-msg-id-JXftHEGhalJpIr6A"
+    "id": "mock-insta-msg-id-fxQS24juZNpKH5as"
   },
   "persistenceVerification": {
     "messageCount": 5,

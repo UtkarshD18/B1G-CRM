@@ -237,6 +237,7 @@ module.exports = {
   sendToAll,
   getConnectionsByUid,
   getSocketIo,
+  getIOInstance: getSocketIo,
   sendRingToUid,
   updateConnectionDataBySocketId,
 };

@@ -22,6 +22,35 @@ async function updateChatInMysql({
     return; // If user not found, exit
   }
 
+  // Ensure contact exists to maintain consistency
+  if (senderMobile && senderMobile !== "NA") {
+    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [uid, senderMobile]);
+    if (checkContact.length === 0) {
+      const pbName = "Meta Webhook Ingest";
+      let pbId;
+      const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+      if (existingPb.length > 0) {
+        pbId = existingPb[0].id;
+      } else {
+        const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [uid, pbName]);
+        if (insertPb && insertPb.length > 0) {
+          pbId = insertPb[0].id;
+        } else {
+          const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+          pbId = getPb[0]?.id;
+        }
+      }
+      await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`, [
+        uid,
+        pbId,
+        pbName,
+        senderName || "Meta Contact",
+        senderMobile,
+        "Auto Created via Meta Ingest"
+      ]);
+    }
+  }
+
   const userTimezone = getCurrentTimestampInTimeZone(
     user?.timezone || Date.now() / 1000
   );

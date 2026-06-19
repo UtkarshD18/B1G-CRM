@@ -145,6 +145,16 @@ async function processMessage({
     // chatbot init and webhooks evaluation
     // console.log({ latestConversation });
     if (latestConversation?.newMessage && uid) {
+      const senderMobile = latestConversation.newMessage.senderMobile;
+      if (senderMobile) {
+        const slaExpires = new Date(Date.now() + 300 * 1000); // 5 minutes SLA
+        await query(
+          `UPDATE chats 
+           SET last_reply_by = 'user', last_incoming_time = ?, sla_expires_at = ?, sla_violated = 0 
+           WHERE sender_mobile = ? AND uid = ?`,
+          [Date.now(), slaExpires, senderMobile, uid]
+        );
+      }
       metaChatbotInit({ latestConversation, uid, origin });
       processWebhookRules({ latestConversation, uid, origin });
     }

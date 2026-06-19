@@ -526,9 +526,27 @@ function processSocketEvent({
         const msgObjNew = { ...msgObj, metaChatId: sendMsg?.id };
         addObjectToFile(msgObjNew, chatPath);
 
+        const existingChat = await query(`SELECT last_reply_by, last_incoming_time FROM chats WHERE chat_id = ?`, [selectedChat?.chat_id]);
+        if (existingChat.length > 0 && existingChat[0].last_reply_by === 'user' && existingChat[0].last_incoming_time) {
+          const incomingTime = Number(existingChat[0].last_incoming_time);
+          const responseTime = Math.floor((Date.now() - incomingTime) / 1000);
+          const slaViolated = responseTime > 300 ? 1 : 0;
+          const responderAgentUid = agent ? uid : 'owner';
+
+          await query(
+            `INSERT INTO agent_response_logs (uid, agent_uid, chat_id, response_time_seconds, sla_violated) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [ownerUid, responderAgentUid, selectedChat?.chat_id, responseTime, slaViolated]
+          );
+
+          if (slaViolated) {
+            await query(`UPDATE escalation_queue SET resolved = 1, resolved_at = CURRENT_TIMESTAMP WHERE chat_id = ? AND resolved = 0`, [selectedChat?.chat_id]);
+          }
+        }
+
         await query(
-          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
-          [userTimezone, JSON.stringify(msgObjNew), 1, selectedChat?.chat_id]
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ?, last_reply_by = 'agent', last_outgoing_time = ?, sla_violated = 0, sla_expires_at = NULL WHERE chat_id = ?`,
+          [userTimezone, JSON.stringify(msgObjNew), 1, Date.now(), selectedChat?.chat_id]
         );
 
         // Send the latest chat list to all sockets of the user.

@@ -175,6 +175,35 @@ router.post("/webhook/:uid", async (req, res) => {
       }
     }
 
+    // Ensure contact exists to maintain consistency
+    if (senderId) {
+      const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [uid, senderId]);
+      if (checkContact.length === 0) {
+        const pbName = "Instagram Ingest";
+        let pbId;
+        const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+        if (existingPb.length > 0) {
+          pbId = existingPb[0].id;
+        } else {
+          const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [uid, pbName]);
+          if (insertPb && insertPb.length > 0) {
+            pbId = insertPb[0].id;
+          } else {
+            const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+            pbId = getPb[0]?.id;
+          }
+        }
+        await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`, [
+          uid,
+          pbId,
+          pbName,
+          senderName || "Instagram Contact",
+          senderId,
+          "Auto Created via Instagram Ingest"
+        ]);
+      }
+    }
+
     // Check if chat thread already exists in B1GCRM
     const [existingChat] = await query(
       "SELECT * FROM chats WHERE chat_id = ? AND uid = ?",

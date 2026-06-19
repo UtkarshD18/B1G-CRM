@@ -99,6 +99,21 @@ app.use("/api/qr", qrRoute);
 const instagramRoute = require("./routes/instagram");
 app.use("/api/instagram", instagramRoute);
 
+const aiProvidersRoute = require("./routes/ai_providers");
+app.use("/api/ai_providers", aiProvidersRoute);
+
+const knowledgeBaseRoute = require("./routes/knowledge_base");
+app.use("/api/knowledge_base", knowledgeBaseRoute);
+
+const websiteRoute = require("./routes/website");
+app.use("/api/website", websiteRoute);
+
+const crmLeadsRoute = require("./routes/crm_leads");
+app.use("/api/crm", crmLeadsRoute);
+
+const agentWorkflowRoute = require("./routes/agent_workflow");
+app.use("/api/agent_workflow", agentWorkflowRoute);
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -220,6 +235,36 @@ process.on("unhandledRejection", (reason) => {
 });
 
 nodeCleanup(cleanup);
+
+// Background SLA escalations checker (5 minutes SLA)
+const { query: dbQuery } = require("./database/dbpromise");
+const checkSlaEscalations = async () => {
+  try {
+    const breachingChats = await dbQuery(
+      `SELECT id, chat_id, uid, sender_name, last_incoming_time 
+       FROM chats 
+       WHERE last_reply_by = 'user' AND sla_violated = 0 AND sla_expires_at < CURRENT_TIMESTAMP`
+    );
+
+    for (const chat of breachingChats) {
+      await dbQuery("UPDATE chats SET sla_violated = 1 WHERE id = ?", [chat.id]);
+      const existingEsc = await dbQuery(
+        "SELECT * FROM escalation_queue WHERE chat_id = ? AND resolved = 0",
+        [chat.chat_id]
+      );
+      if (existingEsc.length === 0) {
+        await dbQuery(
+          "INSERT INTO escalation_queue (uid, chat_id, reason) VALUES (?, ?, ?)",
+          [chat.uid, chat.chat_id, "SLA response window breached (unanswered for >5 minutes)"]
+        );
+        logger.info(`Chat ${chat.chat_id} escalated due to SLA breach`);
+      }
+    }
+  } catch (err) {
+    logger.error("SLA Checker Error", { error: err.message });
+  }
+};
+setInterval(checkSlaEscalations, 30000);
 
 startServer();
 

@@ -1874,7 +1874,7 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
     const contacts = [
       { name: "Aarav Mehta", mobile: "+919999900001", var1: "VIP", var2: "Retail", var3: "Mumbai", var4: "Interested", var5: "Ref-01" },
       { name: "Diya Sharma", mobile: "+919999900002", var1: "Regular", var2: "Wholesale", var3: "Delhi", var4: "FollowUp", var5: "Ref-02" },
-      { name: "Kabir Singh", mobile: "+919999900003", var1: "New", var2: "Retail", var3: "Bangalore", var4: "Interested", var5: "Ref-03" },
+      { name: "Kabir Singh", mobile: "demo-chat-insta-3", var1: "New", var2: "Retail", var3: "Bangalore", var4: "Interested", var5: "Ref-03" },
       { name: "Ananya Goel", mobile: "+919999900004", var1: "VIP", var2: "Enterprise", var3: "Hyderabad", var4: "Active", var5: "Ref-04" },
       { name: "Vivaan Shah", mobile: "+919999900005", var1: "Inactive", var2: "Retail", var3: "Pune", var4: "Cold", var5: "Ref-05" },
       { name: "Ira Patel", mobile: "+919999900006", var1: "Regular", var2: "Retail", var3: "Ahmedabad", var4: "Interested", var5: "Ref-06" },
@@ -1958,7 +1958,7 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
     }
 
     // 1 Flow
-    const flowId = "flow_demo_welcome";
+    const flowId = `flow_demo_welcome_${req.decode.uid.slice(0, 10)}`;
     const flowTitle = "Demo Welcome Visual Flow";
     const existingFlow = await query(`SELECT * FROM flow WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
     if (existingFlow.length === 0) {
@@ -2070,8 +2070,8 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
     const sampleChats = [
       {
         chatId: "demo-chat-wa-1",
-        senderName: "Jane Doe",
-        senderMobile: "+19998887701",
+        senderName: "Aarav Mehta",
+        senderMobile: "+919999900001",
         origin: "META",
         tag: "lead",
         note: "Interested in Enterprise pricing plan.",
@@ -2081,8 +2081,8 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
             metaChatId: "msg-wa-1",
             msgContext: { type: "text", text: { body: "Hello! I am trying to connect my business phone." } },
             timestamp: Math.floor(Date.now() / 1000) - 3600,
-            senderName: "Jane Doe",
-            senderMobile: "+19998887701",
+            senderName: "Aarav Mehta",
+            senderMobile: "+919999900001",
             status: "received",
             star: false,
             route: "INCOMING",
@@ -2093,8 +2093,8 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
       },
       {
         chatId: "demo-chat-qr-2",
-        senderName: "John Smith",
-        senderMobile: "+19998887702",
+        senderName: "Diya Sharma",
+        senderMobile: "+919999900002",
         origin: "QR",
         tag: "support",
         note: "Struggling with setting up templates.",
@@ -2104,8 +2104,8 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
             metaChatId: "msg-qr-2",
             msgContext: { type: "text", text: { body: "Hi, can you verify why my campaign status says PAUSED?" } },
             timestamp: Math.floor(Date.now() / 1000) - 1800,
-            senderName: "John Smith",
-            senderMobile: "+19998887702",
+            senderName: "Diya Sharma",
+            senderMobile: "+919999900002",
             status: "received",
             star: false,
             route: "INCOMING",
@@ -2116,7 +2116,7 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
       },
       {
         chatId: "demo-chat-insta-3",
-        senderName: "Alice Brown",
+        senderName: "Kabir Singh",
         senderMobile: "demo-chat-insta-3",
         origin: "instagram",
         tag: "general",
@@ -2127,7 +2127,7 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
             metaChatId: "msg-insta-3",
             msgContext: { type: "text", text: { body: "Hey! Do you offer bulk discounts on custom orders?" } },
             timestamp: Math.floor(Date.now() / 1000) - 600,
-            senderName: "Alice Brown",
+            senderName: "Kabir Singh",
             senderMobile: "demo-chat-insta-3",
             status: "received",
             star: false,

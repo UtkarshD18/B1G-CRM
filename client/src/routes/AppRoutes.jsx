@@ -30,6 +30,11 @@ import UserSettingsPage from '../pages/user/Settings'
 import AgentDashboardPage from '../pages/agent/Dashboard'
 import AgentInboxPage from '../pages/agent/Inbox'
 import ReferenceModulePage from '../pages/ReferenceModulePage'
+import UserAiProvidersPage from '../pages/user/AiProviderSettings'
+import UserKnowledgeBasePage from '../pages/user/KnowledgeBase'
+import UserWebsiteManagerPage from '../pages/user/WebsiteManager'
+import UserCrmPipelinePage from '../pages/user/CrmPipeline'
+import UserSupervisorDashboardPage from '../pages/user/SupervisorDashboard'
 
 export const ADMIN_REFERENCE_ROUTES = [
   { path: 'dashboard', component: 'dashboard' },
@@ -98,6 +103,11 @@ export const USER_REFERENCE_ROUTES = [
   { path: 'webhook-logs', component: 'planned', title: 'Webhook Logs' },
   { path: 'telegram-sessions', component: 'planned', title: 'Telegram Sessions' },
   { path: 'web-notification', component: 'planned', title: 'Web Notification' },
+  { path: 'ai-providers', component: 'aiProviders' },
+  { path: 'knowledge-base', component: 'knowledgeBase' },
+  { path: 'website-manager', component: 'websiteManager' },
+  { path: 'pipeline', component: 'pipeline' },
+  { path: 'supervisor-dashboard', component: 'supervisorDashboard' },
 ]
 
 const adminRouteComponents = {
@@ -124,6 +134,11 @@ const userRouteComponents = {
   developerApi: UserDeveloperApiPage,
   metaTemplates: UserMetaTemplatesPage,
   settings: UserSettingsPage,
+  aiProviders: UserAiProvidersPage,
+  knowledgeBase: UserKnowledgeBasePage,
+  websiteManager: UserWebsiteManagerPage,
+  pipeline: UserCrmPipelinePage,
+  supervisorDashboard: UserSupervisorDashboardPage,
 }
 
 function renderReferenceRoutes(routes, area, components) {

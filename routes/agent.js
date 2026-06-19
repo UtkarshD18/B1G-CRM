@@ -356,11 +356,13 @@ router.get("/get_my_assigned_chats", validateAgent, async (req, res) => {
       chatIds,
     });
 
-    // Using IN clause to match against multiple IDs
-    data = await query(`SELECT * FROM chats WHERE chat_id IN (?) AND uid = ?`, [
-      chatIds,
-      req.owner?.uid,
-    ]);
+    data = await query(
+      `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
+       FROM chats c 
+       LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
+       WHERE c.chat_id IN (?) AND c.uid = ?`,
+      [chatIds, req.owner?.uid]
+    );
 
     console.log({
       data,

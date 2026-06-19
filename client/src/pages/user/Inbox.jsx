@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import { API_BASE, apiFormRequest, apiFormRequestWithProgress, apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
-import { classNames, decodeTokenPayload, formatRelativeTimestamp, normalizeConversationMessage } from '../../shared/format'
+import { classNames, decodeTokenPayload, formatRelativeTimestamp, normalizeConversationMessage, parseStoredJson } from '../../shared/format'
 import { FaWhatsapp, FaInstagram, FaTelegram, FaGlobe, FaFacebook } from 'react-icons/fa'
 
 const channelFilters = [
@@ -131,6 +131,15 @@ function parseTags(tagsField) {
   } catch {
     return String(tagsField).split(',').map((t) => t.trim()).filter(Boolean)
   }
+}
+
+function formatLastMessage(lastMessage) {
+  if (!lastMessage) return 'No messages yet.'
+  const parsed = parseStoredJson(lastMessage)
+  if (parsed) {
+    return normalizeConversationMessage(parsed)
+  }
+  return lastMessage
 }
 
 function UserInboxPage() {
@@ -503,7 +512,7 @@ function UserInboxPage() {
                   <span className="wa-avatar">{getInitials(getContactName(chat))}</span>
                   <span className="wa-chat-main">
                     <strong>{getContactName(chat)}</strong>
-                    <span>{chat.last_message || 'No messages yet.'}</span>
+                    <span>{formatLastMessage(chat.last_message)}</span>
                     {tags.length > 0 && (
                       <div className="chat-card-tags">
                         {tags.map((tag, idx) => {

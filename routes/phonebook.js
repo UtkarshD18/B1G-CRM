@@ -25,8 +25,8 @@ router.post('/add', validateUser, checkPlan, checkContactLimit, async (req, res)
             return res.json({ success: false, msg: "Duplicate phonebook name found" })
         }
 
-        await query(`INSERT INTO phonebook (name, uid) VALUES (?,?)`, [name, req.decode.uid])
-        res.json({ success: true, msg: "Phonebook was added" })
+        const insertRes = await query(`INSERT INTO phonebook (name, uid) VALUES (?,?) RETURNING *`, [name, req.decode.uid])
+        res.json({ success: true, msg: "Phonebook was added", data: insertRes[0] })
 
     } catch (err) {
         res.json({ success: false, msg: "something went wrong" })
