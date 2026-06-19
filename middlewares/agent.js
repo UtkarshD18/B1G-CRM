@@ -18,8 +18,8 @@ const validateAgent = async (req, res, next) => {
                     logout: true
                 })
             } else {
-                const getAgent = await query(`SELECT * FROM agents WHERE email = ? and password = ? `, [
-                    decode.email, decode.password
+                const getAgent = await query(`SELECT * FROM agents WHERE email = ? AND uid = ? `, [
+                    decode.email, decode.uid
                 ])
                 if (getAgent.length < 1) {
                     return res.json({

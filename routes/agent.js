@@ -302,7 +302,6 @@ router.post("/login", async (req, res) => {
         {
           uid: agentFind[0].uid,
           role: "agent",
-          password: agentFind[0].password,
           email: agentFind[0].email,
           owner_uid: agentFind[0]?.owner_uid,
         },

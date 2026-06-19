@@ -26,7 +26,7 @@ router.post('/add', validateUser, checkPlan, checkContactLimit, async (req, res)
         }
 
         await query(`INSERT INTO phonebook (name, uid) VALUES (?,?)`, [name, req.decode.uid])
-        res.json({ success: true, msg: "Phonebook was addedd" })
+        res.json({ success: true, msg: "Phonebook was added" })
 
     } catch (err) {
         res.json({ success: false, msg: "something went wrong" })

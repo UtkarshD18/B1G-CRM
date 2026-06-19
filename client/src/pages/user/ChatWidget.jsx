@@ -149,9 +149,9 @@ function UserChatWidgetPage() {
     <div className="page-stack">
       <div className="page-header">
         <div>
-          <span className="eyebrow">chat widget</span>
-          <h2>Chat widget workspace</h2>
-          <p>Create WhatsApp click-to-chat launchers, test the endpoint, and copy the iframe embed code.</p>
+          <span className="eyebrow">click-to-chat launcher</span>
+          <h2>Click-to-Chat launcher workspace</h2>
+          <p>Create WhatsApp click-to-chat launchers, test the endpoint, and copy the iframe embed code. This creates a floating image button on a website that redirects visitors to a wa.me WhatsApp link.</p>
         </div>
       </div>
 

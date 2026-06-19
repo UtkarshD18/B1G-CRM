@@ -9,7 +9,7 @@ const {
 const { checkPlan } = require("../middlewares/plan.js");
 const validateUser = require("../middlewares/user.js");
 
-router.get("/create", async (req, res) => {
+router.get("/create", validateUser, async (req, res) => {
   try {
     const { id } = req.query;
     // Kick off session creation (which returns immediately)
@@ -28,7 +28,7 @@ router.get("/create", async (req, res) => {
   }
 });
 
-router.get("/send", async (req, res) => {
+router.get("/send", validateUser, async (req, res) => {
   try {
     const number = req.query;
     const session = await getSession("chullii");
@@ -199,6 +199,11 @@ router.post("/change_instance_status", validateUser, async (req, res) => {
 
     const { insId, status, jid } = req.body;
 
+    const [existing] = await query(`SELECT * FROM instance WHERE uniqueId = ? AND uid = ?`, [insId, req.decode.uid]);
+    if (!existing) {
+      return res.json({ success: false, msg: "Instance was not found or unauthorized" });
+    }
+
     const session = await getSession(insId);
 
     if (!session) {
@@ -216,9 +221,10 @@ router.post("/change_instance_status", validateUser, async (req, res) => {
     const finalUpdate = { onlineStatus: status };
 
     await session.sendPresenceUpdate(status);
-    await query(`UPDATE instance SET other = ? WHERE uniqueId = ?`, [
+    await query(`UPDATE instance SET other = ? WHERE uniqueId = ? AND uid = ?`, [
       JSON.stringify(finalUpdate),
       insId,
+      req.decode.uid
     ]);
 
     res.json({

@@ -17,9 +17,9 @@ const bcrypt = require("bcrypt");
 const { getConnectionsByUid } = require("../socket.js");
 const { checkQr } = require("../helper/addon/qr/index.js");
 
-router.get("/", async (req, res) => {
+router.get("/", adminValidator, async (req, res) => {
   try {
-    const data = getConnectionsByUid("lWvj6K0xI0FlSKJoyV7ak9DN0mzvKJK8");
+    const data = getConnectionsByUid(req.decode.uid);
     res.json(data);
   } catch (err) {
     res.json({ err, msg: "server error" });
@@ -340,6 +340,25 @@ router.get("/get_app_version", async (req, res) => {
 // install app
 router.post("/install_app", async (req, res) => {
   try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.json({ msg: "Admin password missing", success: false });
+    }
+
+    const getAdmin = await query(`SELECT * FROM admin`, []);
+    if (getAdmin.length < 1) {
+      return res.json({ msg: "Admin user not found", success: false });
+    }
+
+    const compare = await bcrypt.compare(password, getAdmin[0].password);
+    if (!compare) {
+      return res.json({
+        msg: "Invalid admin password",
+        success: false,
+      });
+    }
+
     const filePath = `${__dirname}/../client/public/static`;
 
     const check = folderExists(filePath);

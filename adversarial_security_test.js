@@ -278,7 +278,7 @@ async function runAdversarialAudit() {
     host: "127.0.0.1",
     port: 5432,
     user: "b1gcrm",
-    password: "b1gcrm_local_dev",
+    password: "b1gcrm123",
     database: "b1gcrm"
   });
   await dbClient.connect();
@@ -322,7 +322,7 @@ async function runAdversarialAudit() {
         host: "127.0.0.1",
         port: 5432,
         user: "b1gcrm",
-        password: "b1gcrm_local_dev",
+        password: "b1gcrm123",
         database: "b1gcrm"
       });
       await pgClient.connect();
@@ -340,7 +340,7 @@ async function runAdversarialAudit() {
         host: "127.0.0.1",
         port: 5432,
         user: "b1gcrm",
-        password: "b1gcrm_local_dev",
+        password: "b1gcrm123",
         database: "b1gcrm"
       });
       await pgClient.connect();

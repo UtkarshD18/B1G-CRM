@@ -167,15 +167,20 @@ async function processWebhookRules({ latestConversation, uid, origin }) {
       } else if (actionType === "assign_agent") {
         const agentUid = actionPayloadObj.agentUid || actionPayloadObj.value;
         if (agentUid) {
-          // Remove any existing assignment first
-          await query("DELETE FROM agent_chats WHERE chat_id = ? AND owner_uid = ?", [chatId, uid]);
-          // Insert new assignment
-          await query("INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)", [
-            uid,
-            agentUid,
-            chatId
-          ]);
-          console.log(`Webhook rule assigned chat ${chatId} to agent ${agentUid}`);
+          const agentVerify = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [agentUid, uid]);
+          if (agentVerify.length > 0) {
+            // Remove any existing assignment first
+            await query("DELETE FROM agent_chats WHERE chat_id = ? AND owner_uid = ?", [chatId, uid]);
+            // Insert new assignment
+            await query("INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)", [
+              uid,
+              agentUid,
+              chatId
+            ]);
+            console.log(`Webhook rule assigned chat ${chatId} to agent ${agentUid}`);
+          } else {
+            console.warn(`Webhook rule assign_agent security block: Agent ${agentUid} does not belong to owner ${uid}`);
+          }
         }
       }
     }

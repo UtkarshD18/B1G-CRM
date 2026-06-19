@@ -911,14 +911,19 @@ function UserAutomationFlowsPage() {
               Flow ID
               <input value={flowId} onChange={(event) => setFlowId(event.target.value)} placeholder="flow identifier" />
             </label>
-            <label>
-              Nodes JSON
-              <textarea rows={10} value={nodesJson} onChange={(event) => setNodesJson(event.target.value)} />
-            </label>
-            <label>
-              Edges JSON
-              <textarea rows={10} value={edgesJson} onChange={(event) => setEdgesJson(event.target.value)} />
-            </label>
+            <details style={{ marginTop: '12px', marginBottom: '12px' }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#1b2d38' }}>Advanced / Edit Raw JSON</summary>
+              <div style={{ display: 'grid', gap: '12px', marginTop: '10px' }}>
+                <label>
+                  Nodes JSON
+                  <textarea rows={10} value={nodesJson} onChange={(event) => setNodesJson(event.target.value)} />
+                </label>
+                <label>
+                  Edges JSON
+                  <textarea rows={10} value={edgesJson} onChange={(event) => setEdgesJson(event.target.value)} />
+                </label>
+              </div>
+            </details>
             <button className="primary-button" type="submit">
               Save flow
             </button>

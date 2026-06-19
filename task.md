@@ -1,0 +1,21 @@
+# Tasks - Sprint 11 & Sprint 12 Stabilization
+
+- `[x]` **Sprint 11 - Dev Setup & server stability bypass (nodemon.json)**
+- `[x]` **Sprint 11 - Seeder database local templates insertion**
+- `[x]` **Sprint 11 - Decouple Contacts UI loaders & action save alerts**
+- `[x]` **Sprint 11 - Add Contacts UI edit modals & Phonebooks rename overlays**
+- `[x]` **Sprint 11 - Correct Contacts backend typo in success response**
+- `[x]` **Sprint 11 - Prevent Campaigns UI success alerts overwrite**
+- `[x]` **Sprint 11 - Rename Chat Widget to WhatsApp Click-to-Chat Launcher**
+- `[x]` **Sprint 11 - Collapse visual flow canvas raw JSON textareas**
+- `[x]` **Sprint 11 - Webhook Rules matcher engine evaluation on ingest**
+- `[x]` **Sprint 12 - Remove bcrypt password hashes from signed JWT token payloads**
+- `[x]` **Sprint 12 - Standardize user/admin/agent validation middlewares to verify email/UID parameters**
+- `[x]` **Sprint 12 - Enforce cross-tenant owner checks on webhook rules agent assignment**
+- `[x]` **Sprint 12 - Prevent IDOR security vulnerabilities on WA session presence status updates**
+- `[x]` **Sprint 12 - Verify cross-tenant isolation and DB consistency check tests**
+- `[x]` **Sprint 12 - Complete visual integration Puppeteer verification runs**
+- `[x]` **Final Release - Gate public debug QR/Inbox endpoints behind user validation**
+- `[x]` **Final Release - Secure public /install_app endpoint behind admin password validation**
+- `[x]` **Final Release - Update AI documentation and reports**
+- `[x]` **Final Release - Run E2E Puppeteer verification successfully**

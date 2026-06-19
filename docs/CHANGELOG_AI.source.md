@@ -2,6 +2,36 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-19 - Final Release: Production Readiness & Security Lockdown
+
+| Field | Details |
+| --- | --- |
+| Feature | Gated legacy public debug routes (`/api/qr/create`, `/api/qr/send`, `/api/inbox/` root, and `/api/web/` connection check root) with `validateUser`/`adminValidator` middlewares. Secured `/api/web/install_app` with admin password checks. Updated known issues and current status documents. |
+| Files changed | `routes/qr.js`, `routes/inbox.js`, `routes/web.js`, `docs/KNOWN_ISSUES.md`, `docs/CURRENT_STATUS.md`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Eliminates unauthenticated remote file writes and code execution paths, protects private tenant configurations against unauthorized query/trigger calls, and completes release stabilization. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
+## 2026-06-19 - Sprint 12: Production Hardening, Security Audit & Verification Testing
+
+| Field | Details |
+| --- | --- |
+| Feature | Completed Sprint 12 production security hardening: removed password hashes from JWT payloads for all access, refresh, recovery, and agent impersonation tokens; updated middlewares to verify tokens using UID/email instead of password checks; secured the webhook rules engine with tenant validation to prevent IDOR on agent assignments; added ownership checks to presence updates in `routes/qr.js`; set up and verified 100% PASS on the cross-tenant mock attack script `adversarial_security_test.js` and database consistency checks. |
+| Files changed | `middlewares/user.js`, `middlewares/admin.js`, `middlewares/agent.js`, `routes/user.js`, `routes/admin.js`, `routes/agent.js`, `routes/qr.js`, `helper/webhooks/engine.js`, `adversarial_security_test.js`, `docs/CHANGELOG_AI.source.md`, `docs/PROJECT_CONTEXT.source.md`, `PENDING_TASKS.md`, `MODULE_REALITY_CHECK.md`. |
+| Impact | Removes plain text password hashes from customer browser tokens, fixes IDOR vulnerabilities in WhatsApp status modifications and webhooks agent assignments, and establishes high-quality automated testing coverage. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
+## 2026-06-19 - Sprint 11: Runtime Verification, Truth Audit & Production Stabilization
+
+| Field | Details |
+| --- | --- |
+| Feature | Completed Sprint 11 runtime verification. Fixed seeder to insert default templates into the `templets` database table, added UI modals for editing contacts and renaming phonebooks, implemented Webhook Rules matcher engine into the message ingestion loop, resolved nodemon reboot loop by ignoring runtime files in `nodemon.json`, and renamed "Chat Widget" to "WhatsApp Click-to-Chat Launcher" in navigation and components. |
+| Files changed | `nodemon.json`, `client/src/pages/user/Contacts.jsx`, `client/src/pages/user/Campaigns.jsx`, `client/src/pages/user/ChatWidget.jsx`, `client/src/pages/user/AutomationFlows.jsx`, `client/src/shared/constants.js`, `client/src/shared/navigation.js`, `routes/phonebook.js`, `routes/user.js`, `docs/CHANGELOG_AI.source.md`, `docs/PROJECT_CONTEXT.source.md`, `PENDING_TASKS.md`, `MODULE_REALITY_CHECK.md`. |
+| Impact | Eliminates dev server crashes, ensures templates populate correctly in database, allows contacts management from UI, processes inbound webhooks against rules, and fixes layout clutter and naming mismatches. |
+| Breaking changes | None. |
+| Migration notes | Restart application, database is clean and seeded correctly. |
+
 ## 2026-06-18 - Sprint 5: Functional Auditing, Webhook Engine & Campaign Simulation
 
 | Field | Details |

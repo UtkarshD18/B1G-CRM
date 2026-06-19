@@ -19,8 +19,8 @@ const validateUser = async (req, res, next) => {
                     logout: true
                 })
             } else {
-                const getUser = await query(`SELECT * FROM user WHERE email = ? and password = ? `, [
-                    decode.email, decode.password
+                const getUser = await query(`SELECT * FROM user WHERE email = ? AND uid = ? `, [
+                    decode.email, decode.uid
                 ])
                 if (getUser.length < 1) {
                     return res.json({

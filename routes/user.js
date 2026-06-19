@@ -94,7 +94,6 @@ router.post("/login_with_facebook", async (req, res) => {
           {
             uid: uid,
             role: "user",
-            password: hasPass,
             email: email,
           },
           env.JWT_SECRET,
@@ -107,7 +106,6 @@ router.post("/login_with_facebook", async (req, res) => {
           {
             uid: getUser[0].uid,
             role: "user",
-            password: getUser[0].password,
             email: getUser[0].email,
           },
           env.JWT_SECRET,
@@ -158,7 +156,6 @@ router.post("/login_with_google", async (req, res) => {
           {
             uid: uid,
             role: "user",
-            password: hasPass,
             email: email,
           },
           env.JWT_SECRET,
@@ -171,7 +168,6 @@ router.post("/login_with_google", async (req, res) => {
           {
             uid: getUser[0].uid,
             role: "user",
-            password: getUser[0].password,
             email: getUser[0].email,
           },
           env.JWT_SECRET,
@@ -263,7 +259,6 @@ router.post("/login", async (req, res) => {
         {
           uid: userFind[0].uid,
           role: "user",
-          password: userFind[0].password,
           email: userFind[0].email,
         },
         env.JWT_SECRET,
@@ -1488,10 +1483,10 @@ router.post("/send_resovery", async (req, res) => {
 
     const jsontoken = sign(
       {
+        uid: checkEmailValid[0].uid,
         old_email: email,
         email: email,
         time: moment(new Date()),
-        password: checkEmailValid[0]?.password,
         role: "user",
       },
       env.JWT_SECRET,
@@ -1838,7 +1833,6 @@ router.post("/auto_agent_login", validateUser, async (req, res) => {
       {
         uid: agentFind[0].uid,
         role: "agent",
-        password: agentFind[0].password,
         email: agentFind[0].email,
         owner_uid: agentFind[0]?.owner_uid,
       },
@@ -1941,6 +1935,26 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
           errors[i]
         ]);
       }
+    }
+
+    // Seed templates
+    const existingTemp1 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [req.decode.uid, "demo_welcome_template"]);
+    if (existingTemp1.length === 0) {
+      await query(`INSERT INTO templets (uid, content, type, title) VALUES (?, ?, ?, ?)`, [
+        req.decode.uid,
+        JSON.stringify("Hello {{1}}, welcome to our CRM service!"),
+        "text",
+        "demo_welcome_template"
+      ]);
+    }
+    const existingTemp2 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [req.decode.uid, "order_update"]);
+    if (existingTemp2.length === 0) {
+      await query(`INSERT INTO templets (uid, content, type, title) VALUES (?, ?, ?, ?)`, [
+        req.decode.uid,
+        JSON.stringify("Hello {{1}}, your order {{2}} has been shipped."),
+        "text",
+        "order_update"
+      ]);
     }
 
     // 1 Flow

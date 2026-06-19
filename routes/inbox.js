@@ -203,9 +203,9 @@ router.get("/webhook/:uid", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", validateUser, async (req, res) => {
   try {
-    const uid = "lWvj6K0xI0FlSKJoyV7ak9DN0mzvKJK8";
+    const uid = req.decode.uid;
     const { msg } = req.query;
 
     // getting socket id

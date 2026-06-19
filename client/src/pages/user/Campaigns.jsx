@@ -235,12 +235,15 @@ function UserCampaignsPage() {
       setPhonebooks(Array.isArray(phonebookResult?.data) ? phonebookResult.data : [])
       setDashboardSummary(dashboardResult.data || null)
       setTemplates(Array.isArray(templateResult?.data) ? templateResult.data : [])
-      setStatus(
-        finalStatus ||
-        (mode === 'send' && !templateResult?.success
-          ? templateResult?.msg || 'Unable to load Meta templates'
-          : ''),
-      )
+      if (finalStatus) {
+        setStatus(finalStatus)
+      } else {
+        setStatus(
+          mode === 'send' && !templateResult?.success
+            ? templateResult?.msg || 'Unable to load Meta templates'
+            : '',
+        )
+      }
     } catch (error) {
       setStatus(error.message || 'Unable to load campaigns')
     }
