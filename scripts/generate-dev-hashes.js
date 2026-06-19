@@ -10,12 +10,12 @@
 const bcrypt = require('bcrypt');
 
 async function main() {
-  const adminHash = await bcrypt.hash('<PASSWORD>', 10);
-  const userHash  = await bcrypt.hash('<PASSWORD>', 10);
+  const adminHash = await bcrypt.hash(process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME', 10);
+  const userHash  = await bcrypt.hash(process.env.TEST_USER_PASSWORD || 'CHANGE_ME', 10);
 
   // Round-trip verification
-  const adminOk = await bcrypt.compare('<PASSWORD>', adminHash);
-  const userOk  = await bcrypt.compare('<PASSWORD>', userHash);
+  const adminOk = await bcrypt.compare(process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME', adminHash);
+  const userOk  = await bcrypt.compare(process.env.TEST_USER_PASSWORD || 'CHANGE_ME', userHash);
 
   console.log('');
   console.log('=== B1G-CRM Dev Credential Hashes ===');

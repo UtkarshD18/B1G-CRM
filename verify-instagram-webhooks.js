@@ -9,7 +9,7 @@ const queryDb = async (sql, params = []) => {
     host: process.env.PGHOST || '127.0.0.1',
     port: 5432,
     user: process.env.PGUSER || 'b1gcrm',
-    password: process.env.PGPASSWORD || 'b1gcrm_local_dev',
+    password: process.env.PGPASSWORD || 'CHANGE_ME',
     database: process.env.PGDATABASE || 'b1gcrm'
   });
   await client.connect();
@@ -30,7 +30,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Logging in as User...');
     const loginRes = await axios.post('http://localhost:3010/api/user/login', {
       email: 'user@example.com',
-      password: '<PASSWORD>'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
 
     const token = loginRes.data.token;
@@ -141,9 +141,9 @@ const queryDb = async (sql, params = []) => {
       ]
     };
 
-    // Calculate signature using mock app secret 'example-secret'
+    // Calculate signature using mock app secret process.env.META_APP_SECRET || 'example-secret'
     const rawBody = JSON.stringify(webhookPayload);
-    const signature = 'sha256=' + crypto.createHmac('sha256', 'example-secret').update(rawBody).digest('hex');
+    const signature = 'sha256=' + crypto.createHmac('sha256', process.env.META_APP_SECRET || 'example-secret').update(rawBody).digest('hex');
 
     const webhookPostUrl = `http://localhost:3010/api/instagram/webhook/${tenantUid}`;
     const postRes = await axios.post(webhookPostUrl, webhookPayload, {

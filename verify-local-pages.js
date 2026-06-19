@@ -97,7 +97,7 @@ async function verifyPage(page, role, url, slug) {
   console.log('--- Checking Admin Portal ---');
   await page.goto('http://localhost:3010/admin/login', { waitUntil: 'networkidle2' });
   await fillReactInput('input[type="email"]', 'admin@example.com');
-  await fillReactInput('input[type="password"]', '<PASSWORD>');
+  await fillReactInput('input[type="password"]', process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME');
   await page.evaluate(() => {
     const btn = document.querySelector('button[type="submit"]') || document.querySelector('button');
     if (btn) btn.click();
@@ -114,7 +114,7 @@ async function verifyPage(page, role, url, slug) {
   console.log('\n--- Checking User Portal ---');
   await page.goto('http://localhost:3010/user/login', { waitUntil: 'networkidle2' });
   await fillReactInput('input[type="email"]', 'user@example.com');
-  await fillReactInput('input[type="password"]', '<PASSWORD>');
+  await fillReactInput('input[type="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
   await page.evaluate(() => {
     const btn = document.querySelector('button[type="submit"]') || document.querySelector('button');
     if (btn) btn.click();
@@ -131,7 +131,7 @@ async function verifyPage(page, role, url, slug) {
   console.log('\n--- Checking Agent Portal ---');
   await page.goto('http://localhost:3010/agent/login', { waitUntil: 'networkidle2' });
   await fillReactInput('input[type="email"]', 'agent@example.com');
-  await fillReactInput('input[type="password"]', '<PASSWORD>');
+  await fillReactInput('input[type="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
   await page.evaluate(() => {
     const btn = document.querySelector('button[type="submit"]') || document.querySelector('button');
     if (btn) btn.click();

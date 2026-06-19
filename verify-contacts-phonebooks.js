@@ -24,7 +24,7 @@ const queryDb = async (sql, params = []) => {
     host: '127.0.0.1',
     port: 5432,
     user: 'b1gcrm',
-    password: 'b1gcrm_local_dev',
+    password: process.env.PGPASSWORD || 'CHANGE_ME',
     database: 'b1gcrm'
   });
   await client.connect();
@@ -56,7 +56,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Logging in as User...');
     await page.goto('http://localhost:3010/user/login', { waitUntil: 'networkidle2' });
     await fillReactInput(page, 'input[type="email"]', 'user@example.com');
-    await fillReactInput(page, 'input[type="password"]', '<PASSWORD>');
+    await fillReactInput(page, 'input[type="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
     await page.evaluate(() => {
       document.querySelector('button[type="submit"]').click();
     });
@@ -146,7 +146,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Verifying Edit Contact and Phonebook capabilities via API...');
     const loginRes = await axios.post('http://localhost:3010/api/user/login', {
       email: 'user@example.com',
-      password: '<PASSWORD>'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
     const token = loginRes.data.token;
     const headers = { Authorization: `Bearer ${token}` };

@@ -9,14 +9,14 @@ async function login() {
   // Login as User
   const userLogin = await axios.post(`${BASE_URL}/user/login`, {
     email: "user@example.com",
-    password: "<PASSWORD>",
+    password: process.env.TEST_USER_PASSWORD || "CHANGE_ME",
   });
   userToken = userLogin.data.token;
 
   // Login as Admin
   const adminLogin = await axios.post(`${BASE_URL}/admin/login`, {
     email: "admin@example.com",
-    password: "<PASSWORD>",
+    password: process.env.TEST_ADMIN_PASSWORD || "CHANGE_ME",
   });
   adminToken = adminLogin.data.token;
 }

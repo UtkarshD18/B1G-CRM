@@ -9,7 +9,7 @@ const fs = require('fs');
     console.log('Logging in as User...');
     const loginRes = await axios.post('http://localhost:3010/api/user/login', {
       email: 'user@example.com',
-      password: '<PASSWORD>'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
     
     const token = loginRes.data.token;

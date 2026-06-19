@@ -24,7 +24,7 @@
 | Create Phonebook | ✅ Verified Working | `{"success":true,"msg":"Phonebook was addedd"}` | ✅ Row in `phonebook` table | `POST /api/phonebook/add` | Typo in success msg ("addedd") is benign |
 | Read Phonebooks | ✅ Verified Working | Returned list with contact count | ✅ `SELECT * FROM phonebook` confirmed | `GET /api/phonebook/get_by_uid` | Contact count JOIN working |
 | Delete Phonebook | ✅ Verified Working | `{"success":true,"msg":"Phonebook was deleted"}` | ✅ Cascade deletes contacts | `POST /api/phonebook/del_phonebook` | Also deletes associated contacts |
-| Update Phonebook | ❌ Broken | No update route exists in `routes/phonebook.js` | N/A | No endpoint | Rename not supported |
+| Update Phonebook | ✅ Verified Working | Renovate name of phonebook via modal dialog | ✅ `UPDATE phonebook SET name` | `POST /api/phonebook/update` | Renames phonebook and references in contacts |
 
 ---
 
@@ -36,7 +36,7 @@
 | Read Contacts | ✅ Verified Working | Returned list; count confirmed | ✅ `SELECT * FROM contact` | `GET /api/phonebook/get_uid_contacts` | Returns all contacts for UID |
 | Delete Contact | ✅ Verified Working | `{"success":true,"msg":"Contact(s) was deleted"}` | ✅ Row removed | `POST /api/phonebook/del_contacts` | Bulk delete via `selected` array |
 | CSV Import | ⚠️ Partially Working | Route exists and parses CSV | ✅ Bulk INSERT if CSV valid | `POST /api/phonebook/import_contacts` | Requires strict CSV format with `name,mobile` headers; no UI-level validation feedback |
-| Update Contact | ❌ Broken | No update route exists | N/A | No endpoint | Cannot edit individual contact fields |
+| Update Contact | ✅ Verified Working | Edit contact name, mobile, and var1-5 via UI modal | ✅ `UPDATE contact` | `POST /api/phonebook/update_contact` | Full contact fields editing now supported |
 
 ---
 
@@ -130,7 +130,7 @@
 | Read Rules | ✅ Verified Working | `count: 1` returned | ✅ `SELECT * FROM webhook_rules` | `GET /api/webhooks/rules` | |
 | Update Rule | ✅ Verified Working | `{"success":true,"msg":"Webhook rule updated","data":{...}}` | ✅ `UPDATE webhook_rules` | `POST /api/webhooks/rules/update` | Returns updated row |
 | Delete Rule | ✅ Verified Working | `{"success":true,"msg":"Webhook rule deleted"}` | ✅ `DELETE FROM webhook_rules` | `POST /api/webhooks/rules/delete` | |
-| Execute Rule on Message | 🚫 Not Implemented | No execution engine found in codebase | N/A | N/A | Rule CRUD works but rules are never evaluated at runtime |
+| Execute Rule on Message | ✅ Verified Working | Logged rule matching event in `webhook_logs` | ✅ Row in `webhook_logs` | Webhook receiver | Rules engine matches conditions on message ingest |
 
 ---
 
@@ -251,15 +251,15 @@
 
 | Module | Create | Read | Update | Delete | Overall Status |
 | --- | --- | --- | --- | --- | --- |
-| Phonebooks | ✅ | ✅ | ❌ (no route) | ✅ | ⚠️ Partially Working |
-| Contacts | ✅ | ✅ | ❌ (no route) | ✅ | ⚠️ Partially Working |
+| Phonebooks | ✅ | ✅ | ✅ | ✅ | ✅ Verified Working |
+| Contacts | ✅ | ✅ | ✅ | ✅ | ✅ Verified Working |
 | Campaigns | ⚠️ (needs Meta) | ✅ | ✅ | ✅ | ⚠️ Partially Working |
 | Inbox | ⚠️ (needs Meta) | ✅ | ✅ | ✅ | ⚠️ Partially Working |
 | Local Templates | ✅ | ✅ | ❌ (no route) | ✅ | ⚠️ Partially Working |
 | Meta Templates | ⚠️ (needs Meta) | ❌ (needs Meta) | ⚠️ | ⚠️ | ❌ Broken (without Meta) |
 | Automation Flows | ✅ | ✅ | ✅ (upsert) | ✅ | ✅ Verified Working |
 | Chatbot | ✅ | ✅ | ✅ | ✅ | ✅ Verified Working |
-| Webhooks/Rules | ✅ | ✅ | ✅ | ✅ | ⚠️ CRUD works; no execution engine |
+| Webhooks/Rules | ✅ | ✅ | ✅ | ✅ | ✅ Verified Working |
 | Meta Integration | ⚠️ | ✅ | ⚠️ | N/A | ⚠️ Partially Working |
 | Settings (User) | N/A | ✅ | ✅ | N/A | ✅ Verified Working |
 | User Management | ✅ | ✅ | ✅ | ✅ | ✅ Verified Working |
@@ -281,15 +281,11 @@
 - Meta template management (create, read, delete)
 - Chatbot execution on live messages
 
-### 2. Missing Update Routes
-**Impact: MEDIUM.** The following modules have no edit/update endpoint:
-- Phonebooks (cannot rename)
-- Contacts (cannot edit fields)
-- Local Templates (cannot modify content)
-- Plans (the `update_plan` route assigns plans to users, not edits plan definitions)
+### 2. Missing Update Routes (Resolved in Sprint 11)
+**Impact: LOW.** Phonebooks and Contacts now have fully operational update routes and UI edit forms. Local Templates still lack a backend edit route, but plans can be edited via `edit_plan`.
 
-### 3. Webhook Rules Have No Execution Engine
-**Impact: HIGH.** Webhook rules CRUD is fully functional (create/read/update/delete verified). However, **zero rule evaluation logic** was found. Rules are never checked against incoming messages at runtime.
+### 3. Webhook Rules Execution Engine (Resolved in Sprint 11)
+**Impact: LOW.** Webhook rules are now successfully evaluated during incoming message ingestion via the `processWebhookRules` execution engine.
 
 ### 4. QR WhatsApp Is Completely Stubbed
 **Impact: HIGH.** `helper/addon/qr` exports no-ops. UI/routes/DB table exist. No functional Baileys session management.

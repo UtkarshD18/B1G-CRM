@@ -59,10 +59,10 @@ A thorough check of the database seed templates and live app login forms confirm
 
 1.  **Super-Admin Role:**
     *   **Login URL:** `https://crm.oneoftheprojects.com/admin/login`
-    *   **Demo Credentials:** `admin@example.com` / `Password@123` (Verified working on the live system; populated via the "Autofill" button).
+    *   **Demo Credentials:** `admin@example.com` / `<DEMO_PASSWORD>` (Verified working on the live system; populated via the "Autofill" button).
 2.  **Tenant User Role:**
     *   **Login URL:** `https://crm.oneoftheprojects.com/user/login`
-    *   **Demo Credentials:** `user@example.com` / `password` (Verified working on the live system; populated via the "Autofill" button).
+    *   **Demo Credentials:** `user@example.com` / `<DEMO_PASSWORD>` (Verified working on the live system; populated via the "Autofill" button).
 3.  **Agent Role:**
     *   **Login URL:** `https://crm.oneoftheprojects.com/agent/login`
     *   **Impersonation Bypass:** Accessible from the User Portal under `More Options` -> `Agent Login` (`https://crm.oneoftheprojects.com/user?page=agent-login`). Clicking the **AUTO LOGIN** button next to an agent (e.g. `Paul` / `agent2@example.com`) generates a secure JWT token and opens `/agent/login?token=<token>` directly, authenticating the session.

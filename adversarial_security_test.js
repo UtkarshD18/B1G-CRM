@@ -1,7 +1,22 @@
 const axios = require("axios");
 const fs = require("fs");
 
-const BASE_URL = "http://localhost:3010/api";
+// Test credentials loaded from environment to avoid hardcoding
+const TEST_CONFIG = {
+  baseUrl: process.env.TEST_BASE_URL || "http://localhost:3010/api",
+  userEmail: process.env.TEST_USER_EMAIL || "user@example.com",
+  userPassword: process.env.TEST_USER_PASSWORD || "CHANGE_ME",
+  signupPassword: process.env.TEST_SIGNUP_PASSWORD || "CHANGE_ME",
+  agentPassword: process.env.TEST_AGENT_PASSWORD || "CHANGE_ME",
+  db: {
+    host: process.env.PGHOST || "127.0.0.1",
+    port: parseInt(process.env.PGPORT || "5432"),
+    user: process.env.PGUSER || "b1gcrm",
+    password: process.env.PGPASSWORD || "CHANGE_ME",
+    database: process.env.PGDATABASE || "b1gcrm"
+  }
+};
+const BASE_URL = TEST_CONFIG.baseUrl;
 let tenant1Token = "";
 let tenant2Token = "";
 let tenant1Uid = "local-user-uid"; // User 1 email: user@example.com (from setup/schema)
@@ -12,7 +27,7 @@ async function setupTenants() {
   try {
     const res1 = await axios.post(`${BASE_URL}/user/login`, {
       email: "user@example.com",
-      password: "<PASSWORD>"
+      password: TEST_CONFIG.userPassword
     });
     tenant1Token = res1.data.token;
   } catch (err) {
@@ -25,13 +40,13 @@ async function setupTenants() {
     await axios.post(`${BASE_URL}/user/signup`, {
       name: "Tenant Two",
       email: tenant2Email,
-      password: "Password@123",
+      password: TEST_CONFIG.signupPassword,
       mobile_with_country_code: "9876543210",
       acceptPolicy: true
     });
     const res2 = await axios.post(`${BASE_URL}/user/login`, {
       email: tenant2Email,
-      password: "Password@123"
+      password: TEST_CONFIG.signupPassword
     });
     tenant2Token = res2.data.token;
 
@@ -278,8 +293,8 @@ async function runAdversarialAudit() {
     host: "127.0.0.1",
     port: 5432,
     user: "b1gcrm",
-    password: "b1gcrm_local_dev",
-    database: "b1gcrm"
+    password: TEST_CONFIG.db.password,
+    database: TEST_CONFIG.db.database
   });
   await dbClient.connect();
   const dbContacts = await dbClient.query("SELECT id FROM contact WHERE name = 'T1 Contact' AND uid = 'local-user-uid'");
@@ -322,8 +337,8 @@ async function runAdversarialAudit() {
         host: "127.0.0.1",
         port: 5432,
         user: "b1gcrm",
-        password: "b1gcrm_local_dev",
-        database: "b1gcrm"
+        password: TEST_CONFIG.db.password,
+        database: TEST_CONFIG.db.database
       });
       await pgClient.connect();
       const verifyRow = await pgClient.query("SELECT * FROM contact WHERE id = $1", [t1ContactId]);
@@ -340,8 +355,8 @@ async function runAdversarialAudit() {
         host: "127.0.0.1",
         port: 5432,
         user: "b1gcrm",
-        password: "b1gcrm_local_dev",
-        database: "b1gcrm"
+        password: TEST_CONFIG.db.password,
+        database: TEST_CONFIG.db.database
       });
       await pgClient.connect();
       const verifyPb = await pgClient.query("SELECT * FROM phonebook WHERE id = $1", [t1PhonebookId]);
@@ -359,7 +374,7 @@ async function runAdversarialAudit() {
   try {
     const res = await axios.post(`${BASE_URL}/agent/add_agent`, {
       name: "T1 Agent",
-      password: "AgentPassword@123",
+      password: TEST_CONFIG.agentPassword,
       email: `t1agent_${Date.now()}@example.com`,
       mobile: "1112223333",
       comments: "T1 comments"

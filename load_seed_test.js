@@ -9,7 +9,7 @@ const USER_UID = "local-user-uid";
 async function login() {
   const res = await axios.post(`${BASE_URL}/user/login`, {
     email: "user@example.com",
-    password: "<PASSWORD>",
+    password: process.env.TEST_USER_PASSWORD || "CHANGE_ME",
   });
   return res.data.token;
 }
@@ -23,7 +23,7 @@ async function runLoadTest() {
     host: "127.0.0.1",
     port: 5432,
     user: "b1gcrm",
-    password: "b1gcrm_local_dev",
+    password: process.env.PGPASSWORD || "CHANGE_ME",
     database: "b1gcrm",
   });
   await client.connect();
@@ -121,7 +121,7 @@ async function runLoadTest() {
   await page.goto("http://localhost:3010/user/login", { waitUntil: "networkidle2" });
   await page.evaluate(() => {
     document.querySelector('input[type="email"]').value = "user@example.com";
-    document.querySelector('input[type="password"]').value = "<PASSWORD>";
+    document.querySelector('input[type="password"]').value = process.env.TEST_USER_PASSWORD || "CHANGE_ME";
     const btn = document.querySelector('button[type="submit"]') || document.querySelector('button');
     if (btn) btn.click();
   });

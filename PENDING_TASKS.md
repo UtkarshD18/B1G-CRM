@@ -294,6 +294,25 @@
   - Message input with send button
   - Online status indicator
 
+### Phase 11: Sprint 11 Stabilization (100% Complete)
+
+#### Runtime Stabilization & Verification
+- ✅ **nodemon.json** - Configured server watch ignore lists for runtime data directories (`flow-json/`, `conversations/`, `sessions/`, `logs/`, `client/`) to prevent dev server crashes.
+- ✅ **routes/user.js** - Fixed seeder to populate local database templates (`demo_welcome_template` and `order_update`).
+- ✅ **client/src/pages/user/Contacts.jsx** - Decoupled loading status lines and added contact edit modals & phonebook rename forms.
+- ✅ **helper/inbox/inbox.js** - Integrated the Webhook Rules evaluation engine (`processWebhookRules`) on inbound message ingest.
+- ✅ **client/src/pages/user/ChatWidget.jsx** - Renamed Chat Widget references to **Click-to-Chat Launcher** across components and navigation.
+- ✅ **client/src/pages/user/AutomationFlows.jsx** - Nested Visual Flow canvas raw JSON editing fields in collapsible containers.
+
+### Phase 12: Sprint 12 Production Hardening (100% Complete)
+
+#### Security & Tenancy Hardening
+- ✅ **Token Security** - Removed password hash references from all signed JWT payloads across users, admins, and agents login/recovery/impersonation channels.
+- ✅ **Authentication Verification** - Updated validation middlewares to authorize tokens using email and UID values, avoiding password checks on API calls.
+- ✅ **IDOR Prevention (Webhooks)** - Restricted webhook rules agent assignment to verify agent ownership.
+- ✅ **IDOR Prevention (QR sessions)** - Enforced owner checks on `/change_instance_status` presence edits.
+- ✅ **Adversarial Security Suite** - Set up and verified 100% PASS on the cross-tenant mock attack script `adversarial_security_test.js`.
+
 ---
 
 ## ⏳ PENDING TASKS
@@ -368,7 +387,7 @@
 - [ ] **Contact Management Integration**
   - Connect to `/api/inbox/get_contacts`
   - Create contact modal
-  - Edit contact details
+  - [x] Edit contact details (Implemented UI edit modals in Sprint 11)
   - Tag management
   - Contact search with autocomplete
 
@@ -420,7 +439,7 @@
 - [ ] **Phonebook & Contact Organization**
   - Contact group creation
   - Bulk contact import (CSV)
-  - Group management and editing
+  - [x] Group management and editing (Implemented phonebook rename in Sprint 11)
   - Contact tags and labeling
   - Contact activity timeline
   - Duplicate detection and merging

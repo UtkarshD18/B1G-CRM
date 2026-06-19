@@ -6,7 +6,7 @@ const queryDb = async (sql, params = []) => {
     host: '127.0.0.1',
     port: 5432,
     user: 'b1gcrm',
-    password: 'b1gcrm_local_dev',
+    password: process.env.PGPASSWORD || 'CHANGE_ME',
     database: 'b1gcrm'
   });
   await client.connect();
@@ -26,7 +26,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Logging in as User...');
     const userLogin = await axios.post('http://localhost:3010/api/user/login', {
       email: 'user@example.com',
-      password: '<PASSWORD>'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
     const userHeaders = { Authorization: `Bearer ${userLogin.data.token}` };
     const userUid = 'local-user-uid'; // From user token
@@ -40,7 +40,7 @@ const queryDb = async (sql, params = []) => {
     const agent1Res = await axios.post('http://localhost:3010/api/agent/add_agent', {
       name: 'Agent One',
       email: 'audit-reassign-1@example.com',
-      password: '<PASSWORD>',
+      password: process.env.TEST_AGENT_PASSWORD || 'CHANGE_ME',
       mobile: '+919999999991',
       comments: 'First Agent'
     }, { headers: userHeaders });
@@ -49,7 +49,7 @@ const queryDb = async (sql, params = []) => {
     const agent2Res = await axios.post('http://localhost:3010/api/agent/add_agent', {
       name: 'Agent Two',
       email: 'audit-reassign-2@example.com',
-      password: '<PASSWORD>',
+      password: process.env.TEST_AGENT_PASSWORD || 'CHANGE_ME',
       mobile: '+919999999992',
       comments: 'Second Agent'
     }, { headers: userHeaders });

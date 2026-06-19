@@ -6,7 +6,7 @@ const queryDb = async (sql, params = []) => {
     host: '127.0.0.1',
     port: 5432,
     user: 'b1gcrm',
-    password: 'b1gcrm_local_dev',
+    password: process.env.PGPASSWORD || 'CHANGE_ME',
     database: 'b1gcrm'
   });
   await client.connect();
@@ -26,7 +26,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Logging in as User...');
     const loginRes = await axios.post('http://localhost:3010/api/user/login', {
       email: 'user@example.com',
-      password: '<PASSWORD>'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
     const token = loginRes.data.token;
     const headers = { Authorization: `Bearer ${token}` };

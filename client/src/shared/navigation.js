@@ -19,7 +19,7 @@ export const USER_NAV = [
   { label: 'Meta WhatsApp', path: '/user/link-meta-whatsapp' },
   { label: 'Agent Login', path: '/user/agent-login' },
   { label: 'Agent Task', path: '/user/agent-task' },
-  { label: 'Chat Widget', path: '/user/chat-widget' },
+  { label: 'Click-to-Chat Launcher', path: '/user/chat-widget' },
   { label: 'Billing', path: '/user/billing' },
   { label: 'API & Webhooks', path: '/user/api-dashboard' },
   { label: 'Settings', path: '/user/settings' },

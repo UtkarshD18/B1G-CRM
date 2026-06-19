@@ -12,7 +12,7 @@ const queryDb = async (sql, params = []) => {
     host: '127.0.0.1',
     port: 5432,
     user: 'b1gcrm',
-    password: 'b1gcrm_local_dev',
+    password: process.env.PGPASSWORD || 'CHANGE_ME',
     database: 'b1gcrm'
   });
   await client.connect();
@@ -64,7 +64,7 @@ const fillReactInput = async (page, selector, value) => {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'qr_00_login_page.png') });
 
     await fillReactInput(page, 'input[type="email"]', 'user@example.com');
-    await fillReactInput(page, 'input[type="password"]', '<PASSWORD>');
+    await fillReactInput(page, 'input[type="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
     await page.evaluate(() => {
       const btn = document.querySelector('button[type="submit"]') || document.querySelector('button');
       if (btn) btn.click();

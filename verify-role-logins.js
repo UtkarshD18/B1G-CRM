@@ -137,21 +137,21 @@ const runRoleTest = async (browser, roleName, loginUrl, email, password, dashboa
     // Audit Admin
     const adminRes = await runRoleTest(
       browser, 'Admin', 'http://localhost:3010/admin/login',
-      'admin@example.com', '<PASSWORD>', '/admin/dashboard'
+      'admin@example.com', (process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME'), '/admin/dashboard'
     );
     auditReport.push(adminRes);
 
     // Audit User
     const userRes = await runRoleTest(
       browser, 'User', 'http://localhost:3010/user/login',
-      'user@example.com', '<PASSWORD>', '/user/dashboard'
+      'user@example.com', process.env.TEST_USER_PASSWORD || 'CHANGE_ME', '/user/dashboard'
     );
     auditReport.push(userRes);
 
     // Audit Agent
     const agentRes = await runRoleTest(
       browser, 'Agent', 'http://localhost:3010/agent/login',
-      'agent@example.com', '<PASSWORD>', '/agent/dashboard'
+      'agent@example.com', process.env.TEST_USER_PASSWORD || 'CHANGE_ME', '/agent/dashboard'
     );
     auditReport.push(agentRes);
 

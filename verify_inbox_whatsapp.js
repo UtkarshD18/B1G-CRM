@@ -13,7 +13,7 @@ const queryDb = async (sql, params = []) => {
     host: '127.0.0.1',
     port: 5432,
     user: 'b1gcrm',
-    password: 'b1gcrm_local_dev',
+    password: process.env.PGPASSWORD || 'CHANGE_ME',
     database: 'b1gcrm'
   });
   await client.connect();
@@ -75,7 +75,7 @@ const fillReactInput = async (page, selector, value) => {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'whatsapp_00_login_page.png') });
 
     await fillReactInput(page, 'input[type="email"]', 'user@example.com');
-    await fillReactInput(page, 'input[type="password"]', '<PASSWORD>');
+    await fillReactInput(page, 'input[type="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'whatsapp_01_user_login_entered.png') });
 
     await page.evaluate(() => {
@@ -289,7 +289,7 @@ const fillReactInput = async (page, selector, value) => {
     // Agent Login
     await page.goto('http://localhost:3010/agent/login', { waitUntil: 'networkidle2' });
     await fillReactInput(page, 'input[type="email"]', 'agent@example.com');
-    await fillReactInput(page, 'input[type="password"]', '<PASSWORD>');
+    await fillReactInput(page, 'input[type="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
     await page.evaluate(() => {
       const btn = document.querySelector('button[type="submit"]') || document.querySelector('button');
       if (btn) btn.click();
@@ -309,7 +309,7 @@ const fillReactInput = async (page, selector, value) => {
     console.log('10. Sending reply as Agent via REST API...');
     const agentAuthRes = await axios.post('http://localhost:3010/api/agent/login', {
       email: 'agent@example.com',
-      password: '<PASSWORD>'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
     const agentToken = agentAuthRes.data.token;
     
@@ -329,7 +329,7 @@ const fillReactInput = async (page, selector, value) => {
     console.log('11. Relogging as User to verify agent reply in inbox...');
     await page.goto('http://localhost:3010/user/login', { waitUntil: 'networkidle2' });
     await fillReactInput(page, 'input[type="email"]', 'user@example.com');
-    await fillReactInput(page, 'input[type="password"]', '<PASSWORD>');
+    await fillReactInput(page, 'input[type="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
     await page.evaluate(() => {
       const btn = document.querySelector('button[type="submit"]') || document.querySelector('button');
       if (btn) btn.click();

@@ -7,8 +7,8 @@ This document outlines the login flow, role discovery, route discovery, page cap
 ## 1. Login Flow Strategy
 
 The reference CRM uses cookie/localStorage based JWT token authentication for three portals:
-*   **User Portal:** Log in at `/user/login` using `user@example.com` / `password`.
-*   **Admin Portal:** Log in at `/admin/login` using `admin@example.com` / `Password@123`.
+*   **User Portal:** Log in at `/user/login` using `user@example.com` / `<DEMO_PASSWORD>`.
+*   **Admin Portal:** Log in at `/admin/login` using `admin@example.com` / `<DEMO_PASSWORD>`.
 *   **Agent Portal:** Click the **AUTO LOGIN** button next to any agent under `/user?page=agent-login`. This retrieves an impersonation token and logs into `/agent/login?token=<token>`.
 
 ### Puppeteer Automation Implementation:

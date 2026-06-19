@@ -7,7 +7,7 @@ const queryDb = async (sql, params = []) => {
     host: '127.0.0.1',
     port: 5432,
     user: 'b1gcrm',
-    password: 'b1gcrm_local_dev',
+    password: process.env.PGPASSWORD || 'CHANGE_ME',
     database: 'b1gcrm'
   });
   await client.connect();
@@ -27,7 +27,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Logging in as User...');
     const userLoginRes = await axios.post('http://localhost:3010/api/user/login', {
       email: 'user@example.com',
-      password: '<PASSWORD>'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
     const userToken = userLoginRes.data.token;
     const userHeaders = { Authorization: `Bearer ${userToken}` };
@@ -38,7 +38,7 @@ const queryDb = async (sql, params = []) => {
     console.log(`Creating agent account for ${agentEmail}...`);
     const createAgentRes = await axios.post('http://localhost:3010/api/agent/add_agent', {
       name: agentName,
-      password: '<PASSWORD>',
+      password: process.env.TEST_AGENT_PASSWORD || 'CHANGE_ME',
       email: agentEmail,
       mobile: '+919876543210',
       comments: 'Audit temp comments'
@@ -68,7 +68,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Logging in as Agent...');
     const agentLoginRes = await axios.post('http://localhost:3010/api/agent/login', {
       email: agentEmail,
-      password: '<PASSWORD>'
+      password: process.env.TEST_AGENT_PASSWORD || 'CHANGE_ME'
     });
     
     const agentToken = agentLoginRes.data.token;

@@ -29,7 +29,7 @@ const pages = [
     await page.goto('http://localhost:3010/login', { waitUntil: 'networkidle2', timeout: 15000 });
     await page.waitForSelector('input[type="email"], input[name="email"]', { timeout: 5000 });
     await page.type('input[type="email"], input[name="email"]', 'user@example.com');
-    await page.type('input[type="password"], input[name="password"]', '<PASSWORD>');
+    await page.type('input[type="password"], input[name="password"]', process.env.TEST_USER_PASSWORD || 'CHANGE_ME');
     await page.click('button[type="submit"]');
     await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {});
     await new Promise(r => setTimeout(r, 2000));

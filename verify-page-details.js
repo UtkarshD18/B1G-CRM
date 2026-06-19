@@ -140,19 +140,19 @@ const auditPagesForRole = async (browser, roleName, loginUrl, email, password, b
   try {
     const adminReport = await auditPagesForRole(
       browser, 'Admin', 'http://localhost:3010/admin/login',
-      'admin@example.com', '<PASSWORD>', 'admin', ADMIN_PAGES
+      'admin@example.com', (process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME'), 'admin', ADMIN_PAGES
     );
     report = report.concat(adminReport);
 
     const userReport = await auditPagesForRole(
       browser, 'User', 'http://localhost:3010/user/login',
-      'user@example.com', '<PASSWORD>', 'user', USER_PAGES
+      'user@example.com', process.env.TEST_USER_PASSWORD || 'CHANGE_ME', 'user', USER_PAGES
     );
     report = report.concat(userReport);
 
     const agentReport = await auditPagesForRole(
       browser, 'Agent', 'http://localhost:3010/agent/login',
-      'agent@example.com', '<PASSWORD>', 'agent', AGENT_PAGES
+      'agent@example.com', process.env.TEST_USER_PASSWORD || 'CHANGE_ME', 'agent', AGENT_PAGES
     );
     report = report.concat(agentReport);
 

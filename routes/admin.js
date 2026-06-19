@@ -41,7 +41,6 @@ router.post("/login", async (req, res) => {
         {
           uid: userFind[0].uid,
           role: "admin",
-          password: userFind[0].password,
           email: userFind[0].email,
         },
         env.JWT_SECRET,
@@ -547,7 +546,6 @@ router.post("/auto_login", adminValidator, async (req, res) => {
       {
         uid: user[0].uid,
         role: "user",
-        password: user[0].password,
         email: user[0].email,
       },
       env.JWT_SECRET,
@@ -908,10 +906,10 @@ router.post("/send_resovery", async (req, res) => {
 
     const jsontoken = sign(
       {
+        uid: checkEmailValid[0].uid,
         old_email: email,
         email: email,
         time: moment(new Date()),
-        password: checkEmailValid[0]?.password,
         role: "admin",
       },
       env.JWT_SECRET,
