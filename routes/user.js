@@ -2039,7 +2039,8 @@ router.post("/seed_demo_data", validateUser, async (req, res) => {
     if (existingAgent.length > 0) {
       actualAgentUid = existingAgent[0].uid;
     } else {
-      const hasPass = await bcrypt.hash(process.env.DEMO_AGENT_PASSWORD || "CHANGE_ME", 10);
+      const demoAgentPassword = process.env.DEMO_AGENT_PASSWORD || "CHANGE_ME";
+      const hasPass = await bcrypt.hash(demoAgentPassword, 10);
       await query(`INSERT INTO agents (owner_uid, uid, email, password, role, name, comments, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
         req.decode.uid,
         agentUid,

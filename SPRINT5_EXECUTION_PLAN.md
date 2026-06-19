@@ -1,6 +1,6 @@
 # SPRINT 5 EXECUTION PLAN
 
-**Audit Reference**: [SPRINT4_MASTER_REPORT.md](SPRINT4_MASTER_REPORT.md)  
+**Audit Reference**: [SPRINT4_MASTER_REPORT.md](SPRINT4_MASTER_REPORT.md)
 **Goal**: Resolve core bugs, implement the webhook trigger engine, connect persistent states, and achieve functional reference CRM parity.
 
 ---
@@ -25,7 +25,7 @@
 
 ### 2.1 Kanban Column Drag-and-Drop Sync
 *   **Problem**: Moving chat cards across status columns is visual-only and does not persist.
-*   **Resolution**: 
+*   **Resolution**:
     1. Expose `POST /api/inbox/update_kanban_status` in [routes/inbox.js](routes/inbox.js).
     2. Add status column mappings in PostgreSQL `chats` table.
     3. Update [client/src/pages/user/Kanban.jsx](client/src/pages/user/Kanban.jsx) to invoke the update endpoint on drops.
