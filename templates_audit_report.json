@@ -1,0 +1,28 @@
+{
+  "create": {
+    "title": "Audit Temp 1781780196625",
+    "successResponse": true,
+    "persisted": true,
+    "row": {
+      "id": 3,
+      "uid": "local-user-uid",
+      "content": "{\"body\":\"Hello audit tester\"}",
+      "type": "text",
+      "title": "Audit Temp 1781780196625",
+      "createdat": "2026-06-18T10:56:36.629Z"
+    }
+  },
+  "read": {
+    "success": true,
+    "count": 1,
+    "containsAuditTemp": true
+  },
+  "edit": {
+    "supported": false,
+    "notes": "Edit/Update local templates is not supported by API routes (no update endpoint in routes/templet.js) or user portal client files."
+  },
+  "delete": {
+    "successResponse": true,
+    "removedFromDb": true
+  }
+}

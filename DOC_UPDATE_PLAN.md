@@ -7,11 +7,11 @@ This plan details the discrepancies identified between current documentation fil
 ## 1. Identified Discrepancies
 
 1. **Overall Completion Metric:**
-   - *Current Doc:* Specifies `70%` estimated completion in [PROJECT_CONTEXT.source.md](file:///home/shadow/projects/B1GCRM/docs/PROJECT_CONTEXT.source.md).
+   - *Current Doc:* Specifies `70%` estimated completion in [PROJECT_CONTEXT.source.md](docs/PROJECT_CONTEXT.source.md).
    - *Audit Reality:* The computed verified completion metric is `72.0%` overall, based on detailed layer analyses.
 2. **WhatsApp QR Connection Status:**
-   - *Current Doc:* Classified as "Partial" or "Stubbed" in [FEATURE_TRACKER.md](file:///home/shadow/projects/B1GCRM/docs/FEATURE_TRACKER.md).
-   - *Audit Reality:* Since the helper module at [helper/addon/qr/index.js](file:///home/shadow/projects/B1GCRM/helper/addon/qr/index.js) contains no functional code and only returns stubs, it is classified as **Broken** rather than "Partial".
+   - *Current Doc:* Classified as "Partial" or "Stubbed" in [FEATURE_TRACKER.md](docs/FEATURE_TRACKER.md).
+   - *Audit Reality:* Since the helper module at [helper/addon/qr/index.js](helper/addon/qr/index.js) contains no functional code and only returns stubs, it is classified as **Broken** rather than "Partial".
 3. **Inbox Media Attachments:**
    - *Current Doc:* Omitted or treated under inbox realtime.
    - *Audit Reality:* Missing. Server does not support files saving/rendering in Inbox, which is a major gap.

@@ -11,10 +11,10 @@ Verification of B1GCRM authentication, authorization, and API endpoint health ac
 
 | Role | Email | Password | Login Endpoint | Result |
 | --- | --- | --- | --- | --- |
-| **User** | `user@example.com` | `User@123` | `POST /api/user/login` | ✅ Success (JWT issued) |
-| **Admin** | `admin@example.com` | `Admin@123` | `POST /api/admin/login` | ✅ Success (JWT issued) |
-| **Agent** | `agent@example.com` | `User@123` | `POST /api/agent/login` | ✅ Success (JWT issued) |
-| **Signup** | `parity-test@example.com` | `parity123` | `POST /api/user/signup` | ✅ Success (account created) |
+| **User** | `user@example.com` | `<PASSWORD>` | `POST /api/user/login` | ✅ Success (JWT issued) |
+| **Admin** | `admin@example.com` | `<PASSWORD>` | `POST /api/admin/login` | ✅ Success (JWT issued) |
+| **Agent** | `agent@example.com` | `<PASSWORD>` | `POST /api/agent/login` | ✅ Success (JWT issued) |
+| **Signup** | `parity-test@example.com` | `<PASSWORD>` | `POST /api/user/signup` | ✅ Success (account created) |
 
 > [!NOTE]
 > Seed credentials are defined in `database/seed-dev.js` and applied by `npm run db:seed`. The bcrypt hashes are pre-computed in `database/migrations/000_create_base_schema.sql`.
@@ -102,6 +102,6 @@ All endpoints tested with `Bearer <token>` authorization header.
 
 | Table | Count | Seed Accounts |
 | --- | --- | --- |
-| `"user"` | 3 | `user@example.com` (User@123), `test-signup@example.com`, `parity-test@example.com` |
-| `admin` | 1 | `admin@example.com` (Admin@123) |
-| `agents` | 1 | `agent@example.com` (User@123) |
+| `"user"` | 3 | `user@example.com` (<PASSWORD>), `test-signup@example.com`, `parity-test@example.com` |
+| `admin` | 1 | `admin@example.com` (<PASSWORD>) |
+| `agents` | 1 | `agent@example.com` (<PASSWORD>) |

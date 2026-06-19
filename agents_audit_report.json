@@ -1,0 +1,53 @@
+{
+  "agentCreate": {
+    "name": "Audit Agent 1781819340140",
+    "email": "audit-agent-1781819340140@example.com",
+    "successResponse": true,
+    "persistedInDb": true,
+    "row": {
+      "id": 15,
+      "owner_uid": "local-user-uid",
+      "uid": "UOeJifXErqMWw5KgKkShIug4FP9mgALR",
+      "email": "audit-agent-1781819340140@example.com",
+      "password": "[HIDDEN]",
+      "role": "agent",
+      "name": "Audit Agent 1781819340140",
+      "mobile": "+919876543210",
+      "comments": "Audit temp comments",
+      "is_active": 1,
+      "created_at": "2026-06-18T21:49:00.184Z",
+      "updated_at": "2026-06-18T21:49:00.184Z",
+      "createdat": "2026-06-18T21:49:00.184Z",
+      "updatedat": "2026-06-18T21:49:00.184Z"
+    }
+  },
+  "agentLogin": {
+    "success": true,
+    "tokenReturned": true
+  },
+  "taskAssign": {
+    "title": "Audit Task 1781819340248",
+    "successResponse": true,
+    "persistedInDb": true,
+    "row": {
+      "id": 10,
+      "owner_uid": "local-user-uid",
+      "uid": "UOeJifXErqMWw5KgKkShIug4FP9mgALR",
+      "title": "Audit Task 1781819340248",
+      "description": "Please complete the parity check validation",
+      "status": "PENDING",
+      "agent_comments": null,
+      "createdat": "2026-06-18T21:49:00.251Z",
+      "updatedat": "2026-06-18T21:49:00.251Z"
+    }
+  },
+  "taskComplete": {
+    "successResponse": true,
+    "statusInDb": "COMPLETED",
+    "commentsInDb": "Parity check completed successfully"
+  },
+  "cleanup": {
+    "taskRemoved": true,
+    "agentRemoved": true
+  }
+}

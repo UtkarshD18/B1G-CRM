@@ -280,6 +280,10 @@ router.post("/del_chatbot", validateUser, async (req, res) => {
       id,
       req.decode.uid,
     ]);
+    await query(`DELETE FROM chatbot_log WHERE chatbot_id = ? AND uid = ?`, [
+      id,
+      req.decode.uid,
+    ]);
     res.json({ success: true, msg: "Chatbot was deleted" });
   } catch (err) {
     console.log(err);

@@ -28,6 +28,7 @@ import UserDeveloperApiPage from '../pages/user/DeveloperApi'
 import UserMetaTemplatesPage from '../pages/user/MetaTemplates'
 import UserSettingsPage from '../pages/user/Settings'
 import AgentDashboardPage from '../pages/agent/Dashboard'
+import AgentInboxPage from '../pages/agent/Inbox'
 import ReferenceModulePage from '../pages/ReferenceModulePage'
 
 export const ADMIN_REFERENCE_ROUTES = [
@@ -226,7 +227,7 @@ function AppRoutes() {
       >
         <Route index element={<Navigate to="/agent/dashboard" replace />} />
         <Route path="dashboard" element={<AgentDashboardPage />} />
-        <Route path="chats" element={<AgentDashboardPage />} />
+        <Route path="chats" element={<AgentInboxPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

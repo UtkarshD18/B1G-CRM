@@ -1,0 +1,33 @@
+{
+  "getChats": {
+    "success": true,
+    "foundTargetChat": true,
+    "originProperty": "instagram"
+  },
+  "sendText": {
+    "success": true,
+    "id": "mock-insta-msg-id-7cJ5zf4GuDvHjmId"
+  },
+  "sendImage": {
+    "success": true,
+    "id": "mock-insta-msg-id-PpGWCMozrTbCkPqd"
+  },
+  "sendVideo": {
+    "success": true,
+    "id": "mock-insta-msg-id-KIb6WjOV0ODavW10"
+  },
+  "sendDoc": {
+    "success": true,
+    "id": "mock-insta-msg-id-JXftHEGhalJpIr6A"
+  },
+  "persistenceVerification": {
+    "messageCount": 5,
+    "initialMessageText": "Hello inbox test",
+    "textReplyText": "Hello, this is an outgoing reply to Instagram!",
+    "imageReplyUrl": "http://localhost:3010/static/logo.png",
+    "imageCaption": "Outgoing image reply",
+    "videoReplyUrl": "http://localhost:3010/static/video.mp4",
+    "docReplyUrl": "http://localhost:3010/static/document.pdf"
+  },
+  "lastDbMessagePersisted": true
+}

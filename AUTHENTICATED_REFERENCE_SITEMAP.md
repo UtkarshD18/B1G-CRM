@@ -15,7 +15,7 @@ Comprehensive map of all authenticated pages in the reference CRM (whatsCRM) at 
 | `/admin/login` | Admin | Super-admin login (email/password only) |
 | `/agent/login` | Agent | Agent restricted login (email/password, auto-login tokens) |
 
-**Demo Credentials:** `user@user.com` / `password` (visible on login page with Autofill button)
+**Demo Credentials:** `user@example.com` / `<PASSWORD>` (visible on login page with Autofill button)
 
 ---
 

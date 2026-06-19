@@ -26,7 +26,7 @@ router.post('/add', validateUser, checkPlan, checkContactLimit, async (req, res)
         }
 
         await query(`INSERT INTO phonebook (name, uid) VALUES (?,?)`, [name, req.decode.uid])
-        res.json({ success: true, msg: "Phonebook was addedd" })
+        res.json({ success: true, msg: "Phonebook was added" })
 
     } catch (err) {
         res.json({ success: false, msg: "something went wrong" })
@@ -196,9 +196,79 @@ router.get('/get_uid_contacts', validateUser, async (req, res) => {
 router.post('/del_contacts', validateUser, async (req, res) => {
     try {
 
-        await query(`DELETE FROM contact WHERE id IN (?)`, [req.body.selected])
+        await query(`DELETE FROM contact WHERE id IN (?) AND uid = ?`, [req.body.selected, req.decode.uid])
         res.json({ success: true, msg: "Contact(s) was deleted" })
 
+    } catch (err) {
+        res.json({ success: false, msg: "something went wrong" })
+        console.log(err)
+    }
+})
+
+// rename phonebook
+router.post('/update', validateUser, async (req, res) => {
+    try {
+        const { id, name } = req.body
+
+        if (!id || !name) {
+            return res.json({ success: false, msg: "Phonebook ID and name are required" })
+        }
+
+        // Verify ownership first
+        const pbExists = await query(`SELECT * FROM phonebook WHERE id = ? AND uid = ?`, [id, req.decode.uid])
+        if (pbExists.length < 1) {
+            return res.json({ success: false, msg: "Phonebook not found" })
+        }
+
+        // Check for duplicate name
+        const findExt = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ? AND id != ?`, [req.decode.uid, name, id])
+        if (findExt.length > 0) {
+            return res.json({ success: false, msg: "Duplicate phonebook name found" })
+        }
+
+        await query(`UPDATE phonebook SET name = ? WHERE id = ? AND uid = ?`, [name, id, req.decode.uid])
+        await query(`UPDATE contact SET phonebook_name = ? WHERE phonebook_id = ? AND uid = ?`, [name, id, req.decode.uid])
+
+        res.json({ success: true, msg: "Phonebook was updated" })
+    } catch (err) {
+        res.json({ success: false, msg: "something went wrong" })
+        console.log(err)
+    }
+})
+
+// edit contact
+router.post('/update_contact', validateUser, async (req, res) => {
+    try {
+        const { id, name, mobile, var1, var2, var3, var4, var5 } = req.body
+
+        if (!id || !mobile) {
+            return res.json({ success: false, msg: "Contact ID and mobile are required" })
+        }
+
+        // Verify ownership
+        const contactExists = await query(`SELECT * FROM contact WHERE id = ? AND uid = ?`, [id, req.decode.uid])
+        if (contactExists.length < 1) {
+            return res.json({ success: false, msg: "Contact not found" })
+        }
+
+        await query(
+            `UPDATE contact 
+             SET name = ?, mobile = ?, var1 = ?, var2 = ?, var3 = ?, var4 = ?, var5 = ?
+             WHERE id = ? AND uid = ?`,
+            [
+                name || '',
+                mobile,
+                var1 || '',
+                var2 || '',
+                var3 || '',
+                var4 || '',
+                var5 || '',
+                id,
+                req.decode.uid
+            ]
+        )
+
+        res.json({ success: true, msg: "Contact was updated" })
     } catch (err) {
         res.json({ success: false, msg: "something went wrong" })
         console.log(err)

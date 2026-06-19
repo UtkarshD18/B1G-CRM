@@ -1,0 +1,9 @@
+{
+  "ignore": [
+    "flow-json/*",
+    "conversations/*",
+    "sessions/*",
+    "logs/*",
+    "client/*"
+  ]
+}

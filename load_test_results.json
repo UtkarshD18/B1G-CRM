@@ -1,0 +1,46 @@
+{
+  "apiMetrics": {
+    "get_phonebooks": {
+      "responseTimeMs": 4,
+      "count": 5,
+      "success": true
+    },
+    "get_chats": {
+      "responseTimeMs": 10,
+      "count": 101,
+      "success": true
+    },
+    "get_campaigns": {
+      "responseTimeMs": 3,
+      "count": 50,
+      "success": true
+    },
+    "get_flows": {
+      "responseTimeMs": 3,
+      "count": 24,
+      "success": true
+    },
+    "get_chatbots": {
+      "responseTimeMs": 2,
+      "count": 23,
+      "success": true
+    }
+  },
+  "uiMetrics": {
+    "Inbox": {
+      "loadTimeMs": 974
+    },
+    "Contacts": {
+      "loadTimeMs": 1017
+    },
+    "Campaigns": {
+      "loadTimeMs": 1020
+    },
+    "Chatbots": {
+      "loadTimeMs": 1018
+    },
+    "Flows": {
+      "loadTimeMs": 1014
+    }
+  }
+}

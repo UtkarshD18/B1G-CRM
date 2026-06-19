@@ -1,13 +1,13 @@
 # Current Status
 
-Last audited: 2026-06-15
+Last audited: 2026-06-19
 
 ## Implemented
 
 | Area | Evidence |
 | --- | --- |
 | Express backend | `server.js` mounts all route modules, applies middleware, serves frontend, starts sockets and campaign loop. |
-| PostgreSQL migrations | `database/migrate.js` and migrations `000` through `007`. |
+| PostgreSQL migrations | `database/migrate.js` and migrations `000` through `009`. |
 | Docker app stack | `Dockerfile` and `docker-compose.yml`. |
 | React SPA shell | `client/src/routes/AppRoutes.jsx`, `PortalLayout`, role gates. |
 | Admin core pages | Dashboard, plans, users, orders, settings pages exist and call APIs. |
@@ -18,18 +18,27 @@ Last audited: 2026-06-15
 | Chatbot diagnostics | `chatbot_log` table and `/api/chatbot/get_logs`. |
 | Webhook rule CRUD | `webhook_rules` migration and `routes/webhooks.js`. |
 | AI documentation system | `/docs` and `CLAUDE.md`. |
+| UI/UX Refinement (Sprint 1) | Solved white-on-beige text contrast issues and grid button collisions across all dashboards. |
+| Runtime Functionality + Reference CRM Gap (Sprint 2) | Integrated real-time media rendering (images, videos, audio, documents) in user inbox, and resolved global color contrast overrides. |
+| Reference CRM Parity Audit (Sprint 3) | Completed master parity audit reports, page reality classification, database/API audits, campaign blocker analysis, and top 50 parity improvements list. |
+| Sprint 5 Execution | Added Campaign Local Simulation mode (bypassing Meta Graph API limits), Phonebook Rename API (`POST /update`), Contact Edit API (`POST /update_contact`), Webhook execution engine, target dispatches, and persistent webhook logs. |
+| Admin Plan Edit config | Resolved endpoint routing collision under `/api/admin/edit_plan` and `client/src/pages/admin/Plans.jsx`. |
+| Multi-Agent Reassignment | Implemented unique socket listener reassignments and resolved duplicate assignment row DB issues. |
+| Sprint 11 Stabilization | Resolved nodemon reboot loops, populated seeder templates, added Contact & Phonebook edit forms, integrated Webhook Rules matcher engine, renamed Chat Widget to Click-to-Chat Launcher, and collapsed Visual Flow raw JSON textareas. |
+| Sprint 12 Production Hardening | Removed password hashes from JWT payloads, enforced agent assignment check, and resolved presence updates IDOR vulnerabilities. |
+
 
 ## Partially Implemented
 
 | Area | Gap |
 | --- | --- |
-| Auth/session model | Works, but tokens include password hashes and active login routes do not set explicit expiry. |
+| Auth/session model | Works; password hashes removed in Sprint 12. Active login routes do not set explicit expiry. |
 | Tenant isolation | Mostly query-based by `uid`; no database foreign keys. |
 | Inbox realtime | Active socket handlers exist; duplicate legacy websocket/helper paths remain. |
 | QR WhatsApp | API/UI scaffolding exists, but QR helper exports stubs/no-ops. |
 | Billing | Multiple provider routes exist, but production readiness depends on provider credentials and callback hardening. |
 | CMS/translation/theme | APIs write runtime files; this can be fragile in immutable/container deployments. |
-| API/webhooks | API key send routes and webhook rule CRUD exist; usage analytics and rule execution/logging are incomplete. |
+| API/webhooks | API key send routes, webhook rule CRUD, execution engine rules evaluation, target post dispatches, and logs are implemented; usage analytics dashboard is incomplete. |
 | Testing | Frontend tests exist; backend tests do not. |
 
 ## Missing Or Planned
@@ -79,9 +88,9 @@ Last audited: 2026-06-15
 
 | Concern | Why |
 | --- | --- |
-| JWT payload includes password hash | Avoid exposing stored hash material in client-held token. |
+| JWT payload includes password hash | [RESOLVED] Removed bcrypt password hashes from token payloads. |
 | Login tokens have no explicit expiry in active routes | Long-lived tokens increase risk. |
-| Some routes mutate files without auth or only body password | `/api/web/install_app` and `/api/web/update_app` are high risk. |
+| Some routes mutate files without auth or only body password | [RESOLVED] `/api/web/install_app` and `/api/web/update_app` are gated by admin password verification. |
 | No foreign keys | Orphaned or cross-tenant data errors are easier. |
 | File uploads write under public dirs | Validate file type/size/path carefully. |
 | Secrets stored in DB/plain env | Payment, SMTP, Meta tokens require operational protection. |

@@ -1,0 +1,21 @@
+{
+  "linkAccount": {
+    "success": true,
+    "msg": "Instagram credentials connected successfully."
+  },
+  "dbKeysPersisted": true,
+  "getHandshake": {
+    "status": 200,
+    "bodyMatchesChallenge": true
+  },
+  "createChatbot": {
+    "success": true,
+    "msg": "Chatbot was added"
+  },
+  "webhookPostStatus": 200,
+  "chatPersisted": true,
+  "fileHistoryPersisted": true,
+  "incomingMessageText": "trigger",
+  "chatbotTriggered": true,
+  "cleanupDisconnectSuccess": true
+}

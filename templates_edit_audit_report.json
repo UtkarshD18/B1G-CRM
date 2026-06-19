@@ -1,0 +1,17 @@
+{
+  "create": {
+    "title": "Edit Temp 1781819346026",
+    "id": 12,
+    "successResponse": true,
+    "persisted": true
+  },
+  "update": {
+    "title": "Edit Temp 1781819346026 - Updated",
+    "successResponse": true,
+    "contentUpdated": true
+  },
+  "delete": {
+    "successResponse": true,
+    "removedFromDb": true
+  }
+}

@@ -41,7 +41,6 @@ router.post("/login", async (req, res) => {
         {
           uid: userFind[0].uid,
           role: "admin",
-          password: userFind[0].password,
           email: userFind[0].email,
         },
         env.JWT_SECRET,
@@ -547,7 +546,6 @@ router.post("/auto_login", adminValidator, async (req, res) => {
       {
         uid: user[0].uid,
         role: "user",
-        password: user[0].password,
         email: user[0].email,
       },
       env.JWT_SECRET,
@@ -908,10 +906,10 @@ router.post("/send_resovery", async (req, res) => {
 
     const jsontoken = sign(
       {
+        uid: checkEmailValid[0].uid,
         old_email: email,
         email: email,
         time: moment(new Date()),
-        password: checkEmailValid[0]?.password,
         role: "admin",
       },
       env.JWT_SECRET,
@@ -988,17 +986,7 @@ router.get("/modify_password", adminValidator, async (req, res) => {
   }
 });
 
-// del user
-router.post("/del_user", adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-    await query(`DELETE FROM user WHERE id = ?`, [id]);
-    res.json({ success: true, msg: "User was deletd" });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
-  }
-});
+// Duplicate del_user route removed to avoid conflicts.
 
 // get all genn wa links
 router.get("/get_wa_gen", adminValidator, async (req, res) => {
@@ -1086,7 +1074,35 @@ router.post("/del_user", adminValidator, async (req, res) => {
       return res.json({ success: false, msg: "User ID is required" });
     }
 
-    await query(`DELETE FROM user WHERE id = ?`, [id]);
+    const user = await query(`SELECT uid FROM "user" WHERE id = ?`, [id]);
+    if (user.length > 0) {
+      const userUid = user[0].uid;
+      // Cascade delete all associated tenant resources to maintain database integrity
+      await query(`DELETE FROM agents WHERE owner_uid = ?`, [userUid]);
+      await query(`DELETE FROM phonebook WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM contact WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM broadcast WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM broadcast_log WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM orders WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM meta_api WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM meta_templet_media WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM chats WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM rooms WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM agent_chats WHERE owner_uid = ?`, [userUid]);
+      await query(`DELETE FROM chat_tags WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM chatbot WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM flow WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM flow_data WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM templets WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM instance WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM agent_task WHERE owner_uid = ?`, [userUid]);
+      await query(`DELETE FROM chat_widget WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM chatbot_log WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM webhook_rules WHERE uid = ?`, [userUid]);
+      await query(`DELETE FROM webhook_logs WHERE uid = ?`, [userUid]);
+    }
+
+    await query(`DELETE FROM "user" WHERE id = ?`, [id]);
     res.json({ success: true, msg: "User was deleted" });
   } catch (err) {
     console.log(err);

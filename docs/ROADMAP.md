@@ -1,46 +1,41 @@
 # Roadmap
 
-Last audited: 2026-06-17
+Last audited: 2026-06-18
 
-## Priority 1 - Stabilize Foundations
-
-| Work | Why | Files |
-| --- | --- | --- |
-| Add backend tests for auth, tenant isolation, and core routes. | Current backend has no test suite. | `routes/*`, `middlewares/*`, new test setup |
-| [Completed] Reconcile database schema docs/files. | Done (synced schema files with migrations 000-009). | `database/schema.sql`, `database/migrations/*`, `docs/DATABASE.md` |
-| Harden auth tokens. | Active login routes omit expiry and include password hashes. | `routes/user.js`, `routes/admin.js`, `routes/agent.js`, `middlewares/*` |
-| Audit public mutating routes. | Install/update/theme/language writes can be dangerous in production. | `routes/web.js` |
-| Decide QR product path. | QR API/UI exists, implementation is stubbed. | `routes/qr.js`, `helper/addon/qr/*`, `client/src/pages/user/Integrations.jsx` |
-
-## Priority 2 - Complete User Workspace
+## Priority 1 - Critical Parity Fixes (Sprint 4)
 
 | Work | Why | Files |
 | --- | --- | --- |
-| Inbox polish and pagination. | Inbox is central and JSON-file backed. | `routes/inbox.js`, `socket.js`, `helper/socket/*`, `client/src/pages/user/Inbox.jsx` |
-| Campaign pacing/retry/preview. | Broadcasts need production controls. | `routes/broadcast.js`, `loops/*`, `client/src/pages/user/Campaigns.jsx` |
-| Flow/chatbot validation. | Runtime depends on saved JSON and node compatibility. | `routes/chatFlow.js`, `routes/chatbot.js`, `functions/chatbot.js`, `helper/chatbot/*` |
-| Webhook execution engine. | Rule CRUD exists but no execution/log pipeline was found. | `routes/webhooks.js`, `helper/inbox/*`, new logs/migration |
-| API usage analytics. | Developer API dashboard mentions readiness but not usage analytics. | `routes/apiv2.js`, `client/src/pages/user/DeveloperApi.jsx` |
+| Fix Admin Plan definitions update route. | Collision in `routes/admin.js` prevents updating plan cost/limits. | `routes/admin.js`, `client/src/pages/admin/Plans.jsx` |
+| Add validation parameters to Chat Widget fields. | Prevents database casting crashes from styling strings. | `routes/user.js`, `client/src/pages/user/ChatWidget.jsx` |
+| Integrate Webhook Rules Execution Engine. | Rules CRUD exists, but triggers are not evaluated on incoming messages. | `helper/inbox/inbox.js`, `routes/webhooks.js` |
+| Activate QR WhatsApp Baileys connector. | QR page/table exists, but connection methods are stubbed/mocked. | `routes/qr.js`, `helper/addon/qr/*` |
 
-## Priority 3 - Admin And Billing Readiness
+## Priority 2 - User Workspace & Kanban Sync
 
 | Work | Why | Files |
 | --- | --- | --- |
-| Payment provider reconciliation. | Routes exist, but production success/failure paths need hardening. | `routes/user.js`, `routes/admin.js`, `client/src/pages/user/Billing.jsx` |
-| Admin CMS polish. | Many CMS/settings APIs exist; UI consolidation may be needed. | `client/src/pages/admin/Settings.jsx`, `routes/admin.js`, `routes/web.js` |
-| Audit user deletion effects. | No foreign keys means deletes can leave orphaned data. | `routes/admin.js`, migrations |
-| Secret management plan. | Meta/payment/SMTP tokens are sensitive. | `env.js`, `routes/admin.js`, deployment docs |
+| Implement drag-and-drop Kanban persistence. | Kanban UI is a mockup and does not sync columns to database. | `routes/inbox.js`, `client/src/pages/user/Kanban.jsx` |
+| Inbox composer quick reply templates. | Allows templates to be chosen directly in chat composer. | `client/src/pages/user/Inbox.jsx` |
+| Mock campaign delivery loop. | Enables full mock execution testing without live Meta API keys. | `loops/campaignLoop.js`, `functions/function.js` |
 
-## Priority 4 - Planned Channels And Modules
+## Priority 3 - Stabilize Foundations & Security
+
+| Work | Why | Files |
+| --- | --- | --- |
+| Add backend unit tests for auth and tenant isolation. | Core routing logic lacks backend coverage checks. | `routes/*`, `middlewares/*`, test setup |
+| Harden JWT payloads. | Active tokens expose password hashes and lack expiry options. | `routes/user.js`, `routes/admin.js`, `routes/agent.js` |
+| Audit user deletion effects. | Lack of foreign keys could leave orphan records in related tables. | `routes/admin.js` |
+
+## Priority 4 - Planned Channels
 
 | Work | Current state |
 | --- | --- |
-| Instagram link/DM/comment automation | Placeholder UI/routes only. |
+| Instagram link / DM automation | Placeholder UI/routes only. |
 | Telegram sessions | Placeholder route only. |
-| Web notifications/manual push | Placeholder route only. |
+| Web notifications / manual push | Placeholder route only. |
 | WhatsApp forms | Placeholder route only. |
 | WhatsApp warmer | Placeholder route only. |
-| AI/WA calls | Placeholder routes only. |
 
 ## Ongoing Rule
 

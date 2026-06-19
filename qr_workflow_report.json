@@ -1,0 +1,9 @@
+{
+  "steps": {
+    "createdInDb": true,
+    "dbStatus": "SCAN_QR",
+    "qrImageRendered": true,
+    "deletedInDb": true
+  },
+  "errors": []
+}

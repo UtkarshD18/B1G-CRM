@@ -1,0 +1,481 @@
+[
+  {
+    "category": "Webhooks",
+    "route": "/webhooks/rules",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "success": true,
+      "data": []
+    },
+    "passed": true
+  },
+  {
+    "category": "Webhooks",
+    "route": "/webhooks/rules",
+    "method": "GET",
+    "pathType": "error",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "success": 0,
+      "msg": "Invalid token found",
+      "token": "Bearer invalid_token",
+      "logout": true
+    },
+    "passed": true
+  },
+  {
+    "category": "Webhooks",
+    "route": "/webhooks/rules",
+    "method": "POST",
+    "pathType": "success",
+    "inputPayload": {
+      "name": "Test Audit Rule",
+      "source": "external",
+      "event_type": "message",
+      "match_field": "body.text",
+      "match_operator": "contains",
+      "match_value": "hello",
+      "action_type": "tag_chat",
+      "action_payload": "AuditTag",
+      "active": 1
+    },
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Action payload must be valid JSON"
+    },
+    "passed": true
+  },
+  {
+    "category": "Webhooks",
+    "route": "/webhooks/rules",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {
+      "name": "",
+      "source": "external",
+      "event_type": "message",
+      "match_field": "body.text",
+      "match_operator": "contains",
+      "match_value": "hello",
+      "action_type": "tag_chat",
+      "action_payload": "AuditTag",
+      "active": 1
+    },
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Rule name is required"
+    },
+    "passed": true
+  },
+  {
+    "category": "Templates",
+    "route": "/templet/get_templets",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "data": [
+        {
+          "id": 4,
+          "uid": "local-user-uid",
+          "content": "{\"body\":\"Hello original content\"}",
+          "type": "text",
+          "title": "Edit Temp 1781799849125",
+          "createdat": "2026-06-18T16:24:09.129Z"
+        }
+      ],
+      "success": true
+    },
+    "passed": true
+  },
+  {
+    "category": "Templates",
+    "route": "/templet/add_new",
+    "method": "POST",
+    "pathType": "success",
+    "inputPayload": {
+      "title": "Test Audit Template",
+      "type": "text",
+      "content": "This is a test audit template content."
+    },
+    "status": 200,
+    "data": {
+      "success": true,
+      "msg": "Templet was added"
+    },
+    "passed": true
+  },
+  {
+    "category": "Templates",
+    "route": "/templet/add_new",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {
+      "title": "Test Audit Template",
+      "type": "text",
+      "content": ""
+    },
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Please give a title"
+    },
+    "passed": true
+  },
+  {
+    "category": "Templates",
+    "route": "/templet/update",
+    "method": "POST",
+    "pathType": "success",
+    "inputPayload": {
+      "id": 8,
+      "title": "Updated Audit Template",
+      "type": "text",
+      "content": "Updated content details."
+    },
+    "status": 200,
+    "data": {
+      "success": true,
+      "msg": "Template was updated"
+    },
+    "passed": true
+  },
+  {
+    "category": "Templates",
+    "route": "/templet/update",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {},
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Missing required fields"
+    },
+    "passed": true
+  },
+  {
+    "category": "Chatbots",
+    "route": "/chatbot/get_chatbot",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "data": [
+        {
+          "id": 1,
+          "uid": "local-user-uid",
+          "title": "Audit Bot",
+          "for_all": 1,
+          "chats": "[]",
+          "flow": "{\"id\":1,\"uid\":\"local-user-uid\",\"flow_id\":\"audit-flow-1781687868\",\"title\":\"Audit Test Flow\",\"prevent_list\":null,\"ai_list\":null,\"createdat\":\"2026-06-17T09:17:48.271Z\",\"updatedat\":\"2026-06-17T09:17:48.271Z\"}",
+          "flow_id": "audit-flow-1781687868",
+          "active": 1,
+          "origin": "{\"title\":\"Meta\",\"code\":\"META\",\"data\":{}}",
+          "createdat": "2026-06-17T09:18:38.753Z",
+          "updatedat": "2026-06-17T09:18:38.753Z"
+        }
+      ],
+      "success": true
+    },
+    "passed": true
+  },
+  {
+    "category": "Chatbots",
+    "route": "/chatbot/add_chatbot",
+    "method": "POST",
+    "pathType": "success",
+    "inputPayload": {
+      "title": "Audit Test Bot",
+      "flow_id": "test-flow-id",
+      "for_all": 1
+    },
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Select a saved flow first."
+    },
+    "passed": true
+  },
+  {
+    "category": "Chatbots",
+    "route": "/chatbot/add_chatbot",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {},
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Please provide a chatbot title"
+    },
+    "passed": true
+  },
+  {
+    "category": "Flows",
+    "route": "/chat_flow/get_mine",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "data": [
+        {
+          "id": 9,
+          "uid": "local-user-uid",
+          "flow_id": "audit-test-flow-id-1781805557760",
+          "title": "Audit Test Flow",
+          "prevent_list": null,
+          "ai_list": null,
+          "createdat": "2026-06-18T17:59:17.764Z",
+          "updatedat": "2026-06-18T17:59:17.764Z"
+        }
+      ],
+      "success": true
+    },
+    "passed": true
+  },
+  {
+    "category": "Flows",
+    "route": "/chat_flow/add_new",
+    "method": "POST",
+    "pathType": "success",
+    "inputPayload": {
+      "title": "Audit Test Flow",
+      "flowId": "audit-test-flow-id-1781805578658",
+      "nodes": [],
+      "edges": []
+    },
+    "status": 200,
+    "data": {
+      "success": true,
+      "msg": "Flow was saved"
+    },
+    "passed": true
+  },
+  {
+    "category": "Flows",
+    "route": "/chat_flow/add_new",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {},
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Please give a title to the flow"
+    },
+    "passed": true
+  },
+  {
+    "category": "Campaigns",
+    "route": "/broadcast/dashboard_summary",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "success": true,
+      "data": {
+        "campaignStatus": {
+          "total": 0,
+          "queued": 0,
+          "paused": 0,
+          "completed": 0,
+          "scheduled": 0
+        },
+        "delivery": {
+          "total": 0,
+          "pending": 0,
+          "sent": 0,
+          "delivered": 0,
+          "read": 0,
+          "failed": 0
+        },
+        "trend": [
+          {
+            "label": "Jun 12",
+            "value": 0
+          },
+          {
+            "label": "Jun 13",
+            "value": 0
+          },
+          {
+            "label": "Jun 14",
+            "value": 0
+          },
+          {
+            "label": "Jun 15",
+            "value": 0
+          },
+          {
+            "label": "Jun 16",
+            "value": 0
+          },
+          {
+            "label": "Jun 17",
+            "value": 0
+          },
+          {
+            "label": "Jun 18",
+            "value": 0
+          }
+        ],
+        "templates": [],
+        "filters": {
+          "from": null,
+          "to": null
+        }
+      }
+    },
+    "passed": true
+  },
+  {
+    "category": "Campaigns",
+    "route": "/broadcast/get_broadcast",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "data": [],
+      "success": true
+    },
+    "passed": true
+  },
+  {
+    "category": "Campaigns",
+    "route": "/broadcast/add_new",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {},
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Please enter all details"
+    },
+    "passed": true
+  },
+  {
+    "category": "QR",
+    "route": "/qr/get_all",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "success": true,
+      "data": []
+    },
+    "passed": true
+  },
+  {
+    "category": "QR",
+    "route": "/qr/gen_qr",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {},
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Please provide the all fields! title is required"
+    },
+    "passed": true
+  },
+  {
+    "category": "Inbox",
+    "route": "/inbox/get_chats",
+    "method": "GET",
+    "pathType": "success",
+    "inputPayload": null,
+    "status": 200,
+    "data": {
+      "data": [
+        {
+          "id": 1,
+          "chat_id": "jIuIUSDBji",
+          "uid": "local-user-uid",
+          "last_message_came": "1781799942",
+          "sender_name": "John Doe",
+          "sender_mobile": "1234567890",
+          "last_message": "{\"type\":\"text\",\"metaChatId\":\"mock-msg-id-9wvJeXVPG2UYoeRd\",\"msgContext\":{\"type\":\"text\",\"text\":{\"preview_url\":true,\"body\":\"Hello from agent@example.com via REST API!\"}},\"reaction\":\"\",\"timestamp\":1781799942,\"senderName\":\"John Doe\",\"senderMobile\":\"1234567890\",\"status\":\"sent\",\"star\":false,\"route\":\"OUTGOING\",\"agent\":\"agent@example.com\"}",
+          "is_opened": 1,
+          "chat_status": "open",
+          "chat_note": null,
+          "chat_tags": null,
+          "origin": "META",
+          "profile": null,
+          "other": null,
+          "createdat": "2026-06-18T10:10:38.928Z",
+          "updatedat": "2026-06-18T10:10:38.928Z"
+        }
+      ],
+      "success": true
+    },
+    "passed": true
+  },
+  {
+    "category": "Inbox",
+    "route": "/inbox/get_convo",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {},
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "chatId is required"
+    },
+    "passed": true
+  },
+  {
+    "category": "Inbox",
+    "route": "/inbox/send_text",
+    "method": "POST",
+    "pathType": "validation",
+    "inputPayload": {},
+    "status": 200,
+    "data": {
+      "success": false,
+      "msg": "Not enough input provided"
+    },
+    "passed": true
+  },
+  {
+    "category": "Templates",
+    "route": "/templet/del_templets",
+    "method": "POST",
+    "pathType": "success",
+    "inputPayload": {
+      "selected": [
+        8
+      ]
+    },
+    "status": 200,
+    "data": {
+      "success": true,
+      "msg": "Template(s) was deleted"
+    },
+    "passed": true
+  },
+  {
+    "category": "Flows",
+    "route": "/chat_flow/del_flow",
+    "method": "POST",
+    "pathType": "success",
+    "inputPayload": {
+      "id": 9
+    },
+    "status": 200,
+    "data": {
+      "success": true,
+      "msg": "Flow was deleted"
+    },
+    "passed": true
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "create": {
+    "title": "Audit Chatbot 1781819337016",
+    "successResponse": true,
+    "persistedInDb": true,
+    "row": {
+      "id": 30,
+      "uid": "local-user-uid",
+      "title": "Audit Chatbot 1781819337016",
+      "for_all": 1,
+      "chats": "[]",
+      "flow": "{\"id\":37,\"uid\":\"local-user-uid\",\"flow_id\":\"audit-flow-1781819336997\",\"title\":\"Audit Flow for Bot 1781819336997\",\"prevent_list\":null,\"ai_list\":null,\"createdat\":\"2026-06-18T21:48:57.001Z\",\"updatedat\":\"2026-06-18T21:48:57.001Z\"}",
+      "flow_id": "audit-flow-1781819336997",
+      "active": 1,
+      "origin": "{\"title\":\"Meta\",\"code\":\"META\",\"data\":{}}",
+      "createdat": "2026-06-18T21:48:57.019Z",
+      "updatedat": "2026-06-18T21:48:57.019Z"
+    }
+  },
+  "disable": {
+    "successResponse": true,
+    "activeValInDb": 0
+  },
+  "enable": {
+    "successResponse": true,
+    "activeValInDb": 1
+  },
+  "read": {
+    "success": true,
+    "count": 5,
+    "containsAuditBot": true
+  },
+  "delete": {
+    "successResponse": true,
+    "removedFromDb": true
+  }
+}

@@ -2,7 +2,7 @@
 
 ## 1. Component Connection Variables & Values
 
-All database operations (migrations, runtime database connections, and the database query adapter) resolve their database configurations through a single unified entry point: [database/config.js](file:///home/shadow/projects/B1GCRM/database/config.js), which consumes configuration values from [env.js](file:///home/shadow/projects/B1GCRM/env.js).
+All database operations (migrations, runtime database connections, and the database query adapter) resolve their database configurations through a single unified entry point: [database/config.js](database/config.js), which consumes configuration values from [env.js](env.js).
 
 The environment variables utilized and their current runtime values are:
 

@@ -2,17 +2,20 @@
 
 Primary handoff:
 
-- Read `docs/PROJECT_CONTEXT.md` first.
+- Read `CLAUDE.md` first.
+- Read `SKILLS.md` as the permanent operating manual for all development tasks.
+- Read `docs/PROJECT_CONTEXT.md` first for context.
 - Treat `docs/PROJECT_CONTEXT.md` as the source of truth for AI sessions.
 - Use source code as the ultimate authority when docs and code disagree.
 
 Mandatory startup procedure:
 
-1. Read `docs/PROJECT_CONTEXT.md`.
-2. Build a mental model of the project.
-3. Inspect the relevant source files before coding.
-4. Explain the implementation plan.
-5. Only then begin implementation.
+1. Read `CLAUDE.md` and `SKILLS.md`.
+2. Read `docs/PROJECT_CONTEXT.md`.
+3. Build a mental model of the project.
+4. Inspect the relevant source files before coding.
+5. Explain the implementation plan.
+6. Only then begin implementation.
 
 Rules:
 

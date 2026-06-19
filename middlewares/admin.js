@@ -18,8 +18,8 @@ const adminValidator = async (req, res, next) => {
                     logout: true
                 })
             } else {
-                const getAdmin = await query(`SELECT * FROM admin WHERE email = ? and password = ? `, [
-                    decode.email, decode.password
+                const getAdmin = await query(`SELECT * FROM admin WHERE email = ? AND uid = ? `, [
+                    decode.email, decode.uid
                 ])
                 if (getAdmin.length < 1) {
                     return res.json({

@@ -235,12 +235,15 @@ function UserCampaignsPage() {
       setPhonebooks(Array.isArray(phonebookResult?.data) ? phonebookResult.data : [])
       setDashboardSummary(dashboardResult.data || null)
       setTemplates(Array.isArray(templateResult?.data) ? templateResult.data : [])
-      setStatus(
-        finalStatus ||
-        (mode === 'send' && !templateResult?.success
-          ? templateResult?.msg || 'Unable to load Meta templates'
-          : ''),
-      )
+      if (finalStatus) {
+        setStatus(finalStatus)
+      } else {
+        setStatus(
+          mode === 'send' && !templateResult?.success
+            ? templateResult?.msg || 'Unable to load Meta templates'
+            : '',
+        )
+      }
     } catch (error) {
       setStatus(error.message || 'Unable to load campaigns')
     }
@@ -670,66 +673,73 @@ function UserCampaignsPage() {
         <div className="panel-header">
           <h2>{mode === 'dashboard' ? 'Campaign performance' : 'Campaigns'}</h2>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Template</th>
-              <th>Audience</th>
-              <th>Status</th>
-              <th>Schedule</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {campaigns.map((campaign) => (
-              <tr key={campaign.broadcast_id}>
-                <td>{campaign.title}</td>
-                <td>{getCampaignTemplate(campaign)}</td>
-                <td>{getCampaignAudience(campaign)}</td>
-                <td>{normalizeStatus(campaign.status)}</td>
-                <td>{formatDateTime(campaign.schedule)}</td>
-                <td>
-                  <div className="action-row">
-                    <button
-                      className={classNames('mini-button', selectedCampaignId === campaign.broadcast_id ? 'dark-text' : '')}
-                      type="button"
-                      onClick={() => loadLogs(campaign.broadcast_id)}
-                    >
-                      {selectedCampaignId === campaign.broadcast_id ? 'Selected' : 'Inspect'}
-                    </button>
-                    <button
-                      className="mini-button"
-                      type="button"
-                      onClick={() => updateStatus(campaign.broadcast_id, 'QUEUE')}
-                    >
-                      Queue
-                    </button>
-                    <button
-                      className="mini-button"
-                      type="button"
-                      onClick={() => updateStatus(campaign.broadcast_id, 'PAUSED')}
-                    >
-                      Pause
-                    </button>
-                    <button
-                      className="mini-button subtle-danger"
-                      type="button"
-                      onClick={() => deleteCampaign(campaign.broadcast_id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {!campaigns.length ? (
+        {!campaigns.length ? (
+          <div className="empty-onboarding-card">
+            <h3>No campaigns available</h3>
+            <p>To run a marketing campaign broadcast, follow these steps:</p>
+            <ol>
+              <li>Go to the <strong>Contacts</strong> page, create a Phonebook, and add or import Contacts.</li>
+              <li>Go to the <strong>Meta Templates</strong> page, create a template, and ensure it is approved.</li>
+              <li>Switch to the <strong>Send campaign</strong> tab here, select your approved template, match variables, select your phonebook, and launch.</li>
+            </ol>
+          </div>
+        ) : (
+          <table>
+            <thead>
               <tr>
-                <td colSpan="6">No campaigns created yet.</td>
+                <th>Title</th>
+                <th>Template</th>
+                <th>Audience</th>
+                <th>Status</th>
+                <th>Schedule</th>
+                <th />
               </tr>
-            ) : null}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {campaigns.map((campaign) => (
+                <tr key={campaign.broadcast_id}>
+                  <td>{campaign.title}</td>
+                  <td>{getCampaignTemplate(campaign)}</td>
+                  <td>{getCampaignAudience(campaign)}</td>
+                  <td>{normalizeStatus(campaign.status)}</td>
+                  <td>{formatDateTime(campaign.schedule)}</td>
+                  <td>
+                    <div className="action-row">
+                      <button
+                        className={classNames('mini-button', selectedCampaignId === campaign.broadcast_id ? 'dark-text' : '')}
+                        type="button"
+                        onClick={() => loadLogs(campaign.broadcast_id)}
+                      >
+                        {selectedCampaignId === campaign.broadcast_id ? 'Selected' : 'Inspect'}
+                      </button>
+                      <button
+                        className="mini-button"
+                        type="button"
+                        onClick={() => updateStatus(campaign.broadcast_id, 'QUEUE')}
+                      >
+                        Queue
+                      </button>
+                      <button
+                        className="mini-button"
+                        type="button"
+                        onClick={() => updateStatus(campaign.broadcast_id, 'PAUSED')}
+                      >
+                        Pause
+                      </button>
+                      <button
+                        className="mini-button subtle-danger"
+                        type="button"
+                        onClick={() => deleteCampaign(campaign.broadcast_id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="panel table-panel">

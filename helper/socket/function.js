@@ -3,6 +3,7 @@ const path = require("path");
 const { query } = require("../../database/dbpromise");
 const fetch = require("node-fetch");
 const mime = require("mime-types");
+const env = require("../../env");
 
 function mergeArraysWithPhonebook(chatArray, phonebookArray) {
   // Iterate through the chat array and enrich with phonebook data
@@ -167,6 +168,9 @@ function returnMsgObjAfterAddingKey(overrides = {}) {
 
 async function sendMetaMsg({ uid, to, msgObj }) {
   try {
+    if (env.MOCK_META_DELIVERY) {
+      return { success: true, id: "mock-msg-id-" + Math.random().toString(36).substring(2, 15) };
+    }
     const [api] = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
     if (!api || !api?.access_token || !api?.business_phone_number_id) {
       return { success: false, msg: "Please add your meta API keys" };
@@ -325,10 +329,80 @@ async function sendQrMsg({ uid, to, msgObj, chatInfo }) {
   }
 }
 
+async function sendInstagramMsg({ uid, to, msgObj }) {
+  try {
+    const [api] = await query(`SELECT * FROM instagram_api WHERE uid = ?`, [uid]);
+    if (!api || !api?.access_token || !api?.instagram_business_account_id) {
+      return { success: false, msg: "Please link your Instagram Business Account first." };
+    }
+
+    if (env.MOCK_META_DELIVERY || api.access_token.startsWith("mock_")) {
+      return { success: true, id: "mock-insta-msg-id-" + Math.random().toString(36).substring(2, 15) };
+    }
+
+    const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${api.access_token}`;
+    
+    let instagramMessagePayload = {};
+    if (msgObj.type === "text") {
+      instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || "" };
+    } else if (msgObj.type === "image") {
+      instagramMessagePayload = {
+        attachment: {
+          type: "image",
+          payload: { url: msgObj.image?.link || msgObj.image?.url }
+        }
+      };
+    } else if (msgObj.type === "video") {
+      instagramMessagePayload = {
+        attachment: {
+          type: "video",
+          payload: { url: msgObj.video?.link || msgObj.video?.url }
+        }
+      };
+    } else if (msgObj.type === "document" || msgObj.type === "file") {
+      instagramMessagePayload = {
+        attachment: {
+          type: "file",
+          payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link }
+        }
+      };
+    } else {
+      instagramMessagePayload = { text: JSON.stringify(msgObj) };
+    }
+
+    const payload = {
+      recipient: { id: to },
+      message: instagramMessagePayload
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (data?.error) {
+      return { success: false, msg: data?.error?.message };
+    }
+
+    if (data?.message_id) {
+      return { success: true, id: data.message_id };
+    } else {
+      return { success: false, msg: JSON.stringify(data) };
+    }
+  } catch (err) {
+    return { success: false, msg: err?.toString() };
+  }
+}
+
 module.exports = {
   mergeArraysWithPhonebook,
   deleteMediaFromConversation,
   returnMsgObjAfterAddingKey,
   sendMetaMsg,
   sendQrMsg,
+  sendInstagramMsg,
 };

@@ -1,0 +1,25 @@
+{
+  "campaignCreation": {
+    "success": true,
+    "persistedInDb": true,
+    "logCountBefore": 1,
+    "campaignRow": {
+      "id": 55,
+      "broadcast_id": "C5DDxYY0Tv3V6hFz46uPT3IYBYpIStrv",
+      "uid": "local-user-uid",
+      "title": "Audit Simulation Campaign",
+      "templet": "{\"name\":\"test_template\"}",
+      "phonebook": "{\"id\":9999,\"uid\":\"local-user-uid\",\"name\":\"Audit Campaign Phonebook\",\"created_at\":\"2026-06-18T21:48:41.286Z\",\"updated_at\":\"2026-06-18T21:48:41.286Z\"}",
+      "status": "QUEUE",
+      "schedule": "2026-06-18T21:48:31.297Z",
+      "timezone": "Asia/Kolkata",
+      "created_at": "2026-06-18T21:48:41.302Z",
+      "updated_at": "2026-06-18T21:48:41.302Z"
+    }
+  },
+  "campaignExecution": {
+    "campaignStatus": "FINISHED",
+    "deliveryStatus": "sent",
+    "executedSuccessfully": true
+  }
+}

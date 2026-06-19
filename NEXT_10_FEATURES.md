@@ -11,7 +11,7 @@ This list defines the prioritized development queue of features to achieve parit
 - **Business Value:** High (Provides sandbox WhatsApp number linking without needing Meta Cloud apps).
 - **Effort:** 5 days
 - **Dependencies:** Ready (existing \`instance\` database table).
-- **Action:** Wires Baileys library connection sockets inside [helper/addon/qr/index.js](file:///home/shadow/projects/B1GCRM/helper/addon/qr/index.js).
+- **Action:** Wires Baileys library connection sockets inside [helper/addon/qr/index.js](helper/addon/qr/index.js).
 
 ### 2. Stripe Webhook checkout Verification
 - **Priority:** High
@@ -46,7 +46,7 @@ This list defines the prioritized development queue of features to achieve parit
 - **Business Value:** Medium (Allows super-admin to edit landing pages).
 - **Effort:** 4 days
 - **Dependencies:** Ready (existing setting tables).
-- **Action:** Expands [Settings.jsx](file:///home/shadow/projects/B1GCRM/client/src/pages/admin/Settings.jsx) with listing tables and modals.
+- **Action:** Expands [Settings.jsx](client/src/pages/admin/Settings.jsx) with listing tables and modals.
 
 ### 7. Plan resource limits Enforcement
 - **Priority:** High
