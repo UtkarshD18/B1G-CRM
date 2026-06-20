@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-20T19:13:24.475Z",
+  "timestamp": "2026-06-20T19:33:39.635Z",
   "total": 39,
   "passed": 39,
   "failed": 0,
@@ -21,7 +21,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Get flows",
       "pass": true,
-      "detail": "Found 15 flows"
+      "detail": "Found 16 flows"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -51,7 +51,7 @@
       "module": "CHATBOT→DIAG",
       "test": "Get chatbots",
       "pass": true,
-      "detail": "Found 15 chatbots"
+      "detail": "Found 16 chatbots"
     },
     {
       "module": "CHATBOT→DIAG",
@@ -75,7 +75,7 @@
       "module": "CONTACT→CAMPAIGN",
       "test": "Get contacts",
       "pass": true,
-      "detail": "Found 28 contacts"
+      "detail": "Found 29 contacts"
     },
     {
       "module": "CONTACT→CAMPAIGN",
@@ -123,7 +123,7 @@
       "module": "CRM→CONTACTS",
       "test": "Get CRM leads",
       "pass": true,
-      "detail": "Found 13 leads"
+      "detail": "Found 14 leads"
     },
     {
       "module": "CRM→CONTACTS",
@@ -135,13 +135,13 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 35"
+      "detail": "ID: 37"
     },
     {
       "module": "AGENT→INBOX",
       "test": "Get agents",
       "pass": true,
-      "detail": "Found 14 agents"
+      "detail": "Found 15 agents"
     },
     {
       "module": "AGENT→INBOX",
@@ -183,7 +183,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 14 rules"
+      "detail": "Found 15 rules"
     },
     {
       "module": "WEBHOOK→INBOX",

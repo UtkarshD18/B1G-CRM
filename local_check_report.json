@@ -8,7 +8,7 @@
       "buttons": 1,
       "tables": 0,
       "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nADMIN DASHBOARD\nOperational SaaS overview\n\nTENANTS\n\n22\nTotal user accounts\n\nORDERS\n\n0\nTransactions recorded\n\nCONTACT LEADS\n\n0\nPublic site inquiries\nPa"
+      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nADMIN DASHBOARD\nOperational SaaS overview\n\nTENANTS\n\n23\nTotal user accounts\n\nORDERS\n\n0\nTransactions recorded\n\nCONTACT LEADS\n\n0\nPublic site inquiries\nPa"
     },
     {
       "slug": "manage-plans",
@@ -25,7 +25,7 @@
       "status": "Loaded",
       "title": "Tenant roster and plan assignment",
       "inputs": 4,
-      "buttons": 70,
+      "buttons": 73,
       "tables": 1,
       "classification": "Placeholder",
       "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nMANAGE USERS\nTenant roster and plan assignment\n\nEdit tenant profiles, assign plans, delete users, or open a tenant session.\n\nSelect a user to edit\nNam"
@@ -86,8 +86,8 @@
       "slug": "contacts",
       "status": "Loaded",
       "title": "Phonebooks and contact records",
-      "inputs": 38,
-      "buttons": 43,
+      "inputs": 39,
+      "buttons": 44,
       "tables": 2,
       "classification": "Placeholder",
       "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
@@ -107,7 +107,7 @@
       "status": "Loaded",
       "title": "Real flow CRUD over `/api/chat_flow`",
       "inputs": 3,
-      "buttons": 47,
+      "buttons": 49,
       "tables": 0,
       "classification": "Placeholder",
       "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
@@ -117,7 +117,7 @@
       "status": "Loaded",
       "title": "Chatbot automation over saved flows",
       "inputs": 6,
-      "buttons": 51,
+      "buttons": 54,
       "tables": 2,
       "classification": "Placeholder",
       "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
@@ -137,7 +137,7 @@
       "status": "Loaded",
       "title": "Tenant-managed staff accounts",
       "inputs": 4,
-      "buttons": 17,
+      "buttons": 18,
       "tables": 1,
       "classification": "Placeholder",
       "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
@@ -147,7 +147,7 @@
       "status": "Loaded",
       "title": "Task queue assigned to tenant agents",
       "inputs": 1,
-      "buttons": 16,
+      "buttons": 17,
       "tables": 1,
       "classification": "Placeholder",
       "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
@@ -177,7 +177,7 @@
       "status": "Loaded",
       "title": "REST API, template API, and webhook setup",
       "inputs": 5,
-      "buttons": 39,
+      "buttons": 41,
       "tables": 1,
       "classification": "Placeholder",
       "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"

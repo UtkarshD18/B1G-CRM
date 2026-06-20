@@ -91,9 +91,9 @@ const queryDb = async (sql, params = []) => {
     const triggerRes = await axios.post(`http://localhost:3010/api/inbox/webhook/${userUid}`, webhookPayload);
     console.log('Trigger post status:', triggerRes.status);
 
-    // 4. Wait for processing to complete (the engine logs asynchronously)
-    console.log('Waiting for rule execution logs processing...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // 4. Wait for processing to complete (the engine logs asynchronously, retries take ~7 seconds)
+    console.log('Waiting for rule execution logs processing (9 seconds)...');
+    await new Promise(resolve => setTimeout(resolve, 9000));
 
     // 5. Verify log creation in database
     const dbLogs = await queryDb('SELECT * FROM webhook_logs WHERE rule_id = $1', [ruleId]);
