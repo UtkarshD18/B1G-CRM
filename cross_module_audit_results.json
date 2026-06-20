@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-20T18:44:58.950Z",
+  "timestamp": "2026-06-20T18:47:53.480Z",
   "total": 39,
   "passed": 39,
   "failed": 0,
@@ -123,7 +123,7 @@
       "module": "CRM→CONTACTS",
       "test": "Get CRM leads",
       "pass": true,
-      "detail": "Found 9 leads"
+      "detail": "Found 10 leads"
     },
     {
       "module": "CRM→CONTACTS",
@@ -135,7 +135,7 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 27"
+      "detail": "ID: 29"
     },
     {
       "module": "AGENT→INBOX",

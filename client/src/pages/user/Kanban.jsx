@@ -56,6 +56,8 @@ function UserKanbanPage() {
   const { tokens } = useAuth()
   const [status, setStatus] = useState('Loading Kanban...')
   const [chats, setChats] = useState([])
+  const [draggedChat, setDraggedChat] = useState(null)
+  const [draggedOverColumn, setDraggedOverColumn] = useState(null)
 
   const loadChats = useCallback(async () => {
     setStatus('Loading Kanban...')
@@ -118,6 +120,37 @@ function UserKanbanPage() {
     }
   }
 
+  const handleDragStart = (e, chat) => {
+    e.dataTransfer.setData('text/plain', chat.chat_id)
+    setDraggedChat(chat)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedChat(null)
+    setDraggedOverColumn(null)
+  }
+
+  const handleDragOver = (e, columnKey) => {
+    e.preventDefault()
+    setDraggedOverColumn(columnKey)
+  }
+
+  const handleDragLeave = () => {
+    setDraggedOverColumn(null)
+  }
+
+  const handleDrop = async (e, columnKey) => {
+    e.preventDefault()
+    setDraggedOverColumn(null)
+    const chatId = e.dataTransfer.getData('text/plain') || draggedChat?.chat_id
+    if (!chatId) return
+
+    const chatToMove = chats.find((c) => String(c.chat_id) === String(chatId))
+    if (!chatToMove) return
+
+    await moveChat(chatToMove, columnKey)
+  }
+
   return (
     <div className="page-stack">
       <div className="page-header">
@@ -135,14 +168,27 @@ function UserKanbanPage() {
 
       <div className="kanban-board">
         {columns.map((column) => (
-          <section className="kanban-column" key={column.key}>
+          <section
+            className={`kanban-column ${draggedOverColumn === column.key ? 'drag-over' : ''}`}
+            key={column.key}
+            onDragOver={(e) => handleDragOver(e, column.key)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, column.key)}
+          >
             <div className="panel-header">
               <h2>{column.title}</h2>
               <span className="status-chip">{groupedChats[column.key]?.length || 0}</span>
             </div>
             <div className="kanban-card-list">
               {(groupedChats[column.key] || []).map((chat) => (
-                <article className="kanban-card" key={chat.chat_id} style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)' }}>
+                <article
+                  className={`kanban-card ${draggedChat?.chat_id === chat.chat_id ? 'dragging' : ''}`}
+                  key={chat.chat_id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, chat)}
+                  onDragEnd={handleDragEnd}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)' }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong style={{ fontSize: '0.95rem' }}>{getChatTitle(chat)}</strong>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>

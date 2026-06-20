@@ -929,10 +929,16 @@ th {
 
 .kanban-column {
   min-width: 0;
-  border: 1px solid rgba(16, 33, 45, 0.12);
+  border: 2px solid rgba(16, 33, 45, 0.12);
   border-radius: 24px;
   background: rgba(248, 243, 235, 0.72);
   padding: 18px;
+  transition: all 0.2s ease;
+}
+
+.kanban-column.drag-over {
+  border-color: #1ea085;
+  background: rgba(30, 160, 133, 0.08);
 }
 
 .kanban-card-list {
@@ -947,6 +953,16 @@ th {
   border-radius: 16px;
   background: #ffffff;
   padding: 16px;
+  cursor: grab;
+  transition: opacity 0.15s ease;
+}
+
+.kanban-card:active {
+  cursor: grabbing;
+}
+
+.kanban-card.dragging {
+  opacity: 0.4;
 }
 
 .kanban-card strong {
