@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
+import { formatDateTime } from '../../shared/format'
 
 function UserTaskPage() {
   const { tokens } = useAuth()
   const [agents, setAgents] = useState([])
   const [tasks, setTasks] = useState([])
   const [status, setStatus] = useState('Loading tasks...')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [form, setForm] = useState({
     title: '',
     des: '',
@@ -63,7 +65,8 @@ function UserTaskPage() {
     }
   }
 
-  async function deleteTask(id) {
+  async function deleteTask(id, title) {
+    if (!window.confirm(`Delete task "${title || id}"? This cannot be undone.`)) return
     setStatus('Deleting task...')
     try {
       const result = await apiRequest('/api/user/del_task_for_agent', {
@@ -83,6 +86,11 @@ function UserTaskPage() {
       setStatus(error.message || 'Unable to delete task')
     }
   }
+
+  const filteredTasks = useMemo(() => {
+    if (statusFilter === 'all') return tasks
+    return tasks.filter(t => String(t.status || '').toLowerCase() === statusFilter)
+  }, [tasks, statusFilter])
 
   return (
     <div className="page-stack">
@@ -135,18 +143,33 @@ function UserTaskPage() {
         </form>
 
         <div className="panel table-panel">
-          <div className="panel-header">
-            <h2>Current tasks</h2>
+          <div className="panel-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
+            <h2>Current tasks ({filteredTasks.length})</h2>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              style={{ minWidth: '150px', padding: '6px 12px', fontSize: '14px', borderRadius: '12px', border: '1px solid rgba(10,25,37,0.12)' }}
+            >
+              <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
-          {!tasks.length ? (
+          {!filteredTasks.length ? (
             <div className="empty-onboarding-card">
-              <h3>No agent tasks available</h3>
-              <p>To assign follow-up tasks to your agent team:</p>
-              <ol>
-                <li>Go to the <strong>Agent Management</strong> page (Agent login) and register your support agents.</li>
-                <li>Return to this page, enter the task title, description, select an agent, and click Add task.</li>
-                <li>Agents can log in using their dedicated agent portal to view and complete their assigned tasks.</li>
-              </ol>
+              {tasks.length === 0 ? (
+                <>
+                  <h3>No agent tasks available</h3>
+                  <p>To assign follow-up tasks to your agent team:</p>
+                  <ol>
+                    <li>Go to the <strong>Agent Management</strong> page (Agent login) and register your support agents.</li>
+                    <li>Return to this page, enter the task title, description, select an agent, and click Add task.</li>
+                    <li>Agents can log in using their dedicated agent portal to view and complete their assigned tasks.</li>
+                  </ol>
+                </>
+              ) : (
+                <h3>No tasks matched the selected filter.</h3>
+              )}
             </div>
           ) : (
             <table>
@@ -160,14 +183,22 @@ function UserTaskPage() {
                 </tr>
               </thead>
               <tbody>
-                {tasks.map((task) => (
+                {filteredTasks.map((task) => (
                   <tr key={task.id}>
-                    <td>{task.title}</td>
-                    <td>{task.agent_email}</td>
-                    <td>{task.status}</td>
-                    <td>{task.createdAt || 'N/A'}</td>
+                    <td><strong>{task.title}</strong></td>
+                    <td className="muted-copy">{task.agent_email}</td>
                     <td>
-                      <button className="mini-button subtle-danger" type="button" onClick={() => deleteTask(task.id)}>
+                      <span className="status-chip" style={{
+                        backgroundColor: task.status === 'completed' ? '#d1fae5' : '#fef9c3',
+                        color: task.status === 'completed' ? '#065f46' : '#854d0e',
+                        fontSize: '11px'
+                      }}>
+                        {task.status || 'pending'}
+                      </span>
+                    </td>
+                    <td className="muted-copy" style={{ whiteSpace: 'nowrap' }}>{formatDateTime(task.createdAt)}</td>
+                    <td>
+                      <button className="mini-button subtle-danger" type="button" onClick={() => deleteTask(task.id, task.title)}>
                         Delete
                       </button>
                     </td>
