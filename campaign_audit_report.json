@@ -4,17 +4,17 @@
     "persistedInDb": true,
     "logCountBefore": 1,
     "campaignRow": {
-      "id": 61,
-      "broadcast_id": "xl0khI2NdoJvOpqwMfnsLDighmNyIu1A",
+      "id": 44,
+      "broadcast_id": "qrTzdXevSDGBeAHJRi78KNCyfQ88pFaQ",
       "uid": "local-user-uid",
       "title": "Audit Simulation Campaign",
       "templet": "{\"name\":\"test_template\"}",
-      "phonebook": "{\"id\":9999,\"uid\":\"local-user-uid\",\"name\":\"Audit Campaign Phonebook\",\"created_at\":\"2026-06-19T09:43:08.130Z\",\"updated_at\":\"2026-06-19T09:43:08.130Z\"}",
+      "phonebook": "{\"id\":9999,\"uid\":\"local-user-uid\",\"name\":\"Audit Campaign Phonebook\",\"created_at\":\"2026-06-20T20:47:17.540Z\",\"updated_at\":\"2026-06-20T20:47:17.540Z\"}",
       "status": "QUEUE",
-      "schedule": "2026-06-19T09:42:58.142Z",
+      "schedule": "2026-06-20T20:47:07.552Z",
       "timezone": "Asia/Kolkata",
-      "created_at": "2026-06-19T09:43:08.149Z",
-      "updated_at": "2026-06-19T09:43:08.149Z"
+      "created_at": "2026-06-20T20:47:17.563Z",
+      "updated_at": "2026-06-20T20:47:17.563Z"
     }
   },
   "campaignExecution": {

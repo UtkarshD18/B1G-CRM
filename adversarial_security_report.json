@@ -3,7 +3,7 @@
     "attackType": "Cross-Tenant Rule Update",
     "endpoint": "/webhooks/rules/update",
     "payload": {
-      "id": 52
+      "id": 56
     },
     "expectedOutcome": "Fail to update rule",
     "actualResponseStatus": 200,
@@ -17,7 +17,7 @@
     "attackType": "Cross-Tenant Rule Delete",
     "endpoint": "/webhooks/rules/delete",
     "payload": {
-      "id": 52
+      "id": 56
     },
     "expectedOutcome": "Fail to delete rule",
     "actualResponseStatus": 200,
@@ -89,7 +89,7 @@
     "attackType": "Cross-Tenant Flow Delete",
     "endpoint": "/chat_flow/del_flow",
     "payload": {
-      "flowId": "t1-flow-id-1781984021743"
+      "flowId": "t1-flow-id-1781988349021"
     },
     "expectedOutcome": "Flow persists in T1's list",
     "actualResponseStatus": 200,
@@ -203,7 +203,7 @@
     "attackType": "Cross-Tenant Task Delete",
     "endpoint": "/user/del_task_for_agent",
     "payload": {
-      "id": 17
+      "id": 18
     },
     "expectedOutcome": "Task persists in T1's list",
     "actualResponseStatus": 200,

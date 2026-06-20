@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-21 - Sprint 14: Admin Dashboard Enhancement & Agent Task UX Polish
+
+| Field | Details |
+| --- | --- |
+| Feature | Redesigned the Admin Dashboard with plan distribution metrics, upcoming subscription expirations alert panel, and a recent tenant signups listing; enhanced the Agent Task page in the User Portal by introducing status-based task filtering (All, Pending, Completed) and adding a deletion confirmation dialog to avoid accidental data loss. |
+| Files changed | `client/src/pages/admin/Dashboard.jsx`, `client/src/pages/user/AgentTask.jsx`. |
+| Impact | Significantly improves SaaS platform management for super-admins with actionable plan analytics and signup feeds, and secures task operations for user portal managers. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-21 - Sprint 14: Release Hardening & Verification Suite Alignment
 
 | Field | Details |

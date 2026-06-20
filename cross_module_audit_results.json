@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-20T19:33:39.635Z",
+  "timestamp": "2026-06-20T20:45:32.857Z",
   "total": 39,
   "passed": 39,
   "failed": 0,
@@ -21,7 +21,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Get flows",
       "pass": true,
-      "detail": "Found 16 flows"
+      "detail": "Found 17 flows"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -51,13 +51,13 @@
       "module": "CHATBOT→DIAG",
       "test": "Get chatbots",
       "pass": true,
-      "detail": "Found 16 chatbots"
+      "detail": "Found 17 chatbots"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get diagnostic logs",
       "pass": true,
-      "detail": "Found 11 logs"
+      "detail": "Found 25 logs"
     },
     {
       "module": "CHATBOT→DIAG",
@@ -75,7 +75,7 @@
       "module": "CONTACT→CAMPAIGN",
       "test": "Get contacts",
       "pass": true,
-      "detail": "Found 29 contacts"
+      "detail": "Found 30 contacts"
     },
     {
       "module": "CONTACT→CAMPAIGN",
@@ -123,7 +123,7 @@
       "module": "CRM→CONTACTS",
       "test": "Get CRM leads",
       "pass": true,
-      "detail": "Found 14 leads"
+      "detail": "Found 15 leads"
     },
     {
       "module": "CRM→CONTACTS",
@@ -135,13 +135,13 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 37"
+      "detail": "ID: 39"
     },
     {
       "module": "AGENT→INBOX",
       "test": "Get agents",
       "pass": true,
-      "detail": "Found 15 agents"
+      "detail": "Found 16 agents"
     },
     {
       "module": "AGENT→INBOX",
@@ -165,13 +165,13 @@
       "module": "SUPERVISOR→AGENT",
       "test": "Get KPIs",
       "pass": true,
-      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":4,\"escalatedChatsCount\":0}"
+      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":4,\"escalatedChatsCount\":1}"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get escalations",
       "pass": true,
-      "detail": "Found 0 escalations"
+      "detail": "Found 1 escalations"
     },
     {
       "module": "SUPERVISOR→AGENT",
@@ -183,7 +183,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 15 rules"
+      "detail": "Found 16 rules"
     },
     {
       "module": "WEBHOOK→INBOX",

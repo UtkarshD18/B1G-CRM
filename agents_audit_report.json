@@ -1,24 +1,24 @@
 {
   "agentCreate": {
-    "name": "Audit Agent 1781869929750",
-    "email": "audit-agent-1781869929750@example.com",
+    "name": "Audit Agent 1781988458365",
+    "email": "audit-agent-1781988458365@example.com",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 33,
+      "id": 165,
       "owner_uid": "local-user-uid",
-      "uid": "D3nq8Z4HEx8h2ec50fOW5EOIGBAGVoi4",
-      "email": "audit-agent-1781869929750@example.com",
+      "uid": "zKM43XCOX5b5JPbbdOzsIoKYjCZfixcP",
+      "email": "audit-agent-1781988458365@example.com",
       "password": "[HIDDEN]",
       "role": "agent",
-      "name": "Audit Agent 1781869929750",
+      "name": "Audit Agent 1781988458365",
       "mobile": "+919876543210",
       "comments": "Audit temp comments",
       "is_active": 1,
-      "created_at": "2026-06-19T11:52:09.794Z",
-      "updated_at": "2026-06-19T11:52:09.794Z",
-      "createdat": "2026-06-19T11:52:09.794Z",
-      "updatedat": "2026-06-19T11:52:09.794Z"
+      "created_at": "2026-06-20T20:47:38.424Z",
+      "updated_at": "2026-06-20T20:47:38.424Z",
+      "createdat": "2026-06-20T20:47:38.424Z",
+      "updatedat": "2026-06-20T20:47:38.424Z"
     }
   },
   "agentLogin": {
@@ -26,19 +26,19 @@
     "tokenReturned": true
   },
   "taskAssign": {
-    "title": "Audit Task 1781869929859",
+    "title": "Audit Task 1781988458517",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 20,
+      "id": 19,
       "owner_uid": "local-user-uid",
-      "uid": "D3nq8Z4HEx8h2ec50fOW5EOIGBAGVoi4",
-      "title": "Audit Task 1781869929859",
+      "uid": "zKM43XCOX5b5JPbbdOzsIoKYjCZfixcP",
+      "title": "Audit Task 1781988458517",
       "description": "Please complete the parity check validation",
       "status": "PENDING",
       "agent_comments": null,
-      "createdat": "2026-06-19T11:52:09.861Z",
-      "updatedat": "2026-06-19T11:52:09.861Z"
+      "createdat": "2026-06-20T20:47:38.520Z",
+      "updatedat": "2026-06-20T20:47:38.520Z"
     }
   },
   "taskComplete": {
