@@ -476,16 +476,21 @@ async function processBaileysMsg({
       origin: "qr",
     };
 
-    // Append new message and update the conversation file.
-    conversationArray.push(newMessage);
-    fs.writeFileSync(
-      conversationPath,
-      JSON.stringify(conversationArray, null, 2)
+    // Append new message and update the conversation file if not already present.
+    const exists = conversationArray.some(
+      (msg) => msg.metaChatId === body.key.id
     );
+    if (!exists) {
+      conversationArray.push(newMessage);
+      fs.writeFileSync(
+        conversationPath,
+        JSON.stringify(conversationArray, null, 2)
+      );
+    }
 
     // Retrieve the latest 10 messages.
     const latestMessages = conversationArray.slice(-10);
-    return { newMessage, latestMessages };
+    return { newMessage: exists ? null : newMessage, latestMessages };
   } catch (err) {
     console.error("Error processing Baileys message:", err.message);
     return null;

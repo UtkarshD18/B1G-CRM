@@ -1681,6 +1681,22 @@ router.post("/add_widget", validateUser, async (req, res) => {
       return res.json({ msg: "Please fill the details" });
     }
 
+    const allowedPlaces = [
+      "BOTTOM_RIGHT",
+      "BOTTOM_LEFT",
+      "TOP_RIGHT",
+      "TOP_LEFT",
+      "BOTTOM_CENTER",
+      "TOP_CENTER",
+      "ALL_CENTER",
+    ];
+    const finalPlace = allowedPlaces.includes(place) ? place : "BOTTOM_RIGHT";
+
+    const parsedSize = parseInt(size, 10);
+    const finalSize = isNaN(parsedSize) || parsedSize <= 0 ? 60 : parsedSize;
+
+    const sanitizedNumber = String(whatsapp_number).replace(/[^+\d]/g, "").slice(0, 100);
+
     let filename;
 
     if (logoType === "UPLOAD") {
@@ -1711,10 +1727,10 @@ router.post("/add_widget", validateUser, async (req, res) => {
         unique_id,
         req.decode.uid,
         title,
-        whatsapp_number,
+        sanitizedNumber,
         filename,
-        place,
-        size || 50,
+        finalPlace,
+        finalSize,
       ]
     );
 

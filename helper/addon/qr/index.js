@@ -43,6 +43,50 @@ const createSession = async (uniqueId, title = "Session") => {
 
     sock.ev.on("creds.update", saveCreds);
 
+    sock.ev.on("messages.upsert", async (m) => {
+      const { messages, type } = m;
+      for (const msg of messages) {
+        if (!msg.message) continue;
+        try {
+          const [instance] = await query("SELECT uid FROM instance WHERE uniqueId = ?", [uniqueId]);
+          if (instance) {
+            const { processMessage } = require("../../inbox/inbox");
+            await processMessage({
+              body: msg,
+              uid: instance.uid,
+              origin: "qr",
+              getSession,
+              sessionId: uniqueId,
+              qrType: type,
+            });
+          }
+        } catch (err) {
+          console.error(`[Baileys] Error processing upsert message:`, err);
+        }
+      }
+    });
+
+    sock.ev.on("messages.update", async (updates) => {
+      for (const update of updates) {
+        try {
+          const [instance] = await query("SELECT uid FROM instance WHERE uniqueId = ?", [uniqueId]);
+          if (instance) {
+            const { processMessage } = require("../../inbox/inbox");
+            await processMessage({
+              body: update,
+              uid: instance.uid,
+              origin: "qr",
+              getSession,
+              sessionId: uniqueId,
+              qrType: "update",
+            });
+          }
+        } catch (err) {
+          console.error(`[Baileys] Error processing message update:`, err);
+        }
+      }
+    });
+
     sock.ev.on("connection.update", async (update) => {
       const { connection, lastDisconnect, qr } = update;
 

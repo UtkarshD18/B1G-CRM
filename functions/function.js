@@ -1060,8 +1060,9 @@ function sendAPIMessage(obj, waNumId, waToken) {
 function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
   return new Promise(async (resolve) => {
     try {
-      // First check if target chat is an Instagram chat
+      // First check if target chat is an Instagram chat or QR chat
       let isInstagram = false;
+      let isQr = false;
       if (chatId) {
         const [chat] = await query(
           `SELECT * FROM chats WHERE chat_id = ? AND uid = ?`,
@@ -1069,7 +1070,93 @@ function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
         );
         if (chat?.origin?.toLowerCase() === "instagram") {
           isInstagram = true;
+        } else if (chat?.origin?.toLowerCase() === "qr") {
+          isQr = true;
         }
+      }
+
+      if (isQr) {
+        const { getSession, formatPhone } = require("../helper/addon/qr/index.js");
+        const parts = chatId.split("_");
+        const sessionId = parts.slice(1).join("_");
+        const session = getSession(sessionId);
+
+        if (!session) {
+          return resolve({ success: false, msg: `WhatsApp QR session is not connected or active.` });
+        }
+
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+
+        let baileysPayload = {};
+        if (msgObj.type === "text") {
+          baileysPayload = { text: msgObj.text?.body || msgObj.body || "" };
+        } else if (msgObj.type === "image") {
+          baileysPayload = {
+            image: { url: msgObj.image?.link || msgObj.image?.url },
+            caption: msgObj.image?.caption || ""
+          };
+        } else if (msgObj.type === "video") {
+          baileysPayload = {
+            video: { url: msgObj.video?.link || msgObj.video?.url },
+            caption: msgObj.video?.caption || ""
+          };
+        } else if (msgObj.type === "audio") {
+          baileysPayload = {
+            audio: { url: msgObj.audio?.link || msgObj.audio?.url },
+            mimetype: "audio/mp4"
+          };
+        } else if (msgObj.type === "document" || msgObj.type === "file") {
+          const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
+          const fileName = docUrl ? path.basename(docUrl.split('?')[0]) : "document.pdf";
+          baileysPayload = {
+            document: { url: docUrl },
+            mimetype: "application/pdf",
+            fileName: fileName,
+            caption: msgObj.document?.caption || ""
+          };
+        } else {
+          baileysPayload = { text: JSON.stringify(msgObj) };
+        }
+
+        let sentMsgId = "mock-qr-msg-id-" + randomstring.generate(16);
+        let success = true;
+        let errMsg = "";
+
+        try {
+          const jid = formatPhone(toNumber);
+          const response = await session.sendMessage(jid, baileysPayload);
+          if (response?.key?.id) {
+            sentMsgId = response.key.id;
+          }
+        } catch (e) {
+          success = false;
+          errMsg = e.toString();
+        }
+
+        if (!success) {
+          return resolve({ success: false, msg: errMsg });
+        }
+
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: sentMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+          origin: "qr"
+        };
+
+        const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+        );
+
+        return resolve({ success: true, id: sentMsgId });
       }
 
       if (isInstagram) {
