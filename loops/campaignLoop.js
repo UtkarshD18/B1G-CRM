@@ -29,7 +29,7 @@ async function updateBroadcastDatabase(status, broadcastId) {
   ]);
 }
 
-// Function to process a broadcast campaign
+// Function to process a broadcast campaign in batches with SKIP LOCKED queue safety
 async function processBroadcast(campaign) {
   const planDays = await getUserPlayDays(campaign?.uid);
 
@@ -50,33 +50,61 @@ async function processBroadcast(campaign) {
     return;
   }
 
-  const log = await query(
-    "SELECT * FROM broadcast_log WHERE broadcast_id = ? AND delivery_status = ? LIMIT ?",
-    [campaign?.broadcast_id, "PENDING", 1]
+  const batchSize = 50;
+  const messages = await query(
+    `UPDATE broadcast_log
+     SET delivery_status = 'PROCESSING'
+     WHERE id IN (
+       SELECT id
+       FROM broadcast_log
+       WHERE broadcast_id = ? AND delivery_status = 'PENDING'
+       LIMIT ?
+       FOR UPDATE SKIP LOCKED
+     )
+     RETURNING *`,
+    [campaign?.broadcast_id, batchSize]
   );
 
-  if (log.length < 1) {
-    await updateBroadcastDatabase("FINISHED", campaign?.broadcast_id);
+  if (messages.length < 1) {
+    // Check if there are any remaining pending or active processing logs
+    const activeCount = await query(
+      `SELECT COUNT(id)::int as count FROM broadcast_log 
+       WHERE broadcast_id = ? AND delivery_status IN ('PENDING', 'PROCESSING')`,
+      [campaign?.broadcast_id]
+    );
+    if (activeCount[0].count === 0) {
+      await updateBroadcastDatabase("FINISHED", campaign?.broadcast_id);
+    }
     return;
   }
 
-  const message = log[0];
+  for (const message of messages) {
+    try {
+      const getObj = await sendMessage(message, metaKeys[0]);
+      const curTime = Date.now();
 
-  const getObj = await sendMessage(message, metaKeys[0]);
-
-  const curTime = Date.now();
-
-  if (getObj.success) {
-    await query(
-      `UPDATE broadcast_log SET meta_msg_id = ?, delivery_status = ?, delivery_time = ? WHERE id = ?`,
-      [getObj?.msgId, getObj.msg, curTime, message?.id]
-    );
-  } else {
-    console.log({ getObj: JSON.stringify(getObj) });
-    await query(`UPDATE broadcast_log SET delivery_status = ? WHERE id = ?`, [
-      getObj.msg,
-      message?.id,
-    ]);
+      if (getObj.success) {
+        await query(
+          `UPDATE broadcast_log SET meta_msg_id = ?, delivery_status = ?, delivery_time = ? WHERE id = ?`,
+          [getObj?.msgId, getObj.msg, curTime, message?.id]
+        );
+      } else {
+        console.log({ getObj: JSON.stringify(getObj) });
+        await query(`UPDATE broadcast_log SET delivery_status = ?, err = ? WHERE id = ?`, [
+          getObj.msg || "FAILED",
+          JSON.stringify(getObj),
+          message?.id,
+        ]);
+      }
+    } catch (err) {
+      console.error(`Failed to process message ID ${message?.id}:`, err);
+      await query(`UPDATE broadcast_log SET delivery_status = 'FAILED', err = ? WHERE id = ?`, [
+        err.message,
+        message?.id,
+      ]);
+    }
+    // Respect rate limits with a small throttle delay
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 }
 
@@ -85,8 +113,6 @@ async function processBroadcasts() {
   const broadcasts = await query("SELECT * FROM broadcast WHERE status = ?", [
     "QUEUE",
   ]);
-
-  // console.log({ length: broadcasts.length });
 
   for (const campaign of broadcasts) {
     if (
@@ -98,12 +124,16 @@ async function processBroadcasts() {
   }
 }
 
-// Function to introduce a random delay before processing broadcasts
+// Function to run the campaign processing engine in a safe daemon loop
 async function runCampaign() {
-  // console.log('Campaign started');
-  await processBroadcasts();
-  await delayRandom(3, 5);
-  runCampaign(); // This line causes the function to run recursively
+  while (true) {
+    try {
+      await processBroadcasts();
+    } catch (err) {
+      console.error("Error in campaign run loop:", err.message);
+    }
+    await delayRandom(3, 5);
+  }
 }
 
 module.exports = { runCampaign };

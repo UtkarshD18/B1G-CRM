@@ -2,6 +2,8 @@ const fetch = require("node-fetch");
 const { sendMetatemplet } = require("../functions/function");
 const env = require("../env");
 
+const templateCache = new Map();
+
 function replaceVariables(obj, arr) {
   const replacedArr = arr.map((item) => {
     if (item.startsWith("{{") && item.endsWith("}}")) {
@@ -34,6 +36,12 @@ async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
       ]
     };
   }
+
+  const cacheKey = `${metaKeys?.waba_id}:${name}`;
+  if (templateCache.has(cacheKey)) {
+    return templateCache.get(cacheKey);
+  }
+
   const url = `https://graph.facebook.com/v18.0/${metaKeys?.waba_id}/message_templates?name=${name}`;
   const options = {
     method: "GET",
@@ -46,6 +54,9 @@ async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
     try {
       const response = await fetch(url, options);
       const data = await response.json();
+      if (data && !data.error) {
+        templateCache.set(cacheKey, data);
+      }
       return data;
     } catch (error) {
       if (error.code === "EAI_AGAIN" && attempt < retries) {
