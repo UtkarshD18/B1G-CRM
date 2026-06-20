@@ -105,14 +105,23 @@ function parseCSVFile(fileData) {
 }
 
 
-// import contcats 
 router.post('/import_contacts', validateUser, checkPlan, checkContactLimit, async (req, res) => {
     try {
+        const { id, phonebook_name } = req.body
+
+        if (!id) {
+            return res.json({ success: false, msg: "Phonebook ID is required" })
+        }
+
+        // Verify phonebook ownership
+        const pbCheck = await query(`SELECT id FROM phonebook WHERE id = ? AND uid = ?`, [id, req.decode.uid]);
+        if (pbCheck.length < 1) {
+            return res.json({ success: false, msg: "Phonebook not found or unauthorized" })
+        }
+
         if (!req.files || Object.keys(req.files).length === 0) {
             return res.json({ success: false, msg: "No files were uploaded" })
         }
-
-        const { id, phonebook_name } = req.body
 
         const csvData = await parseCSVFile(req.files.file.data);
         if (!csvData) {
@@ -154,8 +163,18 @@ router.post('/add_single_contact', validateUser, checkPlan, checkContactLimit, a
     try {
         const { id, phonebook_name, mobile, name, var1, var2, var3, var4, var5 } = req.body
 
+        if (!id) {
+            return res.json({ success: false, msg: "Phonebook ID is required" })
+        }
+
         if (!mobile) {
             return res.json({ success: false, msg: "Mobile number is required" })
+        }
+
+        // Verify phonebook ownership
+        const pbCheck = await query(`SELECT id FROM phonebook WHERE id = ? AND uid = ?`, [id, req.decode.uid]);
+        if (pbCheck.length < 1) {
+            return res.json({ success: false, msg: "Phonebook not found or unauthorized" })
         }
 
         await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1, var2, var3, var4, var5) VALUES (?,?,?,?,?,?,?,?,?,?)`, [

@@ -29,6 +29,7 @@ Last audited: 2026-06-19
 | Sprint 13 QR & Widget Hardening | Activated real-time Baileys connection listeners ('messages.upsert', 'messages.update') and outbound sending routing via active session; hardened Chat Widget configuration input validations. |
 | Sprint 13 Webhook Logs Execution | Implemented end-to-end Webhook Execution Logs. Added query endpoint and React log viewer dashboard view with filters and inspect drawers; fixed dev database seeder to upsert missing agent credentials on boot. |
 | Sprint 13 JWT Security Hardening | Enforced explicit token expirations (7d via `env.JWT_EXPIRY`) across standard logins/auto-logins, enforced 1h expiry on password recovery tokens, and fixed password recovery token age validator comparison bounds. |
+| Sprint 13 Tenant Isolation Hardening | Hardened CRM Leads, reminders, activities, Phonebooks, and contact import routes against Insecure Direct Object References (IDORs). |
 
 
 ## Partially Implemented
@@ -36,7 +37,7 @@ Last audited: 2026-06-19
 | Area | Gap |
 | --- | --- |
 | Auth/session model | Works; password hashes removed in Sprint 12. Enforced explicit JWT expiry on active login routes and recovery links in Sprint 13. |
-| Tenant isolation | Mostly query-based by `uid`; no database foreign keys. |
+| Tenant isolation | Works; query-based by `uid`. Enforced explicit ownership validations on CRM Leads and Phonebook Contacts in Sprint 13. |
 | Inbox realtime | Active socket handlers exist; duplicate legacy websocket/helper paths remain. |
 | QR WhatsApp | Active; socket listeners wired to message ingress loop and sending functional, though connection state dashboard could be further polished. |
 | Billing | Multiple provider routes exist, but production readiness depends on provider credentials and callback hardening. |

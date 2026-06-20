@@ -131,6 +131,11 @@ router.post("/leads/update", validateUser, async (req, res) => {
 // GET reminders for a lead
 router.get("/leads/reminders/:leadId", validateUser, async (req, res) => {
   try {
+    const leadCheck = await query("SELECT id FROM crm_leads WHERE id = ? AND uid = ?", [req.params.leadId, req.decode.uid]);
+    if (leadCheck.length === 0) {
+      return res.json({ success: false, msg: "Lead not found or unauthorized" });
+    }
+
     const data = await query(
       "SELECT * FROM crm_lead_reminders WHERE lead_id = ? AND uid = ? ORDER BY remind_at ASC",
       [req.params.leadId, req.decode.uid]
@@ -148,6 +153,11 @@ router.post("/leads/add_reminder", validateUser, async (req, res) => {
     const { lead_id, title, remind_at } = req.body;
     if (!lead_id || !title || !remind_at) {
       return res.json({ success: false, msg: "Missing reminder parameters" });
+    }
+
+    const leadCheck = await query("SELECT id FROM crm_leads WHERE id = ? AND uid = ?", [lead_id, req.decode.uid]);
+    if (leadCheck.length === 0) {
+      return res.json({ success: false, msg: "Lead not found or unauthorized" });
     }
 
     const result = await query(
@@ -173,6 +183,11 @@ router.post("/leads/add_reminder", validateUser, async (req, res) => {
 // GET activities logs for a lead
 router.get("/leads/activities/:leadId", validateUser, async (req, res) => {
   try {
+    const leadCheck = await query("SELECT id FROM crm_leads WHERE id = ? AND uid = ?", [req.params.leadId, req.decode.uid]);
+    if (leadCheck.length === 0) {
+      return res.json({ success: false, msg: "Lead not found or unauthorized" });
+    }
+
     const data = await query(
       `SELECT cla.*, a.name as agent_name 
        FROM crm_lead_activities cla
@@ -193,6 +208,11 @@ router.post("/leads/add_activity", validateUser, async (req, res) => {
     const { lead_id, activity_type, description, agent_uid } = req.body;
     if (!lead_id || !description) {
       return res.json({ success: false, msg: "Lead ID and description are required" });
+    }
+
+    const leadCheck = await query("SELECT id FROM crm_leads WHERE id = ? AND uid = ?", [lead_id, req.decode.uid]);
+    if (leadCheck.length === 0) {
+      return res.json({ success: false, msg: "Lead not found or unauthorized" });
     }
 
     const result = await query(

@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-20 - Sprint 13: Tenant Isolation Hardening (IDOR Fixes)
+
+| Field | Details |
+| --- | --- |
+| Feature | Hardened CRM Leads and Phonebook Contacts APIs against Insecure Direct Object References (IDORs). Verified phonebook ownership on `/phonebook/import_contacts` and `/phonebook/add_single_contact`. Verified lead ownership on `/api/crm/leads/add_reminder`, `/api/crm/leads/add_activity`, `/api/crm/leads/reminders/:leadId` (GET), and `/api/crm/leads/activities/:leadId` (GET). |
+| Files changed | `routes/phonebook.js`, `routes/crm_leads.js`, `scratch/verify-tenant-isolation.js`. |
+| Impact | Eliminates high-risk data leakage and cross-tenant pollution vulnerabilities, ensuring tenants can only access or mutate their own leads and phonebooks. |
+| Breaking changes | None. Unauthorized actions now return standard error blocks `success: false, msg: "Lead/Phonebook not found or unauthorized"`. |
+| Migration notes | None. |
+
 ## 2026-06-20 - Sprint 13: JWT Security Hardening & Session Expirations
 
 | Field | Details |
