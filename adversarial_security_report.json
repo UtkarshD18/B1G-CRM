@@ -3,7 +3,7 @@
     "attackType": "Cross-Tenant Rule Update",
     "endpoint": "/webhooks/rules/update",
     "payload": {
-      "id": 15
+      "id": 42
     },
     "expectedOutcome": "Fail to update rule",
     "actualResponseStatus": 200,
@@ -17,7 +17,7 @@
     "attackType": "Cross-Tenant Rule Delete",
     "endpoint": "/webhooks/rules/delete",
     "payload": {
-      "id": 15
+      "id": 42
     },
     "expectedOutcome": "Fail to delete rule",
     "actualResponseStatus": 200,
@@ -31,7 +31,7 @@
     "attackType": "Cross-Tenant Template Update",
     "endpoint": "/templet/update",
     "payload": {
-      "id": 9
+      "id": 3
     },
     "expectedOutcome": "Fail to update template",
     "actualResponseStatus": 200,
@@ -46,7 +46,7 @@
     "endpoint": "/templet/del_templets",
     "payload": {
       "selected": [
-        9
+        3
       ]
     },
     "expectedOutcome": "Template persists in T1's list",
@@ -89,7 +89,7 @@
     "attackType": "Cross-Tenant Flow Delete",
     "endpoint": "/chat_flow/del_flow",
     "payload": {
-      "flowId": "t1-flow-id-1781839802167"
+      "flowId": "t1-flow-id-1781977824328"
     },
     "expectedOutcome": "Flow persists in T1's list",
     "actualResponseStatus": 200,
@@ -103,7 +103,7 @@
     "attackType": "Cross-Tenant PB Rename",
     "endpoint": "/phonebook/update",
     "payload": {
-      "id": 13
+      "id": 8
     },
     "expectedOutcome": "Fail to update phonebook",
     "actualResponseStatus": 200,
@@ -117,7 +117,7 @@
     "attackType": "Cross-Tenant Contact Edit",
     "endpoint": "/phonebook/update_contact",
     "payload": {
-      "id": 18
+      "id": 45
     },
     "expectedOutcome": "Fail to update contact",
     "actualResponseStatus": 200,
@@ -132,7 +132,7 @@
     "endpoint": "/phonebook/del_contacts",
     "payload": {
       "selected": [
-        18
+        45
       ]
     },
     "expectedOutcome": "Contact persists in DB",
@@ -147,7 +147,7 @@
     "attackType": "Cross-Tenant PB Delete",
     "endpoint": "/phonebook/del_phonebook",
     "payload": {
-      "id": 13
+      "id": 8
     },
     "expectedOutcome": "Phonebook persists in DB",
     "actualResponseStatus": 200,
@@ -161,7 +161,7 @@
     "attackType": "Cross-Tenant Agent Activeness Update",
     "endpoint": "/agent/change_agent_activeness",
     "payload": {
-      "agentUid": "MWxh9078Y4rChwlpwQdvdJ64ftXnzLPZ"
+      "agentUid": "rf0woox6A16dHEh2HH0ORetxegMDYrnw"
     },
     "expectedOutcome": "Agent remains active",
     "actualResponseStatus": 200,
@@ -175,7 +175,7 @@
     "attackType": "Cross-Tenant Agent Assignment update_agent_in_chat",
     "endpoint": "/agent/update_agent_in_chat",
     "payload": {
-      "agentUid": "MWxh9078Y4rChwlpwQdvdJ64ftXnzLPZ"
+      "agentUid": "rf0woox6A16dHEh2HH0ORetxegMDYrnw"
     },
     "expectedOutcome": "Ownership verification check",
     "actualResponseStatus": 200,
@@ -189,7 +189,7 @@
     "attackType": "Cross-Tenant Agent Delete",
     "endpoint": "/agent/del_agent",
     "payload": {
-      "uid": "MWxh9078Y4rChwlpwQdvdJ64ftXnzLPZ"
+      "uid": "rf0woox6A16dHEh2HH0ORetxegMDYrnw"
     },
     "expectedOutcome": "Agent persists in T1's list",
     "actualResponseStatus": 200,
@@ -203,7 +203,7 @@
     "attackType": "Cross-Tenant Task Delete",
     "endpoint": "/user/del_task_for_agent",
     "payload": {
-      "id": 7
+      "id": 4
     },
     "expectedOutcome": "Task persists in T1's list",
     "actualResponseStatus": 200,

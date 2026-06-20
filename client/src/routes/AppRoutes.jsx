@@ -35,6 +35,7 @@ import UserKnowledgeBasePage from '../pages/user/KnowledgeBase'
 import UserWebsiteManagerPage from '../pages/user/WebsiteManager'
 import UserCrmPipelinePage from '../pages/user/CrmPipeline'
 import UserSupervisorDashboardPage from '../pages/user/SupervisorDashboard'
+import UserWebhookLogsPage from '../pages/user/WebhookLogs'
 
 export const ADMIN_REFERENCE_ROUTES = [
   { path: 'dashboard', component: 'dashboard' },
@@ -100,7 +101,7 @@ export const USER_REFERENCE_ROUTES = [
   { path: 'wa-call-logs', component: 'planned', title: 'WA Call Logs' },
   { path: 'setup-wa-calls', component: 'planned', title: 'Setup WA Calls' },
   { path: 'webhook-automation', component: 'planned', title: 'Webhook Automation' },
-  { path: 'webhook-logs', component: 'planned', title: 'Webhook Logs' },
+  { path: 'webhook-logs', component: 'webhookLogs' },
   { path: 'telegram-sessions', component: 'planned', title: 'Telegram Sessions' },
   { path: 'web-notification', component: 'planned', title: 'Web Notification' },
   { path: 'ai-providers', component: 'aiProviders' },
@@ -139,6 +140,7 @@ const userRouteComponents = {
   websiteManager: UserWebsiteManagerPage,
   pipeline: UserCrmPipelinePage,
   supervisorDashboard: UserSupervisorDashboardPage,
+  webhookLogs: UserWebhookLogsPage,
 }
 
 function renderReferenceRoutes(routes, area, components) {

@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-19T11:53:11.561Z",
-  "total": 40,
-  "passed": 40,
+  "timestamp": "2026-06-20T17:50:27.120Z",
+  "total": 39,
+  "passed": 39,
   "failed": 0,
   "score": 100,
   "results": [
@@ -21,7 +21,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Get flows",
       "pass": true,
-      "detail": "Found 13 flows"
+      "detail": "Found 10 flows"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -33,7 +33,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Chatbot has flow_id",
       "pass": true,
-      "detail": "flow_id: t1-flow-id-1781808183128"
+      "detail": "flow_id: flow_demo_welcome"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -45,19 +45,19 @@
       "module": "FLOW→CHATBOT",
       "test": "Flow JSON loadable",
       "pass": true,
-      "detail": "nodes: 0, edges: 0"
+      "detail": "nodes: 2, edges: 1"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get chatbots",
       "pass": true,
-      "detail": "Found 2 chatbots"
+      "detail": "Found 10 chatbots"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get diagnostic logs",
       "pass": true,
-      "detail": "Found 18 logs"
+      "detail": "Found 11 logs"
     },
     {
       "module": "CHATBOT→DIAG",
@@ -69,37 +69,31 @@
       "module": "CONTACT→CAMPAIGN",
       "test": "Get phonebooks",
       "pass": true,
-      "detail": "Found 15 phonebooks"
+      "detail": "Found 4 phonebooks"
     },
     {
       "module": "CONTACT→CAMPAIGN",
       "test": "Get contacts",
       "pass": true,
-      "detail": "Found 28 contacts"
+      "detail": "Found 23 contacts"
     },
     {
       "module": "CONTACT→CAMPAIGN",
       "test": "Get campaigns",
       "pass": true,
-      "detail": "Found 1 campaigns"
-    },
-    {
-      "module": "CONTACT→CAMPAIGN",
-      "test": "Campaign \"Demo Launch Campaign\" phonebook valid",
-      "pass": true,
-      "detail": "References phonebook id: 18"
+      "detail": "Found 0 campaigns"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Get chat list",
       "pass": true,
-      "detail": "Found 14 chats"
+      "detail": "Found 4 chats"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Chats have sender identity",
       "pass": true,
-      "detail": "14/14 chats have sender names"
+      "detail": "4/4 chats have sender names"
     },
     {
       "module": "AI→CHATBOT",
@@ -117,7 +111,7 @@
       "module": "KB→AI",
       "test": "Get knowledge base",
       "pass": true,
-      "detail": "Found 1 items"
+      "detail": "Found 0 items"
     },
     {
       "module": "KB→AI",
@@ -129,7 +123,7 @@
       "module": "CRM→CONTACTS",
       "test": "Get CRM leads",
       "pass": true,
-      "detail": "Found 6 leads"
+      "detail": "Found 3 leads"
     },
     {
       "module": "CRM→CONTACTS",
@@ -141,7 +135,7 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 7"
+      "detail": "ID: 4"
     },
     {
       "module": "AGENT→INBOX",
@@ -165,13 +159,13 @@
       "module": "WEBSITE→WIDGET",
       "test": "Get websites",
       "pass": true,
-      "detail": "Found 1 websites"
+      "detail": "Found 0 websites"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get KPIs",
       "pass": true,
-      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":14,\"escalatedChatsCount\":0}"
+      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":4,\"escalatedChatsCount\":0}"
     },
     {
       "module": "SUPERVISOR→AGENT",
@@ -189,7 +183,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 6 rules"
+      "detail": "Found 9 rules"
     },
     {
       "module": "WEBHOOK→INBOX",
@@ -243,7 +237,7 @@
       "module": "DASHBOARD→CAMPAIGN",
       "test": "Campaign dashboard summary",
       "pass": true,
-      "detail": "Campaigns: 1, Delivery: 10"
+      "detail": "Campaigns: 0, Delivery: 0"
     }
   ]
 }

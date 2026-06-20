@@ -25,11 +25,11 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 
 | Field | Value |
 | --- | --- |
-| Current branch | `sprint5-runtime-verification` |
+| Current branch | `feature-branch` |
 | Current sprint | `Final Project Completion & Production Stabilization` |
 | Current priority | `Security verification, gating debug endpoints, and project handoff.` |
 | Current feature in progress | `None` |
-| Last completed feature | `Gated public debug/install endpoints, cleaned up all reports, and verified browser integration flows.` |
+| Last completed feature | `Implemented Webhook Execution Logs backend query route and React log viewer dashboard component with search, filtering, and modal inspect details.` |
 | Recommended next task | `Production deployment` |
 | Known blockers | `None` |
 
@@ -125,7 +125,7 @@ Primary route groups:
 
 ## Partially Completed Features
 
-- QR WhatsApp integration is scaffolded but still stubbed in the active helper.
+- WhatsApp QR integration is active with real Baileys connection listeners and message dispatch.
 - Realtime inbox and legacy helper trees overlap.
 - Billing providers are wired but need production-hardening validation.
 - API/webhook analytics are incomplete.
@@ -135,14 +135,13 @@ Primary route groups:
 
 Priority order:
 
-1. Replace QR stubs with a functional Baileys session connector.
-2. Add backend test coverage for critical routes and migrations.
-3. Reduce duplicate helper/auth/socket implementations.
-4. Separate long-running campaign work from the web process.
+1. Add backend test coverage for critical routes and migrations.
+2. Reduce duplicate helper/auth/socket implementations.
+3. Separate long-running campaign work from the web process.
 
 ## Current Blockers
 
-- QR helper no-ops.
+- None.
 
 ## Technical Debt
 
@@ -187,10 +186,9 @@ Priority order:
 
 ## Suggested Next Tasks
 
-1. Replace QR stubs with functional Baileys socket connector.
-2. Separate long-running campaign work from the web process.
-3. Consolidate separate validation middlewares (`validateUser`, `validateAgent`, `adminValidator`) into standard `middlewares/auth.js`.
-4. Add endpoint to update local templates content in `routes/templet.js`.
+1. Separate long-running campaign work from the web process.
+2. Consolidate separate validation middlewares (`validateUser`, `validateAgent`, `adminValidator`) into standard `middlewares/auth.js`.
+3. Add endpoint to update local templates content in `routes/templet.js`.
 
 ## Definition Of Done
 

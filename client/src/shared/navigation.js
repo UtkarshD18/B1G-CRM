@@ -27,6 +27,7 @@ export const USER_NAV = [
   { label: 'Supervisor Dashboard', path: '/user/supervisor-dashboard' },
   { label: 'Billing', path: '/user/billing' },
   { label: 'API & Webhooks', path: '/user/api-dashboard' },
+  { label: 'Webhook Logs', path: '/user/webhook-logs' },
   { label: 'Settings', path: '/user/settings' },
 ]
 

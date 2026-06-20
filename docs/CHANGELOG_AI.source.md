@@ -2,6 +2,26 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-21 - Sprint 13: Webhook Execution Logs End-to-End Feature
+
+| Field | Details |
+| --- | --- |
+| Feature | Implemented backend query route `/api/webhooks/logs` with tenant isolation (`validateUser`), created React visual log viewer dashboard page `WebhookLogs.jsx` showing status badges and modal details drawers, and linked the path in client `AppRoutes.jsx`, `navigation.js`, and `DeveloperApi.jsx`. Fixed development seeder to upsert missing user accounts on start. |
+| Files changed | `database/seed-dev.js`, `routes/webhooks.js`, `client/src/pages/user/WebhookLogs.jsx`, `client/src/routes/AppRoutes.jsx`, `client/src/shared/navigation.js`, `client/src/pages/user/DeveloperApi.jsx`, `scratch/verify-webhook-logs.js`. |
+| Impact | Allows developers and administrators to audit, search, filter, and inspect detailed outbound webhook rule dispatches, request payloads, response bodies, and response codes. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
+## 2026-06-21 - Sprint 13: QR Baileys Connection Integration & Chat Widget Input Hardening
+
+| Field | Details |
+| --- | --- |
+| Feature | Hooked up real-time Baileys WhatsApp connection event listeners (`messages.upsert`, `messages.update`), enabled sending outbound messages over WhatsApp QR socket session (`sendMetaMsg`), and hardened Chat Widget configuration input validations (placement whitelist check, size integer parsing and fallback, phone number formatting/sanitization). |
+| Files changed | `functions/function.js`, `helper/addon/qr/index.js`, `helper/addon/qr/processThings.js`, `routes/user.js`, `scratch/verify-chat-widget-hardening.js`. |
+| Impact | Connects active Baileys socket hooks to message ingestion loop, allows manual composing over QR sessions, and mitigates invalid layout or parameter values in the Click-to-Chat widget database row inserts. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-19 - Final Release: Production Readiness & Security Lockdown
 
 | Field | Details |

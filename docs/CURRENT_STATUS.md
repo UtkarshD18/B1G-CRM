@@ -26,6 +26,8 @@ Last audited: 2026-06-19
 | Multi-Agent Reassignment | Implemented unique socket listener reassignments and resolved duplicate assignment row DB issues. |
 | Sprint 11 Stabilization | Resolved nodemon reboot loops, populated seeder templates, added Contact & Phonebook edit forms, integrated Webhook Rules matcher engine, renamed Chat Widget to Click-to-Chat Launcher, and collapsed Visual Flow raw JSON textareas. |
 | Sprint 12 Production Hardening | Removed password hashes from JWT payloads, enforced agent assignment check, and resolved presence updates IDOR vulnerabilities. |
+| Sprint 13 QR & Widget Hardening | Activated real-time Baileys connection listeners ('messages.upsert', 'messages.update') and outbound sending routing via active session; hardened Chat Widget configuration input validations. |
+| Sprint 13 Webhook Logs Execution | Implemented end-to-end Webhook Execution Logs. Added query endpoint and React log viewer dashboard view with filters and inspect drawers; fixed dev database seeder to upsert missing agent credentials on boot. |
 
 
 ## Partially Implemented
@@ -35,7 +37,7 @@ Last audited: 2026-06-19
 | Auth/session model | Works; password hashes removed in Sprint 12. Active login routes do not set explicit expiry. |
 | Tenant isolation | Mostly query-based by `uid`; no database foreign keys. |
 | Inbox realtime | Active socket handlers exist; duplicate legacy websocket/helper paths remain. |
-| QR WhatsApp | API/UI scaffolding exists, but QR helper exports stubs/no-ops. |
+| QR WhatsApp | Active; socket listeners wired to message ingress loop and sending functional, though connection state dashboard could be further polished. |
 | Billing | Multiple provider routes exist, but production readiness depends on provider credentials and callback hardening. |
 | CMS/translation/theme | APIs write runtime files; this can be fragile in immutable/container deployments. |
 | API/webhooks | API key send routes, webhook rule CRUD, execution engine rules evaluation, target post dispatches, and logs are implemented; usage analytics dashboard is incomplete. |
@@ -71,7 +73,7 @@ Last audited: 2026-06-19
 | --- | --- |
 | Active validators duplicate logic | Move routes to unified `middlewares/auth.js` only after compatibility review. |
 | Plan data copied as JSON into users | Consider normalized plan assignment/history model. |
-| QR add-on stubbed | Decide whether QR is product-supported, then implement or hide routes/UI. |
+| QR add-on stubbed | [RESOLVED] Real QR session helper implemented and integrated into the message/inbox routing flows. |
 | Socket state in memory | Horizontal scaling needs adapter/shared state. |
 | Campaign loop recursive in app process | Consider worker/queue with locks for multi-instance deploys. |
 

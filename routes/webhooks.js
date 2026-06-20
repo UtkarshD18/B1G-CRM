@@ -180,4 +180,18 @@ router.post("/rules/delete", validateUser, async (req, res) => {
   }
 });
 
+router.get("/logs", validateUser, async (req, res) => {
+  try {
+    const data = await query(
+      `SELECT * FROM webhook_logs WHERE uid = ? ORDER BY createdAt DESC LIMIT 200`,
+      [req.decode.uid]
+    );
+
+    res.json({ success: true, data });
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false, msg: "something went wrong" });
+  }
+});
+
 module.exports = router;
