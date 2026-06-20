@@ -19,7 +19,7 @@ Last audited: 2026-06-20
 | --- | --- | --- | --- |
 | `database/schema.sql` incomplete | Later tables from migration `002` not present. | New DB work may use stale schema file. | Generate schema from migrations or mark schema file legacy. |
 | Mixed timestamp column names | Migrations create both `created_at` and `createdAt` patterns. | Query mistakes and inconsistent sorting. | Normalize in future migrations or document per table. |
-| Duplicate helper trees | Both `helper/` and `helpers/`; active imports use mostly `helper/`. | Agents may edit inactive code. | Consolidate after import audit. |
+| Duplicate helper trees | Both `helper/` and `helpers/`; active imports use mostly `helper/`. | Agents may edit inactive code. | [RESOLVED] Removed legacy helpers/ tree and websocket.js in Sprint 14. |
 | Duplicate auth middleware styles | `middlewares/auth.js` exists but routes use role-specific middleware. | Inconsistent behavior/status codes. | [RESOLVED] Consolidated all role-specific auth middlewares into unified middlewares/auth.js in Sprint 14. |
 | Runtime JSON files hold core state | Conversations and flow data stored on disk. | Backups/scaling need filesystem persistence. | Move to DB or document backup/volume policy. |
 | Root `npm test` fails by design | `package.json` script exits 1. | CI cannot use root tests. | [RESOLVED] Configured root automated test suite (database integrity, auth validation & rollbacks, and integration checks) in Sprint 14. |

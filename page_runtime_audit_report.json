@@ -45,13 +45,13 @@
     "role": "Admin",
     "apiCalls": [
       "GET /api/admin/get_web_public",
-      "GET /api/admin/get_payment_gateway_admin",
       "GET /api/admin/get_faq",
-      "GET /api/admin/get_social_login",
+      "GET /api/admin/get_payment_gateway_admin",
       "POST /api/admin/get_page_slug",
-      "GET /api/admin/get_contact_leads",
       "GET /api/admin/get_testi",
-      "GET /api/admin/get_smtp"
+      "GET /api/admin/get_social_login",
+      "GET /api/admin/get_smtp",
+      "GET /api/admin/get_contact_leads"
     ],
     "status": "Working",
     "errors": [],
@@ -103,8 +103,8 @@
     "role": "User",
     "apiCalls": [
       "GET /api/broadcast/get_broadcast",
-      "GET /api/broadcast/dashboard_summary",
       "GET /api/user/get_my_meta_templets",
+      "GET /api/broadcast/dashboard_summary",
       "GET /api/phonebook/get_by_uid"
     ],
     "status": "Partial",
@@ -125,10 +125,10 @@
     "route": "/user/wa-chatbot",
     "role": "User",
     "apiCalls": [
-      "GET /api/chatbot/get_chatbot",
-      "GET /api/chatbot/get_logs?limit=25",
       "GET /api/chat_flow/get_mine",
-      "GET /api/inbox/get_chats"
+      "GET /api/chatbot/get_chatbot",
+      "GET /api/inbox/get_chats",
+      "GET /api/chatbot/get_logs?limit=25"
     ],
     "status": "Working",
     "errors": [],
@@ -192,8 +192,8 @@
     "route": "/user/billing",
     "role": "User",
     "apiCalls": [
-      "GET /api/user/get_payment_details",
       "GET /api/user/get_me",
+      "GET /api/user/get_payment_details",
       "GET /api/admin/get_plans"
     ],
     "status": "Partial",
@@ -204,8 +204,8 @@
     "route": "/user/api-dashboard",
     "role": "User",
     "apiCalls": [
-      "GET /api/webhooks/rules",
-      "GET /api/user/get_me"
+      "GET /api/user/get_me",
+      "GET /api/webhooks/rules"
     ],
     "status": "Working",
     "errors": [],
@@ -227,8 +227,8 @@
     "role": "Agent",
     "apiCalls": [
       "GET /api/agent/get_me",
-      "GET /api/agent/get_my_task",
-      "GET /api/agent/get_my_assigned_chats"
+      "GET /api/agent/get_my_assigned_chats",
+      "GET /api/agent/get_my_task"
     ],
     "status": "Working",
     "errors": [],

@@ -20,7 +20,12 @@ export async function apiRequest(path, { method = 'GET', token, body } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   })
 
-  return response.json()
+  const text = await response.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { success: false, msg: text || 'Invalid server response' }
+  }
 }
 
 export async function apiFormRequest(path, { token, formData } = {}) {
@@ -36,7 +41,12 @@ export async function apiFormRequest(path, { token, formData } = {}) {
     body: formData,
   })
 
-  return response.json()
+  const text = await response.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { success: false, msg: text || 'Invalid server response' }
+  }
 }
 
 export function apiFormRequestWithProgress(path, { token, formData, onProgress } = {}) {

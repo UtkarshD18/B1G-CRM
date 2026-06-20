@@ -34,6 +34,8 @@ Last audited: 2026-06-20
 | Sprint 14 Unified Auth & Transactions | Consolidated role-specific authentication middlewares; implemented pool-bound transaction helper withTransaction in database/dbpromise.js; wrapped deletes and mutations across admin, broadcast, phonebook, chatFlow, agent, and crm_leads in transactions; created root-level automated backend tests. |
 | Sprint 14 Kanban Drag-and-Drop Persistence | Implemented interactive HTML5 drag-and-drop persistence on the Chat Kanban board, synced directly to the change ticket status API endpoint. |
 | Sprint 14 CRM Lead Pipeline Drag-and-Drop | Implemented interactive HTML5 drag-and-drop persistence on the CRM Lead Pipeline board, synced directly to the stage-shifting backend API endpoint. |
+| Sprint 14 Release Hardening | Removed legacy duplicate helper tree helpers/ and dead websocket.js entrypoint; hardened client apiRequest JSON parsing to prevent fatal UI crashes. |
+
 
 
 ## Partially Implemented
@@ -42,7 +44,7 @@ Last audited: 2026-06-20
 | --- | --- |
 | Auth/session model | Works; password hashes removed in Sprint 12. Enforced explicit JWT expiry on active login routes and recovery links in Sprint 13. |
 | Tenant isolation | Works; query-based by `uid`. Enforced explicit ownership validations on CRM Leads and Phonebook Contacts in Sprint 13. |
-| Inbox realtime | Active socket handlers exist; duplicate legacy websocket/helper paths remain. |
+| Inbox realtime | [RESOLVED] Removed legacy websocket/helper paths; active socket.js logic handles live stream updates. |
 | QR WhatsApp | Active; socket listeners wired to message ingress loop and sending functional, though connection state dashboard could be further polished. |
 | Billing | Multiple provider routes exist, but production readiness depends on provider credentials and callback hardening. |
 | CMS/translation/theme | APIs write runtime files; this can be fragile in immutable/container deployments. |
@@ -67,7 +69,7 @@ Last audited: 2026-06-20
 | `database/schema.sql` synchronized with migrations | Completed (synced chatbot_log and webhook_rules; verified migrations 000-009). |
 | Mixed `created_at` and `createdAt` columns | Easy to write invalid queries. |
 | No explicit foreign keys | Data integrity relies on route code. |
-| Duplicate helper/socket/auth implementations | Risk of editing inactive code. |
+| Duplicate helper/socket/auth implementations | [RESOLVED] Removed legacy helper/ vs helpers/ duplicate directory trees and consolidated auth middlewares in Sprint 14. |
 | Broad `functions/function.js` utility file | Hard to reason about responsibilities and side effects. |
 | Runtime JSON files for core state | Backups/deployments must include filesystem state. |
 | Public mutating install/update routes | Production security concern. |
