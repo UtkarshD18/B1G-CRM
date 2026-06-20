@@ -7,6 +7,7 @@ function authError(res, status, msg, code) {
     success: false,
     msg,
     code,
+    logout: true
   });
 }
 
@@ -65,15 +66,32 @@ async function validateAgent(req, res, next) {
       return authError(res, 403, "Invalid agent type", "INVALID_AGENT_TYPE");
     }
 
-    const agents = await query("SELECT * FROM agents WHERE uid = ?", [
+    const agents = await query("SELECT * FROM agents WHERE email = ? AND uid = ?", [
+      decoded.email,
       decoded.uid,
     ]);
     if (!agents.length) {
       return authError(res, 401, "Agent not found", "AGENT_NOT_FOUND");
     }
 
+    if (agents[0]?.is_active < 1) {
+      return authError(res, 403, "You are an inactive agent.", "INACTIVE_AGENT");
+    }
+
+    const owners = await query("SELECT * FROM user WHERE uid = ?", [
+      agents[0]?.owner_uid,
+    ]);
+    if (!owners.length) {
+      return authError(res, 404, "Agent Owner not found", "OWNER_NOT_FOUND");
+    }
+
+    if (agents[0].role !== "agent") {
+      return authError(res, 403, "Unauthorized token", "UNAUTHORIZED_AGENT_ROLE");
+    }
+
     req.decode = decoded;
     req.agent = agents[0];
+    req.owner = owners[0];
     next();
   } catch (error) {
     logger.error("Agent validation error", { error: error.message });
