@@ -44,7 +44,7 @@ router.post("/login", async (req, res) => {
           email: userFind[0].email,
         },
         env.JWT_SECRET,
-        {}
+        { expiresIn: env.JWT_EXPIRY }
       );
       res.json({
         success: true,
@@ -549,7 +549,7 @@ router.post("/auto_login", adminValidator, async (req, res) => {
         email: user[0].email,
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: env.JWT_EXPIRY }
     );
     console.log(token);
     res.json({
@@ -913,7 +913,7 @@ router.post("/send_resovery", async (req, res) => {
         role: "admin",
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: "1h" }
     );
 
     const recpveryUrl = `${env.FRONTEND_URL}/recovery-admin/${jsontoken}`;
@@ -964,7 +964,7 @@ router.get("/modify_password", adminValidator, async (req, res) => {
       return res.json({ success: false, msg: "Please provide a password" });
     }
 
-    if (moment(req.decode.time).diff(moment(new Date()), "hours") > 1) {
+    if (moment(new Date()).diff(moment(req.decode.time), "hours") > 1) {
       return res.json({ success: false, msg: "Token expired" });
     }
 

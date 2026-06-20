@@ -306,7 +306,7 @@ router.post("/login", async (req, res) => {
           owner_uid: agentFind[0]?.owner_uid,
         },
         env.JWT_SECRET,
-        {}
+        { expiresIn: env.JWT_EXPIRY }
       );
       res.json({
         success: true,

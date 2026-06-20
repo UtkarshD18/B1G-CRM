@@ -1,0 +1,12 @@
+{
+  "userLogin": true,
+  "agentLogin": true,
+  "adminLogin": true,
+  "adminImpersonation": true,
+  "autoAgentLogin": true,
+  "developerApiKeyNoExpiry": true,
+  "recoveryTokenExpiryOnGeneration": true,
+  "recoveryAgeValidatorLogic": true,
+  "overallPass": true,
+  "hardExpiryBlocking": true
+}

@@ -97,7 +97,7 @@ router.post("/login_with_facebook", async (req, res) => {
             email: email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
 
         res.json({ token: loginToken, success: true });
@@ -109,7 +109,7 @@ router.post("/login_with_facebook", async (req, res) => {
             email: getUser[0].email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
         res.json({
           success: true,
@@ -159,7 +159,7 @@ router.post("/login_with_google", async (req, res) => {
             email: email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
 
         res.json({ token: loginToken, success: true });
@@ -171,7 +171,7 @@ router.post("/login_with_google", async (req, res) => {
             email: getUser[0].email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
         res.json({
           success: true,
@@ -262,7 +262,7 @@ router.post("/login", async (req, res) => {
           email: userFind[0].email,
         },
         env.JWT_SECRET,
-        {}
+        { expiresIn: env.JWT_EXPIRY }
       );
       res.json({
         success: true,
@@ -1490,7 +1490,7 @@ router.post("/send_resovery", async (req, res) => {
         role: "user",
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: "1h" }
     );
 
     const recpveryUrl = `${env.FRONTEND_URL}/recovery-user/${jsontoken}`;
@@ -1541,7 +1541,7 @@ router.get("/modify_password", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Please provide a password" });
     }
 
-    if (moment(req.decode.time).diff(moment(new Date()), "hours") > 1) {
+    if (moment(new Date()).diff(moment(req.decode.time), "hours") > 1) {
       return res.json({ success: false, msg: "Token expired" });
     }
 
@@ -1853,7 +1853,7 @@ router.post("/auto_agent_login", validateUser, async (req, res) => {
         owner_uid: agentFind[0]?.owner_uid,
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: env.JWT_EXPIRY }
     );
 
     res.json({ token, success: true });

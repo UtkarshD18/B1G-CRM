@@ -1,6 +1,6 @@
 # Roadmap
 
-Last audited: 2026-06-18
+Last audited: 2026-06-20
 
 ## Priority 1 - Critical Parity Fixes (Sprint 4)
 
@@ -24,7 +24,7 @@ Last audited: 2026-06-18
 | Work | Why | Files |
 | --- | --- | --- |
 | Add backend unit tests for auth and tenant isolation. | Core routing logic lacks backend coverage checks. | `routes/*`, `middlewares/*`, test setup |
-| Harden JWT payloads. | Active tokens expose password hashes and lack expiry options. | `routes/user.js`, `routes/admin.js`, `routes/agent.js` |
+| Harden JWT payloads. | [RESOLVED] Enforced explicit token expirations (7d/1h) in Sprint 13. | `routes/user.js`, `routes/admin.js`, `routes/agent.js` |
 | Audit user deletion effects. | Lack of foreign keys could leave orphan records in related tables. | `routes/admin.js` |
 
 ## Priority 4 - Planned Channels

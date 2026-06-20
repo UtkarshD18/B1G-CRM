@@ -1,6 +1,6 @@
 # Known Issues
 
-Last audited: 2026-06-15
+Last audited: 2026-06-20
 
 ## High Risk
 
@@ -8,7 +8,7 @@ Last audited: 2026-06-15
 | --- | --- | --- | --- |
 | QR implementation is stubbed | `helper/addon/qr/index.js` returns no-op session functions and `checkQr()` false. | QR routes/UI can mislead users. | Implement real Baileys session layer or hide QR features. |
 | Active JWT payload includes password hash | Login routes sign `{ password: storedHash }`. | Sensitive hash material is client-held. | [RESOLVED] Removed bcrypt hashes from JWT payloads in Sprint 12. |
-| Active login tokens have no explicit expiry | Login routes pass `{}` to `sign()`. | Long-lived sessions. | Use `env.JWT_EXPIRY`. |
+| Active login tokens have no explicit expiry | Login routes pass `{}` to `sign()`. | Long-lived sessions. | [RESOLVED] Enforced `env.JWT_EXPIRY` in Sprint 13. |
 | Public install/update routes mutate files | `routes/web.js` exposes `install_app` and `update_app`. | Production takeover risk. | [RESOLVED] Gated `/install_app` and `/update_app` with admin password validation in Sprint 12/Final. |
 | No database foreign keys | Migrations declare logical IDs but no `FOREIGN KEY`. | Orphans/cross-tenant mistakes possible. | Add constraints carefully or central ownership guards. |
 | Secret scanner history | Older branch commits contained realistic sample credentials in `.env.example`. | Fast-forwarding `main` through those commits can keep GitGuardian failures alive. | Use a clean-history main update or rewrite affected branch history before opening PRs. |

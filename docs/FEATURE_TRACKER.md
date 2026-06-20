@@ -28,9 +28,9 @@ Status legend:
 
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
-| Admin auth | Partial | Login and route validator exist. | Add explicit token expiry and structured HTTP errors. | `routes/admin.js`, `middlewares/admin.js` | JWT, bcrypt | High |
-| User auth | Partial | Signup/login/social login routes exist; frontend login/signup exists. | Harden social login and recovery flows. | `routes/user.js`, `client/src/pages/auth/*` | JWT, bcrypt, Meta/Google/Facebook configs | High |
-| Agent auth | Partial | Login, active check, owner context, frontend dashboard. | Tighten ownership checks on every chat/task action. | `routes/agent.js`, `middlewares/agent.js` | JWT, PostgreSQL | High |
+| Admin auth | Complete | Login, route validator, and explicit token expiry enforced (7d/1h). | Add structured HTTP errors. | `routes/admin.js`, `middlewares/admin.js` | JWT, bcrypt | High |
+| User auth | Complete | Signup/login/social login, frontend login/signup, explicit token expiry, recovery expiration, and logic fixes. | Harden social login. | `routes/user.js`, `client/src/pages/auth/*` | JWT, bcrypt, Meta/Google/Facebook configs | High |
+| Agent auth | Complete | Login, active check, owner context, frontend dashboard, and explicit token expiry. | Tighten ownership checks on every chat/task action. | `routes/agent.js`, `middlewares/agent.js` | JWT, PostgreSQL | High |
 | Role-gated frontend | Partial | Role tokens gate route branches. | Decode/validate role and expiry client-side if tokens gain expiry. | `client/src/shared/auth.jsx` | localStorage | Medium |
 | Tenant data isolation | Partial | Most routes filter by `uid` or `owner_uid`. | Add DB foreign keys or systematic ownership helpers. | `routes/*.js`, `database/migrations/*` | PostgreSQL | High |
 | Plan enforcement | Partial | `checkPlan`, contact/note/tag checks. | Centralize plan schema and edge cases. | `middlewares/plan.js` | `user.plan` JSON | Medium |

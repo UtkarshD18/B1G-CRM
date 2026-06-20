@@ -28,13 +28,14 @@ Last audited: 2026-06-19
 | Sprint 12 Production Hardening | Removed password hashes from JWT payloads, enforced agent assignment check, and resolved presence updates IDOR vulnerabilities. |
 | Sprint 13 QR & Widget Hardening | Activated real-time Baileys connection listeners ('messages.upsert', 'messages.update') and outbound sending routing via active session; hardened Chat Widget configuration input validations. |
 | Sprint 13 Webhook Logs Execution | Implemented end-to-end Webhook Execution Logs. Added query endpoint and React log viewer dashboard view with filters and inspect drawers; fixed dev database seeder to upsert missing agent credentials on boot. |
+| Sprint 13 JWT Security Hardening | Enforced explicit token expirations (7d via `env.JWT_EXPIRY`) across standard logins/auto-logins, enforced 1h expiry on password recovery tokens, and fixed password recovery token age validator comparison bounds. |
 
 
 ## Partially Implemented
 
 | Area | Gap |
 | --- | --- |
-| Auth/session model | Works; password hashes removed in Sprint 12. Active login routes do not set explicit expiry. |
+| Auth/session model | Works; password hashes removed in Sprint 12. Enforced explicit JWT expiry on active login routes and recovery links in Sprint 13. |
 | Tenant isolation | Mostly query-based by `uid`; no database foreign keys. |
 | Inbox realtime | Active socket handlers exist; duplicate legacy websocket/helper paths remain. |
 | QR WhatsApp | Active; socket listeners wired to message ingress loop and sending functional, though connection state dashboard could be further polished. |
@@ -91,7 +92,7 @@ Last audited: 2026-06-19
 | Concern | Why |
 | --- | --- |
 | JWT payload includes password hash | [RESOLVED] Removed bcrypt password hashes from token payloads. |
-| Login tokens have no explicit expiry in active routes | Long-lived tokens increase risk. |
+| Login tokens have no explicit expiry in active routes | [RESOLVED] Enforced explicit token expiry options (7d / 1h) in Sprint 13. |
 | Some routes mutate files without auth or only body password | [RESOLVED] `/api/web/install_app` and `/api/web/update_app` are gated by admin password verification. |
 | No foreign keys | Orphaned or cross-tenant data errors are easier. |
 | File uploads write under public dirs | Validate file type/size/path carefully. |

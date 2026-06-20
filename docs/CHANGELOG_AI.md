@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-20 - Sprint 13: JWT Security Hardening & Session Expirations
+
+| Field | Details |
+| --- | --- |
+| Feature | Enforced explicit session token expirations (`env.JWT_EXPIRY`, defaulting to 7 days) on user, agent, and admin login routes, as well as auto agent logins and admin-user impersonation routes. Restricted password recovery token duration to 1 hour, and resolved comparison boundary logic bugs on recovery age checks. |
+| Files changed | `routes/user.js`, `routes/agent.js`, `routes/admin.js`, `scratch/verify-token-expiration.js`. |
+| Impact | Eliminates infinite-lived session tokens and recovery tokens, preventing unauthorized persistent access and securing password reset links. |
+| Breaking changes | None. Session tokens will now naturally expire and require re-authentication after the expiration period. |
+| Migration notes | Ensure `JWT_EXPIRY` is configured in production environment variables (defaults to '7d' if not specified). |
+
 ## 2026-06-21 - Sprint 13: Webhook Execution Logs End-to-End Feature
 
 | Field | Details |
