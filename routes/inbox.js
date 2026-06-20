@@ -163,10 +163,10 @@ router.post("/update_kanban_order", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "orderedChatIds must be an array" });
     }
 
-    await withTransaction(async (conn) => {
+    await withTransaction(async (txQuery) => {
       for (let i = 0; i < orderedChatIds.length; i++) {
-        await conn.query(
-          `UPDATE chats SET kanban_order = $1 WHERE chat_id = $2 AND uid = $3`,
+        await txQuery(
+          `UPDATE chats SET kanban_order = ? WHERE chat_id = ? AND uid = ?`,
           [i, orderedChatIds[i], req.decode.uid]
         );
       }
