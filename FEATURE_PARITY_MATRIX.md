@@ -2,6 +2,12 @@
 
 This matrix compares the features of the live reference CRM against B1GCRM, indicating files involved, implementation priority, and integration details.
 
+> [!IMPORTANT]
+> **This document is superseded by newer documents.** For the most current and comprehensive alignment data based on a full authenticated crawl of the reference CRM (June 20, 2026), see:
+> - [REFERENCE_VS_B1GCRM_ALIGNMENT.md](REFERENCE_VS_B1GCRM_ALIGNMENT.md) — Full side-by-side comparison with newly discovered features
+> - [AUTHENTICATED_PARITY_MATRIX.md](AUTHENTICATED_PARITY_MATRIX.md) — Updated parity scores
+> - [AUTHENTICATED_FEATURE_INVENTORY.md](AUTHENTICATED_FEATURE_INVENTORY.md) — Updated feature inventory with 4 new modules
+
 ---
 
 ## Parity Table

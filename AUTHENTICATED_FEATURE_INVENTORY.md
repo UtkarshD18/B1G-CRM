@@ -238,23 +238,74 @@ Detailed inventory of every feature in the reference CRM, grouped by module, wit
 
 ---
 
-## Module 16: Missing/Placeholder Features
+## Module 16: Newly Discovered Real Pages (June 20, 2026 Crawl)
 
-These features exist in the reference CRM navigation but are **only placeholder pages** in B1GCRM:
+> [!IMPORTANT]
+> The following pages were previously classified as "placeholder" in B1GCRM, but a live crawl on June 20, 2026 confirmed they are **fully functional pages** on the reference CRM with real forms, data grids, and CRUD operations.
 
-| Feature | Reference Route | B1GCRM Status | Priority |
+### User Portal — Real Pages on Reference, Placeholder in B1GCRM
+
+| Feature | Reference Route | Reference UI Elements | B1GCRM Status | Priority |
+| --- | --- | --- | --- | --- |
+| **Webhook Logs Viewer** | `webhook-logs` | Full MUI DataGrid: Columns/Filters/Density/Export, 14 inputs, heading "Webhook Logs" | ❌ Placeholder in B1GCRM | 🔴 High |
+| **Webhook Automation CRUD** | `webhook-automation` | "Add Webhook" button, empty state "No Webhooks Yet" | ❌ Placeholder in B1GCRM | 🔴 High |
+| **Instagram Account Linking** | `link-instagram` | "Add" button ×2, heading "No accounts connected yet" | ❌ Placeholder in B1GCRM | 🔴 High |
+| **AI Call Flow Builder** | `create-call-flow` | Welcome Message textarea, OpenAI API Key (`sk-...`), System Instructions textarea, 5 inputs | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **WA Call Logs** | `wa-call-logs` | Call log viewer with checkbox filters, heading "WA Call Logs" | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **Telegram Sessions** | `telegram-sessions` | "Add New Session" button, session card "Wacrm" with "Account Information" | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **API Dashboard Logs** | `api-dashboard` | API Logs DataGrid with Filters/Export, 6 inputs (checkboxes + search) | ⚠️ Partial (B1GCRM shows API key/docs but not logs grid) | 🟡 Medium |
+
+### Admin Portal — Real Pages on Reference, Placeholder in B1GCRM
+
+| Feature | Reference Route | Reference UI Elements | B1GCRM Status | Priority |
+| --- | --- | --- | --- | --- |
+| **Theme Manager** | `web-theme` | 14 pre-built themes + "Create New Theme" + Edit/Set Active per theme | ❌ Placeholder in B1GCRM | 🔴 High |
+| **Instagram Config** | `instagram-config` | Webhook Settings + App Credentials (App ID, App Secret), "Save Settings", 3× "Copy to clipboard" | ❌ Placeholder in B1GCRM | 🔴 High |
+| **Web Notification Config** | `web-notification` | Firebase App Config (7 fields) + Push & Service Account (VAPID Key, Client Email, Private Key), 12 inputs total | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **Manual Web Push** | `send-web-push` | Audience selector, Text Only/With Image toggle, Title/Body/URL, Live Preview, "Send Now (N recipients)" | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **Telegram Config** | `telegram-config` | Telegram API ID/Hash inputs, "Save" button, link to `my.telegram.org` | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **WA Embed Login** | `embed-config` | App Secret/App ID + embed code display, "Save"/"Copy to clipboard" buttons | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **Translation Manager** | `translation` | Language list with Add New/Edit/Delete/Set Default per language (13+ languages) | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **Flow Builder Templates** | `flow-builder-template` | Template library view, "Add New" button | ❌ Placeholder in B1GCRM | 🟡 Medium |
+| **WA Links Data** | `wa-link` | DataGrid with Filters/Export, 3 inputs | ❌ Placeholder in B1GCRM | 🟢 Low |
+| **QR Plugin Settings** | `qr-plugin-settings` | Configuration form, "Save" button | ❌ Placeholder in B1GCRM | 🟢 Low |
+
+---
+
+## Module 17: True Both-Placeholder Pages
+
+These pages exist in the reference sidebar but **fall back to the dashboard** when visited (plan-gated or stub on both sides):
+
+| Feature | Reference Route | B1GCRM Status | Notes |
 | --- | --- | --- | --- |
-| WhatsApp Forms | `whatsapp-forms` | 🔲 Placeholder | Medium |
-| Instagram DM Bot | `insta-dm-bot` | 🔲 Placeholder | Medium |
-| Instagram Comment DM | `insta-comment-dm` | 🔲 Placeholder | Medium |
-| WhatsApp Warmer | `whatsapp-warmer` | 🔲 Placeholder | Medium |
-| WA Call Flows | `create-call-flow` | 🔲 Placeholder | Low |
-| WA Call Logs | `wa-call-logs` | 🔲 Placeholder | Low |
-| Setup WA Calls | `setup-wa-calls` | 🔲 Placeholder | Low |
-| Webhook Automation | `webhook-automation` | 🔲 Placeholder | Medium |
-| Webhook Logs | `webhook-logs` | 🔲 Placeholder | Medium |
-| Telegram Sessions | `telegram-sessions` | 🔲 Placeholder | Low |
-| Web Notification | `web-notification` | 🔲 Placeholder | Low |
+| WhatsApp Forms | `whatsapp-forms` | 🔲 Both Placeholder | Falls back to dashboard on reference |
+| Instagram DM Bot | `insta-dm-bot` | 🔲 Both Placeholder | Falls back to dashboard on reference |
+| Instagram Comment DM | `insta-comment-dm` | 🔲 Both Placeholder | Falls back to dashboard on reference |
+| WhatsApp Warmer | `whatsapp-warmer` | 🔲 Both Placeholder | Falls back to dashboard on reference |
+| Setup WA Calls | `setup-wa-calls` | 🔲 Both Placeholder | Falls back to dashboard on reference |
+| Web Notification (User) | `web-notification` | 🔲 Both Placeholder | Falls back to dashboard on reference |
+
+---
+
+## Module 18: B1GCRM-Exclusive Features (Not in Reference)
+
+| Feature | Component | Size | Description |
+| --- | --- | --- | --- |
+| **Lead Pipeline** | `CrmPipeline.jsx` | 23KB | Drag-and-drop sales pipeline board |
+| **AI Providers** | `AiProviderSettings.jsx` | 9KB | Multi-AI provider configuration |
+| **Knowledge Base** | `KnowledgeBase.jsx` | 9KB | AI-powered knowledge document management |
+| **Websites Manager** | `WebsiteManager.jsx` | 15KB | Multi-website management panel |
+| **Supervisor Dashboard** | `SupervisorDashboard.jsx` | 10KB | Real-time agent supervision metrics |
+
+---
+
+## Module 19: Meta Template Type Gap (June 20, 2026 Discovery)
+
+| Feature | Reference | B1GCRM Implementation | Evidence |
+| --- | --- | --- | --- |
+| Standard template type | ✅ | ✅ Complete | `MetaTemplates.jsx` |
+| **Carousel template type** | ✅ | ❌ Missing | Reference shows "Carousel" as second template type option |
+| **Catalog template type** | ✅ | ❌ Missing | Reference shows "Catalog" as third template type option |
 
 ---
 
@@ -262,13 +313,16 @@ These features exist in the reference CRM navigation but are **only placeholder 
 
 | Metric | Count |
 | --- | --- |
-| **Total reference features audited** | 127 |
-| **✅ Complete** | 89 (70%) |
-| **⚠️ Partial** | 10 (8%) |
-| **❌ Missing** | 17 (13%) |
-| **🔲 Placeholder** | 11 (9%) |
+| **Total reference features audited** | 145 |
+| **✅ Complete** | 88 (61%) |
+| **⚠️ Partial** | 10 (7%) |
+| **❌ Missing (real gaps)** | 30 (21%) |
+| **🔲 Both Placeholder** | 6 (4%) |
+| **🆕 B1GCRM Exclusive** | 5 |
 | **Frontend pages (User)** | 15 implemented + 11 placeholder |
 | **Frontend pages (Admin)** | 5 implemented + 8 placeholder |
-| **Frontend pages (Agent)** | 1 implemented |
+| **Frontend pages (Agent)** | 2 implemented |
 | **Backend route files** | 13 (14,300 lines) |
 | **Total frontend LOC** | ~6,200 (user) + ~1,200 (admin) + ~200 (agent) |
+| **Last full crawl** | June 20, 2026 |
+

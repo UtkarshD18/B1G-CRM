@@ -1,0 +1,390 @@
+[
+  {
+    "id": "admin-dashboard",
+    "title": "Admin Dashboard",
+    "url": "/admin/dashboard",
+    "role": "admin",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "admin-plans",
+    "title": "Admin Manage Plans",
+    "url": "/admin/manage-plans",
+    "role": "admin",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "admin-users",
+    "title": "Admin Manage Users",
+    "url": "/admin/manage-users",
+    "role": "admin",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "admin-orders",
+    "title": "Admin Orders",
+    "url": "/admin/orders",
+    "role": "admin",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "admin-settings",
+    "title": "Admin Settings",
+    "url": "/admin/settings",
+    "role": "admin",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-dashboard",
+    "title": "User Dashboard",
+    "url": "/user/dashboard",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-inbox",
+    "title": "User Inbox",
+    "url": "/user/inbox",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-kanban",
+    "title": "User Kanban",
+    "url": "/user/kanban",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-contacts",
+    "title": "User Contacts",
+    "url": "/user/contacts",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-campaigns",
+    "title": "User Campaigns",
+    "url": "/user/campaigns",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-automation-flows",
+    "title": "User Automation Flows",
+    "url": "/user/automation-flows",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-chatbot",
+    "title": "User ChatBot",
+    "url": "/user/chatbot",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-meta-templates",
+    "title": "User Meta Templates",
+    "url": "/user/create-meta-template",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-integrations",
+    "title": "User Integrations",
+    "url": "/user/integrations",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-agent-login",
+    "title": "User Agent Login",
+    "url": "/user/agent-login",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-agent-task",
+    "title": "User Agent Task",
+    "url": "/user/agent-task",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-chat-widget",
+    "title": "User Chat Widget",
+    "url": "/user/chat-widget",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-pipeline",
+    "title": "User Lead Pipeline",
+    "url": "/user/pipeline",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-ai-providers",
+    "title": "User AI Providers",
+    "url": "/user/ai-providers",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-knowledge-base",
+    "title": "User Knowledge Base",
+    "url": "/user/knowledge-base",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-website-manager",
+    "title": "User Website Manager",
+    "url": "/user/website-manager",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-supervisor-dashboard",
+    "title": "User Supervisor Dashboard",
+    "url": "/user/supervisor-dashboard",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-billing",
+    "title": "User Billing",
+    "url": "/user/billing",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-developer-api",
+    "title": "User API & Webhooks",
+    "url": "/user/api-dashboard",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "user-settings",
+    "title": "User Settings",
+    "url": "/user/settings",
+    "role": "user",
+    "classification": "BROKEN",
+    "steps": {},
+    "errors": [
+      "Fatal: page.waitForTimeout is not a function"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "agent-dashboard",
+    "title": "Agent Dashboard",
+    "url": "/agent/dashboard",
+    "role": "agent",
+    "classification": "BROKEN",
+    "steps": {
+      "auth": {
+        "success": false,
+        "error": "No token"
+      }
+    },
+    "errors": [
+      "No token available for role: agent"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  },
+  {
+    "id": "agent-chats",
+    "title": "Agent Assigned Chats",
+    "url": "/agent/chats",
+    "role": "agent",
+    "classification": "BROKEN",
+    "steps": {
+      "auth": {
+        "success": false,
+        "error": "No token"
+      }
+    },
+    "errors": [
+      "No token available for role: agent"
+    ],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": null
+  }
+]
