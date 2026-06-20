@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const { sign } = require("jsonwebtoken");
@@ -1077,32 +1077,36 @@ router.post("/del_user", adminValidator, async (req, res) => {
     const user = await query(`SELECT uid FROM "user" WHERE id = ?`, [id]);
     if (user.length > 0) {
       const userUid = user[0].uid;
-      // Cascade delete all associated tenant resources to maintain database integrity
-      await query(`DELETE FROM agents WHERE owner_uid = ?`, [userUid]);
-      await query(`DELETE FROM phonebook WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM contact WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM broadcast WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM broadcast_log WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM orders WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM meta_api WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM meta_templet_media WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM chats WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM rooms WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM agent_chats WHERE owner_uid = ?`, [userUid]);
-      await query(`DELETE FROM chat_tags WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM chatbot WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM flow WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM flow_data WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM templets WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM instance WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM agent_task WHERE owner_uid = ?`, [userUid]);
-      await query(`DELETE FROM chat_widget WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM chatbot_log WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM webhook_rules WHERE uid = ?`, [userUid]);
-      await query(`DELETE FROM webhook_logs WHERE uid = ?`, [userUid]);
+      // Cascade delete all associated tenant resources inside a transaction to maintain database integrity
+      await withTransaction(async (tx) => {
+        await tx(`DELETE FROM agents WHERE owner_uid = ?`, [userUid]);
+        await tx(`DELETE FROM phonebook WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM contact WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM broadcast WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM broadcast_log WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM orders WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM meta_api WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM meta_templet_media WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM chats WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM rooms WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM agent_chats WHERE owner_uid = ?`, [userUid]);
+        await tx(`DELETE FROM chat_tags WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM chatbot WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM flow WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM flow_data WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM templets WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM instance WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM agent_task WHERE owner_uid = ?`, [userUid]);
+        await tx(`DELETE FROM chat_widget WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM chatbot_log WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM webhook_rules WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM webhook_logs WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM "user" WHERE id = ?`, [id]);
+      });
+    } else {
+      await query(`DELETE FROM "user" WHERE id = ?`, [id]);
     }
 
-    await query(`DELETE FROM "user" WHERE id = ?`, [id]);
     res.json({ success: true, msg: "User was deleted" });
   } catch (err) {
     console.log(err);

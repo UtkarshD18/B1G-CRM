@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -326,36 +326,38 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
       req.decode.uid,
     ]);
 
-    await query(
-      `
-                INSERT INTO broadcast_log (
-                    uid,
-                    broadcast_id,
-                    templet_name,
-                    sender_mobile,
-                    send_to,
-                    delivery_status,
-                    example,
-                    contact
-                ) VALUES ?`,
-      [broadcast_logs]
-    );
+    await withTransaction(async (tx) => {
+      await tx(
+        `
+                  INSERT INTO broadcast_log (
+                      uid,
+                      broadcast_id,
+                      templet_name,
+                      sender_mobile,
+                      send_to,
+                      delivery_status,
+                      example,
+                      contact
+                  ) VALUES ?`,
+        [broadcast_logs]
+      );
 
-    await query(
-      `INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (
-            ?,?,?,?,?,?,?,?
-        )`,
-      [
-        broadcast_id,
-        req.decode.uid,
-        String(title).trim(),
-        JSON.stringify(templet),
-        JSON.stringify(getPhonebook[0]),
-        "QUEUE",
-        scheduleDate,
-        getUser[0]?.timezone || "Asia/Kolkata",
-      ]
-    );
+      await tx(
+        `INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (
+              ?,?,?,?,?,?,?,?
+          )`,
+        [
+          broadcast_id,
+          req.decode.uid,
+          String(title).trim(),
+          JSON.stringify(templet),
+          JSON.stringify(getPhonebook[0]),
+          "QUEUE",
+          scheduleDate,
+          getUser[0]?.timezone || "Asia/Kolkata",
+        ]
+      );
+    });
 
     res.json({ success: true, msg: "Your broadcast has been added" });
   } catch (err) {
@@ -498,14 +500,16 @@ router.post("/del_broadcast", validateUser, async (req, res) => {
   try {
     const { broadcast_id } = req.body;
 
-    await query(`DELETE FROM broadcast WHERE uid = ? AND broadcast_id = ?`, [
-      req.decode.uid,
-      broadcast_id,
-    ]);
-    await query(
-      `DELETE FROM broadcast_log WHERE uid = ? AND broadcast_id = ?`,
-      [req.decode.uid, broadcast_id]
-    );
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM broadcast WHERE uid = ? AND broadcast_id = ?`, [
+        req.decode.uid,
+        broadcast_id,
+      ]);
+      await tx(
+        `DELETE FROM broadcast_log WHERE uid = ? AND broadcast_id = ?`,
+        [req.decode.uid, broadcast_id]
+      );
+    });
 
     res.json({ success: true, msg: "Broadcast was deleted" });
   } catch (err) {

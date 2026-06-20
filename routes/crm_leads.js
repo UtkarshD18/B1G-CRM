@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const validateUser = require("../middlewares/user.js");
 
 // GET all leads grouped by stage or in list
@@ -27,25 +27,29 @@ router.post("/leads/add", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Name and Mobile are required" });
     }
 
-    const result = await query(
-      `INSERT INTO crm_leads (uid, name, mobile, stage, owner_agent_uid, notes, value) 
-       VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *`,
-      [
-        req.decode.uid,
-        name,
-        mobile,
-        stage || "Lead",
-        owner_agent_uid || null,
-        notes || "",
-        value || 0.0
-      ]
-    );
+    const result = await withTransaction(async (tx) => {
+      const resLead = await tx(
+        `INSERT INTO crm_leads (uid, name, mobile, stage, owner_agent_uid, notes, value) 
+         VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+        [
+          req.decode.uid,
+          name,
+          mobile,
+          stage || "Lead",
+          owner_agent_uid || null,
+          notes || "",
+          value || 0.0
+        ]
+      );
 
-    // Log initial activity
-    await query(
-      "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description, agent_uid) VALUES (?, ?, 'note', ?, ?)",
-      [req.decode.uid, result[0].id, "Lead created in system", owner_agent_uid || null]
-    );
+      // Log initial activity
+      await tx(
+        "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description, agent_uid) VALUES (?, ?, 'note', ?, ?)",
+        [req.decode.uid, resLead[0].id, "Lead created in system", owner_agent_uid || null]
+      );
+
+      return resLead;
+    });
 
     res.json({ success: true, msg: "Lead created successfully.", data: result[0] });
   } catch (err) {
@@ -67,16 +71,18 @@ router.post("/leads/move", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Lead record not found" });
     }
 
-    await query(
-      "UPDATE crm_leads SET stage = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND uid = ?",
-      [stage, id, req.decode.uid]
-    );
+    await withTransaction(async (tx) => {
+      await tx(
+        "UPDATE crm_leads SET stage = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND uid = ?",
+        [stage, id, req.decode.uid]
+      );
 
-    // Log activity
-    await query(
-      "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description) VALUES (?, ?, 'note', ?)",
-      [req.decode.uid, id, `Stage shifted from '${previous[0].stage}' to '${stage}'`]
-    );
+      // Log activity
+      await tx(
+        "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description) VALUES (?, ?, 'note', ?)",
+        [req.decode.uid, id, `Stage shifted from '${previous[0].stage}' to '${stage}'`]
+      );
+    });
 
     res.json({ success: true, msg: "Lead moved successfully." });
   } catch (err) {
@@ -93,36 +99,40 @@ router.post("/leads/update", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Lead ID is required" });
     }
 
-    const result = await query(
-      `UPDATE crm_leads 
-       SET name = ?, mobile = ?, stage = ?, owner_agent_uid = ?, notes = ?, value = ?, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = ? AND uid = ? RETURNING *`,
-      [
-        name,
-        mobile,
-        stage,
-        owner_agent_uid || null,
-        notes || "",
-        value || 0.0,
-        id,
-        req.decode.uid
-      ]
-    );
+    const result = await withTransaction(async (tx) => {
+      const resLead = await tx(
+        `UPDATE crm_leads 
+         SET name = ?, mobile = ?, stage = ?, owner_agent_uid = ?, notes = ?, value = ?, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = ? AND uid = ? RETURNING *`,
+        [
+          name,
+          mobile,
+          stage,
+          owner_agent_uid || null,
+          notes || "",
+          value || 0.0,
+          id,
+          req.decode.uid
+        ]
+      );
 
-    if (result.length === 0) {
-      return res.json({ success: false, msg: "Lead not found" });
-    }
+      if (resLead.length === 0) {
+        throw new Error("Lead not found");
+      }
 
-    // Log update activity
-    await query(
-      "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description, agent_uid) VALUES (?, ?, 'note', ?, ?)",
-      [req.decode.uid, id, "Lead info details updated", owner_agent_uid || null]
-    );
+      // Log update activity
+      await tx(
+        "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description, agent_uid) VALUES (?, ?, 'note', ?, ?)",
+        [req.decode.uid, id, "Lead info details updated", owner_agent_uid || null]
+      );
+
+      return resLead;
+    });
 
     res.json({ success: true, msg: "Lead details updated.", data: result[0] });
   } catch (err) {
     console.error(err);
-    res.json({ success: false, msg: "Failed to update lead" });
+    res.json({ success: false, msg: err.message === "Lead not found" ? "Lead not found" : "Failed to update lead" });
   }
 });
 
@@ -160,16 +170,20 @@ router.post("/leads/add_reminder", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Lead not found or unauthorized" });
     }
 
-    const result = await query(
-      "INSERT INTO crm_lead_reminders (uid, lead_id, title, remind_at, status) VALUES (?, ?, ?, ?, 'PENDING') RETURNING *",
-      [req.decode.uid, lead_id, title, remind_at]
-    );
+    const result = await withTransaction(async (tx) => {
+      const resRem = await tx(
+        "INSERT INTO crm_lead_reminders (uid, lead_id, title, remind_at, status) VALUES (?, ?, ?, ?, 'PENDING') RETURNING *",
+        [req.decode.uid, lead_id, title, remind_at]
+      );
 
-    // Log activity
-    await query(
-      "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description) VALUES (?, ?, 'reminder', ?)",
-      [req.decode.uid, lead_id, `Reminder scheduled: '${title}' at ${new Date(remind_at).toLocaleString()}`]
-    );
+      // Log activity
+      await tx(
+        "INSERT INTO crm_lead_activities (uid, lead_id, activity_type, description) VALUES (?, ?, 'reminder', ?)",
+        [req.decode.uid, lead_id, `Reminder scheduled: '${title}' at ${new Date(remind_at).toLocaleString()}`]
+      );
+
+      return resRem;
+    });
 
     res.json({ success: true, msg: "Reminder scheduled successfully.", data: result[0] });
   } catch (err) {

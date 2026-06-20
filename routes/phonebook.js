@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { query } = require('../database/dbpromise.js')
+const { query, withTransaction } = require('../database/dbpromise.js')
 const randomstring = require('randomstring')
 const bcrypt = require('bcrypt')
 const { isValidEmail, areMobileNumbersFilled } = require('../functions/function.js')
@@ -59,8 +59,10 @@ router.post('/del_phonebook', validateUser, async (req, res) => {
     try {
         const { id } = req.body
 
-        await query(`DELETE FROM phonebook WHERE id = ? AND uid = ?`, [id, req.decode.uid])
-        await query(`DELETE FROM contact WHERE phonebook_id = ? AND uid = ?`, [id, req.decode.uid])
+        await withTransaction(async (tx) => {
+            await tx(`DELETE FROM phonebook WHERE id = ? AND uid = ?`, [id, req.decode.uid])
+            await tx(`DELETE FROM contact WHERE phonebook_id = ? AND uid = ?`, [id, req.decode.uid])
+        })
 
         res.json({ success: true, msg: "Phonebook was deleted" })
 

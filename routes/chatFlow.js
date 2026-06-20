@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -78,16 +78,18 @@ router.post("/del_flow", validateUser, async (req, res) => {
   try {
     const { id, flowId } = req.body;
 
-    await query(`DELETE FROM flow WHERE uid = ? AND id = ?`, [
-      req.decode.uid,
-      id,
-    ]);
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM flow WHERE uid = ? AND id = ?`, [
+        req.decode.uid,
+        id,
+      ]);
 
-    // Update chatbots using this flow to prevent runtime execution errors
-    await query(
-      `UPDATE chatbot SET flow_id = NULL, active = 0 WHERE flow_id = ? AND uid = ?`,
-      [flowId, req.decode.uid]
-    );
+      // Update chatbots using this flow to prevent runtime execution errors
+      await tx(
+        `UPDATE chatbot SET flow_id = NULL, active = 0 WHERE flow_id = ? AND uid = ?`,
+        [flowId, req.decode.uid]
+      );
+    });
 
     const nodePath = `${__dirname}/../flow-json/nodes/${req.decode.uid}/${flowId}.json`;
     const edgePath = `${__dirname}/../flow-json/edges/${req.decode.uid}/${flowId}.json`;

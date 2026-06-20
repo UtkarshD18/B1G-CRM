@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -127,18 +127,21 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
 router.post("/del_agent", validateUser, async (req, res) => {
   try {
     const { uid } = req.body;
-    await query(`DELETE FROM agents WHERE uid = ? AND owner_uid = ?`, [
-      uid,
-      req.decode.uid,
-    ]);
-    await query(`DELETE FROM agent_chats WHERE uid = ? AND owner_uid = ?`, [
-      uid,
-      req.decode.uid,
-    ]);
-    await query(`DELETE FROM agent_task WHERE uid = ? AND owner_uid = ?`, [
-      uid,
-      req.decode.uid,
-    ]);
+
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM agents WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+      await tx(`DELETE FROM agent_chats WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+      await tx(`DELETE FROM agent_task WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+    });
 
     res.json({
       success: true,
