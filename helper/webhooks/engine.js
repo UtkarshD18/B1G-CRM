@@ -1,6 +1,39 @@
 const axios = require("axios");
 const { query } = require("../../database/dbpromise.js");
 
+async function dispatchWebhookWithRetry(url, payload, ruleName, maxRetries = 3, initialDelay = 1000) {
+  let attempt = 1;
+  let delay = initialDelay;
+
+  while (true) {
+    try {
+      console.log(`Dispatching webhook rule "${ruleName}" payload to ${url} (Attempt ${attempt}/${maxRetries + 1})...`);
+      const res = await axios.post(url, payload, { timeout: 5000 });
+      return {
+        status: res.status,
+        body: typeof res.data === "string" ? res.data : JSON.stringify(res.data)
+      };
+    } catch (err) {
+      const resStatus = err.response ? err.response.status : 500;
+      const resBody = err.message;
+
+      console.error(`Webhook rule "${ruleName}" post failed on attempt ${attempt}:`, err.message);
+
+      if (attempt > maxRetries) {
+        return {
+          status: resStatus,
+          body: resBody
+        };
+      }
+
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      attempt += 1;
+      delay *= 2; // Exponential backoff
+    }
+  }
+}
+
 function extractBodyText(newMessage) {
   if (!newMessage) return "";
   const messageBody =
@@ -106,19 +139,7 @@ async function processWebhookRules({ latestConversation, uid, origin }) {
           }
         };
 
-        let resStatus = null;
-        let resBody = "";
-
-        try {
-          console.log(`Dispatching webhook rule "${rule.name}" payload to ${targetUrl}`);
-          const res = await axios.post(targetUrl, webhookBody, { timeout: 5000 });
-          resStatus = res.status;
-          resBody = typeof res.data === "string" ? res.data : JSON.stringify(res.data);
-        } catch (err) {
-          resStatus = err.response ? err.response.status : 500;
-          resBody = err.message;
-          console.error(`Webhook rule "${rule.name}" post failed:`, err.message);
-        }
+        const { status: resStatus, body: resBody } = await dispatchWebhookWithRetry(targetUrl, webhookBody, rule.name);
 
         // Write to webhook_logs table
         await query(
