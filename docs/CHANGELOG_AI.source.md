@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-21 - Sprint 14: CRM Lead Pipeline Drag-and-Drop
+
+| Field | Details |
+| --- | --- |
+| Feature | Implemented React 19 HTML5 native drag-and-drop mechanics in the CRM Lead Pipeline dashboard (`CrmPipeline.jsx`) mapping visual drops directly to the stage-shifting backend mutation `/api/crm/leads/move`. Added inline visual drag cues and drop column overlays. |
+| Files changed | `client/src/pages/user/CrmPipeline.jsx`. |
+| Impact | Standardizes pipeline interactions and allows operators to visually drag and drop sales leads across customized workflow stages (Lead, Qualified, Proposal, Negotiation, Won, Lost) with database-level persistence. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-21 - Sprint 14: Kanban Drag-and-Drop Persistence
 
 | Field | Details |

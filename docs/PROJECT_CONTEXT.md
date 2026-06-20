@@ -29,7 +29,7 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 | Current sprint | `Sprint 14: Unified Auth, Database Transactions & Backend Hardening` |
 | Current priority | `Finalizing Sprint 14 verification and documentation.` |
 | Current feature in progress | `None` |
-| Last completed feature | `Implemented interactive HTML5 drag-and-drop persistence on the Chat Kanban board, synced directly to the change ticket status API endpoint; consolidated authentication middlewares; implemented connection pool transaction wrappers.` |
+| Last completed feature | `Implemented interactive HTML5 drag-and-drop persistence on both the Chat Kanban board and the CRM Lead Pipeline board, mapping visual drops directly to status/stage change API endpoints; consolidated authentication middlewares; implemented pool transaction wrappers.` |
 | Recommended next task | `Inbox composer quick reply templates` |
 | Known blockers | `None` |
 
