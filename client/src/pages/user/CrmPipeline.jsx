@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 
@@ -40,6 +40,25 @@ function UserCrmPipelinePage() {
   const [selectedLead, setSelectedLead] = useState(null)
   const [draggedLead, setDraggedLead] = useState(null)
   const [draggedOverStage, setDraggedOverStage] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [agentFilter, setAgentFilter] = useState('all')
+
+  const filteredLeads = useMemo(() => {
+    return leads.filter((lead) => {
+      const matchesSearch =
+        !searchQuery ||
+        String(lead.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(lead.mobile || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(lead.notes || '').toLowerCase().includes(searchQuery.toLowerCase())
+
+      const matchesAgent =
+        agentFilter === 'all' ||
+        (agentFilter === 'unassigned' && !lead.owner_agent_uid) ||
+        lead.owner_agent_uid === agentFilter
+
+      return matchesSearch && matchesAgent
+    })
+  }, [leads, searchQuery, agentFilter])
   
   // Create / Edit Form States
   const [showAddModal, setShowAddModal] = useState(false)
@@ -166,28 +185,53 @@ function UserCrmPipelinePage() {
     }
   }
 
-  async function handleMoveLead(leadId, targetStage) {
+  async function savePipelineOrder(leadId, targetStage, currentLeads) {
     try {
-      const result = await apiRequest('/api/crm/leads/move', {
+      const moveRes = await apiRequest('/api/crm/leads/move', {
         method: 'POST',
         token: tokens.user,
         body: { id: leadId, stage: targetStage }
       })
 
-      if (result?.success) {
-        setStatus(`Lead shifted to ${targetStage}`)
+      if (!moveRes?.success) {
+        setStatus(moveRes?.msg || 'Failed to move stage.')
         loadData()
-        if (selectedLead && selectedLead.id === leadId) {
-          // reload detail log
-          const matched = leads.find(l => l.id === leadId)
-          if (matched) loadLeadDetails({ ...matched, stage: targetStage })
-        }
-      } else {
-        setStatus(result?.msg || 'Failed to move stage.')
+        return
+      }
+
+      const orderedLeadIds = currentLeads.map((l) => l.id)
+      const orderRes = await apiRequest('/api/crm/leads/update_pipeline_order', {
+        method: 'POST',
+        token: tokens.user,
+        body: { orderedLeadIds }
+      })
+
+      if (!orderRes?.success) {
+        setStatus(orderRes?.msg || 'Failed to update lead order.')
+        loadData()
+        return
+      }
+
+      setStatus(`Lead shifted to ${targetStage}`)
+      if (selectedLead && selectedLead.id === leadId) {
+        const matched = currentLeads.find(l => l.id === leadId)
+        if (matched) loadLeadDetails({ ...matched, stage: targetStage })
       }
     } catch (error) {
       setStatus(error.message || 'Error moving lead stage.')
+      loadData()
     }
+  }
+
+  async function handleMoveLead(leadId, targetStage) {
+    const updatedLeads = leads.map((l) => {
+      if (l.id === leadId) {
+        return { ...l, stage: targetStage }
+      }
+      return l
+    })
+    setLeads(updatedLeads)
+    await savePipelineOrder(leadId, targetStage, updatedLeads)
   }
 
   async function handleAddReminder(e) {
@@ -265,15 +309,69 @@ function UserCrmPipelinePage() {
     const leadId = e.dataTransfer.getData('text/plain') || draggedLead?.id
     if (!leadId) return
 
-    const leadToMove = leads.find((l) => String(l.id) === String(leadId))
-    if (!leadToMove) return
+    const sourceLead = leads.find((l) => String(l.id) === String(leadId))
+    if (!sourceLead) return
 
-    await handleMoveLead(leadToMove.id, stage)
+    if (sourceLead.stage === stage) return
+
+    const updatedLeads = leads.map((l) => {
+      if (String(l.id) === String(leadId)) {
+        return { ...l, stage }
+      }
+      return l
+    })
+
+    setLeads(updatedLeads)
+    await savePipelineOrder(leadId, stage, updatedLeads)
+  }
+
+  const handleCardDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleCardDrop = async (e, targetLead, targetStage) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDraggedOverStage(null)
+
+    const leadId = e.dataTransfer.getData('text/plain') || draggedLead?.id
+    if (!leadId || String(leadId) === String(targetLead.id)) return
+
+    const sourceLead = leads.find((l) => String(l.id) === String(leadId))
+    if (!sourceLead) return
+
+    const updatedLeads = leads.map((l) => {
+      if (String(l.id) === String(leadId)) {
+        return { ...l, stage: targetStage }
+      }
+      return l
+    })
+
+    const targetStageLeads = updatedLeads.filter(
+      (l) => l.stage === targetStage && String(l.id) !== String(leadId)
+    )
+
+    const targetIndex = targetStageLeads.findIndex(
+      (l) => String(l.id) === String(targetLead.id)
+    )
+
+    const newTargetStageLeads = [...targetStageLeads]
+    newTargetStageLeads.splice(targetIndex, 0, { ...sourceLead, stage: targetStage })
+
+    const otherStageLeads = updatedLeads.filter(
+      (l) => l.stage !== targetStage
+    )
+
+    const finalLeads = [...otherStageLeads, ...newTargetStageLeads]
+    setLeads(finalLeads)
+
+    await savePipelineOrder(leadId, targetStage, finalLeads)
   }
 
   // Helper to calculate total value per stage
   const getStageTotal = (stage) => {
-    return leads
+    return filteredLeads
       .filter(l => l.stage === stage)
       .reduce((sum, current) => sum + Number(current.value || 0), 0)
   }
@@ -291,12 +389,36 @@ function UserCrmPipelinePage() {
         </button>
       </div>
 
+      {/* Search & Filter Controls */}
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', background: '#fcfcfc', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(10,25,37,0.06)', marginBottom: '16px' }}>
+        <input
+          type="text"
+          placeholder="Search name, mobile, or notes..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ flex: '1', minWidth: '200px', fontSize: '13px', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(10,25,37,0.12)', background: '#fff', color: '#333' }}
+        />
+        <select
+          value={agentFilter}
+          onChange={(e) => setAgentFilter(e.target.value)}
+          style={{ fontSize: '13px', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(10,25,37,0.12)', minWidth: '150px', background: '#fff', color: '#333' }}
+        >
+          <option value="all">All Agents</option>
+          <option value="unassigned">Unassigned</option>
+          {agents.map((a) => (
+            <option key={a.uid} value={a.uid}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {status && <div className="status-line">{status}</div>}
 
       {/* Kanban Board Container */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', overflowX: 'auto', paddingBottom: '16px' }}>
         {STAGES.map(stage => {
-          const stageLeads = leads.filter(l => l.stage === stage)
+          const stageLeads = filteredLeads.filter(l => l.stage === stage)
           const totalValue = getStageTotal(stage)
 
           return (
@@ -338,6 +460,8 @@ function UserCrmPipelinePage() {
                     draggable
                     onDragStart={(e) => handleDragStart(e, lead)}
                     onDragEnd={handleDragEnd}
+                    onDragOver={handleCardDragOver}
+                    onDrop={(e) => handleCardDrop(e, lead, stage)}
                     style={{
                       background: '#ffffff',
                       padding: '12px',

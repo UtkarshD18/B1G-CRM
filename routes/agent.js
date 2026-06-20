@@ -363,7 +363,8 @@ router.get("/get_my_assigned_chats", validateAgent, async (req, res) => {
       `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
        FROM chats c 
        LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
-       WHERE c.chat_id IN (?) AND c.uid = ?`,
+       WHERE c.chat_id IN (?) AND c.uid = ?
+       ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
       [chatIds, req.owner?.uid]
     );
 

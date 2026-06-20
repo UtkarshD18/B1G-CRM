@@ -9,7 +9,8 @@ router.get("/leads", validateUser, async (req, res) => {
       `SELECT cl.*, a.name as owner_name 
        FROM crm_leads cl
        LEFT JOIN agents a ON cl.owner_agent_uid = a.uid
-       WHERE cl.uid = ? ORDER BY cl.updated_at DESC`,
+       WHERE cl.uid = ? 
+       ORDER BY cl.pipeline_order ASC, cl.updated_at DESC`,
       [req.decode.uid]
     );
     res.json({ success: true, data: leads });
@@ -238,6 +239,30 @@ router.post("/leads/add_activity", validateUser, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.json({ success: false, msg: "Failed to log activity" });
+  }
+});
+
+// update custom CRM pipeline ordering for leads
+router.post("/leads/update_pipeline_order", validateUser, async (req, res) => {
+  try {
+    const { orderedLeadIds } = req.body;
+    if (!Array.isArray(orderedLeadIds)) {
+      return res.json({ success: false, msg: "orderedLeadIds must be an array" });
+    }
+
+    await withTransaction(async (conn) => {
+      for (let i = 0; i < orderedLeadIds.length; i++) {
+        await conn(
+          `UPDATE crm_leads SET pipeline_order = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND uid = ?`,
+          [i, orderedLeadIds[i], req.decode.uid]
+        );
+      }
+    });
+
+    res.json({ success: true, msg: "CRM Pipeline order updated" });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Failed to update pipeline order" });
   }
 });
 

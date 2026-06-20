@@ -1,6 +1,7 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
+const fs = require("fs");
 const bcrypt = require("bcrypt");
 const {
   isValidEmail,
@@ -90,7 +91,8 @@ router.get("/get_chats", validateUser, async (req, res) => {
       `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
        FROM chats c 
        LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
-       WHERE c.uid = ?`,
+       WHERE c.uid = ?
+       ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
       [req.decode.uid]
     );
     const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
@@ -149,6 +151,30 @@ router.post("/change_chat_ticket_status", validateUser, async (req, res) => {
     res.json({ success: true, msg: "Chat status updated" });
   } catch (err) {
     console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// update custom kanban order for chats
+router.post("/update_kanban_order", validateUser, async (req, res) => {
+  try {
+    const { orderedChatIds } = req.body;
+    if (!Array.isArray(orderedChatIds)) {
+      return res.json({ success: false, msg: "orderedChatIds must be an array" });
+    }
+
+    await withTransaction(async (conn) => {
+      for (let i = 0; i < orderedChatIds.length; i++) {
+        await conn.query(
+          `UPDATE chats SET kanban_order = $1 WHERE chat_id = $2 AND uid = $3`,
+          [i, orderedChatIds[i], req.decode.uid]
+        );
+      }
+    });
+
+    res.json({ success: true, msg: "Kanban order updated" });
+  } catch (err) {
+    console.error(err);
     res.json({ err, success: false, msg: "Something went wrong" });
   }
 });
@@ -633,6 +659,41 @@ router.post("/merge_chats", validateUser, async (req, res) => {
   try {
   } catch (err) {
     console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// delete a single message from conversation
+router.post("/delete_message", validateUser, async (req, res) => {
+  try {
+    const { chatId, messageId } = req.body;
+    if (!chatId || !messageId) {
+      return res.json({ success: false, msg: "chatId and messageId are required" });
+    }
+
+    const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
+    if (fs.existsSync(filePath)) {
+      let fileData = [];
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf8");
+        fileData = JSON.parse(fileContent);
+      } catch (err) {
+        fileData = [];
+      }
+
+      if (Array.isArray(fileData)) {
+        // filter out the message matching either metaChatId or timestamp
+        const updatedData = fileData.filter(
+          (msg) => String(msg.metaChatId || msg.timestamp) !== String(messageId)
+        );
+
+        fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2), "utf8");
+      }
+    }
+
+    res.json({ success: true, msg: "Message deleted" });
+  } catch (err) {
+    console.error(err);
     res.json({ err, success: false, msg: "Something went wrong" });
   }
 });

@@ -90,18 +90,32 @@ async function processBroadcast(campaign) {
         );
       } else {
         console.log({ getObj: JSON.stringify(getObj) });
-        await query(`UPDATE broadcast_log SET delivery_status = ?, err = ? WHERE id = ?`, [
-          getObj.msg || "FAILED",
-          JSON.stringify(getObj),
-          message?.id,
-        ]);
+        if (message.retry_count < 3) {
+          await query(
+            `UPDATE broadcast_log SET delivery_status = 'PENDING', retry_count = retry_count + 1, err = ? WHERE id = ?`,
+            [JSON.stringify(getObj), message?.id]
+          );
+        } else {
+          await query(`UPDATE broadcast_log SET delivery_status = ?, err = ? WHERE id = ?`, [
+            getObj.msg || "FAILED",
+            JSON.stringify(getObj),
+            message?.id,
+          ]);
+        }
       }
     } catch (err) {
       console.error(`Failed to process message ID ${message?.id}:`, err);
-      await query(`UPDATE broadcast_log SET delivery_status = 'FAILED', err = ? WHERE id = ?`, [
-        err.message,
-        message?.id,
-      ]);
+      if (message.retry_count < 3) {
+        await query(
+          `UPDATE broadcast_log SET delivery_status = 'PENDING', retry_count = retry_count + 1, err = ? WHERE id = ?`,
+          [err.message, message?.id]
+        );
+      } else {
+        await query(`UPDATE broadcast_log SET delivery_status = 'FAILED', err = ? WHERE id = ?`, [
+          err.message,
+          message?.id,
+        ]);
+      }
     }
     // Respect rate limits with a small throttle delay
     await new Promise((resolve) => setTimeout(resolve, 100));

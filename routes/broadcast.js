@@ -254,6 +254,10 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
       return res.json({ success: false, msg: "Please select a valid schedule" });
     }
 
+    if (scheduleDate.getTime() < Date.now() - 5 * 60 * 1000) {
+      return res.json({ success: false, msg: "Cannot schedule campaigns in the past" });
+    }
+
     const getPhonebook = await query(
       `SELECT * FROM phonebook WHERE id = ? AND uid = ?`,
       [phonebook.id, req.decode.uid]

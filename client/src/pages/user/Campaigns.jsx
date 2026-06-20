@@ -632,7 +632,7 @@ function UserCampaignsPage() {
                     <tr>
                       <th>Template slot</th>
                       <th>Contact field</th>
-                      <th>Sent placeholder</th>
+                      <th>Preview value</th>
                     </tr>
                   </thead>
                   <tbody>

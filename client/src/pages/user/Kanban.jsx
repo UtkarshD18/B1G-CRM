@@ -90,34 +90,56 @@ function UserKanbanPage() {
     [chats],
   )
 
+  async function saveKanbanState(chatId, nextStatus, currentChats) {
+    setStatus(`Saving Kanban state...`)
+    try {
+      const statusRes = await apiRequest('/api/inbox/change_chat_ticket_status', {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          chatId,
+          status: nextStatus,
+        },
+      })
+
+      if (!statusRes?.success) {
+        setStatus(statusRes?.msg || 'Unable to update chat status')
+        loadChats()
+        return
+      }
+
+      const orderedChatIds = currentChats.map((c) => c.chat_id)
+      const orderRes = await apiRequest('/api/inbox/update_kanban_order', {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          orderedChatIds,
+        },
+      })
+
+      if (!orderRes?.success) {
+        setStatus(orderRes?.msg || 'Unable to update Kanban ordering')
+        loadChats()
+        return
+      }
+
+      setStatus('Kanban state updated.')
+    } catch (error) {
+      setStatus(error.message || 'Unable to update Kanban state')
+      loadChats()
+    }
+  }
+
   async function moveChat(chat, nextStatus) {
     if (normalizeStatus(chat.chat_status) === nextStatus) {
       return
     }
 
-    setStatus(`Moving ${getChatTitle(chat)} to ${nextStatus}...`)
-    try {
-      const result = await apiRequest('/api/inbox/change_chat_ticket_status', {
-        method: 'POST',
-        token: tokens.user,
-        body: {
-          chatId: chat.chat_id,
-          status: nextStatus,
-        },
-      })
-
-      if (!result?.success) {
-        setStatus(result?.msg || 'Unable to update chat status')
-        return
-      }
-
-      setChats((current) =>
-        current.map((item) => (item.chat_id === chat.chat_id ? { ...item, chat_status: nextStatus } : item)),
-      )
-      setStatus('Chat status updated.')
-    } catch (error) {
-      setStatus(error.message || 'Unable to update chat status')
-    }
+    const updatedChats = chats.map((item) =>
+      item.chat_id === chat.chat_id ? { ...item, chat_status: nextStatus } : item
+    )
+    setChats(updatedChats)
+    await saveKanbanState(chat.chat_id, nextStatus, updatedChats)
   }
 
   const handleDragStart = (e, chat) => {
@@ -145,10 +167,70 @@ function UserKanbanPage() {
     const chatId = e.dataTransfer.getData('text/plain') || draggedChat?.chat_id
     if (!chatId) return
 
-    const chatToMove = chats.find((c) => String(c.chat_id) === String(chatId))
-    if (!chatToMove) return
+    const sourceChat = chats.find((c) => String(c.chat_id) === String(chatId))
+    if (!sourceChat) return
 
-    await moveChat(chatToMove, columnKey)
+    // If it's already in this column, dropping on column does nothing (handled by card drop)
+    if (normalizeStatus(sourceChat.chat_status) === columnKey) return
+
+    // Move to bottom of the new column
+    const updatedChats = chats.map((c) => {
+      if (String(c.chat_id) === String(chatId)) {
+        return { ...c, chat_status: columnKey }
+      }
+      return c
+    })
+
+    setChats(updatedChats)
+    await saveKanbanState(chatId, columnKey, updatedChats)
+  }
+
+  const handleCardDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleCardDrop = async (e, targetChat, targetColumn) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDraggedOverColumn(null)
+
+    const chatId = e.dataTransfer.getData('text/plain') || draggedChat?.chat_id
+    if (!chatId || String(chatId) === String(targetChat.chat_id)) return
+
+    const sourceChat = chats.find((c) => String(c.chat_id) === String(chatId))
+    if (!sourceChat) return
+
+    // First update the status locally for target column
+    const updatedChats = chats.map((c) => {
+      if (String(c.chat_id) === String(chatId)) {
+        return { ...c, chat_status: targetColumn }
+      }
+      return c
+    })
+
+    // Filter chats in target column, excluding the dragged chat
+    const targetColumnChats = updatedChats.filter(
+      (c) => normalizeStatus(c.chat_status) === targetColumn && String(c.chat_id) !== String(chatId)
+    )
+
+    const targetIndex = targetColumnChats.findIndex(
+      (c) => String(c.chat_id) === String(targetChat.chat_id)
+    )
+
+    // Insert sourceChat at targetIndex
+    const newTargetColumnChats = [...targetColumnChats]
+    newTargetColumnChats.splice(targetIndex, 0, { ...sourceChat, chat_status: targetColumn })
+
+    // Other column chats
+    const otherColumnChats = updatedChats.filter(
+      (c) => normalizeStatus(c.chat_status) !== targetColumn
+    )
+
+    const finalChats = [...otherColumnChats, ...newTargetColumnChats]
+    setChats(finalChats)
+
+    await saveKanbanState(chatId, targetColumn, finalChats)
   }
 
   return (
@@ -187,6 +269,8 @@ function UserKanbanPage() {
                   draggable
                   onDragStart={(e) => handleDragStart(e, chat)}
                   onDragEnd={handleDragEnd}
+                  onDragOver={handleCardDragOver}
+                  onDrop={(e) => handleCardDrop(e, chat, column.key)}
                   style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--card-bg)' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

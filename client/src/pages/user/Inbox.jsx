@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { io } from 'socket.io-client'
 import { API_BASE, apiFormRequest, apiFormRequestWithProgress, apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
@@ -169,6 +169,19 @@ function UserInboxPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploading, setUploading] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [shortcutFilter, setShortcutFilter] = useState('')
+  const [shortcutIndex, setShortcutIndex] = useState(0)
+  const [hoveredMsgIndex, setHoveredMsgIndex] = useState(null)
+
+  const filteredTemplates = useMemo(() => {
+    if (!shortcutFilter) return templates
+    return templates.filter(
+      (t) =>
+        String(t.title).toLowerCase().includes(shortcutFilter) ||
+        String(t.content || '').toLowerCase().includes(shortcutFilter)
+    )
+  }, [templates, shortcutFilter])
 
   const loadTemplatesList = useCallback(async () => {
     try {
@@ -358,6 +371,29 @@ function UserInboxPage() {
   }
 
   const handleKeyDown = (event) => {
+    if (showShortcuts && filteredTemplates.length > 0) {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        setShortcutIndex((prev) => (prev + 1) % filteredTemplates.length)
+        return
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        setShortcutIndex((prev) => (prev - 1 + filteredTemplates.length) % filteredTemplates.length)
+        return
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        selectShortcut(filteredTemplates[shortcutIndex])
+        return
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setShowShortcuts(false)
+        return
+      }
+    }
+
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       sendMessage(event)
@@ -380,6 +416,54 @@ function UserInboxPage() {
         text = String(selectedTemp.content || '')
       }
       setMessageDraft(text)
+    }
+  }
+
+  const handleComposerChange = (val) => {
+    setMessageDraft(val)
+    if (val.startsWith('/') && !val.includes(' ')) {
+      setShowShortcuts(true)
+      setShortcutFilter(val.substring(1).toLowerCase())
+      setShortcutIndex(0)
+    } else {
+      setShowShortcuts(false)
+    }
+  }
+
+  const selectShortcut = (temp) => {
+    if (!temp) return
+    let text = ''
+    try {
+      const parsedContent = typeof temp.content === 'string'
+        ? JSON.parse(temp.content)
+        : temp.content
+      text = parsedContent?.body || parsedContent?.text || String(parsedContent || '')
+    } catch {
+      text = String(temp.content || '')
+    }
+    setMessageDraft(text)
+    setShowShortcuts(false)
+  }
+
+  async function handleDeleteMessage(msg) {
+    if (!window.confirm('Are you sure you want to delete this message?')) return
+    const msgId = msg.metaChatId || msg.timestamp
+    try {
+      const res = await apiRequest('/api/inbox/delete_message', {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          chatId: selectedChat.chat_id,
+          messageId: msgId
+        }
+      })
+      if (res?.success) {
+        setConversation(prev => prev.filter(m => (m.metaChatId || m.timestamp) !== msgId))
+      } else {
+        alert(res?.msg || 'Could not delete message')
+      }
+    } catch (err) {
+      alert(err.message || 'Error deleting message')
     }
   }
 
@@ -597,7 +681,44 @@ function UserInboxPage() {
                       message.route === 'OUTGOING' ? 'outgoing' : 'incoming',
                     )}
                     key={`${message.metaChatId || message.timestamp || 'message'}-${index}`}
+                    onMouseEnter={() => setHoveredMsgIndex(index)}
+                    onMouseLeave={() => setHoveredMsgIndex(null)}
+                    style={{ position: 'relative' }}
                   >
+                    {hoveredMsgIndex === index && (
+                      <div className="message-actions-bar" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '-14px', right: '10px', background: '#f8f3eb', border: '1px solid rgba(10,25,37,0.12)', borderRadius: '4px', padding: '2px 4px', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const bodyText = normalizeConversationMessage(message)
+                            navigator.clipboard.writeText(bodyText)
+                          }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '10px', padding: '0 2px' }}
+                          title="Copy text"
+                        >
+                          📋
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const bodyText = normalizeConversationMessage(message)
+                            setMessageDraft(`Replying to "${bodyText}": `)
+                          }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '10px', padding: '0 2px' }}
+                          title="Reply/Quote"
+                        >
+                          💬
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMessage(message)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '10px', padding: '0 2px' }}
+                          title="Delete message"
+                        >
+                          ❌
+                        </button>
+                      </div>
+                    )}
                     <span>{message.route === 'OUTGOING' ? 'You' : message.senderName || 'Contact'}</span>
                     {message.type === 'image' ? (
                       <div className="message-media">
@@ -659,35 +780,59 @@ function UserInboxPage() {
                 <p className="empty-state">Open a chat to load its conversation.</p>
               )}
             </div>
-            <form className="wa-composer" onSubmit={sendMessage}>
-              {templates.length > 0 && (
-                <select
-                  className="quick-reply-select"
-                  value={selectedTemplateId}
-                  onChange={handleTemplateChange}
-                  aria-label="Quick reply template select"
-                >
-                  <option value="">Quick Reply</option>
-                  {templates.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title}
-                    </option>
+            <div style={{ position: 'relative' }}>
+              {showShortcuts && filteredTemplates.length > 0 && (
+                <div className="shortcuts-popover" style={{ position: 'absolute', bottom: '100%', left: '16px', background: '#f8f3eb', border: '1px solid rgba(10,25,37,0.12)', borderRadius: '12px', zIndex: 100, width: '280px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 30px rgba(7,19,29,0.1)' }}>
+                  {filteredTemplates.map((t, idx) => (
+                    <div
+                      key={t.id}
+                      onClick={() => selectShortcut(t)}
+                      style={{
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        background: idx === shortcutIndex ? 'rgba(30,160,133,0.1)' : 'transparent',
+                        borderBottom: '1px solid rgba(10,25,37,0.06)',
+                        color: 'var(--text)'
+                      }}
+                    >
+                      <strong style={{ color: '#1ea085', fontSize: '13px' }}>/{t.title}</strong>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
+                        {typeof t.content === 'string' ? t.content : JSON.stringify(t.content)}
+                      </div>
+                    </div>
                   ))}
-                </select>
+                </div>
               )}
-              <textarea
-                value={messageDraft}
-                onChange={(event) => setMessageDraft(event.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={selectedChat ? 'Type a WhatsApp reply (Enter to send, Shift+Enter for new line)' : 'Open a chat before replying'}
-                disabled={!selectedChat}
-                className="wa-composer-textarea"
-                rows={1}
-              />
-              <button className="primary-button" type="submit" disabled={!selectedChat || !messageDraft.trim()}>
-                Send
-              </button>
-            </form>
+              <form className="wa-composer" onSubmit={sendMessage}>
+                {templates.length > 0 && (
+                  <select
+                    className="quick-reply-select"
+                    value={selectedTemplateId}
+                    onChange={handleTemplateChange}
+                    aria-label="Quick reply template select"
+                  >
+                    <option value="">Quick Reply</option>
+                    {templates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <textarea
+                  value={messageDraft}
+                  onChange={(event) => handleComposerChange(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={selectedChat ? 'Type a WhatsApp reply (Type / for shortcuts)' : 'Open a chat before replying'}
+                  disabled={!selectedChat}
+                  className="wa-composer-textarea"
+                  rows={1}
+                />
+                <button className="primary-button" type="submit" disabled={!selectedChat || !messageDraft.trim()}>
+                  Send
+                </button>
+              </form>
+            </div>
             {uploading && (
               <div className="upload-progress-container" style={{ margin: '0 24px 8px 24px' }}>
                 <div className="upload-progress-bar" style={{ width: `${uploadProgress}%` }} />
