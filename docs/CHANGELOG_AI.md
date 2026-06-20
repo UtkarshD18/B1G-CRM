@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-21 - Sprint 14: Unified Auth, Database Transactions & Backend Hardening
+
+| Field | Details |
+| --- | --- |
+| Feature | Consolidated role-specific auth validation middlewares (`user.js`, `admin.js`, `agent.js`) into standard `middlewares/auth.js` with active agent validation and parent owner context caching (`req.owner`); implemented connection pool transaction wrapper `withTransaction` in `database/dbpromise.js` for SQL rollback safety; wrapped deletes and mutations across users, broadcasts, phonebooks, chatFlows, agents, and CRM leads in transaction blocks; configured root `npm test` script executing database consistency checks, auth checks, and cross-module integration tests. |
+| Files changed | `database/dbpromise.js`, `middlewares/auth.js`, `middlewares/user.js`, `middlewares/admin.js`, `middlewares/agent.js`, `routes/admin.js`, `routes/broadcast.js`, `routes/phonebook.js`, `routes/chatFlow.js`, `routes/agent.js`, `routes/crm_leads.js`, `nodemon.json`, `package.json`, `scratch/verify-backend-auth.js`. |
+| Impact | Standardizes API authentication filters, guarantees transactional consistency and prevents data corruption/orphaning on delete cascades and multi-step mutations, ignores temporary test reports in nodemon to prevent server restarts, and establishes automated backend route test coverage. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-20 - Sprint 13: Campaign Optimization & Webhook Retry Engine
 
 | Field | Details |

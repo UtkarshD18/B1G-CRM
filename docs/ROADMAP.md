@@ -23,9 +23,9 @@ Last audited: 2026-06-20
 
 | Work | Why | Files |
 | --- | --- | --- |
-| Add backend unit tests for auth and tenant isolation. | Core routing logic lacks backend coverage checks. | `routes/*`, `middlewares/*`, test setup |
+| Add backend unit tests for auth and tenant isolation. | [RESOLVED] Configured root test suite running backend auth and integration checks in Sprint 14. | `routes/*`, `middlewares/*`, `scratch/verify-backend-auth.js` |
 | Harden JWT payloads. | [RESOLVED] Enforced explicit token expirations (7d/1h) in Sprint 13. | `routes/user.js`, `routes/admin.js`, `routes/agent.js` |
-| Audit user deletion effects. | Lack of foreign keys could leave orphan records in related tables. | `routes/admin.js` |
+| Audit user deletion effects. | [RESOLVED] Wrapped user cascade delete (/del_user) in a safe database transaction in Sprint 14. | `routes/admin.js` |
 
 ## Priority 4 - Planned Channels
 

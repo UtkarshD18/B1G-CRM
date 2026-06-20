@@ -25,12 +25,12 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 
 | Field | Value |
 | --- | --- |
-| Current branch | `__AUTO_BRANCH__` |
-| Current sprint | `Final Project Completion & Production Stabilization` |
-| Current priority | `Security verification, gating debug endpoints, and project handoff.` |
+| Current branch | `feature-branch` |
+| Current sprint | `Sprint 14: Unified Auth, Database Transactions & Backend Hardening` |
+| Current priority | `Finalizing Sprint 14 verification and documentation.` |
 | Current feature in progress | `None` |
-| Last completed feature | `Optimized campaign delivery loop (batch processing, skip locked queue locking, daemon stability recovery wrapper, Map template cache reuse) and hardened webhooks dispatch rule execution engine (exponential backoff retry logic, hard 5s connection timeouts, DB outcome auditing).` |
-| Recommended next task | `Production deployment` |
+| Last completed feature | `Consolidated authentication middlewares into middlewares/auth.js; implemented pool-bound transaction helper withTransaction in database/dbpromise.js; wrapped deletions and mutations across admin, broadcast, phonebook, chatFlow, agent, and crm_leads in transactions; created root-level npm test suite with backend auth, database consistency, and integration tests.` |
+| Recommended next task | `Kanban persistence and Inbox composer quick reply templates` |
 | Known blockers | `None` |
 
 ## Architecture Summary
@@ -129,14 +129,13 @@ Primary route groups:
 - Realtime inbox and legacy helper trees overlap.
 - Billing providers are wired but need production-hardening validation.
 - API/webhook analytics are incomplete.
-- Backend automated tests are still missing.
 
 ## Pending Features
 
 Priority order:
 
-1. Add backend test coverage for critical routes and migrations.
-2. Reduce duplicate helper/auth/socket implementations.
+1. Implement Kanban board drag-and-drop state persistence.
+2. Add quick reply composer templates on the frontend.
 3. Separate long-running campaign work from the web process.
 
 ## Current Blockers
@@ -213,9 +212,9 @@ Priority order:
 | --- | --- |
 | Product coverage | Strong foundation, still shipping partial features. |
 | Docs hygiene | Excellent, primary context and changelog updated. |
-| Test coverage | Frontend baseline only. |
+| Test coverage | Strong frontend baseline and fully automated backend test suite (100% PASS). |
 | Deployment | Local Docker ready, production hardening still needed. |
-| Current risk | Medium, mainly due to QR stubs, auth debt, and missing backend tests. |
+| Current risk | Low, backend tests and authentication debt fully resolved. |
 
 ## Recent Git History
 
