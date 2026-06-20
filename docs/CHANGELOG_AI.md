@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-21 - Sprint 14: Kanban Drag-and-Drop Persistence
+
+| Field | Details |
+| --- | --- |
+| Feature | Implemented React 19 HTML5 native drag-and-drop mechanics in the Chat Kanban dashboard (`Kanban.jsx`) mapping visual drops directly to the ticket status backend mutation `/api/inbox/change_chat_ticket_status`. Configured CSS transitions, drag-over highlights, and card dragging opacities in `App.css`. |
+| Files changed | `client/src/pages/user/Kanban.jsx`, `client/src/App.css`. |
+| Impact | Enhances CRM operational workspace workflow by allowing operators to interactively drag and drop chats across Open, Pending, and Solved columns with database-level persistence. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-21 - Sprint 14: Unified Auth, Database Transactions & Backend Hardening
 
 | Field | Details |

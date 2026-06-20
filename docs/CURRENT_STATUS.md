@@ -32,6 +32,7 @@ Last audited: 2026-06-20
 | Sprint 13 Campaign & Webhook optimizations | Replaced campaign sequential processing with batch updates (LIMIT 50) and parallel queue safety using FOR UPDATE SKIP LOCKED database locking; integrated map-based template cache in loops; wrapped loop runners in robust daemon restart try/catch blocks. Hardened webhook rules dispatcher with exponential retry backoff, timeouts, and auditing. |
 | Sprint 13 Tenant Isolation Hardening | Hardened CRM Leads, reminders, activities, Phonebooks, and contact import routes against Insecure Direct Object References (IDORs). |
 | Sprint 14 Unified Auth & Transactions | Consolidated role-specific authentication middlewares; implemented pool-bound transaction helper withTransaction in database/dbpromise.js; wrapped deletes and mutations across admin, broadcast, phonebook, chatFlow, agent, and crm_leads in transactions; created root-level automated backend tests. |
+| Sprint 14 Kanban Drag-and-Drop Persistence | Implemented interactive HTML5 drag-and-drop persistence on the Chat Kanban board, synced directly to the change ticket status API endpoint. |
 
 
 ## Partially Implemented

@@ -60,7 +60,7 @@ Status legend:
 | --- | --- | --- | --- | --- | --- | --- |
 | Dashboard | Partial | Tenant metrics route/page. | Better charts and loading/error states. | `routes/user.js`, `client/src/pages/user/Dashboard.jsx` | PostgreSQL | Medium |
 | Inbox | Complete | Chat list/conversation/send APIs, socket handlers, and inline media rendering (images, videos, audio, documents). | Refine/align REST and socket paths further if needed. | `routes/inbox.js`, `socket.js`, `helper/socket/*`, `client/src/pages/user/Inbox.jsx` | Meta API, filesystem | High |
-| Kanban | Partial | Chat status grouped view and status route. | Drag/drop polish. | `routes/inbox.js`, `client/src/pages/user/Kanban.jsx` | PostgreSQL | Medium |
+| Kanban | Complete | Chat status grouped view, ticket status change API, and interactive drag-and-drop. | Keep refining transitions/animations. | `routes/inbox.js`, `client/src/pages/user/Kanban.jsx` | PostgreSQL | Low |
 | Contacts/phonebook | Complete/partial | Phonebook CRUD, Phonebook Rename API (POST /update), Contact CRUD, Contact Edit API (POST /update_contact), and CSV import. | Import validation and dedupe polish. | `routes/phonebook.js`, `client/src/pages/user/Contacts.jsx` | csv-parser | Medium |
 | Meta WhatsApp link | Partial | Credential form, validation, key storage. | Embedded signup/OAuth not complete. | `routes/user.js`, `client/src/pages/user/Integrations.jsx` | Meta Graph API | High |
 | WhatsApp QR | Complete | UI/routes/table exist. Added connection event listeners (`messages.upsert`/`update`) and message dispatch routing via active session. | None. | `routes/qr.js`, `helper/addon/qr/*`, `client/src/pages/user/Integrations.jsx` | Baileys | Low |
