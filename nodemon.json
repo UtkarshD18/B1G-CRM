@@ -4,6 +4,13 @@
     "conversations/*",
     "sessions/*",
     "logs/*",
-    "client/*"
+    "client/*",
+    "*.json",
+    "*.log",
+    "database_integrity_report.json",
+    "adversarial_security_report.json",
+    "cross_module_audit_results.json",
+    "**/*.json",
+    "**/*.log"
   ]
 }
