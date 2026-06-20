@@ -38,6 +38,8 @@ function UserCrmPipelinePage() {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
   const [selectedLead, setSelectedLead] = useState(null)
+  const [draggedLead, setDraggedLead] = useState(null)
+  const [draggedOverStage, setDraggedOverStage] = useState(null)
   
   // Create / Edit Form States
   const [showAddModal, setShowAddModal] = useState(false)
@@ -238,6 +240,37 @@ function UserCrmPipelinePage() {
     }
   }
 
+  const handleDragStart = (e, lead) => {
+    e.dataTransfer.setData('text/plain', lead.id)
+    setDraggedLead(lead)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedLead(null)
+    setDraggedOverStage(null)
+  }
+
+  const handleDragOver = (e, stage) => {
+    e.preventDefault()
+    setDraggedOverStage(stage)
+  }
+
+  const handleDragLeave = () => {
+    setDraggedOverStage(null)
+  }
+
+  const handleDrop = async (e, stage) => {
+    e.preventDefault()
+    setDraggedOverStage(null)
+    const leadId = e.dataTransfer.getData('text/plain') || draggedLead?.id
+    if (!leadId) return
+
+    const leadToMove = leads.find((l) => String(l.id) === String(leadId))
+    if (!leadToMove) return
+
+    await handleMoveLead(leadToMove.id, stage)
+  }
+
   // Helper to calculate total value per stage
   const getStageTotal = (stage) => {
     return leads
@@ -267,7 +300,22 @@ function UserCrmPipelinePage() {
           const totalValue = getStageTotal(stage)
 
           return (
-            <div key={stage} style={{ background: '#fcfcfc', borderRadius: '16px', border: '1px solid rgba(10,25,37,0.06)', padding: '12px', display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
+            <div
+              key={stage}
+              onDragOver={(e) => handleDragOver(e, stage)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, stage)}
+              style={{
+                background: draggedOverStage === stage ? 'rgba(30, 160, 133, 0.08)' : '#fcfcfc',
+                borderRadius: '16px',
+                border: draggedOverStage === stage ? '2px dashed #1ea085' : '1px solid rgba(10,25,37,0.06)',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: '500px',
+                transition: 'all 0.2s ease'
+              }}
+            >
               {/* Column Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid rgba(10,25,37,0.04)' }}>
                 <div>
@@ -287,14 +335,18 @@ function UserCrmPipelinePage() {
                   <div
                     key={lead.id}
                     onClick={() => loadLeadDetails(lead)}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, lead)}
+                    onDragEnd={handleDragEnd}
                     style={{
                       background: '#ffffff',
                       padding: '12px',
                       borderRadius: '12px',
                       border: '1px solid rgba(10,25,37,0.08)',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-                      cursor: 'pointer',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      cursor: 'grab',
+                      opacity: draggedLead?.id === lead.id ? 0.4 : 1,
+                      transition: 'transform 0.2s ease, box-shadow 0.2s ease, opacity 0.15s ease',
                     }}
                     onMouseEnter={e => {
                       e.currentTarget.style.transform = 'translateY(-2px)'
