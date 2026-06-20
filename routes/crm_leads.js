@@ -250,9 +250,9 @@ router.post("/leads/update_pipeline_order", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "orderedLeadIds must be an array" });
     }
 
-    await withTransaction(async (conn) => {
+    await withTransaction(async (txQuery) => {
       for (let i = 0; i < orderedLeadIds.length; i++) {
-        await conn(
+        await txQuery(
           `UPDATE crm_leads SET pipeline_order = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND uid = ?`,
           [i, orderedLeadIds[i], req.decode.uid]
         );
