@@ -6,7 +6,7 @@ Last audited: 2026-06-20
 
 | Issue | Evidence | Impact | Suggested fix |
 | --- | --- | --- | --- |
-| QR implementation is stubbed | `helper/addon/qr/index.js` returns no-op session functions and `checkQr()` false. | QR routes/UI can mislead users. | Implement real Baileys session layer or hide QR features. |
+| QR implementation is stubbed | `helper/addon/qr/index.js` returns no-op session functions and `checkQr()` false. | QR routes/UI can mislead users. | [RESOLVED] Real QR session helper implemented and integrated into the message/inbox routing flows in Sprint 13. |
 | Active JWT payload includes password hash | Login routes sign `{ password: storedHash }`. | Sensitive hash material is client-held. | [RESOLVED] Removed bcrypt hashes from JWT payloads in Sprint 12. |
 | Active login tokens have no explicit expiry | Login routes pass `{}` to `sign()`. | Long-lived sessions. | [RESOLVED] Enforced `env.JWT_EXPIRY` in Sprint 13. |
 | Public install/update routes mutate files | `routes/web.js` exposes `install_app` and `update_app`. | Production takeover risk. | [RESOLVED] Gated `/install_app` and `/update_app` with admin password validation in Sprint 12/Final. |
@@ -23,7 +23,7 @@ Last audited: 2026-06-20
 | Duplicate auth middleware styles | `middlewares/auth.js` exists but routes use role-specific middleware. | Inconsistent behavior/status codes. | Migrate deliberately with tests. |
 | Runtime JSON files hold core state | Conversations and flow data stored on disk. | Backups/scaling need filesystem persistence. | Move to DB or document backup/volume policy. |
 | Root `npm test` fails by design | `package.json` script exits 1. | CI cannot use root tests. | Add backend tests or change script to scoped test commands. |
-| Campaign loop recursion in app process | `runCampaign()` calls itself forever after random delay. | Multi-instance duplicate sends possible. | Use queue/worker/locks. |
+| Campaign loop recursion in app process | `runCampaign()` calls itself forever after random delay. | Multi-instance duplicate sends possible. | [RESOLVED] Campaign loop refactored into a daemon while(true) loop that catches errors, and processes messages in batches using FOR UPDATE SKIP LOCKED to prevent duplicate concurrent runs in Sprint 13. |
 
 ## Low Risk / Cleanup
 

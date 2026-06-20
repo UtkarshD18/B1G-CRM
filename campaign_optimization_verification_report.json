@@ -1,0 +1,7 @@
+{
+  "templateCaching": true,
+  "batchExecution": true,
+  "queueSafety": true,
+  "cleanup": true,
+  "pass": true
+}

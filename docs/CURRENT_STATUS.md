@@ -1,6 +1,6 @@
 # Current Status
 
-Last audited: 2026-06-19
+Last audited: 2026-06-20
 
 ## Implemented
 
@@ -29,6 +29,7 @@ Last audited: 2026-06-19
 | Sprint 13 QR & Widget Hardening | Activated real-time Baileys connection listeners ('messages.upsert', 'messages.update') and outbound sending routing via active session; hardened Chat Widget configuration input validations. |
 | Sprint 13 Webhook Logs Execution | Implemented end-to-end Webhook Execution Logs. Added query endpoint and React log viewer dashboard view with filters and inspect drawers; fixed dev database seeder to upsert missing agent credentials on boot. |
 | Sprint 13 JWT Security Hardening | Enforced explicit token expirations (7d via `env.JWT_EXPIRY`) across standard logins/auto-logins, enforced 1h expiry on password recovery tokens, and fixed password recovery token age validator comparison bounds. |
+| Sprint 13 Campaign & Webhook optimizations | Replaced campaign sequential processing with batch updates (LIMIT 50) and parallel queue safety using FOR UPDATE SKIP LOCKED database locking; integrated map-based template cache in loops; wrapped loop runners in robust daemon restart try/catch blocks. Hardened webhook rules dispatcher with exponential retry backoff, timeouts, and auditing. |
 | Sprint 13 Tenant Isolation Hardening | Hardened CRM Leads, reminders, activities, Phonebooks, and contact import routes against Insecure Direct Object References (IDORs). |
 
 
@@ -77,7 +78,7 @@ Last audited: 2026-06-19
 | Plan data copied as JSON into users | Consider normalized plan assignment/history model. |
 | QR add-on stubbed | [RESOLVED] Real QR session helper implemented and integrated into the message/inbox routing flows. |
 | Socket state in memory | Horizontal scaling needs adapter/shared state. |
-| Campaign loop recursive in app process | Consider worker/queue with locks for multi-instance deploys. |
+| Campaign loop recursive in app process | [RESOLVED] Refactored campaign loop to run as a robust while(true) daemon that catches errors, preventing recursive stack overflow and thread crashes. |
 
 ## Performance Concerns
 
@@ -85,7 +86,7 @@ Last audited: 2026-06-19
 | --- | --- |
 | Chat lists and campaign logs use broad selects | Larger tenants may need pagination/index review. |
 | Conversation JSON files are read/written whole | Large chats may become slow and conflict-prone. |
-| Campaign loop processes one pending log per campaign per pass | High-volume campaigns need pacing and concurrency design. |
+| Campaign loop processes one pending log per campaign per pass | [RESOLVED] Campaign loop processes messages in batches of 50 using database row-level locking (FOR UPDATE SKIP LOCKED) to allow parallel safely scaled campaign loops. |
 | Socket connection scans iterate over all sockets | Multi-tenant scale may need rooms/adapters. |
 
 ## Security Concerns

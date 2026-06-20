@@ -1,6 +1,6 @@
 # Feature Tracker
 
-Last audited: 2026-06-18
+Last audited: 2026-06-20
 
 Status legend:
 
@@ -68,10 +68,10 @@ Status legend:
 | Automation flows | Partial | React Flow page, save/load/delete/activity APIs. | Advanced branching templates and runtime validation. | `routes/chatFlow.js`, `client/src/pages/user/AutomationFlows.jsx` | `@xyflow/react`, filesystem | High |
 | WA chatbot | Partial | CRUD, selected/all chats, active status, diagnostics. | Full visual runtime parity and analytics. | `routes/chatbot.js`, `functions/chatbot.js`, `helper/chatbot/*`, `client/src/pages/user/ChatBot.jsx` | Meta API, flow JSON | High |
 | Meta templates | Partial | Create/list/delete/upload media APIs and page. | Approval diagnostics and more validation. | `routes/user.js`, `client/src/pages/user/MetaTemplates.jsx` | Meta Graph API | High |
-| Campaigns | Complete/partial | Create/list/status/delete/logs/dashboard, recursive daemon loop, and Campaign Local Simulation mode (MOCK_META_DELIVERY). | Pacing, retry, and validation controls under live production keys. | `routes/broadcast.js`, `loops/*`, `client/src/pages/user/Campaigns.jsx` | Meta API, PostgreSQL | High |
+| Campaigns | Complete/partial | Create/list/status/delete/logs/dashboard, batch updates with queue locking (FOR UPDATE SKIP LOCKED), template cache Map, and Campaign Local Simulation mode (MOCK_META_DELIVERY). | Throttle pacing delay validation, and live keys production scaling. | `routes/broadcast.js`, `loops/*`, `client/src/pages/user/Campaigns.jsx` | Meta API, PostgreSQL | High |
 | Billing | Partial | Plans/free trial/Stripe UI flow. | Complete provider SDK UX and reconciliation. | `routes/user.js`, `client/src/pages/user/Billing.jsx` | Stripe, PayPal, Razorpay, Paystack | High |
 | API dashboard | Partial | API key generation and samples. | Usage analytics. | `routes/apiv2.js`, `routes/user.js`, `client/src/pages/user/DeveloperApi.jsx` | JWT, Meta API | Medium |
-| Webhook rules | Complete | Rule CRUD API, UI, rules execution engine, target POST dispatches, persistent webhook logs query endpoint, and log viewer dashboard. | Usage analytics dashboard. | `routes/webhooks.js`, `client/src/pages/user/DeveloperApi.jsx`, `client/src/pages/user/WebhookLogs.jsx`, `helper/webhooks/engine.js` | PostgreSQL | Medium |
+| Webhook rules | Complete | Rule CRUD API, UI, rules execution engine, exponential backoff retry target POST dispatches with timeouts, persistent webhook logs query endpoint, and log viewer dashboard. | Usage analytics dashboard. | `routes/webhooks.js`, `client/src/pages/user/DeveloperApi.jsx`, `client/src/pages/user/WebhookLogs.jsx`, `helper/webhooks/engine.js` | PostgreSQL | Medium |
 | Agent login management | Complete/partial | Agent creation/list and auto-login token. | Edit/delete polish and audits. | `routes/agent.js`, `routes/user.js`, `client/src/pages/user/AgentLogin.jsx` | JWT, bcrypt | Medium |
 | Agent tasks | Complete/partial | Create/list/delete tenant tasks; agent can complete. | Better task states. | `routes/user.js`, `routes/agent.js`, `client/src/pages/user/AgentTask.jsx` | PostgreSQL | Medium |
 | Chat widget | Partial | Create/list/delete, public widget render route, and input validation hardening. | Analytics/logo UX. | `routes/user.js`, `client/src/pages/user/ChatWidget.jsx` | File uploads | Medium |

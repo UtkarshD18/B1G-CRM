@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-20 - Sprint 13: Campaign Optimization & Webhook Retry Engine
+
+| Field | Details |
+| --- | --- |
+| Feature | Optimized campaign delivery loop (introduced batch updates with FOR UPDATE SKIP LOCKED query locking, Map template cache metadata reuse, daemon stability try/catch recovery wrapper) and hardened webhooks dispatch rule execution engine (exponential backoff retry logic, hard 5s connection timeouts, DB outcome auditing). |
+| Files changed | `loops/campaignLoop.js`, `loops/loopFunctions.js`, `helper/webhooks/engine.js`, `scratch/verify-campaign-batching.js`, `scratch/verify-webhook-retry.js`. |
+| Impact | Substantially improves campaign delivery speeds under high concurrent loads, prevents double sends and race conditions in multi-tenant clustered environments, mitigates external network dependency failures via retry with backoff, and saves database resources. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-20 - Sprint 13: Tenant Isolation Hardening (IDOR Fixes)
 
 | Field | Details |
