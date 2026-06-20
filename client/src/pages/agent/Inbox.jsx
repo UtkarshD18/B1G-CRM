@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import { API_BASE, apiFormRequestWithProgress, apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
@@ -168,6 +168,18 @@ function AgentInboxPage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [chatStatusVal, setChatStatusVal] = useState('open')
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [shortcutFilter, setShortcutFilter] = useState('')
+  const [shortcutIndex, setShortcutIndex] = useState(0)
+
+  const filteredTemplates = useMemo(() => {
+    if (!shortcutFilter) return templates
+    return templates.filter(
+      (t) =>
+        String(t.title).toLowerCase().includes(shortcutFilter) ||
+        String(t.content || '').toLowerCase().includes(shortcutFilter)
+    )
+  }, [templates, shortcutFilter])
 
   function openChat(chat) {
     if (!socketRef.current || !chat?.chat_id) {
@@ -363,10 +375,59 @@ function AgentInboxPage() {
   }
 
   const handleKeyDown = (event) => {
+    if (showShortcuts && filteredTemplates.length > 0) {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        setShortcutIndex((prev) => (prev + 1) % filteredTemplates.length)
+        return
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        setShortcutIndex((prev) => (prev - 1 + filteredTemplates.length) % filteredTemplates.length)
+        return
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        selectShortcut(filteredTemplates[shortcutIndex])
+        return
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setShowShortcuts(false)
+        return
+      }
+    }
+
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       sendMessage(event)
     }
+  }
+
+  const handleComposerChange = (val) => {
+    setMessageDraft(val)
+    if (val.startsWith('/') && !val.includes(' ')) {
+      setShowShortcuts(true)
+      setShortcutFilter(val.substring(1).toLowerCase())
+      setShortcutIndex(0)
+    } else {
+      setShowShortcuts(false)
+    }
+  }
+
+  const selectShortcut = (temp) => {
+    if (!temp) return
+    let text = ''
+    try {
+      const parsedContent = typeof temp.content === 'string'
+        ? JSON.parse(temp.content)
+        : temp.content
+      text = parsedContent?.body || parsedContent?.text || String(parsedContent || '')
+    } catch {
+      text = String(temp.content || '')
+    }
+    setMessageDraft(text)
+    setShowShortcuts(false)
   }
 
   const handleTemplateChange = (event) => {
@@ -666,7 +727,29 @@ function AgentInboxPage() {
                 <p className="empty-state">Open a chat to load its conversation.</p>
               )}
             </div>
-            <form className="wa-composer" onSubmit={sendMessage}>
+            <form className="wa-composer" onSubmit={sendMessage} style={{ position: 'relative' }}>
+              {showShortcuts && filteredTemplates.length > 0 && (
+                <div className="shortcuts-popover" style={{ position: 'absolute', bottom: '100%', left: '16px', background: '#f8f3eb', border: '1px solid rgba(10,25,37,0.12)', borderRadius: '12px', zIndex: 100, width: '280px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 30px rgba(7,19,29,0.1)' }}>
+                  {filteredTemplates.map((t, idx) => (
+                    <div
+                      key={t.id}
+                      onClick={() => selectShortcut(t)}
+                      style={{
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        borderRadius: idx === 0 ? '12px 12px 0 0' : idx === filteredTemplates.length - 1 ? '0 0 12px 12px' : '0',
+                        background: idx === shortcutIndex ? 'rgba(30,160,133,0.1)' : 'transparent',
+                        borderBottom: idx < filteredTemplates.length - 1 ? '1px solid rgba(10,25,37,0.06)' : 'none',
+                      }}
+                    >
+                      <strong style={{ fontSize: '13px', display: 'block' }}>{t.title}</strong>
+                      <span style={{ fontSize: '11px', color: '#6b7280', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {(() => { try { const p = typeof t.content === 'string' ? JSON.parse(t.content) : t.content; return p?.body || p?.text || String(p || '') } catch { return String(t.content || '') } })()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {templates.length > 0 && (
                 <select
                   className="quick-reply-select"
@@ -684,9 +767,9 @@ function AgentInboxPage() {
               )}
               <textarea
                 value={messageDraft}
-                onChange={(event) => setMessageDraft(event.target.value)}
+                onChange={(event) => handleComposerChange(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={selectedChat ? 'Type a WhatsApp reply (Enter to send, Shift+Enter for new line)' : 'Open a chat before replying'}
+                placeholder={selectedChat ? 'Type a WhatsApp reply (Type / for shortcuts)' : 'Open a chat before replying'}
                 disabled={!selectedChat}
                 className="wa-composer-textarea"
                 rows={1}
