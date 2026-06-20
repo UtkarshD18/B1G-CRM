@@ -46,11 +46,11 @@
     "apiCalls": [
       "GET /api/admin/get_web_public",
       "GET /api/admin/get_payment_gateway_admin",
+      "GET /api/admin/get_faq",
       "GET /api/admin/get_social_login",
       "POST /api/admin/get_page_slug",
-      "GET /api/admin/get_testi",
-      "GET /api/admin/get_faq",
       "GET /api/admin/get_contact_leads",
+      "GET /api/admin/get_testi",
       "GET /api/admin/get_smtp"
     ],
     "status": "Working",
@@ -70,7 +70,9 @@
   {
     "route": "/user/inbox",
     "role": "User",
-    "apiCalls": [],
+    "apiCalls": [
+      "GET /api/templet/get_templets"
+    ],
     "status": "Partial",
     "errors": [],
     "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
@@ -101,8 +103,8 @@
     "role": "User",
     "apiCalls": [
       "GET /api/broadcast/get_broadcast",
-      "GET /api/user/get_my_meta_templets",
       "GET /api/broadcast/dashboard_summary",
+      "GET /api/user/get_my_meta_templets",
       "GET /api/phonebook/get_by_uid"
     ],
     "status": "Partial",
@@ -123,8 +125,8 @@
     "route": "/user/wa-chatbot",
     "role": "User",
     "apiCalls": [
-      "GET /api/chatbot/get_logs?limit=25",
       "GET /api/chatbot/get_chatbot",
+      "GET /api/chatbot/get_logs?limit=25",
       "GET /api/chat_flow/get_mine",
       "GET /api/inbox/get_chats"
     ],
@@ -148,7 +150,8 @@
     "apiCalls": [
       "GET /api/user/get_meta_keys",
       "GET /api/user/get_me",
-      "GET /api/qr/get_all"
+      "GET /api/qr/get_all",
+      "GET /api/instagram/get_keys"
     ],
     "status": "Working",
     "errors": [],
@@ -224,8 +227,8 @@
     "role": "Agent",
     "apiCalls": [
       "GET /api/agent/get_me",
-      "GET /api/agent/get_my_assigned_chats",
-      "GET /api/agent/get_my_task"
+      "GET /api/agent/get_my_task",
+      "GET /api/agent/get_my_assigned_chats"
     ],
     "status": "Working",
     "errors": [],
@@ -235,12 +238,10 @@
     "route": "/agent/chats",
     "role": "Agent",
     "apiCalls": [
-      "GET /api/agent/get_my_task",
-      "GET /api/agent/get_my_assigned_chats",
-      "GET /api/agent/get_me"
+      "GET /api/agent/get_templets"
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM Agent Portal  Built from the verified live portal model, not a placeholder mock.  Workspace Assigned Chats Sign out AGENT WORKSPACE Restricted "
+    "textSnippet": "B1GCRM Agent Portal  Built from the verified live portal model, not a placeholder mock.  Workspace Assigned Chats Sign out WORKSPACE Agent assigned in"
   }
 ]

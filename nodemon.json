@@ -11,6 +11,8 @@
     "adversarial_security_report.json",
     "cross_module_audit_results.json",
     "**/*.json",
-    "**/*.log"
+    "**/*.log",
+    "**/*.png",
+    "docs/reference-pages/local-reality/*"
   ]
 }
