@@ -57,9 +57,15 @@ router.post("/webhook/:uid", async (req, res) => {
     }
 
     if (body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id) {
-      const getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
+      let getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         userUID,
       ]);
+      if (getMyMetaApi?.length === 0) {
+        const globalMeta = await query(`SELECT meta_phone_number_id FROM web_private`, []);
+        if (globalMeta.length > 0 && globalMeta[0].meta_phone_number_id) {
+          getMyMetaApi = [{ business_phone_number_id: globalMeta[0].meta_phone_number_id }];
+        }
+      }
       if (getMyMetaApi?.length > 0) {
         const checkNumber =
           body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id;

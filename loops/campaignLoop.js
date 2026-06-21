@@ -41,9 +41,21 @@ async function processBroadcast(campaign) {
     return;
   }
 
-  const metaKeys = await query("SELECT * FROM meta_api WHERE uid = ?", [
+  let metaKeys = await query("SELECT * FROM meta_api WHERE uid = ?", [
     campaign?.uid,
   ]);
+
+  if (metaKeys.length < 1) {
+    const globalMeta = await query(`SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`, []);
+    if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+      metaKeys = [{
+        access_token: globalMeta[0].meta_access_token,
+        business_phone_number_id: globalMeta[0].meta_phone_number_id,
+        waba_id: globalMeta[0].meta_waba_id,
+        app_id: globalMeta[0].meta_app_id
+      }];
+    }
+  }
 
   if (metaKeys.length < 1) {
     await updateBroadcastDatabase("META API NOT FOUND", campaign?.broadcast_id);

@@ -330,7 +330,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -368,7 +374,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -404,7 +416,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -439,7 +457,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -1285,9 +1309,20 @@ function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
         return resolve({ success: true, id: mockMsgId });
       }
 
-      const getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
+      let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         uid,
       ]);
+      if (getMeta.length < 1) {
+        const globalMeta = await query(`SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`, []);
+        if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+          getMeta = [{
+            access_token: globalMeta[0].meta_access_token,
+            business_phone_number_id: globalMeta[0].meta_phone_number_id,
+            waba_id: globalMeta[0].meta_waba_id,
+            app_id: globalMeta[0].meta_app_id
+          }];
+        }
+      }
       const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
       if (getMeta.length < 1) {

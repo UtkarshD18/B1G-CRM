@@ -141,12 +141,47 @@ function getOriginData(chatbotFromMysq) {
   }
 }
 
-function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
+async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
   return new Promise(async (resolve) => {
     try {
-      const getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
+      const env = require("../../../env");
+      if (env.MOCK_META_DELIVERY) {
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+        const mockMsgId = 'mock-msg-id-' + Math.random().toString(36).substring(2, 15);
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: mockMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+        };
+
+        const chatPath = `${__dirname}/../../../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId]
+        );
+        return resolve({ success: true, id: mockMsgId });
+      }
+
+      let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         uid,
       ]);
+      if (getMeta.length < 1) {
+        const globalMeta = await query(`SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`, []);
+        if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+          getMeta = [{
+            access_token: globalMeta[0].meta_access_token,
+            business_phone_number_id: globalMeta[0].meta_phone_number_id,
+            waba_id: globalMeta[0].meta_waba_id,
+            app_id: globalMeta[0].meta_app_id
+          }];
+        }
+      }
       const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
       if (getMeta.length < 1) {

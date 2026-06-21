@@ -151,10 +151,17 @@ async function downloadAndSaveMedia(token, mediaId) {
 
 async function processMediaMsg(type, messages, uid) {
   try {
-    const [{ access_token: token }] = await query(
+    let getMeta = await query(
       `SELECT * FROM meta_api WHERE uid = ?`,
       [uid]
     );
+    if (getMeta.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        getMeta = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
+    const token = getMeta[0]?.access_token;
     if (!token) return null;
 
     const mediaId = messages[0]?.[type]?.id;

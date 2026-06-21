@@ -1114,4 +1114,95 @@ router.post("/del_user", adminValidator, async (req, res) => {
   }
 });
 
+// update deployment settings
+router.post("/update_deployment_settings", adminValidator, async (req, res) => {
+  try {
+    const {
+      meta_app_id,
+      meta_app_secret,
+      meta_waba_id,
+      meta_business_account_id,
+      meta_access_token,
+      meta_phone_number_id,
+      insta_app_id,
+      insta_app_secret,
+      insta_business_account_id,
+      insta_access_token,
+      ai_provider_active,
+      ai_openai_key,
+      ai_openai_model,
+      ai_gemini_key,
+      ai_gemini_model,
+      ai_claude_key,
+      ai_claude_model,
+      ai_openrouter_key,
+      ai_openrouter_model,
+      ai_ollama_url,
+      ai_ollama_model,
+      ai_custom_url,
+      ai_custom_model,
+      widget_domains
+    } = req.body;
+
+    await query(
+      `UPDATE web_private SET 
+        meta_app_id = ?,
+        meta_app_secret = ?,
+        meta_waba_id = ?,
+        meta_business_account_id = ?,
+        meta_access_token = ?,
+        meta_phone_number_id = ?,
+        insta_app_id = ?,
+        insta_app_secret = ?,
+        insta_business_account_id = ?,
+        insta_access_token = ?,
+        ai_provider_active = ?,
+        ai_openai_key = ?,
+        ai_openai_model = ?,
+        ai_gemini_key = ?,
+        ai_gemini_model = ?,
+        ai_claude_key = ?,
+        ai_claude_model = ?,
+        ai_openrouter_key = ?,
+        ai_openrouter_model = ?,
+        ai_ollama_url = ?,
+        ai_ollama_model = ?,
+        ai_custom_url = ?,
+        ai_custom_model = ?,
+        widget_domains = ?`,
+      [
+        meta_app_id || "",
+        meta_app_secret || "",
+        meta_waba_id || "",
+        meta_business_account_id || "",
+        meta_access_token || "",
+        meta_phone_number_id || "",
+        insta_app_id || "",
+        insta_app_secret || "",
+        insta_business_account_id || "",
+        insta_access_token || "",
+        ai_provider_active || "",
+        ai_openai_key || "",
+        ai_openai_model || "",
+        ai_gemini_key || "",
+        ai_gemini_model || "",
+        ai_claude_key || "",
+        ai_claude_model || "",
+        ai_openrouter_key || "",
+        ai_openrouter_model || "",
+        ai_ollama_url || "",
+        ai_ollama_model || "",
+        ai_custom_url || "",
+        ai_custom_model || "",
+        widget_domains || ""
+      ]
+    );
+
+    res.json({ success: true, msg: "Deployment settings updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "something went wrong", error: err.message });
+  }
+});
+
 module.exports = router;

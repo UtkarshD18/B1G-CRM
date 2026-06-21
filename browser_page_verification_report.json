@@ -1,102 +1,32 @@
-[
-  {
-    "page": "inbox",
-    "url": "http://localhost:3010/user/inbox",
-    "screenshot": "docs/reference-pages/local-reality/verified_inbox.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAge",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "templates",
-    "url": "http://localhost:3010/",
-    "screenshot": "docs/reference-pages/local-reality/verified_templates.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "MULTI-PORTAL SAAS CRM\nPublic site, tenant workspace, staff portal, and admin controls in one product.\n\nThe live reference app is not a single dashboard. It is a complete SaaS flow with pricing, checko",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "automation-flows",
-    "url": "http://localhost:3010/",
-    "screenshot": "docs/reference-pages/local-reality/verified_automation-flows.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "MULTI-PORTAL SAAS CRM\nPublic site, tenant workspace, staff portal, and admin controls in one product.\n\nThe live reference app is not a single dashboard. It is a complete SaaS flow with pricing, checko",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "wa-chatbot",
-    "url": "http://localhost:3010/user/wa-chatbot",
-    "screenshot": "docs/reference-pages/local-reality/verified_wa-chatbot.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAge",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "campaigns",
-    "url": "http://localhost:3010/user/campaigns",
-    "screenshot": "docs/reference-pages/local-reality/verified_campaigns.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAge",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "contacts",
-    "url": "http://localhost:3010/user/contacts",
-    "screenshot": "docs/reference-pages/local-reality/verified_contacts.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAge",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "integrations",
-    "url": "http://localhost:3010/user/integrations",
-    "screenshot": "docs/reference-pages/local-reality/verified_integrations.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAge",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "settings",
-    "url": "http://localhost:3010/user/settings",
-    "screenshot": "docs/reference-pages/local-reality/verified_settings.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAge",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "billing",
-    "url": "http://localhost:3010/user/billing",
-    "screenshot": "docs/reference-pages/local-reality/verified_billing.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAge",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  },
-  {
-    "page": "api-dashboard",
-    "url": "http://localhost:3010/",
-    "screenshot": "docs/reference-pages/local-reality/verified_api-dashboard.png",
-    "title": "client",
-    "hasContent": true,
-    "bodyTextPreview": "MULTI-PORTAL SAAS CRM\nPublic site, tenant workspace, staff portal, and admin controls in one product.\n\nThe live reference app is not a single dashboard. It is a complete SaaS flow with pricing, checko",
-    "consoleErrors": 0,
-    "status": "RENDERED"
-  }
-]
+{
+  "featuresWorking": [
+    "Tenant Signup & Login",
+    "Database User Insertion",
+    "Create Phonebook (API/DB/UI)",
+    "Add Contact (API/DB/UI)",
+    "Create Flow Builder",
+    "Create Chatbot",
+    "Create Agent",
+    "Receive Chat",
+    "Chatbot executes flow & replies",
+    "Reply stored in database",
+    "Reply visible in User Portal Inbox",
+    "Reply appears in Kanban",
+    "Reply visible in Agent Portal",
+    "AI Providers UI & switching",
+    "Knowledge Base Module",
+    "Website Manager",
+    "Lead Pipeline",
+    "Contact Consistency Audit"
+  ],
+  "featuresPartiallyWorking": [],
+  "featuresBroken": [],
+  "featuresNotImplemented": [],
+  "syncIssues": [],
+  "aiProviderIssues": [],
+  "chatbotIssues": [],
+  "contactConsistencyIssues": [],
+  "kanbanIssues": [],
+  "sidebarLayoutIssues": [],
+  "details": {}
+}

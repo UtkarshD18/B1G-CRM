@@ -19,10 +19,36 @@ async function singleReplyAi({
     console.log(`[AI Autopilot] Incoming message: "${incomingMsg}" from ${toName} (${senderNumber})`);
 
     // 1. Fetch configured AI provider for the tenant
-    const providers = await query(
+    let providers = await query(
       "SELECT * FROM tenant_ai_providers WHERE uid = ? AND enabled = 1 LIMIT 1",
       [uid]
     );
+
+    if (providers.length === 0) {
+      const globalConfig = await query("SELECT ai_provider_active, ai_openai_key, ai_openai_model, ai_gemini_key, ai_gemini_model, ai_claude_key, ai_claude_model, ai_openrouter_key, ai_openrouter_model, ai_ollama_url, ai_ollama_model, ai_custom_url, ai_custom_model FROM web_private", []);
+      if (globalConfig.length > 0 && globalConfig[0].ai_provider_active) {
+        const active = globalConfig[0].ai_provider_active;
+        let key = "";
+        let model = "";
+        let custom_endpoint = "";
+        if (active === "openai") { key = globalConfig[0].ai_openai_key; model = globalConfig[0].ai_openai_model; }
+        else if (active === "gemini") { key = globalConfig[0].ai_gemini_key; model = globalConfig[0].ai_gemini_model; }
+        else if (active === "claude") { key = globalConfig[0].ai_claude_key; model = globalConfig[0].ai_claude_model; }
+        else if (active === "openrouter") { key = globalConfig[0].ai_openrouter_key; model = globalConfig[0].ai_openrouter_model; }
+        else if (active === "ollama") { custom_endpoint = globalConfig[0].ai_ollama_url; model = globalConfig[0].ai_ollama_model; }
+        else if (active === "custom") { custom_endpoint = globalConfig[0].ai_custom_url; model = globalConfig[0].ai_custom_model; }
+
+        if (active) {
+          providers = [{
+            provider: active,
+            api_key: key,
+            model: model,
+            temperature: 0.7,
+            custom_endpoint: custom_endpoint
+          }];
+        }
+      }
+    }
 
     if (providers.length === 0) {
       console.log("[AI Autopilot] No AI provider enabled for this tenant.");
