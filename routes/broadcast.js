@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -9,6 +9,7 @@ const {
 const { sign } = require("jsonwebtoken");
 const validateUser = require("../middlewares/user.js");
 const { checkPlan } = require("../middlewares/plan.js");
+const env = require("../env");
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MAX_TREND_DAYS = 31;
@@ -253,6 +254,10 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
       return res.json({ success: false, msg: "Please select a valid schedule" });
     }
 
+    if (scheduleDate.getTime() < Date.now() - 5 * 60 * 1000) {
+      return res.json({ success: false, msg: "Cannot schedule campaigns in the past" });
+    }
+
     const getPhonebook = await query(
       `SELECT * FROM phonebook WHERE id = ? AND uid = ?`,
       [phonebook.id, req.decode.uid]
@@ -260,6 +265,16 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
 
     if (getPhonebook.length < 1) {
       return res.json({ success: false, msg: "Invalid phonebook provided" });
+    }
+
+    if (env.MOCK_META_DELIVERY) {
+      const checkMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+      if (checkMeta.length < 1) {
+        await query(
+          `INSERT INTO meta_api (uid, business_phone_number_id, access_token, waba_id) VALUES (?, ?, ?, ?)`,
+          [req.decode.uid, 'mock-phone-id', 'mock-token', 'mock-waba-id']
+        );
+      }
     }
 
     const getMetaAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
@@ -315,36 +330,38 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
       req.decode.uid,
     ]);
 
-    await query(
-      `
-                INSERT INTO broadcast_log (
-                    uid,
-                    broadcast_id,
-                    templet_name,
-                    sender_mobile,
-                    send_to,
-                    delivery_status,
-                    example,
-                    contact
-                ) VALUES ?`,
-      [broadcast_logs]
-    );
+    await withTransaction(async (tx) => {
+      await tx(
+        `
+                  INSERT INTO broadcast_log (
+                      uid,
+                      broadcast_id,
+                      templet_name,
+                      sender_mobile,
+                      send_to,
+                      delivery_status,
+                      example,
+                      contact
+                  ) VALUES ?`,
+        [broadcast_logs]
+      );
 
-    await query(
-      `INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (
-            ?,?,?,?,?,?,?,?
-        )`,
-      [
-        broadcast_id,
-        req.decode.uid,
-        String(title).trim(),
-        JSON.stringify(templet),
-        JSON.stringify(getPhonebook[0]),
-        "QUEUE",
-        scheduleDate,
-        getUser[0]?.timezone || "Asia/Kolkata",
-      ]
-    );
+      await tx(
+        `INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (
+              ?,?,?,?,?,?,?,?
+          )`,
+        [
+          broadcast_id,
+          req.decode.uid,
+          String(title).trim(),
+          JSON.stringify(templet),
+          JSON.stringify(getPhonebook[0]),
+          "QUEUE",
+          scheduleDate,
+          getUser[0]?.timezone || "Asia/Kolkata",
+        ]
+      );
+    });
 
     res.json({ success: true, msg: "Your broadcast has been added" });
   } catch (err) {
@@ -487,14 +504,16 @@ router.post("/del_broadcast", validateUser, async (req, res) => {
   try {
     const { broadcast_id } = req.body;
 
-    await query(`DELETE FROM broadcast WHERE uid = ? AND broadcast_id = ?`, [
-      req.decode.uid,
-      broadcast_id,
-    ]);
-    await query(
-      `DELETE FROM broadcast_log WHERE uid = ? AND broadcast_id = ?`,
-      [req.decode.uid, broadcast_id]
-    );
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM broadcast WHERE uid = ? AND broadcast_id = ?`, [
+        req.decode.uid,
+        broadcast_id,
+      ]);
+      await tx(
+        `DELETE FROM broadcast_log WHERE uid = ? AND broadcast_id = ?`,
+        [req.decode.uid, broadcast_id]
+      );
+    });
 
     res.json({ success: true, msg: "Broadcast was deleted" });
   } catch (err) {

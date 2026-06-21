@@ -1,0 +1,2205 @@
+[
+  {
+    "id": "admin-dashboard",
+    "title": "Admin Dashboard",
+    "url": "/admin/dashboard",
+    "role": "admin",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-dashboard.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/admin/dashboard"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "verify_kpi_cards",
+        "found": 17,
+        "headings": [
+          "Admin Portal",
+          "Operational SaaS overview",
+          "Paid signups (monthly)",
+          "Orders by month",
+          "Plan distribution",
+          "Expiring this week",
+          "Recent signups"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/admin/dashboard",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "N/A (read-only)",
+        "result": "N/A"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/admin/dashboard",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_dashboard_for_user",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_dashboard_for_user",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_dashboard_for_user",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_dashboard_for_user",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-dashboard.png"
+  },
+  {
+    "id": "admin-plans",
+    "title": "Admin Manage Plans",
+    "url": "/admin/manage-plans",
+    "role": "admin",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-plans.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/admin/manage-plans"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "list_buttons",
+        "buttons": [
+          "Sign out",
+          "Create plan",
+          "Edit",
+          "Delete",
+          "Edit",
+          "Delete",
+          "Edit",
+          "Delete"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/admin/plans",
+        "status": 200,
+        "count": "not_array"
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM plan",
+        "result": "3"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/admin/manage-plans",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-plans.png"
+  },
+  {
+    "id": "admin-users",
+    "title": "Admin Manage Users",
+    "url": "/admin/manage-users",
+    "role": "admin",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-users.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/admin/manage-users"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "list_users_table",
+        "rows": 36,
+        "buttons": [
+          "Sign out",
+          "Save profile",
+          "Assign plan",
+          "Refresh",
+          "Edit",
+          "Auto login",
+          "Delete",
+          "Edit",
+          "Auto login",
+          "Delete"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/admin/users",
+        "status": 200,
+        "count": "string"
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM \"user\"",
+        "result": "16"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/admin/manage-users",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_users",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-users.png"
+  },
+  {
+    "id": "admin-orders",
+    "title": "Admin Orders",
+    "url": "/admin/orders",
+    "role": "admin",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-orders.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/admin/orders"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_orders_table",
+        "rows": 4,
+        "buttons": [
+          "Sign out"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/admin/orders",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM orders",
+        "result": "1"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/admin/orders",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_orders",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_orders",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_orders",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_orders",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-orders.png"
+  },
+  {
+    "id": "admin-settings",
+    "title": "Admin Settings",
+    "url": "/admin/settings",
+    "role": "admin",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-settings.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/admin/settings"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_settings",
+        "tabs": 6,
+        "inputs": 12
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/admin/settings",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "web_public + web_private",
+        "result": "pub=1, priv=1"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/admin/settings",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_web_public",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_payment_gateway_admin",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_smtp",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_social_login",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_contact_leads",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_page_slug",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_faq",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_testi",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_page_slug",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_page_slug",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_page_slug",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_web_public",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_smtp",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_payment_gateway_admin",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_social_login",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_contact_leads",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_testi",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_faq",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_web_public",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/admin-settings.png"
+  },
+  {
+    "id": "user-dashboard",
+    "title": "User Dashboard",
+    "url": "/user/dashboard",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-dashboard.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/dashboard"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "verify_dashboard_widgets",
+        "cards": 4,
+        "headings": [
+          "User Portal",
+          "Tenant operations snapshot",
+          "Quick Start: Seed Demo Workspace",
+          "Open chats",
+          "Resolved chats"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/user/dashboard",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "N/A (read-only)",
+        "result": "N/A"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/dashboard",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_dashboard",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_dashboard",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_dashboard",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_dashboard",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-dashboard.png"
+  },
+  {
+    "id": "user-inbox",
+    "title": "User Inbox",
+    "url": "/user/inbox",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-inbox.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/inbox"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "verify_inbox_layout",
+        "chatItems": 4,
+        "inputs": 5
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/inbox/chats",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM chats",
+        "result": "20"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/inbox",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/templet/get_templets",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/templet/get_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/templet/get_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/templet/get_templets",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-inbox.png"
+  },
+  {
+    "id": "user-kanban",
+    "title": "User Kanban",
+    "url": "/user/kanban",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-kanban.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/kanban"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "verify_kanban_board",
+        "columns": 3,
+        "cards": 3
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/inbox/chats (kanban)",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "N/A (uses chats)",
+        "result": "N/A"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/kanban",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-kanban.png"
+  },
+  {
+    "id": "user-contacts",
+    "title": "User Contacts",
+    "url": "/user/contacts",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-contacts.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/contacts"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "list_contacts_buttons",
+        "buttons": [
+          "Sign out",
+          "Refresh",
+          "Add phonebook",
+          "Import contacts",
+          "Add contact"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "POST /api/phonebook/add",
+        "status": 200,
+        "body": {
+          "success": true,
+          "msg": "Phonebook was added",
+          "data": {
+            "id": 39,
+            "uid": "TUj6zNRafKzt4kSZKEUNLGIHZTTaoN4c",
+            "name": "AuditPB_1781990375412",
+            "created_at": "2026-06-20T21:20:32.621Z",
+            "updated_at": "2026-06-20T21:20:32.621Z"
+          }
+        }
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "count phonebook AuditPB_*",
+        "result": "1"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/contacts",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_by_uid",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_uid_contacts",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_uid_contacts",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_by_uid",
+          "status": 200
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-contacts.png"
+  },
+  {
+    "id": "user-campaigns",
+    "title": "User Campaigns",
+    "url": "/user/campaigns",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-campaigns.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/campaigns"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_campaigns",
+        "buttons": [
+          "Sign out",
+          "Refresh"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/broadcast/get_broadcast",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM broadcast",
+        "result": "4"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/campaigns",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/broadcast/get_broadcast",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_by_uid",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/broadcast/get_broadcast",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/broadcast/dashboard_summary",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_by_uid",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/broadcast/dashboard_summary",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/broadcast/get_broadcast",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/broadcast/dashboard_summary",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_by_uid",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/broadcast/get_broadcast",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/broadcast/dashboard_summary",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/phonebook/get_by_uid",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-campaigns.png"
+  },
+  {
+    "id": "user-automation-flows",
+    "title": "User Automation Flows",
+    "url": "/user/automation-flows",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-automation-flows.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/automation-flows"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_flows",
+        "buttons": [
+          "Sign out",
+          "New flow",
+          "Generate bot-ready flow",
+          "Save flow",
+          "Trigger",
+          "Text reply",
+          "Image reply",
+          "Document reply",
+          "Location",
+          "Quick replies"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/chatflow/get",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM flow",
+        "result": "16"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/automation-flows",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chat_flow/get_mine",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/chat_flow/get_mine",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-automation-flows.png"
+  },
+  {
+    "id": "user-chatbot",
+    "title": "User ChatBot",
+    "url": "/user/chatbot",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-chatbot.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/chatbot"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_chatbots",
+        "buttons": [
+          "Sign out",
+          "Create chatbot",
+          "Refresh"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/chatbot/get_chatbot",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM chatbot",
+        "result": "5"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/chatbot",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_chatbot",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_logs?limit=25",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/chat_flow/get_mine",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_chatbot",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_logs?limit=25",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chat_flow/get_mine",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chat_flow/get_mine",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_chatbot",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_logs?limit=25",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_chatbot",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chat_flow/get_mine",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/chatbot/get_logs?limit=25",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/inbox/get_chats",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-chatbot.png"
+  },
+  {
+    "id": "user-meta-templates",
+    "title": "User Meta Templates",
+    "url": "/user/create-meta-template",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-meta-templates.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/create-meta-template"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_templates",
+        "buttons": [
+          "Sign out",
+          "Refresh",
+          "Add button",
+          "Remove",
+          "Submit to Meta",
+          "Edit",
+          "Delete"
+        ],
+        "inputs": 9
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/templet/get_templet",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM templets",
+        "result": "13"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/create-meta-template",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_meta_templets",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-meta-templates.png"
+  },
+  {
+    "id": "user-integrations",
+    "title": "User Integrations",
+    "url": "/user/integrations",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-integrations.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/integrations"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_integrations",
+        "buttons": [
+          "Sign out",
+          "Refresh",
+          "Save and verify Meta",
+          "Show token",
+          "Generate API key",
+          "Create QR instance"
+        ],
+        "cards": 1
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/user/get_meta_keys",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM instance",
+        "result": "0"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/integrations",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/user/get_meta_keys",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/qr/get_all",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_meta_keys",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/qr/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/instagram/get_keys",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/instagram/get_keys",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_meta_keys",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/qr/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/instagram/get_keys",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_meta_keys",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/qr/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/instagram/get_keys",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-integrations.png"
+  },
+  {
+    "id": "user-agent-login",
+    "title": "User Agent Login",
+    "url": "/user/agent-login",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-agent-login.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/agent-login"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_agent_form",
+        "inputs": 5,
+        "buttons": [
+          "Sign out",
+          "Create agent",
+          "Auto login"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "POST /api/agent/add_agent",
+        "status": 200,
+        "body": {
+          "msg": "Agent account was created",
+          "success": true
+        }
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "count agents AuditAgent_*",
+        "result": "1"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/agent-login",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 200
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-agent-login.png"
+  },
+  {
+    "id": "user-agent-task",
+    "title": "User Agent Task",
+    "url": "/user/agent-task",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-agent-task.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/agent-task"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_task_form",
+        "inputs": 4,
+        "buttons": [
+          "Sign out",
+          "Add task"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/agent/get_my_agents",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM agent_task",
+        "result": "12"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/agent-task",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_agent_tasks",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_agent_tasks",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-agent-task.png"
+  },
+  {
+    "id": "user-chat-widget",
+    "title": "User Chat Widget",
+    "url": "/user/chat-widget",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-chat-widget.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/chat-widget"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_widget_config",
+        "inputs": 5,
+        "buttons": [
+          "Sign out",
+          "Create widget"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/user/get_chat_widget",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM chat_widget",
+        "result": "2"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/chat-widget",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_widget",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_widget",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_widget",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_my_widget",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-chat-widget.png"
+  },
+  {
+    "id": "user-pipeline",
+    "title": "User Lead Pipeline",
+    "url": "/user/pipeline",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-pipeline.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/pipeline"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_pipeline",
+        "columns": 0,
+        "buttons": [
+          "Sign out",
+          "+ Create Lead"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/crm/leads",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM crm_leads",
+        "result": "8"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/pipeline",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/crm/leads",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/crm/leads",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/crm/leads",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_agents",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/crm/leads",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-pipeline.png"
+  },
+  {
+    "id": "user-ai-providers",
+    "title": "User AI Providers",
+    "url": "/user/ai-providers",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-ai-providers.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/ai-providers"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_ai_providers",
+        "inputs": 5,
+        "buttons": [
+          "Sign out",
+          "Save Settings",
+          "Configure",
+          "Configure",
+          "Configure",
+          "Configure",
+          "Configure",
+          "Configure"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/ai-providers",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM tenant_ai_providers",
+        "result": "0"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/ai-providers",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/ai_providers/get_all",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/ai_providers/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/ai_providers/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/ai_providers/get_all",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-ai-providers.png"
+  },
+  {
+    "id": "user-knowledge-base",
+    "title": "User Knowledge Base",
+    "url": "/user/knowledge-base",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-knowledge-base.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/knowledge-base"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_knowledge_base",
+        "buttons": [
+          "Sign out",
+          "Upload & Process",
+          "Crawl URL"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/knowledge-base",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM knowledge_base",
+        "result": "2"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/knowledge-base",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/knowledge_base/get_all",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/knowledge_base/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/knowledge_base/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/knowledge_base/get_all",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-knowledge-base.png"
+  },
+  {
+    "id": "user-website-manager",
+    "title": "User Website Manager",
+    "url": "/user/website-manager",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-website-manager.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/website-manager"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_website_manager",
+        "buttons": [
+          "Sign out",
+          "Register Domain"
+        ],
+        "inputs": 1
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/website",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM website_integrations",
+        "result": "1"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/website-manager",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/website/get_all",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/website/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/website/get_all",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/website/get_all",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-website-manager.png"
+  },
+  {
+    "id": "user-supervisor-dashboard",
+    "title": "User Supervisor Dashboard",
+    "url": "/user/supervisor-dashboard",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-supervisor-dashboard.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/supervisor-dashboard"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_supervisor",
+        "cards": 0,
+        "headings": [
+          "User Portal",
+          "Supervisor SLA Dashboard",
+          "0s",
+          "0",
+          "0",
+          "0",
+          "Active Escalation Queue",
+          "Agent Performance Metrics"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/agent/get_my_agents",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "N/A (aggregate view)",
+        "result": "N/A"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/supervisor-dashboard",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/agent_workflow/kpis",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent_workflow/kpis",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent_workflow/escalations",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent_workflow/escalations",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent_workflow/escalations",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent_workflow/kpis",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent_workflow/escalations",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent_workflow/kpis",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-supervisor-dashboard.png"
+  },
+  {
+    "id": "user-billing",
+    "title": "User Billing",
+    "url": "/user/billing",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-billing.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/billing"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_billing",
+        "cards": 12,
+        "buttons": [
+          "Sign out",
+          "Refresh",
+          "Start trial",
+          "Pay with Stripe",
+          "Pay with Stripe"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/admin/plans (for plan list)",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "N/A (billing view)",
+        "result": "N/A"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/billing",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_payment_details",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_payment_details",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_payment_details",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_payment_details",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-billing.png"
+  },
+  {
+    "id": "user-developer-api",
+    "title": "User API & Webhooks",
+    "url": "/user/api-dashboard",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-developer-api.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/api-dashboard"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_dev_api",
+        "inputs": 9,
+        "buttons": [
+          "Sign out",
+          "Refresh",
+          "Generate API key",
+          "Copy webhook URL",
+          "Create rule",
+          "Reset rule",
+          "Copy sample body",
+          "Copy sample body"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoints": [
+          {
+            "path": "/api/user/get_api_key",
+            "status": 200
+          },
+          {
+            "path": "/api/webhooks/get_webhooks",
+            "status": 200
+          }
+        ]
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM webhook_rules",
+        "result": "6"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/api-dashboard",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/webhooks/rules",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/webhooks/rules",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/webhooks/rules",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/webhooks/rules",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-developer-api.png"
+  },
+  {
+    "id": "user-settings",
+    "title": "User Settings",
+    "url": "/user/settings",
+    "role": "user",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-settings.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/user/settings"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "view_settings",
+        "inputs": 5,
+        "buttons": [
+          "Sign out",
+          "Save profile",
+          "Generate API key",
+          "Start trial"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/user/get_profile",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "N/A (profile view)",
+        "result": "N/A"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/user/settings",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/user/get_me",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/user-settings.png"
+  },
+  {
+    "id": "agent-dashboard",
+    "title": "Agent Dashboard",
+    "url": "/agent/dashboard",
+    "role": "agent",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/agent-dashboard.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/agent/dashboard"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "verify_agent_dashboard",
+        "elements": 3,
+        "headings": [
+          "Agent Portal",
+          "Restricted staff portal",
+          "Assigned chats",
+          "Task queue"
+        ]
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/agent/get_me",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "N/A",
+        "result": "N/A"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/agent/dashboard",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_me",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_assigned_chats",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_task",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_task",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_me",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_my_assigned_chats",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/agent-dashboard.png"
+  },
+  {
+    "id": "agent-chats",
+    "title": "Agent Assigned Chats",
+    "url": "/agent/chats",
+    "role": "agent",
+    "classification": "WORKING",
+    "steps": {
+      "screenshot": {
+        "success": true,
+        "path": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/agent-chats.png"
+      },
+      "pageLoad": {
+        "success": true,
+        "url": "http://localhost:5173/agent/chats"
+      },
+      "primaryAction": {
+        "success": true,
+        "action": "verify_agent_inbox",
+        "chatItems": 4,
+        "inputs": 5
+      },
+      "apiCheck": {
+        "success": true,
+        "endpoint": "/api/agent/get_my_assigned_chats",
+        "status": 200,
+        "hasData": true
+      },
+      "dbCheck": {
+        "success": true,
+        "query": "SELECT count(*) FROM agent_chats",
+        "result": "2"
+      },
+      "refreshPersistence": {
+        "success": true,
+        "url": "http://localhost:5173/agent/chats",
+        "hasContent": true
+      },
+      "networkApiCalls": [
+        {
+          "url": "http://localhost:5173/api/admin/get_plans",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_templets",
+          "status": 200
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_templets",
+          "status": 304
+        },
+        {
+          "url": "http://localhost:5173/api/agent/get_templets",
+          "status": 304
+        }
+      ]
+    },
+    "errors": [],
+    "consoleErrors": [],
+    "networkErrors": [],
+    "screenshot": "/home/shadow/projects/B1GCRM/scratch/reality_audit_screenshots/agent-chats.png"
+  }
+]

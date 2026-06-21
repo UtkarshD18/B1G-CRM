@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { API_BASE, apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 import { decodeTokenPayload, formatDateTime, prettyJson, summarizePlan } from '../../shared/format'
@@ -281,6 +282,9 @@ function UserDeveloperApiPage() {
       <div className="panel form-panel">
         <div className="panel-header">
           <h2>Webhook automation rules</h2>
+          <Link to="/user/webhook-logs" className="secondary-button dark-text">
+            View Webhook Logs
+          </Link>
         </div>
         <form className="form-panel" onSubmit={saveWebhookRule}>
           <div className="form-grid">
@@ -444,7 +448,6 @@ function UserDeveloperApiPage() {
           <h2>What is still pending</h2>
         </div>
         <ul className="signal-list">
-          <li>Webhook logs need persistent request logging before a log viewer can be accurate.</li>
           <li>API analytics need counters around `/api/v1` traffic before charts can be real.</li>
         </ul>
       </div>

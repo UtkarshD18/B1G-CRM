@@ -1,6 +1,7 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
+const fs = require("fs");
 const bcrypt = require("bcrypt");
 const {
   isValidEmail,
@@ -56,9 +57,15 @@ router.post("/webhook/:uid", async (req, res) => {
     }
 
     if (body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id) {
-      const getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
+      let getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         userUID,
       ]);
+      if (getMyMetaApi?.length === 0) {
+        const globalMeta = await query(`SELECT meta_phone_number_id FROM web_private`, []);
+        if (globalMeta.length > 0 && globalMeta[0].meta_phone_number_id) {
+          getMyMetaApi = [{ business_phone_number_id: globalMeta[0].meta_phone_number_id }];
+        }
+      }
       if (getMyMetaApi?.length > 0) {
         const checkNumber =
           body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id;
@@ -86,7 +93,14 @@ router.post("/webhook/:uid", async (req, res) => {
 router.get("/get_chats", validateUser, async (req, res) => {
   try {
     let data = [];
-    data = await query(`SELECT * FROM chats WHERE uid = ?`, [req.decode.uid]);
+    data = await query(
+      `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
+       FROM chats c 
+       LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
+       WHERE c.uid = ?
+       ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
+      [req.decode.uid]
+    );
     const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -108,6 +122,9 @@ router.get("/get_chats", validateUser, async (req, res) => {
 router.post("/get_convo", validateUser, async (req, res) => {
   try {
     const { chatId } = req.body;
+    if (!chatId) {
+      return res.json({ success: false, msg: "chatId is required" });
+    }
 
     const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
     const data = readJSONFile(filePath, 100);
@@ -140,6 +157,30 @@ router.post("/change_chat_ticket_status", validateUser, async (req, res) => {
     res.json({ success: true, msg: "Chat status updated" });
   } catch (err) {
     console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// update custom kanban order for chats
+router.post("/update_kanban_order", validateUser, async (req, res) => {
+  try {
+    const { orderedChatIds } = req.body;
+    if (!Array.isArray(orderedChatIds)) {
+      return res.json({ success: false, msg: "orderedChatIds must be an array" });
+    }
+
+    await withTransaction(async (txQuery) => {
+      for (let i = 0; i < orderedChatIds.length; i++) {
+        await txQuery(
+          `UPDATE chats SET kanban_order = ? WHERE chat_id = ? AND uid = ?`,
+          [i, orderedChatIds[i], req.decode.uid]
+        );
+      }
+    });
+
+    res.json({ success: true, msg: "Kanban order updated" });
+  } catch (err) {
+    console.error(err);
     res.json({ err, success: false, msg: "Something went wrong" });
   }
 });
@@ -200,9 +241,9 @@ router.get("/webhook/:uid", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", validateUser, async (req, res) => {
   try {
-    const uid = "lWvj6K0xI0FlSKJoyV7ak9DN0mzvKJK8";
+    const uid = req.decode.uid;
     const { msg } = req.query;
 
     // getting socket id
@@ -624,6 +665,41 @@ router.post("/merge_chats", validateUser, async (req, res) => {
   try {
   } catch (err) {
     console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// delete a single message from conversation
+router.post("/delete_message", validateUser, async (req, res) => {
+  try {
+    const { chatId, messageId } = req.body;
+    if (!chatId || !messageId) {
+      return res.json({ success: false, msg: "chatId and messageId are required" });
+    }
+
+    const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
+    if (fs.existsSync(filePath)) {
+      let fileData = [];
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf8");
+        fileData = JSON.parse(fileContent);
+      } catch (err) {
+        fileData = [];
+      }
+
+      if (Array.isArray(fileData)) {
+        // filter out the message matching either metaChatId or timestamp
+        const updatedData = fileData.filter(
+          (msg) => String(msg.metaChatId || msg.timestamp) !== String(messageId)
+        );
+
+        fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2), "utf8");
+      }
+    }
+
+    res.json({ success: true, msg: "Message deleted" });
+  } catch (err) {
+    console.error(err);
     res.json({ err, success: false, msg: "Something went wrong" });
   }
 });

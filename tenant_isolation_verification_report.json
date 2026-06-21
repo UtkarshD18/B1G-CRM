@@ -1,0 +1,11 @@
+{
+  "setup": true,
+  "addReminderBlocked": true,
+  "addActivityBlocked": true,
+  "getRemindersBlocked": true,
+  "getActivitiesBlocked": true,
+  "importContactsBlocked": true,
+  "addSingleContactBlocked": true,
+  "cleanup": true,
+  "pass": true
+}

@@ -12,6 +12,15 @@ import AdminPlansPage from '../pages/admin/Plans'
 import AdminUsersPage from '../pages/admin/Users'
 import AdminOrdersPage from '../pages/admin/Orders'
 import AdminSettingsPage from '../pages/admin/Settings'
+import AdminFrontPartnerPage from '../pages/admin/FrontPartner'
+import AdminFaqPage from '../pages/admin/Faq'
+import AdminManagePages from '../pages/admin/ManagePages'
+import AdminTestimonialPage from '../pages/admin/Testimonial'
+import AdminContactFormPage from '../pages/admin/ContactForm'
+import AdminPaymentGatewaysPage from '../pages/admin/PaymentGateways'
+import AdminSmtpPage from '../pages/admin/SmtpSettings'
+import AdminSocialLoginPage from '../pages/admin/SocialLogin'
+import AdminSiteSettingsPage from '../pages/admin/SiteSettings'
 import UserDashboardPage from '../pages/user/Dashboard'
 import UserInboxPage from '../pages/user/Inbox'
 import UserKanbanPage from '../pages/user/Kanban'
@@ -28,7 +37,14 @@ import UserDeveloperApiPage from '../pages/user/DeveloperApi'
 import UserMetaTemplatesPage from '../pages/user/MetaTemplates'
 import UserSettingsPage from '../pages/user/Settings'
 import AgentDashboardPage from '../pages/agent/Dashboard'
+import AgentInboxPage from '../pages/agent/Inbox'
 import ReferenceModulePage from '../pages/ReferenceModulePage'
+import UserAiProvidersPage from '../pages/user/AiProviderSettings'
+import UserKnowledgeBasePage from '../pages/user/KnowledgeBase'
+import UserWebsiteManagerPage from '../pages/user/WebsiteManager'
+import UserCrmPipelinePage from '../pages/user/CrmPipeline'
+import UserSupervisorDashboardPage from '../pages/user/SupervisorDashboard'
+import UserWebhookLogsPage from '../pages/user/WebhookLogs'
 
 export const ADMIN_REFERENCE_ROUTES = [
   { path: 'dashboard', component: 'dashboard' },
@@ -36,15 +52,15 @@ export const ADMIN_REFERENCE_ROUTES = [
   { path: 'manage-users', component: 'users' },
   { path: 'orders', component: 'orders' },
   { path: 'settings', component: 'settings' },
-  { path: 'front-partner', component: 'settings' },
-  { path: 'faq', component: 'settings' },
-  { path: 'manage-page', component: 'settings' },
-  { path: 'testimonial', component: 'settings' },
-  { path: 'contact-form', component: 'settings' },
-  { path: 'payment-gateways', component: 'settings' },
-  { path: 'social-login', component: 'settings' },
-  { path: 'site-settings', component: 'settings' },
-  { path: 'smtp', component: 'settings' },
+  { path: 'front-partner', component: 'frontPartner' },
+  { path: 'faq', component: 'faq' },
+  { path: 'manage-page', component: 'managePage' },
+  { path: 'testimonial', component: 'testimonial' },
+  { path: 'contact-form', component: 'contactForm' },
+  { path: 'payment-gateways', component: 'paymentGateways' },
+  { path: 'social-login', component: 'socialLogin' },
+  { path: 'site-settings', component: 'siteSettings' },
+  { path: 'smtp', component: 'smtpSettings' },
   { path: 'web-theme', component: 'settings' },
   { path: 'translation', component: 'settings' },
   { path: 'update-web', component: 'settings' },
@@ -94,9 +110,14 @@ export const USER_REFERENCE_ROUTES = [
   { path: 'wa-call-logs', component: 'planned', title: 'WA Call Logs' },
   { path: 'setup-wa-calls', component: 'planned', title: 'Setup WA Calls' },
   { path: 'webhook-automation', component: 'planned', title: 'Webhook Automation' },
-  { path: 'webhook-logs', component: 'planned', title: 'Webhook Logs' },
+  { path: 'webhook-logs', component: 'webhookLogs' },
   { path: 'telegram-sessions', component: 'planned', title: 'Telegram Sessions' },
   { path: 'web-notification', component: 'planned', title: 'Web Notification' },
+  { path: 'ai-providers', component: 'aiProviders' },
+  { path: 'knowledge-base', component: 'knowledgeBase' },
+  { path: 'website-manager', component: 'websiteManager' },
+  { path: 'pipeline', component: 'pipeline' },
+  { path: 'supervisor-dashboard', component: 'supervisorDashboard' },
 ]
 
 const adminRouteComponents = {
@@ -105,6 +126,15 @@ const adminRouteComponents = {
   users: AdminUsersPage,
   orders: AdminOrdersPage,
   settings: AdminSettingsPage,
+  frontPartner: AdminFrontPartnerPage,
+  faq: AdminFaqPage,
+  managePage: AdminManagePages,
+  testimonial: AdminTestimonialPage,
+  contactForm: AdminContactFormPage,
+  paymentGateways: AdminPaymentGatewaysPage,
+  smtpSettings: AdminSmtpPage,
+  socialLogin: AdminSocialLoginPage,
+  siteSettings: AdminSiteSettingsPage,
 }
 
 const userRouteComponents = {
@@ -123,6 +153,12 @@ const userRouteComponents = {
   developerApi: UserDeveloperApiPage,
   metaTemplates: UserMetaTemplatesPage,
   settings: UserSettingsPage,
+  aiProviders: UserAiProvidersPage,
+  knowledgeBase: UserKnowledgeBasePage,
+  websiteManager: UserWebsiteManagerPage,
+  pipeline: UserCrmPipelinePage,
+  supervisorDashboard: UserSupervisorDashboardPage,
+  webhookLogs: UserWebhookLogsPage,
 }
 
 function renderReferenceRoutes(routes, area, components) {
@@ -226,7 +262,7 @@ function AppRoutes() {
       >
         <Route index element={<Navigate to="/agent/dashboard" replace />} />
         <Route path="dashboard" element={<AgentDashboardPage />} />
-        <Route path="chats" element={<AgentDashboardPage />} />
+        <Route path="chats" element={<AgentInboxPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

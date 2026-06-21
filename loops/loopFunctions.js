@@ -1,5 +1,8 @@
 const fetch = require("node-fetch");
 const { sendMetatemplet } = require("../functions/function");
+const env = require("../env");
+
+const templateCache = new Map();
 
 function replaceVariables(obj, arr) {
   const replacedArr = arr.map((item) => {
@@ -22,6 +25,23 @@ function replaceVariables(obj, arr) {
 }
 
 async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
+  if (env.MOCK_META_DELIVERY || metaKeys?.access_token === 'mock-token') {
+    return {
+      data: [
+        {
+          name: name,
+          language: "en",
+          components: []
+        }
+      ]
+    };
+  }
+
+  const cacheKey = `${metaKeys?.waba_id}:${name}`;
+  if (templateCache.has(cacheKey)) {
+    return templateCache.get(cacheKey);
+  }
+
   const url = `https://graph.facebook.com/v18.0/${metaKeys?.waba_id}/message_templates?name=${name}`;
   const options = {
     method: "GET",
@@ -34,6 +54,9 @@ async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
     try {
       const response = await fetch(url, options);
       const data = await response.json();
+      if (data && !data.error) {
+        templateCache.set(cacheKey, data);
+      }
       return data;
     } catch (error) {
       if (error.code === "EAI_AGAIN" && attempt < retries) {
@@ -67,6 +90,13 @@ function removeNulls(arr) {
 }
 
 async function sendMessage(message, metaKeys) {
+  if (env.MOCK_META_DELIVERY || metaKeys?.access_token === 'mock-token') {
+    return {
+      success: true,
+      msgId: "mock-msg-id-" + Math.random().toString(36).substring(7),
+      msg: "sent"
+    };
+  }
   const templetName = message?.templet_name;
   const templet = await getMetaTempletByName(templetName, metaKeys);
   const contact = JSON.parse(message?.contact);

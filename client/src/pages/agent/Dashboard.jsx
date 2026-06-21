@@ -123,7 +123,13 @@ function AgentDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {chats.map((chat) => (
+              {chats.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: '24px 0' }}>
+                    <span className="muted-copy">No chats assigned to you yet.</span>
+                  </td>
+                </tr>
+              ) : chats.map((chat) => (
                 <tr key={chat.chat_id}>
                   <td>{chat.chat_id}</td>
                   <td>{chat.name || chat.mobile || 'Unknown contact'}</td>
@@ -167,7 +173,13 @@ function AgentDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {tasks.map((task) => (
+              {tasks.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: '24px 0' }}>
+                    <span className="muted-copy">Your task queue is empty. Great work!</span>
+                  </td>
+                </tr>
+              ) : tasks.map((task) => (
                 <tr key={task.id}>
                   <td>{task.title}</td>
                   <td>{task.status}</td>

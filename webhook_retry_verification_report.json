@@ -1,0 +1,8 @@
+{
+  "serverVerification": false,
+  "retryCountVerified": true,
+  "backoffTimingVerified": true,
+  "databaseLoggingVerified": true,
+  "cleanup": true,
+  "pass": true
+}

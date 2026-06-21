@@ -330,7 +330,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -368,7 +374,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -404,7 +416,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -439,7 +457,13 @@ async function saveWebhookConversation(body, uid) {
   ) {
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    const metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    let metAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (metAPI.length === 0) {
+      const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
+      if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+        metAPI = [{ access_token: globalMeta[0].meta_access_token }];
+      }
+    }
     const metaToken = metAPI[0]?.access_token;
 
     if (metaToken) {
@@ -1060,9 +1084,245 @@ function sendAPIMessage(obj, waNumId, waToken) {
 function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
   return new Promise(async (resolve) => {
     try {
-      const getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
+      // First check if target chat is an Instagram chat or QR chat
+      let isInstagram = false;
+      let isQr = false;
+      if (chatId) {
+        const [chat] = await query(
+          `SELECT * FROM chats WHERE chat_id = ? AND uid = ?`,
+          [chatId, uid]
+        );
+        if (chat?.origin?.toLowerCase() === "instagram") {
+          isInstagram = true;
+        } else if (chat?.origin?.toLowerCase() === "qr") {
+          isQr = true;
+        }
+      }
+
+      if (isQr) {
+        const { getSession, formatPhone } = require("../helper/addon/qr/index.js");
+        const parts = chatId.split("_");
+        const sessionId = parts.slice(1).join("_");
+        const session = getSession(sessionId);
+
+        if (!session) {
+          return resolve({ success: false, msg: `WhatsApp QR session is not connected or active.` });
+        }
+
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+
+        let baileysPayload = {};
+        if (msgObj.type === "text") {
+          baileysPayload = { text: msgObj.text?.body || msgObj.body || "" };
+        } else if (msgObj.type === "image") {
+          baileysPayload = {
+            image: { url: msgObj.image?.link || msgObj.image?.url },
+            caption: msgObj.image?.caption || ""
+          };
+        } else if (msgObj.type === "video") {
+          baileysPayload = {
+            video: { url: msgObj.video?.link || msgObj.video?.url },
+            caption: msgObj.video?.caption || ""
+          };
+        } else if (msgObj.type === "audio") {
+          baileysPayload = {
+            audio: { url: msgObj.audio?.link || msgObj.audio?.url },
+            mimetype: "audio/mp4"
+          };
+        } else if (msgObj.type === "document" || msgObj.type === "file") {
+          const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
+          const fileName = docUrl ? path.basename(docUrl.split('?')[0]) : "document.pdf";
+          baileysPayload = {
+            document: { url: docUrl },
+            mimetype: "application/pdf",
+            fileName: fileName,
+            caption: msgObj.document?.caption || ""
+          };
+        } else {
+          baileysPayload = { text: JSON.stringify(msgObj) };
+        }
+
+        let sentMsgId = "mock-qr-msg-id-" + randomstring.generate(16);
+        let success = true;
+        let errMsg = "";
+
+        try {
+          const jid = formatPhone(toNumber);
+          const response = await session.sendMessage(jid, baileysPayload);
+          if (response?.key?.id) {
+            sentMsgId = response.key.id;
+          }
+        } catch (e) {
+          success = false;
+          errMsg = e.toString();
+        }
+
+        if (!success) {
+          return resolve({ success: false, msg: errMsg });
+        }
+
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: sentMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+          origin: "qr"
+        };
+
+        const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+        );
+
+        return resolve({ success: true, id: sentMsgId });
+      }
+
+      if (isInstagram) {
+        const [api] = await query(`SELECT * FROM instagram_api WHERE uid = ?`, [uid]);
+        if (!api || !api?.access_token || !api?.instagram_business_account_id) {
+          return resolve({ success: false, msg: "Please link your Instagram Business Account first." });
+        }
+
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+
+        let mockMsgId = 'mock-insta-msg-id-' + randomstring.generate(16);
+        let success = true;
+        let errMsg = "";
+
+        if (!env.MOCK_META_DELIVERY && !api.access_token.startsWith("mock_")) {
+          try {
+            const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${api.access_token}`;
+            let instagramMessagePayload = {};
+            if (msgObj.type === "text") {
+              instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || "" };
+            } else if (msgObj.type === "image") {
+              instagramMessagePayload = {
+                attachment: {
+                  type: "image",
+                  payload: { url: msgObj.image?.link || msgObj.image?.url }
+                }
+              };
+            } else if (msgObj.type === "video") {
+              instagramMessagePayload = {
+                attachment: {
+                  type: "video",
+                  payload: { url: msgObj.video?.link || msgObj.video?.url }
+                }
+              };
+            } else if (msgObj.type === "document" || msgObj.type === "file") {
+              instagramMessagePayload = {
+                attachment: {
+                  type: "file",
+                  payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link }
+                }
+              };
+            } else {
+              instagramMessagePayload = { text: JSON.stringify(msgObj) };
+            }
+
+            const payload = {
+              recipient: { id: toNumber },
+              message: instagramMessagePayload
+            };
+
+            const response = await fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+            if (data?.error) {
+              success = false;
+              errMsg = data?.error?.message;
+            } else if (data?.message_id) {
+              mockMsgId = data.message_id;
+            } else {
+              success = false;
+              errMsg = JSON.stringify(data);
+            }
+          } catch (e) {
+            success = false;
+            errMsg = e.toString();
+          }
+        }
+
+        if (!success) {
+          return resolve({ success: false, msg: errMsg });
+        }
+
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: mockMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+        };
+
+        const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+        );
+
+        return resolve({ success: true, id: mockMsgId });
+      }
+
+      if (env.MOCK_META_DELIVERY) {
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+        const mockMsgId = 'mock-msg-id-' + randomstring.generate(16);
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: mockMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+        };
+
+        const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId]
+        );
+
+        await query(`UPDATE chats SET is_opened = ? WHERE chat_id = ?`, [
+          1,
+          chatId,
+        ]);
+
+        return resolve({ success: true, id: mockMsgId });
+      }
+
+      let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         uid,
       ]);
+      if (getMeta.length < 1) {
+        const globalMeta = await query(`SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`, []);
+        if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+          getMeta = [{
+            access_token: globalMeta[0].meta_access_token,
+            business_phone_number_id: globalMeta[0].meta_phone_number_id,
+            waba_id: globalMeta[0].meta_waba_id,
+            app_id: globalMeta[0].meta_app_id
+          }];
+        }
+      }
       const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
       if (getMeta.length < 1) {
@@ -1446,6 +1706,12 @@ async function getMetaNumberDetail(
   budiness_phone_number_id,
   bearerToken
 ) {
+  if (env.MOCK_META_DELIVERY || budiness_phone_number_id === 'mock-phone-id') {
+    return {
+      display_phone_number: "+1234567890",
+      id: budiness_phone_number_id || "mock-phone-id"
+    };
+  }
   const url = `https://graph.facebook.com/${apiVersion}/${budiness_phone_number_id}`;
   const options = {
     method: "GET",

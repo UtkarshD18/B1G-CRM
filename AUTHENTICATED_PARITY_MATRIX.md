@@ -5,11 +5,14 @@ Side-by-side parity comparison of every module between the reference CRM and B1G
 > [!NOTE]
 > This matrix supersedes the earlier `FEATURE_PARITY_MATRIX.md`. It includes authenticated page data and verified source code evidence.
 
+> [!IMPORTANT]
+> **Updated June 20, 2026** — A full authenticated Puppeteer crawl of every page on the reference CRM (`https://crm.oneoftheprojects.com`) revealed that many pages previously classified as "placeholder" are actually **fully functional pages** with real UI elements (forms, data grids, CRUD operations). Parity scores have been revised accordingly. See [REFERENCE_VS_B1GCRM_ALIGNMENT.md](REFERENCE_VS_B1GCRM_ALIGNMENT.md) for the full side-by-side comparison.
+
 ---
 
 ## Overall Parity Score
 
-| Category | ✅ Complete | ⚠️ Partial | ❌ Missing | 🔲 Placeholder | **Parity %** |
+| Category | ✅ Complete | ⚠️ Partial | ❌ Missing | 🔲 Both Placeholder | **Parity %** |
 | --- | --- | --- | --- | --- | --- |
 | **Dashboard** | 3 | 0 | 2 | 0 | **60%** |
 | **Inbox** | 11 | 1 | 5 | 0 | **65%** |
@@ -18,17 +21,19 @@ Side-by-side parity comparison of every module between the reference CRM and B1G
 | **Campaigns** | 10 | 0 | 0 | 0 | **100%** |
 | **Automation Flows** | 10 | 0 | 0 | 0 | **100%** |
 | **Chatbot** | 8 | 0 | 0 | 0 | **100%** |
-| **Meta Templates** | 9 | 0 | 0 | 0 | **100%** |
-| **Integrations** | 2 | 1 | 0 | 2 | **50%** |
-| **Developer API & Webhooks** | 4 | 0 | 2 | 0 | **67%** |
+| **Meta Templates** | 7 | 1 | 1 | 0 | **78%** |
+| **Integrations** | 2 | 1 | 1 | 0 | **63%** |
+| **Developer API & Webhooks** | 4 | 1 | 3 | 0 | **50%** |
 | **Agent Management** | 4 | 0 | 0 | 0 | **100%** |
 | **Chat Widget** | 3 | 0 | 1 | 0 | **75%** |
 | **Billing** | 3 | 4 | 0 | 0 | **71%** |
 | **User Settings** | 4 | 0 | 0 | 0 | **100%** |
-| **Admin Settings** | 8 | 1 | 0 | 0 | **94%** |
+| **Admin Core Settings** | 8 | 2 | 0 | 0 | **90%** |
+| **Admin Pro Plugins** | 0 | 0 | 8 | 0 | **0%** |
 | **Agent Portal** | 3 | 0 | 1 | 0 | **75%** |
-| **Channel Integrations** | 0 | 0 | 0 | 11 | **0%** |
-| **TOTAL** | **89** | **7** | **15** | **13** | **72%** |
+| **AI Calling** | 0 | 0 | 2 | 1 | **0%** |
+| **Channel Integrations** | 0 | 0 | 2 | 4 | **0%** |
+| **TOTAL** | **88** | **10** | **30** | **5** | **66%** |
 
 ---
 

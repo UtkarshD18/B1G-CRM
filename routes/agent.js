@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -108,10 +108,10 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
   try {
     const { agentUid, activeness } = req.body;
 
-    await query(`UPDATE agents SET is_active = ? WHERE uid = ?`, [
-      activeness ? 1 : 0,
-      agentUid,
-    ]);
+    const result = await query(
+      `UPDATE agents SET is_active = ? WHERE uid = ? AND owner_uid = ?`,
+      [activeness ? 1 : 0, agentUid, req.decode.uid]
+    );
 
     res.json({
       success: true,
@@ -123,14 +123,25 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
   }
 });
 
-// del user
+// del agent
 router.post("/del_agent", validateUser, async (req, res) => {
   try {
     const { uid } = req.body;
-    await query(`DELETE FROM agents WHERE uid = ? AND owner_uid = ?`, [
-      uid,
-      req.decode.uid,
-    ]);
+
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM agents WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+      await tx(`DELETE FROM agent_chats WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+      await tx(`DELETE FROM agent_task WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+    });
 
     res.json({
       success: true,
@@ -210,7 +221,19 @@ router.post("/update_agent_in_chat", validateUser, async (req, res) => {
   try {
     const { assignAgent, chatId, agentUid } = req.body;
 
+    // Verify ownership of the chat (must exist and belong to the user)
+    const chatExists = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [chatId, req.decode.uid]);
+    if (chatExists.length < 1) {
+      return res.json({ success: false, msg: "Chat was not found" });
+    }
+
     if (assignAgent?.email) {
+      // Verify ownership of the agent
+      const agentExists = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [assignAgent.uid, req.decode.uid]);
+      if (agentExists.length < 1) {
+        return res.json({ success: false, msg: "Agent was not found" });
+      }
+
       await query(
         `DELETE FROM agent_chats WHERE owner_uid = ? AND chat_id = ?`,
         [req.decode?.uid, chatId]
@@ -282,12 +305,11 @@ router.post("/login", async (req, res) => {
         {
           uid: agentFind[0].uid,
           role: "agent",
-          password: agentFind[0].password,
           email: agentFind[0].email,
           owner_uid: agentFind[0]?.owner_uid,
         },
         env.JWT_SECRET,
-        {}
+        { expiresIn: env.JWT_EXPIRY }
       );
       res.json({
         success: true,
@@ -337,11 +359,14 @@ router.get("/get_my_assigned_chats", validateAgent, async (req, res) => {
       chatIds,
     });
 
-    // Using IN clause to match against multiple IDs
-    data = await query(`SELECT * FROM chats WHERE chat_id IN (?) AND uid = ?`, [
-      chatIds,
-      req.owner?.uid,
-    ]);
+    data = await query(
+      `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
+       FROM chats c 
+       LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
+       WHERE c.chat_id IN (?) AND c.uid = ?
+       ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
+      [chatIds, req.owner?.uid]
+    );
 
     console.log({
       data,
@@ -712,6 +737,36 @@ router.post("/change_chat_ticket_status", validateAgent, async (req, res) => {
       success: true,
       msg: "Chat status updated",
     });
+  } catch (err) {
+    console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// save chat note
+router.post("/save_note", validateAgent, async (req, res) => {
+  try {
+    const { chatId, note } = req.body;
+    if (!chatId) {
+      return res.json({ success: false, msg: "chatId is required" });
+    }
+    await query("UPDATE chats SET chat_note = ? WHERE chat_id = ? AND uid = ?", [
+      note,
+      chatId,
+      req.decode.owner_uid
+    ]);
+    res.json({ success: true, msg: "Note updated" });
+  } catch (err) {
+    res.json({ success: false, msg: "something went wrong" });
+    console.log(err);
+  }
+});
+
+// get templets for agent
+router.get("/get_templets", validateAgent, async (req, res) => {
+  try {
+    const data = await query("SELECT * FROM templets WHERE uid = ?", [req.decode.owner_uid]);
+    res.json({ data, success: true });
   } catch (err) {
     console.log(err);
     res.json({ err, success: false, msg: "Something went wrong" });

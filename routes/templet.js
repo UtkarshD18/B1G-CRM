@@ -47,12 +47,43 @@ router.get('/get_templets', validateUser, async (req, res) => {
 router.post('/del_templets', validateUser, async (req, res) => {
     try {
 
-        await query(`DELETE FROM templets WHERE id IN (?)`, [req.body.selected])
-        res.json({ success: true, msg: "Contact(s) was deleted" })
+        await query(`DELETE FROM templets WHERE id IN (?) AND uid = ?`, [req.body.selected, req.decode.uid])
+        res.json({ success: true, msg: "Template(s) was deleted" })
 
     } catch (err) {
         res.json({ success: false, msg: "something went wrong" })
         console.log(err)
+    }
+})
+
+// update templet
+router.post('/update', validateUser, async (req, res) => {
+    try {
+        const { id, title, type, content } = req.body
+
+        if (!id || !title || !type || !content) {
+            return res.json({ success: false, msg: "Missing required fields" })
+        }
+
+        // Verify ownership
+        const [existing] = await query(`SELECT * FROM templets WHERE id = ? AND uid = ?`, [id, req.decode.uid])
+        if (!existing) {
+            return res.json({ success: false, msg: "Template not found" })
+        }
+
+        await query(`UPDATE templets SET title = ?, type = ?, content = ? WHERE id = ? AND uid = ?`, [
+            title,
+            type,
+            JSON.stringify(content),
+            id,
+            req.decode.uid
+        ])
+
+        res.json({ success: true, msg: "Template was updated" })
+
+    } catch (err) {
+        console.log(err)
+        res.json({ err, msg: "something went wrong", success: false })
     }
 })
 

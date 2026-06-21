@@ -20,3 +20,9 @@ client/dist/
 .gemini/
 # Keep media uploads but ignore exact files inside if needed
 !client/public/media/
+
+# Runtime state and tenant cache directories
+conversations/
+flow-json/
+sessions/
+logs/
