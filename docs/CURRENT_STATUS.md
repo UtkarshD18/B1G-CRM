@@ -35,6 +35,7 @@ Last audited: 2026-06-20
 | Sprint 14 Kanban Drag-and-Drop Persistence | Implemented interactive HTML5 drag-and-drop persistence on the Chat Kanban board, synced directly to the change ticket status API endpoint. |
 | Sprint 14 CRM Lead Pipeline Drag-and-Drop | Implemented interactive HTML5 drag-and-drop persistence on the CRM Lead Pipeline board, synced directly to the stage-shifting backend API endpoint. |
 | Sprint 14 Release Hardening | Removed legacy duplicate helper tree helpers/ and dead websocket.js entrypoint; hardened client apiRequest JSON parsing to prevent fatal UI crashes. |
+| Sprint 14 Payment Gateway Parity | Integrated MercadoPago credentials into database/APIs and customized form labels/input types dynamically per payment gateway provider (Stripe, PayPal, Razorpay, Paystack, MercadoPago, Offline). |
 
 
 

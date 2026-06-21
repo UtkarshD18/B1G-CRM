@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-21 - Sprint 14: Payment Gateway Parity & MercadoPago Integration
+
+| Field | Details |
+| --- | --- |
+| Feature | Completed 100% production parity for Admin payment gateway workspace: integrated MercadoPago config credentials (`pay_mercadopago_id`, `pay_mercadopago_key`, `mercadopago_active`) in web_private table, update_pay_gateway API endpoint, settings page, and user billing page; customized UI forms to dynamically render tailored field labels (e.g. Publishable Key, Client ID, Public Key, Access Token) and input types per gateway provider. |
+| Files changed | `database/migrations/016_mercadopago_settings.sql`, `database/schema.sql`, `database/postgres-local-schema.sql`, `routes/admin.js`, `routes/user.js`, `client/src/pages/admin/PaymentGateways.jsx`, `client/src/pages/admin/Settings.jsx`, `client/src/pages/user/Billing.jsx`. |
+| Impact | Achieves full parity across Admin and User portals for payment systems, sanitizes sensitive tokens, and dynamically renders tailored credential labels. |
+| Breaking changes | None. |
+| Migration notes | Run `npm run db:migrate` to update existing tables. |
+
 ## 2026-06-21 - Sprint 14: Admin Dashboard Enhancement & Agent Task UX Polish
 
 | Field | Details |

@@ -44,7 +44,7 @@ Status legend:
 | Manage users | Partial | List/update/delete/plan/auto-login. | Safer deletion and audit trail. | `routes/admin.js`, `client/src/pages/admin/Users.jsx` | PostgreSQL, JWT | High |
 | Orders | Partial | Orders API/page exists. | Payment-specific detail views. | `routes/admin.js`, `client/src/pages/admin/Orders.jsx` | Billing providers | Medium |
 | CMS settings | Partial | Public settings, pages, FAQ, testimonial, contact leads. | Complete production CMS UX. | `routes/admin.js`, `routes/web.js`, `client/src/pages/admin/Settings.jsx` | File uploads, PostgreSQL | Medium |
-| Payment gateways | Partial | Credential storage and provider flags. | Provider verification and secret handling. | `routes/admin.js`, `routes/user.js` | Stripe, PayPal, Razorpay, Paystack | High |
+| Payment gateways | Complete | Credential storage, provider flags, MercadoPago integration, and customized input labels dynamically per provider. | None. | `routes/admin.js`, `routes/user.js`, `client/src/pages/admin/PaymentGateways.jsx`, `client/src/pages/admin/Settings.jsx`, `client/src/pages/user/Billing.jsx` | Stripe, PayPal, Razorpay, Paystack, MercadoPago | High |
 | SMTP | Partial | Get/update/test email. | Secure secret storage. | `routes/admin.js`, `emails/returnEmails.js` | SMTP provider | Medium |
 | Translation/theme | Partial | Language JSON and theme JSON routes. | Avoid runtime source-file writes in immutable deploys. | `routes/web.js`, `languages/*`, `routes/theme.json` | File system | High |
 | Front partners | Partial | Partner logo CRUD. | Better UI/status unknown. | `routes/admin.js`, `client/src/pages/admin/Settings.jsx` | File uploads | Low |
