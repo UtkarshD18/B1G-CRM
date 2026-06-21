@@ -17,7 +17,17 @@ const gateways = [
   { name: 'PayPal', prefix: 'pay_paypal', flag: 'paypal_active', color: '#003087', icon: '🅿️' },
   { name: 'Razorpay', prefix: 'rz', flag: 'rz_active', color: '#072654', icon: '🇮🇳' },
   { name: 'Paystack', prefix: 'pay_paystack', flag: 'paystack_active', color: '#00c3f7', icon: '🌍' },
+  { name: 'MercadoPago', prefix: 'pay_mercadopago', flag: 'mercadopago_active', color: '#009ee3', icon: '💙' },
 ]
+
+const gatewayLabels = {
+  Offline: { id: 'Bank Details / Title', key: 'Instructions / Description' },
+  Stripe: { id: 'Publishable Key', key: 'Secret Key' },
+  PayPal: { id: 'Client ID', key: 'Client Secret' },
+  Razorpay: { id: 'Key ID', key: 'Key Secret' },
+  Paystack: { id: 'Public Key', key: 'Secret Key' },
+  MercadoPago: { id: 'Public Key', key: 'Access Token' },
+}
 
 function AdminPaymentGateways() {
   const { tokens } = useAuth()
@@ -63,7 +73,7 @@ function AdminPaymentGateways() {
             <div key={gw.name} className="panel" style={{ padding: '20px', borderRadius: '16px', borderLeft: `4px solid ${gw.color}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '1.3rem' }}>{gw.icon}</span>
+                   <span style={{ fontSize: '1.3rem' }}>{gw.icon}</span>
                   <strong style={{ fontSize: '1rem' }}>{gw.name}</strong>
                 </div>
                 <label className="checkbox-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -75,12 +85,12 @@ function AdminPaymentGateways() {
               </div>
               <div className="form-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
                 <label style={{ display: 'grid', gap: '6px', fontWeight: 600, color: '#365261' }}>
-                  {gw.name} ID / Public Key
+                  {gatewayLabels[gw.name]?.id || `${gw.name} ID / Public Key`}
                   <input value={data[`${gw.prefix}_id`] || ''} onChange={e => setData({ ...data, [`${gw.prefix}_id`]: e.target.value })} style={{ borderRadius: '12px', padding: '12px 14px', border: '1px solid #c5d0d6' }} />
                 </label>
                 <label style={{ display: 'grid', gap: '6px', fontWeight: 600, color: '#365261' }}>
-                  {gw.name} Secret Key
-                  <input type="password" value={data[`${gw.prefix}_key`] || ''} onChange={e => setData({ ...data, [`${gw.prefix}_key`]: e.target.value })} style={{ borderRadius: '12px', padding: '12px 14px', border: '1px solid #c5d0d6' }} />
+                  {gatewayLabels[gw.name]?.key || `${gw.name} Secret Key`}
+                  <input type={gw.name === 'Offline' ? 'text' : 'password'} value={data[`${gw.prefix}_key`] || ''} onChange={e => setData({ ...data, [`${gw.prefix}_key`]: e.target.value })} style={{ borderRadius: '12px', padding: '12px 14px', border: '1px solid #c5d0d6' }} />
                 </label>
               </div>
             </div>

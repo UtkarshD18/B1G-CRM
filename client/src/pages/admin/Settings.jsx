@@ -21,6 +21,9 @@ const paymentDefaults = {
   pay_paystack_id: '',
   pay_paystack_key: '',
   paystack_active: 0,
+  pay_mercadopago_id: '',
+  pay_mercadopago_key: '',
+  mercadopago_active: 0,
 }
 
 const webDefaults = {
@@ -305,7 +308,7 @@ function AdminSettingsPage() {
               ))}
           </div>
           <div className="action-row">
-            {['offline_active', 'stripe_active', 'paypal_active', 'rz_active', 'paystack_active'].map((key) => (
+            {['offline_active', 'stripe_active', 'paypal_active', 'rz_active', 'paystack_active', 'mercadopago_active'].map((key) => (
               <label className="checkbox-row" key={key}>
                 <input
                   checked={Number(payments[key]) > 0}
