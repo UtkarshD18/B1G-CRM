@@ -1,24 +1,24 @@
 {
   "agentCreate": {
-    "name": "Audit Agent 1781988458365",
-    "email": "audit-agent-1781988458365@example.com",
+    "name": "Audit Agent 1782014731118",
+    "email": "audit-agent-1782014731118@example.com",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 165,
+      "id": 55,
       "owner_uid": "local-user-uid",
-      "uid": "zKM43XCOX5b5JPbbdOzsIoKYjCZfixcP",
-      "email": "audit-agent-1781988458365@example.com",
+      "uid": "ntI05PTZlX4tD7Sai0RYhi2V5VZ9opUX",
+      "email": "audit-agent-1782014731118@example.com",
       "password": "[HIDDEN]",
       "role": "agent",
-      "name": "Audit Agent 1781988458365",
+      "name": "Audit Agent 1782014731118",
       "mobile": "+919876543210",
       "comments": "Audit temp comments",
       "is_active": 1,
-      "created_at": "2026-06-20T20:47:38.424Z",
-      "updated_at": "2026-06-20T20:47:38.424Z",
-      "createdat": "2026-06-20T20:47:38.424Z",
-      "updatedat": "2026-06-20T20:47:38.424Z"
+      "created_at": "2026-06-21T04:05:31.159Z",
+      "updated_at": "2026-06-21T04:05:31.159Z",
+      "createdat": "2026-06-21T04:05:31.159Z",
+      "updatedat": "2026-06-21T04:05:31.159Z"
     }
   },
   "agentLogin": {
@@ -26,19 +26,19 @@
     "tokenReturned": true
   },
   "taskAssign": {
-    "title": "Audit Task 1781988458517",
+    "title": "Audit Task 1782014731212",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 19,
+      "id": 25,
       "owner_uid": "local-user-uid",
-      "uid": "zKM43XCOX5b5JPbbdOzsIoKYjCZfixcP",
-      "title": "Audit Task 1781988458517",
+      "uid": "ntI05PTZlX4tD7Sai0RYhi2V5VZ9opUX",
+      "title": "Audit Task 1782014731212",
       "description": "Please complete the parity check validation",
       "status": "PENDING",
       "agent_comments": null,
-      "createdat": "2026-06-20T20:47:38.520Z",
-      "updatedat": "2026-06-20T20:47:38.520Z"
+      "createdat": "2026-06-21T04:05:31.214Z",
+      "updatedat": "2026-06-21T04:05:31.214Z"
     }
   },
   "taskComplete": {

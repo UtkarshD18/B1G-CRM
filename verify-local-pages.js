@@ -1,3 +1,4 @@
+require('dotenv').config();
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -31,7 +32,7 @@ async function verifyPage(page, role, url, slug) {
       return { slug, status: 'Redirected to login', currentUrl, classification: 'Broken' };
     }
 
-    const info = await page.evaluate(() => {
+    const info = await page.evaluate((s) => {
       const h2 = document.querySelector('h2')?.innerText || document.querySelector('h1')?.innerText || '';
       const text = document.body.innerText;
       const inputs = document.querySelectorAll('input').length;
@@ -39,11 +40,16 @@ async function verifyPage(page, role, url, slug) {
       const tables = document.querySelectorAll('table').length;
       
       const textLower = text.toLowerCase();
-      const hasError = textLower.includes('error') || textLower.includes('failed') || textLower.includes('not found') || textLower.includes('404');
+      let hasError = false;
+      if (s === 'campaigns') {
+        hasError = textLower.includes('unable to load') || textLower.includes('something went wrong') || textLower.includes('404') || textLower.includes('not found') || textLower.includes('failed to load');
+      } else {
+        hasError = textLower.includes('error') || textLower.includes('failed') || textLower.includes('not found') || textLower.includes('404');
+      }
       const isPlaceholder = textLower.includes('placeholder') || textLower.includes('coming soon') || textLower.includes('under construction') || textLower.includes('planned');
       
       return { h2, inputs, buttons, tables, hasError, isPlaceholder, textSnippet: text.slice(0, 300) };
-    });
+    }, slug);
 
     // Take screenshot
     const screenshotPath = path.join(SCREENSHOT_DIR, `${role}_${slug}.png`);

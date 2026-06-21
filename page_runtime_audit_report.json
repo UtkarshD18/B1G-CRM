@@ -3,11 +3,13 @@
     "route": "/admin/dashboard",
     "role": "Admin",
     "apiCalls": [
-      "GET /api/admin/get_dashboard_for_user"
+      "GET /api/admin/get_plans",
+      "GET /api/admin/get_dashboard_for_user",
+      "GET /api/admin/get_users"
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM Admin Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Manage Plans Manage Users Orders Settings Sign out "
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
   },
   {
     "route": "/admin/manage-plans",
@@ -17,18 +19,18 @@
     ],
     "status": "Partial",
     "errors": [],
-    "textSnippet": "B1GCRM Admin Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Manage Plans Manage Users Orders Settings Sign out "
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
   },
   {
     "route": "/admin/manage-users",
     "role": "Admin",
     "apiCalls": [
-      "GET /api/admin/get_users",
-      "GET /api/admin/get_plans"
+      "GET /api/admin/get_plans",
+      "GET /api/admin/get_users"
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM Admin Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Manage Plans Manage Users Orders Settings Sign out "
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
   },
   {
     "route": "/admin/orders",
@@ -38,7 +40,7 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM Admin Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Manage Plans Manage Users Orders Settings Sign out "
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
   },
   {
     "route": "/admin/settings",
@@ -47,15 +49,15 @@
       "GET /api/admin/get_web_public",
       "GET /api/admin/get_payment_gateway_admin",
       "GET /api/admin/get_social_login",
-      "GET /api/admin/get_smtp",
       "POST /api/admin/get_page_slug",
-      "GET /api/admin/get_contact_leads",
+      "GET /api/admin/get_testi",
       "GET /api/admin/get_faq",
-      "GET /api/admin/get_testi"
+      "GET /api/admin/get_contact_leads",
+      "GET /api/admin/get_smtp"
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM Admin Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Manage Plans Manage Users Orders Settings Sign out "
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
   },
   {
     "route": "/user/dashboard",
@@ -65,7 +67,7 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/inbox",
@@ -75,7 +77,7 @@
     ],
     "status": "Partial",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/kanban",
@@ -85,7 +87,7 @@
     ],
     "status": "Placeholder",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/contacts",
@@ -96,7 +98,7 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/campaigns",
@@ -109,7 +111,7 @@
     ],
     "status": "Partial",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/automation-flows",
@@ -119,20 +121,20 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/wa-chatbot",
     "role": "User",
     "apiCalls": [
-      "GET /api/chatbot/get_logs?limit=25",
       "GET /api/chatbot/get_chatbot",
+      "GET /api/chatbot/get_logs?limit=25",
       "GET /api/chat_flow/get_mine",
       "GET /api/inbox/get_chats"
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/meta-templates",
@@ -149,13 +151,13 @@
     "role": "User",
     "apiCalls": [
       "GET /api/user/get_meta_keys",
-      "GET /api/user/get_me",
       "GET /api/qr/get_all",
+      "GET /api/user/get_me",
       "GET /api/instagram/get_keys"
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/agent-login",
@@ -165,7 +167,7 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/agent-task",
@@ -176,7 +178,7 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/chat-widget",
@@ -186,19 +188,19 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/billing",
     "role": "User",
     "apiCalls": [
-      "GET /api/user/get_me",
       "GET /api/user/get_payment_details",
+      "GET /api/user/get_me",
       "GET /api/admin/get_plans"
     ],
     "status": "Partial",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/api-dashboard",
@@ -209,7 +211,7 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/user/settings",
@@ -220,19 +222,19 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM User Portal  Built from the verified live portal model, not a placeholder mock.  Dashboard Inbox Kanban Contacts Campaigns Automation Flows Cha"
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
   },
   {
     "route": "/agent/dashboard",
     "role": "Agent",
     "apiCalls": [
-      "GET /api/agent/get_my_assigned_chats",
       "GET /api/agent/get_me",
+      "GET /api/agent/get_my_assigned_chats",
       "GET /api/agent/get_my_task"
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM Agent Portal  Built from the verified live portal model, not a placeholder mock.  Workspace Assigned Chats Sign out AGENT WORKSPACE Restricted "
+    "textSnippet": "W whatsCRM Workspace Assigned Chats Sign out whatsCRM 5.9.5 🏠 › dashboard 🌐 English AGENT WORKSPACE Restricted staff portal  Ready for direct auto-l"
   },
   {
     "route": "/agent/chats",
@@ -242,6 +244,6 @@
     ],
     "status": "Working",
     "errors": [],
-    "textSnippet": "B1GCRM Agent Portal  Built from the verified live portal model, not a placeholder mock.  Workspace Assigned Chats Sign out WORKSPACE Agent assigned in"
+    "textSnippet": "W whatsCRM Workspace Assigned Chats Sign out whatsCRM 5.9.5 🏠 › chats 🌐 English WORKSPACE Agent assigned inbox  Restricted chat console listing only"
   }
 ]
