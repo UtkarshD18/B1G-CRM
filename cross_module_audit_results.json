@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-20T22:16:06.701Z",
-  "total": 40,
-  "passed": 40,
+  "timestamp": "2026-06-21T02:28:03.980Z",
+  "total": 41,
+  "passed": 41,
   "failed": 0,
   "score": 100,
   "results": [
@@ -21,7 +21,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Get flows",
       "pass": true,
-      "detail": "Found 13 flows"
+      "detail": "Found 18 flows"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -33,7 +33,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Chatbot has flow_id",
       "pass": true,
-      "detail": "flow_id: t1-flow-id-1781808183128"
+      "detail": "flow_id: flow_demo_welcome"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -45,19 +45,19 @@
       "module": "FLOW→CHATBOT",
       "test": "Flow JSON loadable",
       "pass": true,
-      "detail": "nodes: 0, edges: 0"
+      "detail": "nodes: 2, edges: 1"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get chatbots",
       "pass": true,
-      "detail": "Found 2 chatbots"
+      "detail": "Found 18 chatbots"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get diagnostic logs",
       "pass": true,
-      "detail": "Found 18 logs"
+      "detail": "Found 25 logs"
     },
     {
       "module": "CHATBOT→DIAG",
@@ -69,37 +69,31 @@
       "module": "CONTACT→CAMPAIGN",
       "test": "Get phonebooks",
       "pass": true,
-      "detail": "Found 16 phonebooks"
+      "detail": "Found 5 phonebooks"
     },
     {
       "module": "CONTACT→CAMPAIGN",
       "test": "Get contacts",
       "pass": true,
-      "detail": "Found 28 contacts"
+      "detail": "Found 31 contacts"
     },
     {
       "module": "CONTACT→CAMPAIGN",
       "test": "Get campaigns",
       "pass": true,
-      "detail": "Found 1 campaigns"
-    },
-    {
-      "module": "CONTACT→CAMPAIGN",
-      "test": "Campaign \"Demo Launch Campaign\" phonebook valid",
-      "pass": true,
-      "detail": "References phonebook id: 18"
+      "detail": "Found 0 campaigns"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Get chat list",
       "pass": true,
-      "detail": "Found 14 chats"
+      "detail": "Found 4 chats"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Chats have sender identity",
       "pass": true,
-      "detail": "14/14 chats have sender names"
+      "detail": "4/4 chats have sender names"
     },
     {
       "module": "AI→CHATBOT",
@@ -117,7 +111,7 @@
       "module": "KB→AI",
       "test": "Get knowledge base",
       "pass": true,
-      "detail": "Found 2 items"
+      "detail": "Found 0 items"
     },
     {
       "module": "KB→AI",
@@ -129,7 +123,7 @@
       "module": "CRM→CONTACTS",
       "test": "Get CRM leads",
       "pass": true,
-      "detail": "Found 9 leads"
+      "detail": "Found 17 leads"
     },
     {
       "module": "CRM→CONTACTS",
@@ -141,13 +135,25 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 13"
+      "detail": "ID: 44"
+    },
+    {
+      "module": "CRM→CONTACTS",
+      "test": "Delete test lead",
+      "pass": true,
+      "detail": "Lead deleted successfully."
+    },
+    {
+      "module": "CRM→CONTACTS",
+      "test": "Lead absent after deletion",
+      "pass": true,
+      "detail": "Cleanup verified"
     },
     {
       "module": "AGENT→INBOX",
       "test": "Get agents",
       "pass": true,
-      "detail": "Found 9 agents"
+      "detail": "Found 17 agents"
     },
     {
       "module": "AGENT→INBOX",
@@ -165,19 +171,19 @@
       "module": "WEBSITE→WIDGET",
       "test": "Get websites",
       "pass": true,
-      "detail": "Found 1 websites"
+      "detail": "Found 0 websites"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get KPIs",
       "pass": true,
-      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":14,\"escalatedChatsCount\":0}"
+      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":4,\"escalatedChatsCount\":1}"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get escalations",
       "pass": true,
-      "detail": "Found 0 escalations"
+      "detail": "Found 1 escalations"
     },
     {
       "module": "SUPERVISOR→AGENT",
@@ -189,7 +195,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 6 rules"
+      "detail": "Found 17 rules"
     },
     {
       "module": "WEBHOOK→INBOX",
@@ -243,7 +249,7 @@
       "module": "DASHBOARD→CAMPAIGN",
       "test": "Campaign dashboard summary",
       "pass": true,
-      "detail": "Campaigns: 1, Delivery: 10"
+      "detail": "Campaigns: 0, Delivery: 0"
     }
   ]
 }

@@ -137,6 +137,47 @@ router.post("/leads/update", validateUser, async (req, res) => {
   }
 });
 
+// POST to permanently delete a lead and its tenant-owned history
+router.post("/leads/delete", validateUser, async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) {
+      return res.json({ success: false, msg: "Lead ID is required" });
+    }
+
+    const deletedLead = await withTransaction(async (tx) => {
+      // Explicit child cleanup keeps this route safe on databases created
+      // before the cascade constraints were introduced.
+      await tx(
+        "DELETE FROM crm_lead_reminders WHERE lead_id = ? AND uid = ?",
+        [id, req.decode.uid]
+      );
+      await tx(
+        "DELETE FROM crm_lead_activities WHERE lead_id = ? AND uid = ?",
+        [id, req.decode.uid]
+      );
+      const rows = await tx(
+        "DELETE FROM crm_leads WHERE id = ? AND uid = ? RETURNING id",
+        [id, req.decode.uid]
+      );
+
+      if (rows.length === 0) {
+        throw new Error("Lead not found");
+      }
+
+      return rows[0];
+    });
+
+    res.json({ success: true, msg: "Lead deleted successfully.", data: deletedLead });
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+      msg: err.message === "Lead not found" ? "Lead not found" : "Failed to delete lead"
+    });
+  }
+});
+
 // REMINDERS API
 
 // GET reminders for a lead

@@ -168,7 +168,9 @@ const runtime = {
 async function startServer() {
   try {
     await runMigrations({ logger });
-    await seedDevCredentials({ logger });
+    if (env.NODE_ENV !== "production") {
+      await seedDevCredentials({ logger });
+    }
 
     runtime.server = app.listen(env.PORT, () => {
       logger.info("B1G CRM server started", {

@@ -12,6 +12,15 @@ import AdminPlansPage from '../pages/admin/Plans'
 import AdminUsersPage from '../pages/admin/Users'
 import AdminOrdersPage from '../pages/admin/Orders'
 import AdminSettingsPage from '../pages/admin/Settings'
+import AdminFrontPartnerPage from '../pages/admin/FrontPartner'
+import AdminFaqPage from '../pages/admin/Faq'
+import AdminManagePages from '../pages/admin/ManagePages'
+import AdminTestimonialPage from '../pages/admin/Testimonial'
+import AdminContactFormPage from '../pages/admin/ContactForm'
+import AdminPaymentGatewaysPage from '../pages/admin/PaymentGateways'
+import AdminSmtpPage from '../pages/admin/SmtpSettings'
+import AdminSocialLoginPage from '../pages/admin/SocialLogin'
+import AdminSiteSettingsPage from '../pages/admin/SiteSettings'
 import UserDashboardPage from '../pages/user/Dashboard'
 import UserInboxPage from '../pages/user/Inbox'
 import UserKanbanPage from '../pages/user/Kanban'
@@ -43,15 +52,15 @@ export const ADMIN_REFERENCE_ROUTES = [
   { path: 'manage-users', component: 'users' },
   { path: 'orders', component: 'orders' },
   { path: 'settings', component: 'settings' },
-  { path: 'front-partner', component: 'settings' },
-  { path: 'faq', component: 'settings' },
-  { path: 'manage-page', component: 'settings' },
-  { path: 'testimonial', component: 'settings' },
-  { path: 'contact-form', component: 'settings' },
-  { path: 'payment-gateways', component: 'settings' },
-  { path: 'social-login', component: 'settings' },
-  { path: 'site-settings', component: 'settings' },
-  { path: 'smtp', component: 'settings' },
+  { path: 'front-partner', component: 'frontPartner' },
+  { path: 'faq', component: 'faq' },
+  { path: 'manage-page', component: 'managePage' },
+  { path: 'testimonial', component: 'testimonial' },
+  { path: 'contact-form', component: 'contactForm' },
+  { path: 'payment-gateways', component: 'paymentGateways' },
+  { path: 'social-login', component: 'socialLogin' },
+  { path: 'site-settings', component: 'siteSettings' },
+  { path: 'smtp', component: 'smtpSettings' },
   { path: 'web-theme', component: 'settings' },
   { path: 'translation', component: 'settings' },
   { path: 'update-web', component: 'settings' },
@@ -117,6 +126,15 @@ const adminRouteComponents = {
   users: AdminUsersPage,
   orders: AdminOrdersPage,
   settings: AdminSettingsPage,
+  frontPartner: AdminFrontPartnerPage,
+  faq: AdminFaqPage,
+  managePage: AdminManagePages,
+  testimonial: AdminTestimonialPage,
+  contactForm: AdminContactFormPage,
+  paymentGateways: AdminPaymentGatewaysPage,
+  smtpSettings: AdminSmtpPage,
+  socialLogin: AdminSocialLoginPage,
+  siteSettings: AdminSiteSettingsPage,
 }
 
 const userRouteComponents = {

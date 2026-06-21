@@ -787,7 +787,7 @@ describe('App routing shell', () => {
 
     expect(await screen.findByText('Chat Kanban')).toBeInTheDocument()
     expect(await screen.findByText('Jordan Buyer')).toBeInTheDocument()
-    expect(await screen.findByText('Pending')).toBeInTheDocument()
+    expect((await screen.findAllByText('Pending')).length).toBeGreaterThan(0)
     expect(window.location.pathname).toBe('/user/kanban')
   })
 

@@ -5,8 +5,8 @@ const { query, withTransaction } = require('../database/dbpromise.js');
 const env = require('../env');
 
 const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3010/api';
-const USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'User@123';
-const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'Admin@123';
+const USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'CHANGE_ME';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME';
 
 const runTest = async () => {
   console.log('=== Backend Auth & Transaction Safety Verification ===\n');
@@ -28,31 +28,26 @@ const runTest = async () => {
     let adminToken = '';
     let userUid = '';
 
-    try {
-      const userRes = await axios.post(`${BASE_URL}/user/login`, {
-        email: 'user@example.com',
-        password: USER_PASSWORD
-      });
-      userToken = userRes.data.token;
-      userUid = userRes.data.uid || 'local-user-uid';
-      console.log('  ✅ User logged in.');
-    } catch (err) {
-      console.warn('  ⚠️ User login failed, using direct DB token generation:', err.message);
-      userToken = jwt.sign({ email: 'user@example.com', uid: 'local-user-uid', role: 'user' }, env.JWT_SECRET);
-      userUid = 'local-user-uid';
+    const userRes = await axios.post(`${BASE_URL}/user/login`, {
+      email: 'user@example.com',
+      password: USER_PASSWORD
+    });
+    if (!userRes.data?.success || !userRes.data?.token) {
+      throw new Error(`User login failed: ${userRes.data?.msg || 'token missing'}`);
     }
+    userToken = userRes.data.token;
+    userUid = userRes.data.uid || 'local-user-uid';
+    console.log('  ✅ User logged in.');
 
-    try {
-      const adminRes = await axios.post(`${BASE_URL}/admin/login`, {
-        email: 'admin@example.com',
-        password: ADMIN_PASSWORD
-      });
-      adminToken = adminRes.data.token;
-      console.log('  ✅ Admin logged in.');
-    } catch (err) {
-      console.warn('  ⚠️ Admin login failed, using direct DB token generation:', err.message);
-      adminToken = jwt.sign({ email: 'admin@example.com', uid: 'local-admin-uid', role: 'admin' }, env.JWT_SECRET);
+    const adminRes = await axios.post(`${BASE_URL}/admin/login`, {
+      email: 'admin@example.com',
+      password: ADMIN_PASSWORD
+    });
+    if (!adminRes.data?.success || !adminRes.data?.token) {
+      throw new Error(`Admin login failed: ${adminRes.data?.msg || 'token missing'}`);
     }
+    adminToken = adminRes.data.token;
+    console.log('  ✅ Admin logged in.');
 
     // 1. Unauthenticated access block check
     console.log('\nChecking unauthenticated access block...');

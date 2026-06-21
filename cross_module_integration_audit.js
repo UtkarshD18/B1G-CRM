@@ -3,9 +3,13 @@
  * Tests real integration paths between modules via API calls and DB queries.
  */
 
+require('dotenv').config();
 const fetch = require('node-fetch');
 
-const BASE = 'http://localhost:3010';
+const BASE = process.env.TEST_APP_URL || 'http://127.0.0.1:3010';
+const USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'CHANGE_ME';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME';
+const AGENT_PASSWORD = process.env.TEST_AGENT_PASSWORD || USER_PASSWORD;
 const results = [];
 let userToken = '';
 let adminToken = '';
@@ -36,7 +40,7 @@ async function api(method, path, body = null, token = null) {
 }
 
 async function loginUser() {
-  const res = await api('POST', '/api/user/login', { email: 'user@example.com', password: 'User@123' });
+  const res = await api('POST', '/api/user/login', { email: 'user@example.com', password: USER_PASSWORD });
   if (res.success && res.token) {
     userToken = res.token;
     log('AUTH', 'User login', true, 'Token obtained');
@@ -46,7 +50,7 @@ async function loginUser() {
 }
 
 async function loginAdmin() {
-  const res = await api('POST', '/api/admin/login', { email: 'admin@example.com', password: 'Admin@123' });
+  const res = await api('POST', '/api/admin/login', { email: 'admin@example.com', password: ADMIN_PASSWORD });
   if (res.success && res.token) {
     adminToken = res.token;
     log('AUTH', 'Admin login', true, 'Token obtained');
@@ -129,8 +133,6 @@ async function testContactCampaignIntegration() {
     return;
   }
   
-  const pb = phonebooks.data[0];
-  
   // Get contacts in phonebook
   const contacts = await api('GET', '/api/phonebook/get_uid_contacts', null, userToken);
   log('CONTACT→CAMPAIGN', 'Get contacts', contacts.success, `Found ${contacts.data?.length || 0} contacts`);
@@ -203,13 +205,14 @@ async function testKnowledgeBaseIntegration() {
 // ============ CRM LEADS → CONTACTS ============
 async function testCrmLeadsIntegration() {
   console.log('\n=== CRM LEADS → CONTACTS ===');
+  const testLeadName = `Integration Test Lead ${Date.now()}`;
   
   const leads = await api('GET', '/api/crm/leads', null, userToken);
   log('CRM→CONTACTS', 'Get CRM leads', leads.success, `Found ${leads.data?.length || 0} leads`);
   
   // Create a test lead - correct endpoint: /api/crm/leads/add
   const createRes = await api('POST', '/api/crm/leads/add', {
-    name: 'Integration Test Lead',
+    name: testLeadName,
     mobile: '+919999999999',
     stage: 'Lead',
     value: 5000
@@ -218,8 +221,17 @@ async function testCrmLeadsIntegration() {
   
   // Verify it appeared
   const leadsAfter = await api('GET', '/api/crm/leads', null, userToken);
-  const testLead = leadsAfter.data?.find(l => l.name === 'Integration Test Lead');
+  const testLead = leadsAfter.data?.find(l => l.name === testLeadName);
   log('CRM→CONTACTS', 'Lead in list after creation', !!testLead, testLead ? `ID: ${testLead.id}` : 'Not found');
+
+  if (testLead) {
+    const deleteRes = await api('POST', '/api/crm/leads/delete', { id: testLead.id }, userToken);
+    log('CRM→CONTACTS', 'Delete test lead', deleteRes.success, deleteRes.msg);
+
+    const leadsAfterDelete = await api('GET', '/api/crm/leads', null, userToken);
+    const deleted = !leadsAfterDelete.data?.some(l => l.id === testLead.id);
+    log('CRM→CONTACTS', 'Lead absent after deletion', deleted, deleted ? 'Cleanup verified' : 'Lead still present');
+  }
 }
 
 // ============ AGENT → INBOX ============
@@ -233,7 +245,7 @@ async function testAgentInboxIntegration() {
   // Try agent login 
   const agentLogin = await api('POST', '/api/agent/login', { 
     email: 'agent@example.com', 
-    password: 'User@123' 
+    password: AGENT_PASSWORD
   });
   
   if (agentLogin.success && agentLogin.token) {

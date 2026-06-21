@@ -185,6 +185,33 @@ function UserCrmPipelinePage() {
     }
   }
 
+  async function handleDeleteLead() {
+    if (!selectedLead) return
+    if (!window.confirm(`Permanently delete lead "${selectedLead.name}" and its activity history?`)) return
+
+    setLoading(true)
+    try {
+      const result = await apiRequest('/api/crm/leads/delete', {
+        method: 'POST',
+        token: tokens.user,
+        body: { id: selectedLead.id }
+      })
+
+      if (!result?.success) {
+        setStatus(result?.msg || 'Failed to delete lead.')
+        return
+      }
+
+      setLeads((current) => current.filter((lead) => lead.id !== selectedLead.id))
+      setSelectedLead(null)
+      setStatus('Lead deleted successfully.')
+    } catch (error) {
+      setStatus(error.message || 'Error deleting lead.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function savePipelineOrder(leadId, targetStage, currentLeads) {
     try {
       const moveRes = await apiRequest('/api/crm/leads/move', {
@@ -677,6 +704,15 @@ function UserCrmPipelinePage() {
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                   <button className="primary-button" type="submit" style={{ flex: 1 }}>
                     Save Info
+                  </button>
+                  <button
+                    type="button"
+                    className="mini-button"
+                    onClick={handleDeleteLead}
+                    disabled={loading}
+                    style={{ border: '1px solid #c94b4b', color: '#a22f2f' }}
+                  >
+                    {loading ? 'Deleting…' : 'Delete'}
                   </button>
                   <button type="button" className="mini-button" onClick={() => setSelectedLead(null)} style={{ border: '1px solid #ccc', color: '#333' }}>
                     Close
