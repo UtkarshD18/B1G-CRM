@@ -54,7 +54,7 @@ const fillReactSelect = async (page, selector, value) => {
 
   // 1. LOGIN
   console.log("1. Navigating to Login Page...");
-  await page.goto('http://localhost:5173/user/login', { waitUntil: 'networkidle2' });
+  await page.goto('http://localhost:3010/user/login', { waitUntil: 'networkidle2' });
   await fillReactInput(page, 'input[type="email"]', 'user@example.com');
   await fillReactInput(page, 'input[type="password"]', 'User@123');
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 's11_01_login_form.png') });
@@ -70,7 +70,7 @@ const fillReactSelect = async (page, selector, value) => {
 
   // 2. CONTACTS - PHONEBOOK CREATION Refresh Check
   console.log("2. Testing Phonebook immediate listing...");
-  await page.goto('http://localhost:5173/user/contacts', { waitUntil: 'networkidle2' });
+  await page.goto('http://localhost:3010/user/contacts', { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 1500));
   
   const initialPbCount = await page.evaluate(() => document.querySelectorAll('table tbody tr').length);
@@ -93,13 +93,13 @@ const fillReactSelect = async (page, selector, value) => {
 
   // 3. AI PROVIDERS
   console.log("3. Navigating to AI Providers Settings...");
-  await page.goto('http://localhost:5173/user/ai-providers', { waitUntil: 'networkidle2' });
+  await page.goto('http://localhost:3010/user/ai-providers', { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 1500));
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 's11_05_ai_providers.png') });
 
   // 4. KNOWLEDGE BASE
   console.log("4. Navigating to Knowledge Base...");
-  await page.goto('http://localhost:5173/user/knowledge-base', { waitUntil: 'networkidle2' });
+  await page.goto('http://localhost:3010/user/knowledge-base', { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 1500));
   
   // Submit a site to crawl
@@ -117,7 +117,7 @@ const fillReactSelect = async (page, selector, value) => {
 
   // 5. WEBSITES MANAGER
   console.log("5. Navigating to Websites Manager...");
-  await page.goto('http://localhost:5173/user/website-manager', { waitUntil: 'networkidle2' });
+  await page.goto('http://localhost:3010/user/website-manager', { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 1500));
   
   // Add website
@@ -132,7 +132,7 @@ const fillReactSelect = async (page, selector, value) => {
 
   // 6. LEAD PIPELINE
   console.log("6. Navigating to Kanban Lead Pipeline...");
-  await page.goto('http://localhost:5173/user/pipeline', { waitUntil: 'networkidle2' });
+  await page.goto('http://localhost:3010/user/pipeline', { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 2000));
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 's11_09_pipeline_kanban.png') });
 
@@ -162,7 +162,7 @@ const fillReactSelect = async (page, selector, value) => {
 
   // 7. SUPERVISOR SLA DASHBOARD
   console.log("7. Navigating to Supervisor SLA Dashboard...");
-  await page.goto('http://localhost:5173/user/supervisor-dashboard', { waitUntil: 'networkidle2' });
+  await page.goto('http://localhost:3010/user/supervisor-dashboard', { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 2000));
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, 's11_12_supervisor_dashboard.png') });
 

@@ -54,7 +54,7 @@ const puppeteer = require('puppeteer');
     await new Promise(r => setTimeout(r, 3000));
 
     console.log('2. Navigating to Contacts...');
-    await page.goto('http://localhost:5173/user/contacts', { waitUntil: 'networkidle2' });
+    await page.goto('http://localhost:3010/user/contacts', { waitUntil: 'networkidle2' });
     await new Promise(r => setTimeout(r, 2000));
 
     console.log('3. Typing phonebook name...');
