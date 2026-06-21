@@ -303,11 +303,13 @@ router.post("/update_pay_gateway", adminValidator, async (req, res) => {
       pay_paystack_id,
       pay_paystack_key,
       paystack_active,
+      pay_mercadopago_id,
+      pay_mercadopago_key,
+      mercadopago_active,
     } = req.body;
 
     await query(
       `UPDATE web_private SET  
-
             pay_offline_id = ?, 
             pay_offline_key = ?, 
             offline_active = ?,
@@ -322,7 +324,10 @@ router.post("/update_pay_gateway", adminValidator, async (req, res) => {
             rz_active = ?,
             pay_paystack_id = ?,
             pay_paystack_key = ?,
-            paystack_active = ?
+            paystack_active = ?,
+            pay_mercadopago_id = ?,
+            pay_mercadopago_key = ?,
+            mercadopago_active = ?
             `,
       [
         pay_offline_id,
@@ -340,6 +345,9 @@ router.post("/update_pay_gateway", adminValidator, async (req, res) => {
         pay_paystack_id,
         pay_paystack_key,
         paystack_active,
+        pay_mercadopago_id,
+        pay_mercadopago_key,
+        mercadopago_active,
       ]
     );
 

@@ -191,6 +191,9 @@ CREATE TABLE IF NOT EXISTS web_private (
   pay_paystack_id TEXT,
   pay_paystack_key TEXT,
   paystack_active SMALLINT DEFAULT 0,
+  pay_mercadopago_id TEXT,
+  pay_mercadopago_key TEXT,
+  mercadopago_active SMALLINT DEFAULT 0,
   createdAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

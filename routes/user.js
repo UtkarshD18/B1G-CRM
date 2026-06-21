@@ -924,6 +924,7 @@ router.get("/get_payment_details", validateUser, async (req, res) => {
     ]);
 
     data.pay_stripe_key = "";
+    data.pay_mercadopago_key = "";
     res.json({ data, userData, success: true });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });
