@@ -1,6 +1,7 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
+const fs = require("fs");
 const bcrypt = require("bcrypt");
 const {
   isValidEmail,
@@ -16,8 +17,7 @@ const {
   getUserPlayDays,
   deleteFileIfExists,
 } = require("../functions/function.js");
-const { sign } = require("jsonwebtoken");
-const validateUser = require("../middlewares/user.js");
+const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
 const { getIOInstance } = require("../socket.js");
 const { checkPlan } = require("../middlewares/plan.js");
 const { processMessage } = require("../helper/inbox/inbox.js");
@@ -56,9 +56,15 @@ router.post("/webhook/:uid", async (req, res) => {
     }
 
     if (body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id) {
-      const getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
+      let getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         userUID,
       ]);
+      if (getMyMetaApi?.length === 0) {
+        const globalMeta = await query(`SELECT meta_phone_number_id FROM web_private`, []);
+        if (globalMeta.length > 0 && globalMeta[0].meta_phone_number_id) {
+          getMyMetaApi = [{ business_phone_number_id: globalMeta[0].meta_phone_number_id }];
+        }
+      }
       if (getMyMetaApi?.length > 0) {
         const checkNumber =
           body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id;
@@ -83,10 +89,17 @@ router.post("/webhook/:uid", async (req, res) => {
 });
 
 // getting chat lists
-router.get("/get_chats", validateUser, async (req, res) => {
+router.get("/get_chats", validateUserOrAgent, async (req, res) => {
   try {
     let data = [];
-    data = await query(`SELECT * FROM chats WHERE uid = ?`, [req.decode.uid]);
+    data = await query(
+      `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
+       FROM chats c 
+       LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
+       WHERE c.uid = ?
+       ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
+      [req.decode.uid]
+    );
     const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -105,9 +118,12 @@ router.get("/get_chats", validateUser, async (req, res) => {
 });
 
 // get chat conversatio
-router.post("/get_convo", validateUser, async (req, res) => {
+router.post("/get_convo", validateUserOrAgent, async (req, res) => {
   try {
     const { chatId } = req.body;
+    if (!chatId) {
+      return res.json({ success: false, msg: "chatId is required" });
+    }
 
     const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
     const data = readJSONFile(filePath, 100);
@@ -119,7 +135,7 @@ router.post("/get_convo", validateUser, async (req, res) => {
 });
 
 // change tenant chat ticket status
-router.post("/change_chat_ticket_status", validateUser, async (req, res) => {
+router.post("/change_chat_ticket_status", validateUserOrAgent, async (req, res) => {
   try {
     const { status, chatId } = req.body;
     const allowedStatuses = ["open", "pending", "solved"];
@@ -140,6 +156,30 @@ router.post("/change_chat_ticket_status", validateUser, async (req, res) => {
     res.json({ success: true, msg: "Chat status updated" });
   } catch (err) {
     console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// update custom kanban order for chats
+router.post("/update_kanban_order", validateUserOrAgent, verifyPermission("kanban_access"), async (req, res) => {
+  try {
+    const { orderedChatIds } = req.body;
+    if (!Array.isArray(orderedChatIds)) {
+      return res.json({ success: false, msg: "orderedChatIds must be an array" });
+    }
+
+    await withTransaction(async (txQuery) => {
+      for (let i = 0; i < orderedChatIds.length; i++) {
+        await txQuery(
+          `UPDATE chats SET kanban_order = ? WHERE chat_id = ? AND uid = ?`,
+          [i, orderedChatIds[i], req.decode.uid]
+        );
+      }
+    });
+
+    res.json({ success: true, msg: "Kanban order updated" });
+  } catch (err) {
+    console.error(err);
     res.json({ err, success: false, msg: "Something went wrong" });
   }
 });
@@ -200,9 +240,9 @@ router.get("/webhook/:uid", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", validateUserOrAgent, async (req, res) => {
   try {
-    const uid = "lWvj6K0xI0FlSKJoyV7ak9DN0mzvKJK8";
+    const uid = req.decode.uid;
     const { msg } = req.query;
 
     // getting socket id
@@ -222,7 +262,7 @@ router.get("/", async (req, res) => {
 });
 
 // sending templets
-router.post("/send_templet", validateUser, checkPlan, async (req, res) => {
+router.post("/send_templet", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
   try {
     const { content, toName, toNumber, chatId, msgType } = req.body;
 
@@ -260,7 +300,7 @@ router.post("/send_templet", validateUser, checkPlan, async (req, res) => {
 });
 
 // send image
-router.post("/send_image", validateUser, checkPlan, async (req, res) => {
+router.post("/send_image", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
   try {
     const { url, toNumber, toName, chatId, caption } = req.body;
 
@@ -310,7 +350,7 @@ router.post("/send_image", validateUser, checkPlan, async (req, res) => {
 });
 
 // send video
-router.post("/send_video", validateUser, checkPlan, async (req, res) => {
+router.post("/send_video", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
   try {
     const { url, toNumber, toName, chatId, caption } = req.body;
 
@@ -360,7 +400,7 @@ router.post("/send_video", validateUser, checkPlan, async (req, res) => {
 });
 
 // send document
-router.post("/send_doc", validateUser, checkPlan, async (req, res) => {
+router.post("/send_doc", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
   try {
     const { url, toNumber, toName, chatId, caption } = req.body;
 
@@ -410,7 +450,7 @@ router.post("/send_doc", validateUser, checkPlan, async (req, res) => {
 });
 
 // send audio
-router.post("/send_audio", validateUser, checkPlan, async (req, res) => {
+router.post("/send_audio", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
   try {
     const { url, toNumber, toName, chatId } = req.body;
 
@@ -458,7 +498,7 @@ router.post("/send_audio", validateUser, checkPlan, async (req, res) => {
 });
 
 // send text message
-router.post("/send_text", validateUser, checkPlan, async (req, res) => {
+router.post("/send_text", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
   try {
     const { text, toNumber, toName, chatId } = req.body;
 
@@ -508,7 +548,7 @@ router.post("/send_text", validateUser, checkPlan, async (req, res) => {
 });
 
 // send meta templet
-router.post("/send_meta_templet", validateUser, checkPlan, async (req, res) => {
+router.post("/send_meta_templet", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
   try {
     const { template, toNumber, toName, chatId, example } = req.body;
 
@@ -575,7 +615,10 @@ router.post("/send_meta_templet", validateUser, checkPlan, async (req, res) => {
 });
 
 // del chat
-router.post("/del_chat", validateUser, async (req, res) => {
+router.post("/del_chat", validateUserOrAgent, async (req, res) => {
+  if (req.decode.role === "agent") {
+    return res.json({ success: false, msg: "Agents cannot delete chats" });
+  }
   try {
     const { chatId } = req.body;
     await query(`DELETE FROM chats WHERE chat_id = ? AND uid = ?`, [
@@ -620,10 +663,51 @@ function groupChatsByNumberArrayFormat(chats) {
 }
 
 // merge chat
-router.post("/merge_chats", validateUser, async (req, res) => {
+router.post("/merge_chats", validateUserOrAgent, async (req, res) => {
+  if (req.decode.role === "agent") {
+    return res.json({ success: false, msg: "Agents cannot merge chats" });
+  }
   try {
   } catch (err) {
     console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// delete a single message from conversation
+router.post("/delete_message", validateUserOrAgent, async (req, res) => {
+  if (req.decode.role === "agent") {
+    return res.json({ success: false, msg: "Agents cannot delete messages" });
+  }
+  try {
+    const { chatId, messageId } = req.body;
+    if (!chatId || !messageId) {
+      return res.json({ success: false, msg: "chatId and messageId are required" });
+    }
+
+    const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
+    if (fs.existsSync(filePath)) {
+      let fileData = [];
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf8");
+        fileData = JSON.parse(fileContent);
+      } catch (err) {
+        fileData = [];
+      }
+
+      if (Array.isArray(fileData)) {
+        // filter out the message matching either metaChatId or timestamp
+        const updatedData = fileData.filter(
+          (msg) => String(msg.metaChatId || msg.timestamp) !== String(messageId)
+        );
+
+        fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2), "utf8");
+      }
+    }
+
+    res.json({ success: true, msg: "Message deleted" });
+  } catch (err) {
+    console.error(err);
     res.json({ err, success: false, msg: "Something went wrong" });
   }
 });

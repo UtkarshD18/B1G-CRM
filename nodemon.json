@@ -1,0 +1,18 @@
+{
+  "ignore": [
+    "flow-json/*",
+    "conversations/*",
+    "sessions/*",
+    "logs/*",
+    "client/*",
+    "*.json",
+    "*.log",
+    "database_integrity_report.json",
+    "adversarial_security_report.json",
+    "cross_module_audit_results.json",
+    "**/*.json",
+    "**/*.log",
+    "**/*.png",
+    "docs/reference-pages/local-reality/*"
+  ]
+}

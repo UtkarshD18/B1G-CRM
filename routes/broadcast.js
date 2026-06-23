@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -7,8 +7,9 @@ const {
   getMetaNumberDetail,
 } = require("../functions/function.js");
 const { sign } = require("jsonwebtoken");
-const validateUser = require("../middlewares/user.js");
+const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
 const { checkPlan } = require("../middlewares/plan.js");
+const env = require("../env");
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MAX_TREND_DAYS = 31;
@@ -239,7 +240,7 @@ function summarizeDashboard(campaigns, logs, range = {}) {
 }
 
 // adding campaign
-router.post("/add_new", validateUser, checkPlan, async (req, res) => {
+router.post("/add_new", validateUserOrAgent, verifyPermission("campaigns_access"), checkPlan, async (req, res) => {
   try {
     const { title, templet, phonebook, scheduleTimestamp, example } = req.body;
 
@@ -253,6 +254,10 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
       return res.json({ success: false, msg: "Please select a valid schedule" });
     }
 
+    if (scheduleDate.getTime() < Date.now() - 5 * 60 * 1000) {
+      return res.json({ success: false, msg: "Cannot schedule campaigns in the past" });
+    }
+
     const getPhonebook = await query(
       `SELECT * FROM phonebook WHERE id = ? AND uid = ?`,
       [phonebook.id, req.decode.uid]
@@ -260,6 +265,16 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
 
     if (getPhonebook.length < 1) {
       return res.json({ success: false, msg: "Invalid phonebook provided" });
+    }
+
+    if (env.MOCK_META_DELIVERY) {
+      const checkMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+      if (checkMeta.length < 1) {
+        await query(
+          `INSERT INTO meta_api (uid, business_phone_number_id, access_token, waba_id) VALUES (?, ?, ?, ?)`,
+          [req.decode.uid, 'mock-phone-id', 'mock-token', 'mock-waba-id']
+        );
+      }
     }
 
     const getMetaAPI = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
@@ -315,36 +330,38 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
       req.decode.uid,
     ]);
 
-    await query(
-      `
-                INSERT INTO broadcast_log (
-                    uid,
-                    broadcast_id,
-                    templet_name,
-                    sender_mobile,
-                    send_to,
-                    delivery_status,
-                    example,
-                    contact
-                ) VALUES ?`,
-      [broadcast_logs]
-    );
+    await withTransaction(async (tx) => {
+      await tx(
+        `
+                  INSERT INTO broadcast_log (
+                      uid,
+                      broadcast_id,
+                      templet_name,
+                      sender_mobile,
+                      send_to,
+                      delivery_status,
+                      example,
+                      contact
+                  ) VALUES ?`,
+        [broadcast_logs]
+      );
 
-    await query(
-      `INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (
-            ?,?,?,?,?,?,?,?
-        )`,
-      [
-        broadcast_id,
-        req.decode.uid,
-        String(title).trim(),
-        JSON.stringify(templet),
-        JSON.stringify(getPhonebook[0]),
-        "QUEUE",
-        scheduleDate,
-        getUser[0]?.timezone || "Asia/Kolkata",
-      ]
-    );
+      await tx(
+        `INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (
+              ?,?,?,?,?,?,?,?
+          )`,
+        [
+          broadcast_id,
+          req.decode.uid,
+          String(title).trim(),
+          JSON.stringify(templet),
+          JSON.stringify(getPhonebook[0]),
+          "QUEUE",
+          scheduleDate,
+          getUser[0]?.timezone || "Asia/Kolkata",
+        ]
+      );
+    });
 
     res.json({ success: true, msg: "Your broadcast has been added" });
   } catch (err) {
@@ -354,7 +371,7 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
 });
 
 // campaign dashboard summary
-router.get("/dashboard_summary", validateUser, async (req, res) => {
+router.get("/dashboard_summary", validateUserOrAgent, verifyPermission("campaigns_access"), async (req, res) => {
   try {
     const range = getDashboardDateRange(req.query);
     const campaignWhere = ["uid = ?"];
@@ -394,7 +411,7 @@ router.get("/dashboard_summary", validateUser, async (req, res) => {
 });
 
 // get all campaign
-router.get("/get_broadcast", validateUser, async (req, res) => {
+router.get("/get_broadcast", validateUserOrAgent, verifyPermission("campaigns_access"), async (req, res) => {
   try {
     const range = getDashboardDateRange(req.query);
     const where = ["uid = ?"];
@@ -416,7 +433,7 @@ router.get("/get_broadcast", validateUser, async (req, res) => {
 });
 
 // get broadcast logs by bid
-router.post("/get_broadcast_logs", validateUser, async (req, res) => {
+router.post("/get_broadcast_logs", validateUserOrAgent, verifyPermission("campaigns_access"), async (req, res) => {
   try {
     const { id } = req.body;
 
@@ -462,7 +479,7 @@ router.post("/get_broadcast_logs", validateUser, async (req, res) => {
 });
 
 // change campaign status
-router.post("/change_broadcast_status", validateUser, async (req, res) => {
+router.post("/change_broadcast_status", validateUserOrAgent, verifyPermission("campaigns_access"), async (req, res) => {
   try {
     console.log(req.body);
     const { status, broadcast_id } = req.body;
@@ -483,18 +500,20 @@ router.post("/change_broadcast_status", validateUser, async (req, res) => {
 });
 
 // delete a broad cast
-router.post("/del_broadcast", validateUser, async (req, res) => {
+router.post("/del_broadcast", validateUserOrAgent, verifyPermission("campaigns_access"), async (req, res) => {
   try {
     const { broadcast_id } = req.body;
 
-    await query(`DELETE FROM broadcast WHERE uid = ? AND broadcast_id = ?`, [
-      req.decode.uid,
-      broadcast_id,
-    ]);
-    await query(
-      `DELETE FROM broadcast_log WHERE uid = ? AND broadcast_id = ?`,
-      [req.decode.uid, broadcast_id]
-    );
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM broadcast WHERE uid = ? AND broadcast_id = ?`, [
+        req.decode.uid,
+        broadcast_id,
+      ]);
+      await tx(
+        `DELETE FROM broadcast_log WHERE uid = ? AND broadcast_id = ?`,
+        [req.decode.uid, broadcast_id]
+      );
+    });
 
     res.json({ success: true, msg: "Broadcast was deleted" });
   } catch (err) {

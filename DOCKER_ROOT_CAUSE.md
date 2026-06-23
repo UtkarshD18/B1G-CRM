@@ -2,13 +2,13 @@
 
 ## 1. Component Connection Variables & Values
 
-All database operations (migrations, runtime database connections, and the database query adapter) resolve their database configurations through a single unified entry point: [database/config.js](file:///home/shadow/projects/B1GCRM/database/config.js), which consumes configuration values from [env.js](file:///home/shadow/projects/B1GCRM/env.js).
+All database operations (migrations, runtime database connections, and the database query adapter) resolve their database configurations through a single unified entry point: [database/config.js](database/config.js), which consumes configuration values from [env.js](env.js).
 
 The environment variables utilized and their current runtime values are:
 
 | Component | Variable Used | Current Value | Source of Value |
 | --- | --- | --- | --- |
-| **Migrations** (`database/migrate.js`) | `DATABASE_URL` (primary)<br>`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` (fallback) | `DATABASE_URL` = `""` *(evaluates as falsy)*<br>`PGHOST` = `"postgres"`<br>`PGPORT` = `5432`<br>`PGUSER` = `"b1gcrm"`<br>`PGPASSWORD` = `"b1gcrm_local_dev"`<br>`PGDATABASE` = `"b1gcrm"` | `docker-compose.yml` (environment block) overrides `.env` values |
+| **Migrations** (`database/migrate.js`) | `DATABASE_URL` (primary)<br>`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` (fallback) | `DATABASE_URL` = `""` *(evaluates as falsy)*<br>`PGHOST` = `"postgres"`<br>`PGPORT` = `5432`<br>`PGUSER` = `"b1gcrm"`<br>`PGPASSWORD` = `"[REDACTED]"`<br>`PGDATABASE` = `"b1gcrm"` | `docker-compose.yml` (environment block) overrides `.env` values |
 | **Runtime DB Connection** (`server.js`) | `DATABASE_URL` (primary)<br>`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` (fallback) | Same as above | Same as above |
 | **Query Adapter** (`database/dbpromise.js`) | `DATABASE_URL` (primary)<br>`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` (fallback) | Same as above | Same as above |
 

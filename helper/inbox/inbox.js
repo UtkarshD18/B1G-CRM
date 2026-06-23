@@ -9,6 +9,7 @@ const { mergeArraysWithPhonebook } = require("../socket/function");
 const { processMetaMessage } = require("./meta");
 const { metaChatbotInit } = require("../chatbot/meta");
 const { processMessageQr } = require("../addon/qr/processThings");
+const { processWebhookRules } = require("../webhooks/engine");
 
 async function updateChatListSocket({ connectionInfo }) {
   try {
@@ -141,14 +142,25 @@ async function processMessage({
     });
     // console.dir({ latestConversation }, { depth: null });
 
-    // chatbot init
+    // chatbot init and webhooks evaluation
     // console.log({ latestConversation });
     if (latestConversation?.newMessage && uid) {
+      const senderMobile = latestConversation.newMessage.senderMobile;
+      if (senderMobile) {
+        const slaExpires = new Date(Date.now() + 300 * 1000); // 5 minutes SLA
+        await query(
+          `UPDATE chats 
+           SET last_reply_by = 'user', last_incoming_time = ?, sla_expires_at = ?, sla_violated = 0 
+           WHERE sender_mobile = ? AND uid = ?`,
+          [Date.now(), slaExpires, senderMobile, uid]
+        );
+      }
       metaChatbotInit({ latestConversation, uid, origin });
+      processWebhookRules({ latestConversation, uid, origin });
     }
   } catch (err) {
     console.log(err);
   }
 }
 
-module.exports = { processMessage };
+module.exports = { processMessage, updateChatListSocket };

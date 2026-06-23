@@ -1,0 +1,58 @@
+{
+  "crud": {
+    "create": {
+      "name": "Audit Webhook Rule 1782015030787",
+      "successResponse": true,
+      "persistedInDb": true,
+      "row": {
+        "id": 20,
+        "uid": "local-user-uid",
+        "name": "Audit Webhook Rule 1782015030787",
+        "source": "external",
+        "event_type": "message",
+        "match_field": "body.text",
+        "match_operator": "contains",
+        "match_value": "hello",
+        "action_type": "send_webhook",
+        "action_payload": "{\"url\":\"https://example.com/webhook\",\"method\":\"POST\"}",
+        "active": 1,
+        "createdat": "2026-06-21T04:10:30.790Z",
+        "updatedat": "2026-06-21T04:10:30.790Z"
+      }
+    },
+    "read": {
+      "success": true,
+      "count": 7,
+      "containsAuditRule": true
+    },
+    "update": {
+      "successResponse": true,
+      "updatedRow": {
+        "id": 20,
+        "uid": "local-user-uid",
+        "name": "Audit Webhook Rule 1782015030787 Updated",
+        "source": "external",
+        "event_type": "message",
+        "match_field": "body.text",
+        "match_operator": "equals",
+        "match_value": "hi",
+        "action_type": "tag_chat",
+        "action_payload": "{\"tag\":\"customer\"}",
+        "active": 0,
+        "createdat": "2026-06-21T04:10:30.790Z",
+        "updatedat": "2026-06-21T04:10:30.813Z"
+      },
+      "activeValInDb": 0
+    },
+    "delete": {
+      "successResponse": true,
+      "removedFromDb": true
+    }
+  },
+  "trigger": {
+    "engineStatus": "Missing",
+    "webhookLogsTableExists": true,
+    "processWebhookRulesReferenced": false,
+    "reason": "Missing integration or schema."
+  }
+}

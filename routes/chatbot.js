@@ -9,7 +9,7 @@ const {
   readJsonFromFile,
 } = require("../functions/function.js");
 const { sign } = require("jsonwebtoken");
-const validateUser = require("../middlewares/user.js");
+const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
 const { checkPlan } = require("../middlewares/plan.js");
 
 function hasPropertyWithValue(arr, property, value) {
@@ -119,7 +119,7 @@ async function prepareChatbotPayload(req) {
   };
 }
 
-router.post("/add_chatbot", validateUser, checkPlan, async (req, res) => {
+router.post("/add_chatbot", validateUserOrAgent, verifyPermission("chatbot_access"), checkPlan, async (req, res) => {
   try {
     if (req.plan?.allow_chatbot < 1) {
       return res.json({
@@ -155,7 +155,7 @@ router.post("/add_chatbot", validateUser, checkPlan, async (req, res) => {
 });
 
 // update chatbot
-router.post("/update_chatbot", validateUser, checkPlan, async (req, res) => {
+router.post("/update_chatbot", validateUserOrAgent, verifyPermission("chatbot_access"), checkPlan, async (req, res) => {
   try {
     const { id } = req.body;
 
@@ -197,7 +197,7 @@ router.post("/update_chatbot", validateUser, checkPlan, async (req, res) => {
 });
 
 // get my chatbots
-router.get("/get_chatbot", validateUser, async (req, res) => {
+router.get("/get_chatbot", validateUserOrAgent, verifyPermission("chatbot_access"), async (req, res) => {
   try {
     const data = await query(`SELECT * FROM chatbot WHERE uid = ?`, [
       req.decode.uid,
@@ -210,7 +210,7 @@ router.get("/get_chatbot", validateUser, async (req, res) => {
 });
 
 // get recent chatbot diagnostics
-router.get("/get_logs", validateUser, async (req, res) => {
+router.get("/get_logs", validateUserOrAgent, verifyPermission("chatbot_access"), async (req, res) => {
   try {
     const limit = Math.min(
       Math.max(Number.parseInt(req.query.limit || "25", 10) || 25, 1),
@@ -248,7 +248,7 @@ router.get("/get_logs", validateUser, async (req, res) => {
 });
 
 // change bot status
-router.post("/change_bot_status", validateUser, checkPlan, async (req, res) => {
+router.post("/change_bot_status", validateUserOrAgent, verifyPermission("chatbot_access"), checkPlan, async (req, res) => {
   try {
     const { id, status } = req.body;
 
@@ -273,10 +273,14 @@ router.post("/change_bot_status", validateUser, checkPlan, async (req, res) => {
 });
 
 // del chatbot
-router.post("/del_chatbot", validateUser, async (req, res) => {
+router.post("/del_chatbot", validateUserOrAgent, verifyPermission("chatbot_access"), async (req, res) => {
   try {
     const { id } = req.body;
     await query(`DELETE FROM chatbot WHERE id = ? AND uid = ?`, [
+      id,
+      req.decode.uid,
+    ]);
+    await query(`DELETE FROM chatbot_log WHERE chatbot_id = ? AND uid = ?`, [
       id,
       req.decode.uid,
     ]);
@@ -288,7 +292,7 @@ router.post("/del_chatbot", validateUser, async (req, res) => {
 });
 
 // try to make a request
-router.post("/make_request_api", validateUser, checkPlan, async (req, res) => {
+router.post("/make_request_api", validateUserOrAgent, verifyPermission("chatbot_access"), checkPlan, async (req, res) => {
   try {
     const { url, body, headers, type } = req.body;
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 import { formatDateTime, summarizePlan } from '../../shared/format'
@@ -19,6 +19,7 @@ function AdminUsersPage() {
   const [autoLoginStatus, setAutoLoginStatus] = useState('')
   const [form, setForm] = useState(emptyUserForm)
   const [selectedPlanId, setSelectedPlanId] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const loadData = useCallback(async () => {
     setStatus('Loading users...')
@@ -112,7 +113,10 @@ function AdminUsersPage() {
     }
   }
 
-  async function deleteUser(id) {
+  async function deleteUser(id, name) {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${name || id}"? This action cannot be undone.`)) {
+      return
+    }
     setStatus('Deleting user...')
     try {
       const result = await apiRequest('/api/admin/del_user', {
@@ -153,6 +157,15 @@ function AdminUsersPage() {
       setAutoLoginStatus(error.message || 'Unable to create auto-login token')
     }
   }
+
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return users
+    const q = searchTerm.toLowerCase()
+    return users.filter(u =>
+      String(u.name || '').toLowerCase().includes(q) ||
+      String(u.email || '').toLowerCase().includes(q)
+    )
+  }, [users, searchTerm])
 
   return (
     <div className="page-stack">
@@ -228,11 +241,20 @@ function AdminUsersPage() {
       </form>
 
       <div className="panel table-panel">
-        <div className="panel-header">
-          <h2>Users</h2>
-          <button className="mini-button" type="button" onClick={loadData}>
-            Refresh
-          </button>
+        <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <h2>Users ({filteredUsers.length})</h2>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search by name or email..."
+              style={{ width: '220px', padding: '6px 12px', fontSize: '14px', borderRadius: '12px', border: '1px solid rgba(10,25,37,0.12)' }}
+            />
+            <button className="mini-button" type="button" onClick={loadData}>
+              Refresh
+            </button>
+          </div>
         </div>
         <table>
           <thead>
@@ -245,7 +267,15 @@ function AdminUsersPage() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: 'center', padding: '36px 0' }}>
+                  <span className="muted-copy">
+                    {searchTerm ? 'No users matched your search.' : 'No users registered yet.'}
+                  </span>
+                </td>
+              </tr>
+            ) : filteredUsers.map((user) => (
               <tr key={user.uid}>
                 <td>{user.name}</td>
                 <td>{user.email}</td>
@@ -259,7 +289,7 @@ function AdminUsersPage() {
                     <button className="mini-button" type="button" onClick={() => handleAutoLogin(user.uid)}>
                       Auto login
                     </button>
-                    <button className="mini-button subtle-danger" type="button" onClick={() => deleteUser(user.id)}>
+                    <button className="mini-button subtle-danger" type="button" onClick={() => deleteUser(user.id, user.name)}>
                       Delete
                     </button>
                   </div>

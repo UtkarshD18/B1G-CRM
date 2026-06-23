@@ -141,12 +141,47 @@ function getOriginData(chatbotFromMysq) {
   }
 }
 
-function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
+async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
   return new Promise(async (resolve) => {
     try {
-      const getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
+      const env = require("../../../env");
+      if (env.MOCK_META_DELIVERY) {
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+        const mockMsgId = 'mock-msg-id-' + Math.random().toString(36).substring(2, 15);
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: mockMsgId,
+          timestamp: userTimezone,
+          status: "sent",
+        };
+
+        const chatPath = `${__dirname}/../../../conversations/inbox/${uid}/${chatId}.json`;
+        addObjectToFile(finalSaveMsg, chatPath);
+
+        await query(
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId]
+        );
+        return resolve({ success: true, id: mockMsgId });
+      }
+
+      let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         uid,
       ]);
+      if (getMeta.length < 1) {
+        const globalMeta = await query(`SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`, []);
+        if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+          getMeta = [{
+            access_token: globalMeta[0].meta_access_token,
+            business_phone_number_id: globalMeta[0].meta_phone_number_id,
+            waba_id: globalMeta[0].meta_waba_id,
+            app_id: globalMeta[0].meta_app_id
+          }];
+        }
+      }
       const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
       if (getMeta.length < 1) {
@@ -298,6 +333,108 @@ async function sendQrMsg({
   }
 }
 
+async function sendInstagramMsgChatbot({
+  uid,
+  msgObj,
+  toNumber,
+  savObj,
+  chatId,
+  chatbotFromMysq,
+  originData,
+}) {
+  try {
+    const env = require("../../../env");
+    const [api] = await query(`SELECT * FROM instagram_api WHERE uid = ?`, [uid]);
+    if (!api || !api?.access_token || !api?.instagram_business_account_id) {
+      return { success: false, msg: "Instagram credentials not found" };
+    }
+
+    let msgId = "mock-insta-msg-id-" + Math.random().toString(36).substring(2, 15);
+    let success = true;
+
+    if (!env.MOCK_META_DELIVERY && !api.access_token.startsWith("mock_")) {
+      try {
+        const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${api.access_token}`;
+        let instagramMessagePayload = {};
+        if (msgObj.type === "text") {
+          instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || "" };
+        } else if (msgObj.type === "image") {
+          instagramMessagePayload = {
+            attachment: {
+              type: "image",
+              payload: { url: msgObj.image?.link || msgObj.image?.url }
+            }
+          };
+        } else if (msgObj.type === "video") {
+          instagramMessagePayload = {
+            attachment: {
+              type: "video",
+              payload: { url: msgObj.video?.link || msgObj.video?.url }
+            }
+          };
+        } else if (msgObj.type === "document" || msgObj.type === "file") {
+          instagramMessagePayload = {
+            attachment: {
+              type: "file",
+              payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link }
+            }
+          };
+        } else {
+          instagramMessagePayload = { text: JSON.stringify(msgObj) };
+        }
+
+        const payload = {
+          recipient: { id: toNumber },
+          message: instagramMessagePayload
+        };
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (data?.error) {
+          success = false;
+        } else if (data?.message_id) {
+          msgId = data.message_id;
+        } else {
+          success = false;
+        }
+      } catch (e) {
+        success = false;
+      }
+    }
+
+    if (success) {
+      const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+      const userTimezone = getCurrentTimestampInTimeZone(
+        getUser[0]?.timezone || Date.now() / 1000
+      );
+      const finalSaveMsg = {
+        ...savObj,
+        metaChatId: msgId,
+        timestamp: userTimezone,
+        origin: "instagram",
+      };
+
+      const chatPath = `${__dirname}/../../../conversations/inbox/${uid}/${chatId}.json`;
+      addObjectToFile(finalSaveMsg, chatPath);
+
+      await query(
+        `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
+        [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+      );
+    }
+
+    return { success };
+  } catch (err) {
+    console.log(err);
+    return { success: false, msg: err.toString(), err };
+  }
+}
+
 async function sendMetaMsg({
   uid,
   msgObj,
@@ -311,7 +448,18 @@ async function sendMetaMsg({
     console.log({
       jsonData: JSON.stringify({ chatbotFromMysq, originData }),
     });
-    if (originData?.success) {
+    if (originData?.data?.code === "INSTAGRAM") {
+      const sendInsta = await sendInstagramMsgChatbot({
+        uid,
+        msgObj,
+        toNumber,
+        savObj,
+        chatId,
+        chatbotFromMysq,
+        originData,
+      });
+      return sendInsta;
+    } else if (originData?.success) {
       console.log("SEND QR MSG");
       const sendBaileysApi = await sendQrMsg({
         uid,

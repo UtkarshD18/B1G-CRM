@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const { sign } = require("jsonwebtoken");
@@ -41,11 +41,10 @@ router.post("/login", async (req, res) => {
         {
           uid: userFind[0].uid,
           role: "admin",
-          password: userFind[0].password,
           email: userFind[0].email,
         },
         env.JWT_SECRET,
-        {}
+        { expiresIn: env.JWT_EXPIRY }
       );
       res.json({
         success: true,
@@ -304,11 +303,13 @@ router.post("/update_pay_gateway", adminValidator, async (req, res) => {
       pay_paystack_id,
       pay_paystack_key,
       paystack_active,
+      pay_mercadopago_id,
+      pay_mercadopago_key,
+      mercadopago_active,
     } = req.body;
 
     await query(
       `UPDATE web_private SET  
-
             pay_offline_id = ?, 
             pay_offline_key = ?, 
             offline_active = ?,
@@ -323,7 +324,10 @@ router.post("/update_pay_gateway", adminValidator, async (req, res) => {
             rz_active = ?,
             pay_paystack_id = ?,
             pay_paystack_key = ?,
-            paystack_active = ?
+            paystack_active = ?,
+            pay_mercadopago_id = ?,
+            pay_mercadopago_key = ?,
+            mercadopago_active = ?
             `,
       [
         pay_offline_id,
@@ -341,6 +345,9 @@ router.post("/update_pay_gateway", adminValidator, async (req, res) => {
         pay_paystack_id,
         pay_paystack_key,
         paystack_active,
+        pay_mercadopago_id,
+        pay_mercadopago_key,
+        mercadopago_active,
       ]
     );
 
@@ -547,11 +554,10 @@ router.post("/auto_login", adminValidator, async (req, res) => {
       {
         uid: user[0].uid,
         role: "user",
-        password: user[0].password,
         email: user[0].email,
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: env.JWT_EXPIRY }
     );
     console.log(token);
     res.json({
@@ -908,14 +914,14 @@ router.post("/send_resovery", async (req, res) => {
 
     const jsontoken = sign(
       {
+        uid: checkEmailValid[0].uid,
         old_email: email,
         email: email,
         time: moment(new Date()),
-        password: checkEmailValid[0]?.password,
         role: "admin",
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: "1h" }
     );
 
     const recpveryUrl = `${env.FRONTEND_URL}/recovery-admin/${jsontoken}`;
@@ -966,7 +972,7 @@ router.get("/modify_password", adminValidator, async (req, res) => {
       return res.json({ success: false, msg: "Please provide a password" });
     }
 
-    if (moment(req.decode.time).diff(moment(new Date()), "hours") > 1) {
+    if (moment(new Date()).diff(moment(req.decode.time), "hours") > 1) {
       return res.json({ success: false, msg: "Token expired" });
     }
 
@@ -988,17 +994,7 @@ router.get("/modify_password", adminValidator, async (req, res) => {
   }
 });
 
-// del user
-router.post("/del_user", adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-    await query(`DELETE FROM user WHERE id = ?`, [id]);
-    res.json({ success: true, msg: "User was deletd" });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
-  }
-});
+// Duplicate del_user route removed to avoid conflicts.
 
 // get all genn wa links
 router.get("/get_wa_gen", adminValidator, async (req, res) => {
@@ -1086,11 +1082,134 @@ router.post("/del_user", adminValidator, async (req, res) => {
       return res.json({ success: false, msg: "User ID is required" });
     }
 
-    await query(`DELETE FROM user WHERE id = ?`, [id]);
+    const user = await query(`SELECT uid FROM "user" WHERE id = ?`, [id]);
+    if (user.length > 0) {
+      const userUid = user[0].uid;
+      // Cascade delete all associated tenant resources inside a transaction to maintain database integrity
+      await withTransaction(async (tx) => {
+        await tx(`DELETE FROM agents WHERE owner_uid = ?`, [userUid]);
+        await tx(`DELETE FROM phonebook WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM contact WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM broadcast WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM broadcast_log WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM orders WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM meta_api WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM meta_templet_media WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM chats WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM rooms WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM agent_chats WHERE owner_uid = ?`, [userUid]);
+        await tx(`DELETE FROM chat_tags WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM chatbot WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM flow WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM flow_data WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM templets WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM instance WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM agent_task WHERE owner_uid = ?`, [userUid]);
+        await tx(`DELETE FROM chat_widget WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM chatbot_log WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM webhook_rules WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM webhook_logs WHERE uid = ?`, [userUid]);
+        await tx(`DELETE FROM "user" WHERE id = ?`, [id]);
+      });
+    } else {
+      await query(`DELETE FROM "user" WHERE id = ?`, [id]);
+    }
+
     res.json({ success: true, msg: "User was deleted" });
   } catch (err) {
     console.log(err);
     res.json({ success: false, msg: "something went wrong" });
+  }
+});
+
+// update deployment settings
+router.post("/update_deployment_settings", adminValidator, async (req, res) => {
+  try {
+    const {
+      meta_app_id,
+      meta_app_secret,
+      meta_waba_id,
+      meta_business_account_id,
+      meta_access_token,
+      meta_phone_number_id,
+      insta_app_id,
+      insta_app_secret,
+      insta_business_account_id,
+      insta_access_token,
+      ai_provider_active,
+      ai_openai_key,
+      ai_openai_model,
+      ai_gemini_key,
+      ai_gemini_model,
+      ai_claude_key,
+      ai_claude_model,
+      ai_openrouter_key,
+      ai_openrouter_model,
+      ai_ollama_url,
+      ai_ollama_model,
+      ai_custom_url,
+      ai_custom_model,
+      widget_domains
+    } = req.body;
+
+    await query(
+      `UPDATE web_private SET 
+        meta_app_id = ?,
+        meta_app_secret = ?,
+        meta_waba_id = ?,
+        meta_business_account_id = ?,
+        meta_access_token = ?,
+        meta_phone_number_id = ?,
+        insta_app_id = ?,
+        insta_app_secret = ?,
+        insta_business_account_id = ?,
+        insta_access_token = ?,
+        ai_provider_active = ?,
+        ai_openai_key = ?,
+        ai_openai_model = ?,
+        ai_gemini_key = ?,
+        ai_gemini_model = ?,
+        ai_claude_key = ?,
+        ai_claude_model = ?,
+        ai_openrouter_key = ?,
+        ai_openrouter_model = ?,
+        ai_ollama_url = ?,
+        ai_ollama_model = ?,
+        ai_custom_url = ?,
+        ai_custom_model = ?,
+        widget_domains = ?`,
+      [
+        meta_app_id || "",
+        meta_app_secret || "",
+        meta_waba_id || "",
+        meta_business_account_id || "",
+        meta_access_token || "",
+        meta_phone_number_id || "",
+        insta_app_id || "",
+        insta_app_secret || "",
+        insta_business_account_id || "",
+        insta_access_token || "",
+        ai_provider_active || "",
+        ai_openai_key || "",
+        ai_openai_model || "",
+        ai_gemini_key || "",
+        ai_gemini_model || "",
+        ai_claude_key || "",
+        ai_claude_model || "",
+        ai_openrouter_key || "",
+        ai_openrouter_model || "",
+        ai_ollama_url || "",
+        ai_ollama_model || "",
+        ai_custom_url || "",
+        ai_custom_model || "",
+        widget_domains || ""
+      ]
+    );
+
+    res.json({ success: true, msg: "Deployment settings updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "something went wrong", error: err.message });
   }
 });
 

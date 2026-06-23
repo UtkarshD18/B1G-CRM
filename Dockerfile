@@ -6,12 +6,12 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --legacy-peer-deps
 
 FROM node:20-bookworm-slim AS client-build
 WORKDIR /app
 COPY client/package*.json ./client/
-RUN cd client && npm ci
+RUN cd client && npm ci --legacy-peer-deps
 COPY client ./client
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=${VITE_API_URL}

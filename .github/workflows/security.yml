@@ -1,0 +1,82 @@
+name: Security CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  security-scan:
+    name: Security Scans & Regression Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: b1gcrm
+          POSTGRES_USER: b1gcrm
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Root Dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Client Dependencies
+        run: cd client && npm ci --legacy-peer-deps
+
+      - name: Start Backend Server
+        run: |
+          node server.js &
+          echo "SERVER_PID=$!" >> $GITHUB_ENV
+          sleep 5
+        env:
+          DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
+          JWT_SECRET: change-me-local-jwt-key
+          PORT: 3010
+
+      - name: Run Backend Auth Verification
+        run: node scratch/verify-backend-auth.js
+        env:
+          DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
+          JWT_SECRET: change-me-local-jwt-key
+
+      - name: Run Agent Permission Reality Verification
+        run: node scratch/verify-permissions-reality.js
+        env:
+          DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
+          JWT_SECRET: change-me-local-jwt-key
+
+      - name: Run Security Regression Tests
+        run: node scratch/verify-regression-safety.js
+        env:
+          DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
+          JWT_SECRET: change-me-local-jwt-key
+
+      - name: Stop Backend Server
+        if: always()
+        run: |
+          if [ -n "$SERVER_PID" ]; then
+            kill $SERVER_PID
+          fi

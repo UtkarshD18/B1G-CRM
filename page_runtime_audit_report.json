@@ -1,0 +1,249 @@
+[
+  {
+    "route": "/admin/dashboard",
+    "role": "Admin",
+    "apiCalls": [
+      "GET /api/admin/get_plans",
+      "GET /api/admin/get_dashboard_for_user",
+      "GET /api/admin/get_users"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
+  },
+  {
+    "route": "/admin/manage-plans",
+    "role": "Admin",
+    "apiCalls": [
+      "GET /api/admin/get_plans"
+    ],
+    "status": "Partial",
+    "errors": [],
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
+  },
+  {
+    "route": "/admin/manage-users",
+    "role": "Admin",
+    "apiCalls": [
+      "GET /api/admin/get_plans",
+      "GET /api/admin/get_users"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
+  },
+  {
+    "route": "/admin/orders",
+    "role": "Admin",
+    "apiCalls": [
+      "GET /api/admin/get_orders"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
+  },
+  {
+    "route": "/admin/settings",
+    "role": "Admin",
+    "apiCalls": [
+      "GET /api/admin/get_web_public",
+      "GET /api/admin/get_payment_gateway_admin",
+      "GET /api/admin/get_social_login",
+      "POST /api/admin/get_page_slug",
+      "GET /api/admin/get_testi",
+      "GET /api/admin/get_faq",
+      "GET /api/admin/get_contact_leads",
+      "GET /api/admin/get_smtp"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM 🔍 📊 Dashboard USERS & PLANS 💎 Manage Plans 👥 Manage Users 🛒 Orders FRONT-END CONTENT 🤝 Front Partners ❓ FAQ 📄 Manage Pages 💬 Testim"
+  },
+  {
+    "route": "/user/dashboard",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/user/get_dashboard"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/inbox",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/templet/get_templets"
+    ],
+    "status": "Partial",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/kanban",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/inbox/get_chats"
+    ],
+    "status": "Placeholder",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/contacts",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/phonebook/get_by_uid",
+      "GET /api/phonebook/get_uid_contacts"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/campaigns",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/broadcast/get_broadcast",
+      "GET /api/broadcast/dashboard_summary",
+      "GET /api/user/get_my_meta_templets",
+      "GET /api/phonebook/get_by_uid"
+    ],
+    "status": "Partial",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/automation-flows",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/chat_flow/get_mine"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/wa-chatbot",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/chatbot/get_chatbot",
+      "GET /api/chatbot/get_logs?limit=25",
+      "GET /api/chat_flow/get_mine",
+      "GET /api/inbox/get_chats"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/meta-templates",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/admin/get_plans"
+    ],
+    "status": "Partial",
+    "errors": [],
+    "textSnippet": "B1GCRM Features Pricing Portals Sign in MULTI-PORTAL SAAS CRM Public site, tenant workspace, staff portal, and admin controls in one product.  The liv"
+  },
+  {
+    "route": "/user/integrations",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/user/get_meta_keys",
+      "GET /api/qr/get_all",
+      "GET /api/user/get_me",
+      "GET /api/instagram/get_keys"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/agent-login",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/agent/get_my_agents"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/agent-task",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/agent/get_my_agents",
+      "GET /api/user/get_my_agent_tasks"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/chat-widget",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/user/get_my_widget"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/billing",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/user/get_payment_details",
+      "GET /api/user/get_me",
+      "GET /api/admin/get_plans"
+    ],
+    "status": "Partial",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/api-dashboard",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/webhooks/rules",
+      "GET /api/user/get_me"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/user/settings",
+    "role": "User",
+    "apiCalls": [
+      "GET /api/admin/get_plans",
+      "GET /api/user/get_me"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Dashboard Inbox Kanban Contacts Campaigns Automation Flows ChatBot Meta Templates Integrations Meta WhatsApp Agent Login Agent Task Click-t"
+  },
+  {
+    "route": "/agent/dashboard",
+    "role": "Agent",
+    "apiCalls": [
+      "GET /api/agent/get_me",
+      "GET /api/agent/get_my_assigned_chats",
+      "GET /api/agent/get_my_task"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Workspace Assigned Chats Sign out whatsCRM 5.9.5 🏠 › dashboard 🌐 English AGENT WORKSPACE Restricted staff portal  Ready for direct auto-l"
+  },
+  {
+    "route": "/agent/chats",
+    "role": "Agent",
+    "apiCalls": [
+      "GET /api/agent/get_templets"
+    ],
+    "status": "Working",
+    "errors": [],
+    "textSnippet": "W whatsCRM Workspace Assigned Chats Sign out whatsCRM 5.9.5 🏠 › chats 🌐 English WORKSPACE Agent assigned inbox  Restricted chat console listing only"
+  }
+]

@@ -94,5 +94,32 @@ async function query(sql, values = []) {
   }
 }
 
+async function withTransaction(callback) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    
+    // Create a transaction-specific query function
+    const txQuery = async (sql, values = []) => {
+      if (!sql) {
+        throw new Error("SQL query is required");
+      }
+      const { sql: preparedSql, params } = prepareQuery(sql, values);
+      const result = await client.query(preparedSql, params);
+      return result.rows;
+    };
+    
+    const result = await callback(txQuery);
+    await client.query("COMMIT");
+    return result;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 exports.query = query;
 exports.prepareQuery = prepareQuery;
+exports.withTransaction = withTransaction;

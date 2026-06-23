@@ -44,7 +44,25 @@ function initializeSocket(server) {
       agent: agent === "true", // Convert agent to Boolean.
       decodedValue: decodedValue, // The decoded token payload.
       owner_uid: decodedValue?.owner_uid,
+      permissions: [], // Permissions will be fetched asynchronously
     };
+
+    if (socket.connectionInfo.agent && socket.connectionInfo.uid) {
+      const { query } = require("./database/dbpromise");
+      query("SELECT permissions FROM agents WHERE uid = ?", [socket.connectionInfo.uid])
+        .then((rows) => {
+          if (rows.length > 0) {
+            try {
+              socket.connectionInfo.permissions = JSON.parse(rows[0].permissions || "[]");
+            } catch (err) {
+              console.error("Error parsing agent permissions in socket:", err);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Error loading agent permissions for socket:", err);
+        });
+    }
 
     console.log("New connection established:");
     console.dir({ socket: socket.connectionInfo.id });
@@ -237,6 +255,7 @@ module.exports = {
   sendToAll,
   getConnectionsByUid,
   getSocketIo,
+  getIOInstance: getSocketIo,
   sendRingToUid,
   updateConnectionDataBySocketId,
 };

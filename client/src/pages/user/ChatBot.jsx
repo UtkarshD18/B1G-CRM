@@ -335,50 +335,62 @@ function UserChatBotPage() {
             Refresh
           </button>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Flow</th>
-              <th>Origin</th>
-              <th>Scope</th>
-              <th>Status</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {bots.map((bot) => {
-              const origin = getBotOrigin(bot)
-              const flow = getBotFlow(bot)
-              return (
-                <tr key={bot.id}>
-                  <td>{bot.title}</td>
-                  <td>{flow.title || bot.flow_id || 'N/A'}</td>
-                  <td>{origin.code || 'META'}</td>
-                  <td>{getBotScopeLabel(bot)}</td>
-                  <td>{Number(bot.active) > 0 ? 'Active' : 'Inactive'}</td>
-                  <td>
-                    <div className="action-row">
-                      <button className="mini-button" type="button" onClick={() => editBot(bot)}>
-                        Edit
-                      </button>
-                      <button
-                        className="mini-button"
-                        type="button"
-                        onClick={() => changeStatus(bot.id, Number(bot.active) < 1)}
-                      >
-                        {Number(bot.active) > 0 ? 'Deactivate' : 'Activate'}
-                      </button>
-                      <button className="mini-button subtle-danger" type="button" onClick={() => deleteBot(bot.id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        {!bots.length ? (
+          <div className="empty-onboarding-card">
+            <h3>No chatbots available</h3>
+            <p>To automate replies using a chatbot, follow these steps:</p>
+            <ol>
+              <li>Open <strong>Inbox</strong>, and receive or create a conversation.</li>
+              <li>Navigate to <strong>Automation Flows</strong>, and build your visual workflow logic.</li>
+              <li>Return here, describe the bot parameters, select your flow, and click Create chatbot.</li>
+            </ol>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Flow</th>
+                <th>Origin</th>
+                <th>Scope</th>
+                <th>Status</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {bots.map((bot) => {
+                const origin = getBotOrigin(bot)
+                const flow = getBotFlow(bot)
+                return (
+                  <tr key={bot.id}>
+                    <td>{bot.title}</td>
+                    <td>{flow.title || bot.flow_id || 'N/A'}</td>
+                    <td>{origin.code || 'META'}</td>
+                    <td>{getBotScopeLabel(bot)}</td>
+                    <td>{Number(bot.active) > 0 ? 'Active' : 'Inactive'}</td>
+                    <td>
+                      <div className="action-row">
+                        <button className="mini-button" type="button" onClick={() => editBot(bot)}>
+                          Edit
+                        </button>
+                        <button
+                          className="mini-button"
+                          type="button"
+                          onClick={() => changeStatus(bot.id, Number(bot.active) < 1)}
+                        >
+                          {Number(bot.active) > 0 ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button className="mini-button subtle-danger" type="button" onClick={() => deleteBot(bot.id)}>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="panel table-panel">
