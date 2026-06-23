@@ -1,9 +1,0 @@
-{
-  "contactOrphans": [],
-  "agentChatOrphans": [],
-  "agentTaskOrphans": [],
-  "campaignLogOrphans": [],
-  "webhookLogOrphans": [],
-  "chatbotLogOrphans": [],
-  "tenantOrphans": {}
-}
