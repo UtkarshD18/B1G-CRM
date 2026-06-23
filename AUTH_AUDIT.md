@@ -13,7 +13,7 @@ This audit summarizes the verification checks conducted on B1GCRM's authenticati
   {
     "email": "test-signup@example.com",
     "name": "Test User",
-    "password": "TestPassword@123",
+    "password": "<PASSWORD>",
     "mobile_with_country_code": "+1234567890",
     "acceptPolicy": true
   }

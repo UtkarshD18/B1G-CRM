@@ -64,7 +64,7 @@ function UserSignupPage() {
               type="email"
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
-              placeholder="owner@company.com"
+              placeholder="owner@example.com"
             />
           </label>
           <label>

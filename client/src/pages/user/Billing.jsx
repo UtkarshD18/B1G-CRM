@@ -8,6 +8,7 @@ const gatewayLabels = [
   ['paypal', 'PayPal', 'paypal_active', 'pay_paypal_id'],
   ['razorpay', 'Razorpay', 'rz_active', 'rz_id'],
   ['paystack', 'Paystack', 'paystack_active', 'pay_paystack_id'],
+  ['mercadopago', 'MercadoPago', 'mercadopago_active', 'pay_mercadopago_id'],
   ['offline', 'Offline payment', 'offline_active', null],
 ]
 

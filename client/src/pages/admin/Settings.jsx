@@ -3,7 +3,7 @@ import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 import { formatDateTime } from '../../shared/format'
 
-const tabs = ['Web', 'Payments', 'SMTP', 'CMS', 'Leads', 'Social']
+const tabs = ['Web', 'Payments', 'SMTP', 'CMS', 'Leads', 'Social', 'Deployment']
 
 const paymentDefaults = {
   pay_offline_id: '',
@@ -21,6 +21,9 @@ const paymentDefaults = {
   pay_paystack_id: '',
   pay_paystack_key: '',
   paystack_active: 0,
+  pay_mercadopago_id: '',
+  pay_mercadopago_key: '',
+  mercadopago_active: 0,
 }
 
 const webDefaults = {
@@ -46,6 +49,33 @@ const socialDefaults = {
   fb_login_active: 0,
 }
 
+const deploymentDefaults = {
+  meta_app_id: '',
+  meta_app_secret: '',
+  meta_waba_id: '',
+  meta_business_account_id: '',
+  meta_access_token: '',
+  meta_phone_number_id: '',
+  insta_app_id: '',
+  insta_app_secret: '',
+  insta_business_account_id: '',
+  insta_access_token: '',
+  ai_provider_active: 'openai',
+  ai_openai_key: '',
+  ai_openai_model: 'gpt-4o-mini',
+  ai_gemini_key: '',
+  ai_gemini_model: 'gemini-1.5-flash',
+  ai_claude_key: '',
+  ai_claude_model: 'claude-3-5-sonnet-20240620',
+  ai_openrouter_key: '',
+  ai_openrouter_model: '',
+  ai_ollama_url: 'http://localhost:11434/v1/chat/completions',
+  ai_ollama_model: '',
+  ai_custom_url: '',
+  ai_custom_model: '',
+  widget_domains: '',
+}
+
 function AdminSettingsPage() {
   const { tokens } = useAuth()
   const [activeTab, setActiveTab] = useState('Web')
@@ -54,6 +84,7 @@ function AdminSettingsPage() {
   const [payments, setPayments] = useState(paymentDefaults)
   const [smtp, setSmtp] = useState({ email: '', host: '', port: 587, password: '' })
   const [social, setSocial] = useState(socialDefaults)
+  const [deployment, setDeployment] = useState(deploymentDefaults)
   const [faqs, setFaqs] = useState([])
   const [faqForm, setFaqForm] = useState({ question: '', answer: '' })
   const [testimonials, setTestimonials] = useState([])
@@ -102,6 +133,7 @@ function AdminSettingsPage() {
 
       setWeb({ ...webDefaults, ...(webResult?.data || {}) })
       setPayments({ ...paymentDefaults, ...(paymentResult?.data || {}) })
+      setDeployment({ ...deploymentDefaults, ...(paymentResult?.data || {}) })
       setSmtp({ email: '', host: '', port: 587, password: '', ...(smtpResult?.data || {}) })
       setSocial({ ...socialDefaults, ...(socialResult?.data || {}) })
       setFaqs(Array.isArray(faqResult?.data) ? faqResult.data : [])
@@ -276,7 +308,7 @@ function AdminSettingsPage() {
               ))}
           </div>
           <div className="action-row">
-            {['offline_active', 'stripe_active', 'paypal_active', 'rz_active', 'paystack_active'].map((key) => (
+            {['offline_active', 'stripe_active', 'paypal_active', 'rz_active', 'paystack_active', 'mercadopago_active'].map((key) => (
               <label className="checkbox-row" key={key}>
                 <input
                   checked={Number(payments[key]) > 0}
@@ -540,6 +572,120 @@ function AdminSettingsPage() {
           </div>
           <button className="primary-button" type="submit">
             Save social login
+          </button>
+        </form>
+      ) : null}
+      {activeTab === 'Deployment' ? (
+        <form
+          className="panel form-panel"
+          onSubmit={(event) => {
+            event.preventDefault()
+            saveJson('/api/admin/update_deployment_settings', deployment, 'Saving deployment settings...')
+          }}
+        >
+          <div className="panel-header">
+            <h2>Third-Party Integration settings</h2>
+            <p>Configure global fallbacks for Meta, Instagram, AI Providers, and Website Widgets.</p>
+          </div>
+          
+          <h3 style={{ marginTop: '16px', color: '#1ea085' }}>Meta WhatsApp API (Global Fallback)</h3>
+          <div className="form-grid">
+            {[
+              ['meta_waba_id', 'WhatsApp Business Account ID (WABA ID)'],
+              ['meta_business_account_id', 'Meta Business Account ID'],
+              ['meta_phone_number_id', 'Business Phone Number ID'],
+              ['meta_app_id', 'Meta App ID'],
+              ['meta_app_secret', 'Meta App Secret'],
+              ['meta_access_token', 'Meta Access Token'],
+            ].map(([key, label]) => (
+              <label key={key}>
+                {label}
+                <input
+                  type={key.includes('secret') || key.includes('token') ? 'password' : 'text'}
+                  value={deployment[key] || ''}
+                  onChange={(event) => setDeployment({ ...deployment, [key]: event.target.value })}
+                />
+              </label>
+            ))}
+          </div>
+
+          <h3 style={{ marginTop: '24px', color: '#1ea085' }}>Instagram Messaging API (Global Fallback)</h3>
+          <div className="form-grid">
+            {[
+              ['insta_business_account_id', 'Instagram Business Account ID'],
+              ['insta_app_id', 'Instagram App ID'],
+              ['insta_app_secret', 'Instagram App Secret'],
+              ['insta_access_token', 'Instagram Access Token'],
+            ].map(([key, label]) => (
+              <label key={key}>
+                {label}
+                <input
+                  type={key.includes('secret') || key.includes('token') ? 'password' : 'text'}
+                  value={deployment[key] || ''}
+                  onChange={(event) => setDeployment({ ...deployment, [key]: event.target.value })}
+                />
+              </label>
+            ))}
+          </div>
+
+          <h3 style={{ marginTop: '24px', color: '#1ea085' }}>Global Fallback AI Autopilot Provider</h3>
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
+            <label>
+              Active AI Provider
+              <select
+                value={deployment.ai_provider_active}
+                onChange={(event) => setDeployment({ ...deployment, ai_provider_active: event.target.value })}
+              >
+                <option value="openai">OpenAI</option>
+                <option value="gemini">Gemini</option>
+                <option value="claude">Claude</option>
+                <option value="openrouter">OpenRouter</option>
+                <option value="ollama">Ollama (Local)</option>
+                <option value="custom">Custom Endpoint</option>
+              </select>
+            </label>
+          </div>
+          
+          <div className="form-grid" style={{ marginTop: '12px' }}>
+            {[
+              ['ai_openai_key', 'OpenAI API Key'],
+              ['ai_openai_model', 'OpenAI Model (e.g. gpt-4o-mini)'],
+              ['ai_gemini_key', 'Gemini API Key'],
+              ['ai_gemini_model', 'Gemini Model (e.g. gemini-1.5-flash)'],
+              ['ai_claude_key', 'Claude API Key'],
+              ['ai_claude_model', 'Claude Model (e.g. claude-3-5-sonnet-20240620)'],
+              ['ai_openrouter_key', 'OpenRouter API Key'],
+              ['ai_openrouter_model', 'OpenRouter Model'],
+              ['ai_ollama_url', 'Ollama Endpoint URL'],
+              ['ai_ollama_model', 'Ollama Model'],
+              ['ai_custom_url', 'Custom API Endpoint URL'],
+              ['ai_custom_model', 'Custom Model Name'],
+            ].map(([key, label]) => (
+              <label key={key}>
+                {label}
+                <input
+                  type={key.includes('key') ? 'password' : 'text'}
+                  value={deployment[key] || ''}
+                  onChange={(event) => setDeployment({ ...deployment, [key]: event.target.value })}
+                />
+              </label>
+            ))}
+          </div>
+
+          <h3 style={{ marginTop: '24px', color: '#1ea085' }}>Global Website Widgets & Domains</h3>
+          <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
+            <label>
+              Allowed Widget Domains (comma-separated list, e.g. "example.com, mycrm.com")
+              <input
+                value={deployment.widget_domains || ''}
+                onChange={(event) => setDeployment({ ...deployment, widget_domains: event.target.value })}
+                placeholder="example.com, mycrm.com"
+              />
+            </label>
+          </div>
+
+          <button className="primary-button" type="submit" style={{ marginTop: '24px' }}>
+            Save Deployment Configuration
           </button>
         </form>
       ) : null}

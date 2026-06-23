@@ -1,0 +1,255 @@
+{
+  "timestamp": "2026-06-23T08:19:19.104Z",
+  "total": 41,
+  "passed": 41,
+  "failed": 0,
+  "score": 100,
+  "results": [
+    {
+      "module": "AUTH",
+      "test": "User login",
+      "pass": true,
+      "detail": "Token obtained"
+    },
+    {
+      "module": "AUTH",
+      "test": "Admin login",
+      "pass": true,
+      "detail": "Token obtained"
+    },
+    {
+      "module": "FLOW→CHATBOT",
+      "test": "Get flows",
+      "pass": true,
+      "detail": "Found 15 flows"
+    },
+    {
+      "module": "FLOW→CHATBOT",
+      "test": "Create chatbot with flow",
+      "pass": true,
+      "detail": "Chatbot was added"
+    },
+    {
+      "module": "FLOW→CHATBOT",
+      "test": "Chatbot has flow_id",
+      "pass": true,
+      "detail": "flow_id: t1-flow-id-1781808183128"
+    },
+    {
+      "module": "FLOW→CHATBOT",
+      "test": "Chatbot active",
+      "pass": true,
+      "detail": "active: 1"
+    },
+    {
+      "module": "FLOW→CHATBOT",
+      "test": "Flow JSON loadable",
+      "pass": true,
+      "detail": "nodes: 0, edges: 0"
+    },
+    {
+      "module": "CHATBOT→DIAG",
+      "test": "Get chatbots",
+      "pass": true,
+      "detail": "Found 4 chatbots"
+    },
+    {
+      "module": "CHATBOT→DIAG",
+      "test": "Get diagnostic logs",
+      "pass": true,
+      "detail": "Found 25 logs"
+    },
+    {
+      "module": "CHATBOT→DIAG",
+      "test": "Logs reference valid chatbots",
+      "pass": true,
+      "detail": "All valid"
+    },
+    {
+      "module": "CONTACT→CAMPAIGN",
+      "test": "Get phonebooks",
+      "pass": true,
+      "detail": "Found 23 phonebooks"
+    },
+    {
+      "module": "CONTACT→CAMPAIGN",
+      "test": "Get contacts",
+      "pass": true,
+      "detail": "Found 30 contacts"
+    },
+    {
+      "module": "CONTACT→CAMPAIGN",
+      "test": "Get campaigns",
+      "pass": true,
+      "detail": "Found 0 campaigns"
+    },
+    {
+      "module": "CONTACT→INBOX",
+      "test": "Get chat list",
+      "pass": true,
+      "detail": "Found 17 chats"
+    },
+    {
+      "module": "CONTACT→INBOX",
+      "test": "Chats have sender identity",
+      "pass": true,
+      "detail": "16/17 chats have sender names"
+    },
+    {
+      "module": "AI→CHATBOT",
+      "test": "Get AI providers",
+      "pass": true,
+      "detail": "Found 6 providers"
+    },
+    {
+      "module": "AI→CHATBOT",
+      "test": "AI module loadable",
+      "pass": true,
+      "detail": "singleReplyAi is a function"
+    },
+    {
+      "module": "KB→AI",
+      "test": "Get knowledge base",
+      "pass": true,
+      "detail": "Found 4 items"
+    },
+    {
+      "module": "KB→AI",
+      "test": "AI module queries KB table",
+      "pass": true,
+      "detail": "knowledge_base query found in singleReplyAi"
+    },
+    {
+      "module": "CRM→CONTACTS",
+      "test": "Get CRM leads",
+      "pass": true,
+      "detail": "Found 14 leads"
+    },
+    {
+      "module": "CRM→CONTACTS",
+      "test": "Create lead",
+      "pass": true,
+      "detail": "Lead created successfully."
+    },
+    {
+      "module": "CRM→CONTACTS",
+      "test": "Lead in list after creation",
+      "pass": true,
+      "detail": "ID: 30"
+    },
+    {
+      "module": "CRM→CONTACTS",
+      "test": "Delete test lead",
+      "pass": true,
+      "detail": "Lead deleted successfully."
+    },
+    {
+      "module": "CRM→CONTACTS",
+      "test": "Lead absent after deletion",
+      "pass": true,
+      "detail": "Cleanup verified"
+    },
+    {
+      "module": "AGENT→INBOX",
+      "test": "Get agents",
+      "pass": true,
+      "detail": "Found 11 agents"
+    },
+    {
+      "module": "AGENT→INBOX",
+      "test": "Agent login",
+      "pass": true,
+      "detail": "Token obtained"
+    },
+    {
+      "module": "AGENT→INBOX",
+      "test": "Agent can get chats",
+      "pass": true,
+      "detail": "Agent sees 0 chats"
+    },
+    {
+      "module": "WEBSITE→WIDGET",
+      "test": "Get websites",
+      "pass": true,
+      "detail": "Found 2 websites"
+    },
+    {
+      "module": "SUPERVISOR→AGENT",
+      "test": "Get KPIs",
+      "pass": true,
+      "detail": "{\"averageResponseTimeOverall\":583,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":1,\"openChatsCount\":17,\"escalatedChatsCount\":1}"
+    },
+    {
+      "module": "SUPERVISOR→AGENT",
+      "test": "Get escalations",
+      "pass": true,
+      "detail": "Found 1 escalations"
+    },
+    {
+      "module": "SUPERVISOR→AGENT",
+      "test": "Agent metrics via KPIs",
+      "pass": true,
+      "detail": "Per-agent metrics available (0 entries)"
+    },
+    {
+      "module": "WEBHOOK→INBOX",
+      "test": "Get webhook rules",
+      "pass": true,
+      "detail": "Found 6 rules"
+    },
+    {
+      "module": "WEBHOOK→INBOX",
+      "test": "Webhook engine loadable",
+      "pass": true,
+      "detail": "processWebhookRules is a function"
+    },
+    {
+      "module": "CHATBOT→INBOX",
+      "test": "metaChatbotInit loadable",
+      "pass": true,
+      "detail": "function loaded"
+    },
+    {
+      "module": "CHATBOT→INBOX",
+      "test": "recordChatbotLog loadable",
+      "pass": true,
+      "detail": "function loaded"
+    },
+    {
+      "module": "CHATBOT→INBOX",
+      "test": "destributeTaskFlow loadable",
+      "pass": true,
+      "detail": "function loaded"
+    },
+    {
+      "module": "FLOW_DELETE→CHATBOT",
+      "test": "Flow delete cascades to chatbot",
+      "pass": true,
+      "detail": "Chatbot deactivated on flow delete"
+    },
+    {
+      "module": "SLA→SUPERVISOR",
+      "test": "SLA checker exists",
+      "pass": true,
+      "detail": "interval running"
+    },
+    {
+      "module": "SLA→SUPERVISOR",
+      "test": "Escalation queue insert",
+      "pass": true,
+      "detail": "auto-escalation"
+    },
+    {
+      "module": "SLA→SUPERVISOR",
+      "test": "SLA timer on incoming msg",
+      "pass": true,
+      "detail": "timer updated"
+    },
+    {
+      "module": "DASHBOARD→CAMPAIGN",
+      "test": "Campaign dashboard summary",
+      "pass": true,
+      "detail": "Campaigns: 0, Delivery: 0"
+    }
+  ]
+}

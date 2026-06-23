@@ -55,10 +55,24 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
+  const location = useLocation()
   if (!ctx) {
     throw new Error('Auth context unavailable')
   }
-  return ctx
+  
+  const proxyTokens = new Proxy(ctx.tokens, {
+    get(target, prop) {
+      if (prop === 'user' && location.pathname.startsWith('/agent')) {
+        return target.agent
+      }
+      return target[prop]
+    }
+  })
+
+  return {
+    ...ctx,
+    tokens: proxyTokens
+  }
 }
 
 export function RoleGate({ role, children }) {
@@ -70,4 +84,10 @@ export function RoleGate({ role, children }) {
   }
 
   return children
+}
+
+export function useActiveToken() {
+  const { tokens } = useAuth()
+  const location = useLocation()
+  return location.pathname.startsWith('/agent') ? tokens.agent : tokens.user
 }

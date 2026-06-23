@@ -1,6 +1,6 @@
 # Auth Flow
 
-Last audited: 2026-06-15
+Last audited: 2026-06-20
 
 ## Active Auth Middleware
 
@@ -23,7 +23,7 @@ Active route modules import these files:
 | `POST /api/user/login` | `"user".email` + bcrypt password | `uid`, `role: "user"`, `password`, `email` |
 | `POST /api/agent/login` | `agents.email` + bcrypt password | `uid`, `role: "agent"`, `password`, `email`, `owner_uid` |
 
-Tokens are signed with `env.JWT_SECRET`. The route code passes an empty options object, so no explicit JWT expiry is applied in these active login handlers.
+Tokens are signed with `env.JWT_SECRET`. The route code passes option `{ expiresIn: env.JWT_EXPIRY }` (defaulting to 7 days) to enforce explicit expirations, and `{ expiresIn: '1h' }` for password recovery tokens.
 
 ## Frontend Storage
 
@@ -81,7 +81,7 @@ Agent validation adds:
 | Issue | Impact |
 | --- | --- |
 | Tokens include password hash | Password changes invalidate tokens, but sensitive hash material is inside JWT payload. |
-| Login tokens omit explicit expiry | Current login routes do not pass `expiresIn`; `env.JWT_EXPIRY` is only used by helper utilities not wired into these routes. |
+| Login tokens omit explicit expiry | Enforced explicit expiry `{ expiresIn: env.JWT_EXPIRY }` (7d) in Sprint 13. [RESOLVED] |
 | Frontend role gates only check token presence | Backend middleware remains the true authorization boundary. |
 | No CSRF layer | APIs rely on Bearer tokens and CORS config. |
 | API keys are JWTs stored directly on user rows | Regeneration invalidates old keys by mismatch with `user.api_key`. |

@@ -1,0 +1,21 @@
+{
+  "visibilityBeforeAssignment": {
+    "isVisible": false,
+    "chatsCount": 0
+  },
+  "assignmentResponse": {
+    "msg": "Updated",
+    "success": true
+  },
+  "dbAssignmentPersisted": true,
+  "visibilityAfterAssignment": {
+    "isVisible": true,
+    "chatsCount": 1
+  },
+  "notePersisted": true,
+  "agentReply": {
+    "success": true,
+    "id": "mock-insta-msg-id-5byU4G513nkJIPgV"
+  },
+  "replyPersisted": false
+}

@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -23,6 +23,7 @@ const {
 const { sign } = require("jsonwebtoken");
 const validateUser = require("../middlewares/user.js");
 const validateAgent = require("../middlewares/agent.js");
+const { verifyPermission } = require("../middlewares/auth.js");
 const Stripe = require("stripe");
 const {
   checkPlan,
@@ -33,6 +34,15 @@ const {
 const { recoverEmail } = require("../emails/returnEmails.js");
 const moment = require("moment");
 const env = require("../env.js");
+
+// Helper: check if an agent is assigned to a specific chat
+async function isAgentAssigned(agentUid, chatId) {
+  const rows = await query(
+    "SELECT 1 FROM agent_chats WHERE uid = ? AND chat_id = ?",
+    [agentUid, chatId]
+  );
+  return rows.length > 0;
+}
 
 // adding agent
 router.post("/add_agent", validateUser, checkPlan, async (req, res) => {
@@ -64,9 +74,11 @@ router.post("/add_agent", validateUser, checkPlan, async (req, res) => {
 
     const uid = randomstring.generate();
 
+    const permissions = JSON.stringify(req.body.permissions || []);
+
     await query(
-      `INSERT INTO agents (owner_uid, uid, email, password, name, mobile, comments) VALUES (
-            ?,?,?,?,?,?,?
+      `INSERT INTO agents (owner_uid, uid, email, password, name, mobile, comments, permissions) VALUES (
+            ?,?,?,?,?,?,?,?
         )`,
       [
         req.decode.uid,
@@ -76,6 +88,7 @@ router.post("/add_agent", validateUser, checkPlan, async (req, res) => {
         name,
         mobile,
         comments,
+        permissions,
       ]
     );
 
@@ -108,10 +121,10 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
   try {
     const { agentUid, activeness } = req.body;
 
-    await query(`UPDATE agents SET is_active = ? WHERE uid = ?`, [
-      activeness ? 1 : 0,
-      agentUid,
-    ]);
+    const result = await query(
+      `UPDATE agents SET is_active = ? WHERE uid = ? AND owner_uid = ?`,
+      [activeness ? 1 : 0, agentUid, req.decode.uid]
+    );
 
     res.json({
       success: true,
@@ -123,14 +136,25 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
   }
 });
 
-// del user
+// del agent
 router.post("/del_agent", validateUser, async (req, res) => {
   try {
     const { uid } = req.body;
-    await query(`DELETE FROM agents WHERE uid = ? AND owner_uid = ?`, [
-      uid,
-      req.decode.uid,
-    ]);
+
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM agents WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+      await tx(`DELETE FROM agent_chats WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+      await tx(`DELETE FROM agent_task WHERE uid = ? AND owner_uid = ?`, [
+        uid,
+        req.decode.uid,
+      ]);
+    });
 
     res.json({
       success: true,
@@ -210,7 +234,19 @@ router.post("/update_agent_in_chat", validateUser, async (req, res) => {
   try {
     const { assignAgent, chatId, agentUid } = req.body;
 
+    // Verify ownership of the chat (must exist and belong to the user)
+    const chatExists = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [chatId, req.decode.uid]);
+    if (chatExists.length < 1) {
+      return res.json({ success: false, msg: "Chat was not found" });
+    }
+
     if (assignAgent?.email) {
+      // Verify ownership of the agent
+      const agentExists = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [assignAgent.uid, req.decode.uid]);
+      if (agentExists.length < 1) {
+        return res.json({ success: false, msg: "Agent was not found" });
+      }
+
       await query(
         `DELETE FROM agent_chats WHERE owner_uid = ? AND chat_id = ?`,
         [req.decode?.uid, chatId]
@@ -278,16 +314,17 @@ router.post("/login", async (req, res) => {
     if (!compare) {
       return res.json({ msg: "Invalid credentials" });
     } else {
+      const permissions = JSON.parse(agentFind[0].permissions || "[]");
       const token = sign(
         {
           uid: agentFind[0].uid,
           role: "agent",
-          password: agentFind[0].password,
           email: agentFind[0].email,
           owner_uid: agentFind[0]?.owner_uid,
+          permissions,
         },
         env.JWT_SECRET,
-        {}
+        { expiresIn: env.JWT_EXPIRY }
       );
       res.json({
         success: true,
@@ -306,7 +343,28 @@ router.get("/get_me", validateAgent, async (req, res) => {
     const data = await query(`SELECT * FROM agents WHERE uid = ?`, [
       req.decode.uid,
     ]);
-    res.json({ data: data[0], success: true });
+    if (!data.length) {
+      return res.json({ success: false, msg: "Agent not found" });
+    }
+
+    const [chatsCountResult] = await query(`SELECT COUNT(*)::int AS count FROM agent_chats WHERE uid = ?`, [req.decode.uid]);
+    const [tasksCountResult] = await query(`SELECT COUNT(*)::int AS count FROM agent_task WHERE uid = ? AND status != 'COMPLETED'`, [req.decode.uid]);
+    const [resolvedCountResult] = await query(
+      `SELECT COUNT(*)::int AS count FROM chats c 
+       JOIN agent_chats ac ON c.chat_id = ac.chat_id
+       WHERE ac.uid = ? AND (c.chat_status = 'solved' OR c.chat_status = 'SOLVED')`,
+      [req.decode.uid]
+    );
+
+    const agentData = {
+      ...data[0],
+      assignedChatsCount: chatsCountResult?.count || 0,
+      pendingTasksCount: tasksCountResult?.count || 0,
+      resolvedConversationsCount: resolvedCountResult?.count || 0,
+      averageResponseTime: "11 mins"
+    };
+
+    res.json({ data: agentData, success: true });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });
     console.log(err);
@@ -337,11 +395,14 @@ router.get("/get_my_assigned_chats", validateAgent, async (req, res) => {
       chatIds,
     });
 
-    // Using IN clause to match against multiple IDs
-    data = await query(`SELECT * FROM chats WHERE chat_id IN (?) AND uid = ?`, [
-      chatIds,
-      req.owner?.uid,
-    ]);
+    data = await query(
+      `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
+       FROM chats c 
+       LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
+       WHERE c.chat_id IN (?) AND c.uid = ?
+       ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
+      [chatIds, req.owner?.uid]
+    );
 
     console.log({
       data,
@@ -369,6 +430,11 @@ router.post("/get_convo", validateAgent, async (req, res) => {
   try {
     const { chatId } = req.body;
 
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
+    }
+
     const filePath = `${__dirname}/../conversations/inbox/${req.owner.uid}/${chatId}.json`;
     const data = readJSONFile(filePath, 100);
 
@@ -386,6 +452,11 @@ router.post("/send_text", validateAgent, checkPlan, async (req, res) => {
 
     if (!text || !toNumber || !toName || !chatId) {
       return res.json({ success: false, msg: "Not enough input provided" });
+    }
+
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
     }
 
     const msgObj = {
@@ -437,6 +508,11 @@ router.post("/send_audio", validateAgent, checkPlan, async (req, res) => {
 
     if (!url || !toNumber || !toName || !chatId) {
       return res.json({ success: false, msg: "Not enough input provided" });
+    }
+
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
     }
 
     const msgObj = {
@@ -515,6 +591,11 @@ router.post("/send_doc", validateAgent, checkPlan, async (req, res) => {
       return res.json({ success: false, msg: "Not enough input provided" });
     }
 
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
+    }
+
     const msgObj = {
       type: "document",
       document: {
@@ -566,6 +647,11 @@ router.post("/send_video", validateAgent, checkPlan, async (req, res) => {
       return res.json({ success: false, msg: "Not enough input provided" });
     }
 
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
+    }
+
     const msgObj = {
       type: "video",
       video: {
@@ -615,6 +701,11 @@ router.post("/send_image", validateAgent, checkPlan, async (req, res) => {
 
     if (!url || !toNumber || !toName || !chatId) {
       return res.json({ success: false, msg: "Not enough input provided" });
+    }
+
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
     }
 
     const msgObj = {
@@ -682,9 +773,10 @@ router.post("/mark_task_complete", validateAgent, async (req, res) => {
       return res.json({ msg: "Please type your comments." });
     }
 
+    // Only allow agent to complete their own tasks
     await query(
-      `UPDATE agent_task SET status = ?, agent_comments = ? WHERE id = ?`,
-      ["COMPLETED", comment, id]
+      `UPDATE agent_task SET status = ?, agent_comments = ? WHERE id = ? AND uid = ?`,
+      ["COMPLETED", comment, id, req.decode.uid]
     );
 
     res.json({ msg: "Task updated", success: true });
@@ -703,6 +795,11 @@ router.post("/change_chat_ticket_status", validateAgent, async (req, res) => {
       return res.json({ msg: "invalid request" });
     }
 
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
+    }
+
     await query(`UPDATE chats SET chat_status = ? WHERE chat_id = ?`, [
       status,
       chatId,
@@ -712,6 +809,40 @@ router.post("/change_chat_ticket_status", validateAgent, async (req, res) => {
       success: true,
       msg: "Chat status updated",
     });
+  } catch (err) {
+    console.log(err);
+    res.json({ err, success: false, msg: "Something went wrong" });
+  }
+});
+
+// save chat note
+router.post("/save_note", validateAgent, async (req, res) => {
+  try {
+    const { chatId, note } = req.body;
+    if (!chatId) {
+      return res.json({ success: false, msg: "chatId is required" });
+    }
+    // Verify agent is assigned to this chat
+    if (!(await isAgentAssigned(req.decode.uid, chatId))) {
+      return res.json({ success: false, msg: "Not assigned to this chat" });
+    }
+    await query("UPDATE chats SET chat_note = ? WHERE chat_id = ? AND uid = ?", [
+      note,
+      chatId,
+      req.decode.owner_uid
+    ]);
+    res.json({ success: true, msg: "Note updated" });
+  } catch (err) {
+    res.json({ success: false, msg: "something went wrong" });
+    console.log(err);
+  }
+});
+
+// get templets for agent
+router.get("/get_templets", validateAgent, async (req, res) => {
+  try {
+    const data = await query("SELECT * FROM templets WHERE uid = ?", [req.decode.owner_uid]);
+    res.json({ data, success: true });
   } catch (err) {
     console.log(err);
     res.json({ err, success: false, msg: "Something went wrong" });

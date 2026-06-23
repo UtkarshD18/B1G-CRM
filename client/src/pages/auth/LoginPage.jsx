@@ -76,7 +76,7 @@ function LoginPage({ role, title, subtitle, endpoint, allowSignup = false }) {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="name@company.com"
+              placeholder="name@example.com"
             />
           </label>
           <label>

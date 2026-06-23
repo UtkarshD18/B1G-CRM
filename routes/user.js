@@ -2,6 +2,8 @@ const router = require("express").Router();
 const { query } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+const path = require("path");
 const {
   isValidEmail,
   getFileExtension,
@@ -20,6 +22,7 @@ const {
   generateWhatsAppURL,
   rzCapturePayment,
   validateFacebookToken,
+  writeJsonToFile,
 } = require("../functions/function.js");
 const { sign } = require("jsonwebtoken");
 const validateUser = require("../middlewares/user.js");
@@ -91,11 +94,10 @@ router.post("/login_with_facebook", async (req, res) => {
           {
             uid: uid,
             role: "user",
-            password: hasPass,
             email: email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
 
         res.json({ token: loginToken, success: true });
@@ -104,11 +106,10 @@ router.post("/login_with_facebook", async (req, res) => {
           {
             uid: getUser[0].uid,
             role: "user",
-            password: getUser[0].password,
             email: getUser[0].email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
         res.json({
           success: true,
@@ -155,11 +156,10 @@ router.post("/login_with_google", async (req, res) => {
           {
             uid: uid,
             role: "user",
-            password: hasPass,
             email: email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
 
         res.json({ token: loginToken, success: true });
@@ -168,11 +168,10 @@ router.post("/login_with_google", async (req, res) => {
           {
             uid: getUser[0].uid,
             role: "user",
-            password: getUser[0].password,
             email: getUser[0].email,
           },
           env.JWT_SECRET,
-          {}
+          { expiresIn: env.JWT_EXPIRY }
         );
         res.json({
           success: true,
@@ -260,11 +259,10 @@ router.post("/login", async (req, res) => {
         {
           uid: userFind[0].uid,
           role: "user",
-          password: userFind[0].password,
           email: userFind[0].email,
         },
         env.JWT_SECRET,
-        {}
+        { expiresIn: env.JWT_EXPIRY }
       );
       res.json({
         success: true,
@@ -618,6 +616,32 @@ router.post("/add_meta_templet", validateUser, checkPlan, async (req, res) => {
   try {
     console.log(JSON.stringify(req.body));
 
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      }
+      const newTemplate = {
+        name: req.body.name,
+        language: req.body.language || "en_US",
+        category: req.body.category || "UTILITY",
+        status: "APPROVED",
+        components: req.body.components || []
+      };
+      const idx = mockTemplates.findIndex(t => t.name === newTemplate.name);
+      if (idx >= 0) {
+        mockTemplates[idx] = newTemplate;
+      } else {
+        mockTemplates.push(newTemplate);
+      }
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      return res.json({
+        msg: "Templet was added and waiting for the review",
+        success: true,
+      });
+    }
+
     const getAPIKEYS = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -654,6 +678,28 @@ router.post("/add_meta_templet", validateUser, checkPlan, async (req, res) => {
 // get user meta templet
 router.get("/get_my_meta_templets", validateUser, async (req, res) => {
   try {
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      } else {
+        mockTemplates = [
+          {
+            name: "order_update",
+            language: "en_US",
+            category: "UTILITY",
+            status: "APPROVED",
+            components: [
+              { type: "BODY", text: "Hello {{1}}, your order {{2}} has been shipped." }
+            ]
+          }
+        ];
+        fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      }
+      return res.json({ success: true, data: mockTemplates });
+    }
+
     const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -689,6 +735,21 @@ router.post("/del_meta_templet", validateUser, async (req, res) => {
   try {
     const { name } = req.body;
 
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      }
+      mockTemplates = mockTemplates.filter(t => t.name !== name);
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      return res.json({
+        success: true,
+        data: mockTemplates,
+        msg: "Templet was deleted",
+      });
+    }
+
     const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
       req.decode.uid,
     ]);
@@ -718,6 +779,38 @@ router.post("/del_meta_templet", validateUser, async (req, res) => {
         msg: "Templet was deleted",
       });
     }
+  } catch (err) {
+    res.json({ success: false, msg: "something went wrong", err });
+    console.log(err);
+  }
+});
+
+// update meta templet
+router.post("/update_meta_templet", validateUser, async (req, res) => {
+  try {
+    const { name, language, category, components } = req.body;
+
+    if (env.MOCK_META_DELIVERY) {
+      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      let mockTemplates = [];
+      if (fs.existsSync(mockFilePath)) {
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+      }
+      const idx = mockTemplates.findIndex(t => t.name === name);
+      if (idx < 0) {
+        return res.json({ success: false, msg: "Template not found" });
+      }
+      mockTemplates[idx] = {
+        ...mockTemplates[idx],
+        language: language || mockTemplates[idx].language,
+        category: category || mockTemplates[idx].category,
+        components: components || mockTemplates[idx].components
+      };
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      return res.json({ success: true, msg: "Template was updated successfully" });
+    }
+
+    res.json({ success: false, msg: "Direct template updates are not supported by the Meta API. Please delete and recreate the template." });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });
     console.log(err);
@@ -831,6 +924,7 @@ router.get("/get_payment_details", validateUser, async (req, res) => {
     ]);
 
     data.pay_stripe_key = "";
+    data.pay_mercadopago_key = "";
     res.json({ data, userData, success: true });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });
@@ -1390,14 +1484,14 @@ router.post("/send_resovery", async (req, res) => {
 
     const jsontoken = sign(
       {
+        uid: checkEmailValid[0].uid,
         old_email: email,
         email: email,
         time: moment(new Date()),
-        password: checkEmailValid[0]?.password,
         role: "user",
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: "1h" }
     );
 
     const recpveryUrl = `${env.FRONTEND_URL}/recovery-user/${jsontoken}`;
@@ -1448,7 +1542,7 @@ router.get("/modify_password", validateUser, async (req, res) => {
       return res.json({ success: false, msg: "Please provide a password" });
     }
 
-    if (moment(req.decode.time).diff(moment(new Date()), "hours") > 1) {
+    if (moment(new Date()).diff(moment(req.decode.time), "hours") > 1) {
       return res.json({ success: false, msg: "Token expired" });
     }
 
@@ -1588,6 +1682,22 @@ router.post("/add_widget", validateUser, async (req, res) => {
       return res.json({ msg: "Please fill the details" });
     }
 
+    const allowedPlaces = [
+      "BOTTOM_RIGHT",
+      "BOTTOM_LEFT",
+      "TOP_RIGHT",
+      "TOP_LEFT",
+      "BOTTOM_CENTER",
+      "TOP_CENTER",
+      "ALL_CENTER",
+    ];
+    const finalPlace = allowedPlaces.includes(place) ? place : "BOTTOM_RIGHT";
+
+    const parsedSize = parseInt(size, 10);
+    const finalSize = isNaN(parsedSize) || parsedSize <= 0 ? 60 : parsedSize;
+
+    const sanitizedNumber = String(whatsapp_number).replace(/[^+\d]/g, "").slice(0, 100);
+
     let filename;
 
     if (logoType === "UPLOAD") {
@@ -1618,10 +1728,10 @@ router.post("/add_widget", validateUser, async (req, res) => {
         unique_id,
         req.decode.uid,
         title,
-        whatsapp_number,
+        sanitizedNumber,
         filename,
-        place,
-        size || 50,
+        finalPlace,
+        finalSize,
       ]
     );
 
@@ -1702,7 +1812,7 @@ router.get("/widget", async (req, res) => {
 // update agent profile
 router.post("/update_agent_profile", validateUser, async (req, res) => {
   try {
-    const { email, name, mobile, newPas, uid } = req.body;
+    const { email, name, mobile, newPas, uid, permissions } = req.body;
 
     if (!email || !name || !mobile) {
       return res.json({
@@ -1710,16 +1820,18 @@ router.post("/update_agent_profile", validateUser, async (req, res) => {
       });
     }
 
+    const permissionsJson = JSON.stringify(permissions || []);
+
     if (newPas) {
       const hasPas = await bcrypt.hash(newPas, 10);
       await query(
-        `UPDATE agents SET email = ?, name = ?, mobile = ?, password = ? WHERE uid = ?`,
-        [email, name, mobile, hasPas, uid]
+        `UPDATE agents SET email = ?, name = ?, mobile = ?, password = ?, permissions = ? WHERE uid = ? AND owner_uid = ?`,
+        [email, name, mobile, hasPas, permissionsJson, uid, req.decode.uid]
       );
     } else {
       await query(
-        `UPDATE agents SET email = ?, name = ?, mobile = ? WHERE uid = ?`,
-        [email, name, mobile, uid]
+        `UPDATE agents SET email = ?, name = ?, mobile = ?, permissions = ? WHERE uid = ? AND owner_uid = ?`,
+        [email, name, mobile, permissionsJson, uid, req.decode.uid]
       );
     }
 
@@ -1734,24 +1846,349 @@ router.post("/update_agent_profile", validateUser, async (req, res) => {
 router.post("/auto_agent_login", validateUser, async (req, res) => {
   try {
     const { uid } = req.body;
-    const agentFind = await query(`SELECT * FROM agents WHERE uid = ?`, [uid]);
+    const agentFind = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [uid, req.decode.uid]);
+    if (agentFind.length < 1) {
+      return res.json({ success: false, msg: "Agent not found or unauthorized" });
+    }
 
+    const permissions = JSON.parse(agentFind[0].permissions || "[]");
     const token = sign(
       {
         uid: agentFind[0].uid,
         role: "agent",
-        password: agentFind[0].password,
         email: agentFind[0].email,
         owner_uid: agentFind[0]?.owner_uid,
+        permissions,
       },
       env.JWT_SECRET,
-      {}
+      { expiresIn: env.JWT_EXPIRY }
     );
 
     res.json({ token, success: true });
   } catch (err) {
     console.log(err);
     res.json({ msg: "something went wrong", err });
+  }
+});
+
+// seed demo crm data
+router.post("/seed_demo_data", validateUser, async (req, res) => {
+  try {
+    const pbName = "Demo Leads Phonebook";
+    // Insert phonebook
+    let pbId;
+    const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [req.decode.uid, pbName]);
+    if (existingPb.length > 0) {
+      pbId = existingPb[0].id;
+    } else {
+      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [req.decode.uid, pbName]);
+      if (insertPb && insertPb.length > 0) {
+        pbId = insertPb[0].id;
+      } else {
+        const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [req.decode.uid, pbName]);
+        pbId = getPb[0]?.id;
+      }
+    }
+
+    if (!pbId) {
+      return res.json({ success: false, msg: "Failed to initialize demo phonebook" });
+    }
+
+    // 10 Contacts
+    const contacts = [
+      { name: "Aarav Mehta", mobile: "+919999900001", var1: "VIP", var2: "Retail", var3: "Mumbai", var4: "Interested", var5: "Ref-01" },
+      { name: "Diya Sharma", mobile: "+919999900002", var1: "Regular", var2: "Wholesale", var3: "Delhi", var4: "FollowUp", var5: "Ref-02" },
+      { name: "Kabir Singh", mobile: "demo-chat-insta-3", var1: "New", var2: "Retail", var3: "Bangalore", var4: "Interested", var5: "Ref-03" },
+      { name: "Ananya Goel", mobile: "+919999900004", var1: "VIP", var2: "Enterprise", var3: "Hyderabad", var4: "Active", var5: "Ref-04" },
+      { name: "Vivaan Shah", mobile: "+919999900005", var1: "Inactive", var2: "Retail", var3: "Pune", var4: "Cold", var5: "Ref-05" },
+      { name: "Ira Patel", mobile: "+919999900006", var1: "Regular", var2: "Retail", var3: "Ahmedabad", var4: "Interested", var5: "Ref-06" },
+      { name: "Reyansh Gupta", mobile: "+919999900007", var1: "VIP", var2: "Enterprise", var3: "Chennai", var4: "Negotiation", var5: "Ref-07" },
+      { name: "Myra Sen", mobile: "+919999900008", var1: "New", var2: "Retail", var3: "Kolkata", var4: "FollowUp", var5: "Ref-08" },
+      { name: "Arjun Verma", mobile: "+919999900009", var1: "VIP", var2: "Wholesale", var3: "Jaipur", var4: "Interested", var5: "Ref-09" },
+      { name: "Sai Reddy", mobile: "+919999900010", var1: "Regular", var2: "Retail", var3: "Kochi", var4: "Warm", var5: "Ref-10" }
+    ];
+
+    for (const c of contacts) {
+      const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [req.decode.uid, c.mobile]);
+      if (checkContact.length === 0) {
+        await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1, var2, var3, var4, var5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+          req.decode.uid,
+          pbId,
+          pbName,
+          c.name,
+          c.mobile,
+          c.var1,
+          c.var2,
+          c.var3,
+          c.var4,
+          c.var5
+        ]);
+      }
+    }
+
+    // 1 Campaign
+    const broadcastId = "bc_demo_" + randomstring.generate(6);
+    const existingBc = await query(`SELECT * FROM broadcast WHERE uid = ? AND title = ?`, [req.decode.uid, "Demo Launch Campaign"]);
+    if (existingBc.length === 0) {
+      await query(`INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
+        broadcastId,
+        req.decode.uid,
+        "Demo Launch Campaign",
+        JSON.stringify({ name: "demo_welcome_template", language: "en_US", category: "UTILITY" }),
+        JSON.stringify({ id: pbId, name: pbName }),
+        "COMPLETED",
+        new Date(),
+        "Asia/Kolkata"
+      ]);
+
+      // Seed 10 logs for campaign analytics
+      const deliveryStatuses = ["read", "delivered", "read", "failed", "read", "delivered", "sent", "read", "read", "delivered"];
+      const errors = [null, null, null, "Meta rate limit reached", null, null, null, null, null, null];
+      for (let i = 0; i < contacts.length; i++) {
+        await query(`INSERT INTO broadcast_log (uid, broadcast_id, templet_name, sender_mobile, send_to, delivery_status, example, contact, meta_msg_id, delivery_time, err) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+          req.decode.uid,
+          broadcastId,
+          "demo_welcome_template",
+          "+12025550184",
+          contacts[i].mobile,
+          deliveryStatuses[i],
+          JSON.stringify([contacts[i].name]),
+          JSON.stringify(contacts[i]),
+          "wamid." + randomstring.generate(16),
+          Date.now() - (i * 3600 * 1000),
+          errors[i]
+        ]);
+      }
+    }
+
+    // Seed templates
+    const existingTemp1 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [req.decode.uid, "demo_welcome_template"]);
+    if (existingTemp1.length === 0) {
+      await query(`INSERT INTO templets (uid, content, type, title) VALUES (?, ?, ?, ?)`, [
+        req.decode.uid,
+        JSON.stringify("Hello {{1}}, welcome to our CRM service!"),
+        "text",
+        "demo_welcome_template"
+      ]);
+    }
+    const existingTemp2 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [req.decode.uid, "order_update"]);
+    if (existingTemp2.length === 0) {
+      await query(`INSERT INTO templets (uid, content, type, title) VALUES (?, ?, ?, ?)`, [
+        req.decode.uid,
+        JSON.stringify("Hello {{1}}, your order {{2}} has been shipped."),
+        "text",
+        "order_update"
+      ]);
+    }
+
+    // 1 Flow
+    const flowId = `flow_demo_welcome_${req.decode.uid.slice(0, 10)}`;
+    const flowTitle = "Demo Welcome Visual Flow";
+    const existingFlow = await query(`SELECT * FROM flow WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+    if (existingFlow.length === 0) {
+      await query(`INSERT INTO flow (uid, flow_id, title) VALUES (?, ?, ?)`, [
+        req.decode.uid,
+        flowId,
+        flowTitle
+      ]);
+    }
+    const nodes = [
+      { id: "1", type: "START", data: { label: "Start Trigger" } },
+      { id: "2", type: "MESSAGE", data: { label: "Send Welcome Text" } }
+    ];
+    const edges = [
+      { id: "e1-2", source: "1", target: "2" }
+    ];
+    const nodepath = path.join(__dirname, `../flow-json/nodes/${req.decode.uid}/${flowId}.json`);
+    const edgepath = path.join(__dirname, `../flow-json/edges/${req.decode.uid}/${flowId}.json`);
+    await writeJsonToFile(nodepath, nodes);
+    await writeJsonToFile(edgepath, edges);
+
+    // 1 Chatbot
+    const existingBot = await query(`SELECT * FROM chatbot WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+    let botId;
+    if (existingBot.length > 0) {
+      botId = existingBot[0].id;
+    } else {
+      const insertBot = await query(`INSERT INTO chatbot (uid, title, for_all, chats, flow, flow_id, active, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [
+        req.decode.uid,
+        "Demo Welcome Autopilot",
+        1,
+        "[]",
+        JSON.stringify({ id: flowId, flow_id: flowId, title: flowTitle }),
+        flowId,
+        1,
+        JSON.stringify({ title: "Meta", code: "META", data: {} })
+      ]);
+      if (insertBot && insertBot.length > 0) {
+        botId = insertBot[0].id;
+      } else {
+        const getBot = await query(`SELECT id FROM chatbot WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+        botId = getBot[0]?.id;
+      }
+    }
+
+    // Seed chatbot logs for diagnostics
+    const incomingMessages = ["hi", "hello", "need help", "get price", "operator"];
+    const matchedStatuses = [1, 1, 1, 0, 1];
+    const logStatuses = ["replied", "replied", "replied", "unmatched", "escalated"];
+    const details = [
+      { reply_count: 1 },
+      { reply_count: 1 },
+      { reply_count: 2 },
+      { reason: "No matching text intent block" },
+      { reason: "Assigned to human agent" }
+    ];
+    for (let i = 0; i < incomingMessages.length; i++) {
+      await query(`INSERT INTO chatbot_log (uid, chatbot_id, chatbot_title, flow_id, sender_number, sender_name, incoming_message, origin, matched, status, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        req.decode.uid,
+        botId || 999,
+        "Demo Welcome Autopilot",
+        flowId,
+        contacts[i].mobile,
+        contacts[i].name,
+        incomingMessages[i],
+        "META",
+        matchedStatuses[i],
+        logStatuses[i],
+        JSON.stringify(details[i])
+      ]);
+    }
+
+    // 1 Agent
+    const agentEmail = `demo_agent_${req.decode.uid.slice(0, 6)}@example.com`;
+    const agentUid = `agent_${randomstring.generate(8)}`;
+    const existingAgent = await query(`SELECT * FROM agents WHERE owner_uid = ? AND email = ?`, [req.decode.uid, agentEmail]);
+    let actualAgentUid;
+    if (existingAgent.length > 0) {
+      actualAgentUid = existingAgent[0].uid;
+    } else {
+      const demoAgentPassword = process.env.DEMO_AGENT_PASSWORD || "CHANGE_ME";
+      const hasPass = await bcrypt.hash(demoAgentPassword, 10);
+      await query(`INSERT INTO agents (owner_uid, uid, email, password, role, name, comments, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
+        req.decode.uid,
+        agentUid,
+        agentEmail,
+        hasPass,
+        "agent",
+        "Demo Agent",
+        "Demo workspace agent account",
+        1
+      ]);
+      actualAgentUid = agentUid;
+    }
+
+    // 1 Task
+    const existingTask = await query(`SELECT * FROM agent_task WHERE owner_uid = ? AND uid = ?`, [req.decode.uid, actualAgentUid]);
+    if (existingTask.length === 0) {
+      await query(`INSERT INTO agent_task (owner_uid, uid, title, description, status) VALUES (?, ?, ?, ?, ?)`, [
+        req.decode.uid,
+        actualAgentUid,
+        "Follow up with Aarav Mehta",
+        "Aarav is marked as VIP Retail client. Contact him to discuss custom integration discount pricing options.",
+        "PENDING"
+      ]);
+    }
+
+    // 3 Conversations
+    const sampleChats = [
+      {
+        chatId: "demo-chat-wa-1",
+        senderName: "Aarav Mehta",
+        senderMobile: "+919999900001",
+        origin: "META",
+        tag: "lead",
+        note: "Interested in Enterprise pricing plan.",
+        messages: [
+          {
+            type: "text",
+            metaChatId: "msg-wa-1",
+            msgContext: { type: "text", text: { body: "Hello! I am trying to connect my business phone." } },
+            timestamp: Math.floor(Date.now() / 1000) - 3600,
+            senderName: "Aarav Mehta",
+            senderMobile: "+919999900001",
+            status: "received",
+            star: false,
+            route: "INCOMING",
+            context: "",
+            origin: "META"
+          }
+        ]
+      },
+      {
+        chatId: "demo-chat-qr-2",
+        senderName: "Diya Sharma",
+        senderMobile: "+919999900002",
+        origin: "QR",
+        tag: "support",
+        note: "Struggling with setting up templates.",
+        messages: [
+          {
+            type: "text",
+            metaChatId: "msg-qr-2",
+            msgContext: { type: "text", text: { body: "Hi, can you verify why my campaign status says PAUSED?" } },
+            timestamp: Math.floor(Date.now() / 1000) - 1800,
+            senderName: "Diya Sharma",
+            senderMobile: "+919999900002",
+            status: "received",
+            star: false,
+            route: "INCOMING",
+            context: "",
+            origin: "QR"
+          }
+        ]
+      },
+      {
+        chatId: "demo-chat-insta-3",
+        senderName: "Kabir Singh",
+        senderMobile: "demo-chat-insta-3",
+        origin: "instagram",
+        tag: "general",
+        note: "Asking about European delivery options.",
+        messages: [
+          {
+            type: "text",
+            metaChatId: "msg-insta-3",
+            msgContext: { type: "text", text: { body: "Hey! Do you offer bulk discounts on custom orders?" } },
+            timestamp: Math.floor(Date.now() / 1000) - 600,
+            senderName: "Kabir Singh",
+            senderMobile: "demo-chat-insta-3",
+            status: "received",
+            star: false,
+            route: "INCOMING",
+            context: "",
+            origin: "instagram"
+          }
+        ]
+      }
+    ];
+
+    for (const sc of sampleChats) {
+      const checkChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [sc.chatId, req.decode.uid]);
+      if (checkChat.length === 0) {
+        await query(`INSERT INTO chats (chat_id, uid, last_message_came, sender_name, sender_mobile, last_message, is_opened, chat_status, chat_note, chat_tags, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+          sc.chatId,
+          req.decode.uid,
+          sc.messages[0].timestamp,
+          sc.senderName,
+          sc.senderMobile,
+          JSON.stringify(sc.messages[0]),
+          0,
+          "open",
+          sc.note,
+          JSON.stringify([sc.tag]),
+          sc.origin
+        ]);
+      }
+
+      const convPath = path.join(__dirname, `../conversations/inbox/${req.decode.uid}/${sc.chatId}.json`);
+      await writeJsonToFile(convPath, sc.messages);
+    }
+
+    res.json({ success: true, msg: "Demo CRM workspace successfully seeded!" });
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false, msg: "something went wrong", error: err.message });
   }
 });
 

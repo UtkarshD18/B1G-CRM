@@ -7,9 +7,9 @@ const {
   deleteSession,
 } = require("../helper/addon/qr/index.js");
 const { checkPlan } = require("../middlewares/plan.js");
-const validateUser = require("../middlewares/user.js");
+const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
 
-router.get("/create", async (req, res) => {
+router.get("/create", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
   try {
     const { id } = req.query;
     // Kick off session creation (which returns immediately)
@@ -28,7 +28,7 @@ router.get("/create", async (req, res) => {
   }
 });
 
-router.get("/send", async (req, res) => {
+router.get("/send", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
   try {
     const number = req.query;
     const session = await getSession("chullii");
@@ -54,7 +54,7 @@ router.get("/send", async (req, res) => {
   }
 });
 
-router.post("/gen_qr", validateUser, checkPlan, async (req, res) => {
+router.post("/gen_qr", validateUserOrAgent, verifyPermission("settings_access"), checkPlan, async (req, res) => {
   try {
     const { title, uniqueId } = req.body;
     if (!title || !uniqueId) {
@@ -64,10 +64,24 @@ router.post("/gen_qr", validateUser, checkPlan, async (req, res) => {
       });
     }
 
-    await query(
-      `INSERT INTO instance (uid, title, uniqueId, status) VALUES (?,?,?,?)`,
-      [req.decode.uid, title, uniqueId, "GENERATING"]
-    );
+    const [existing] = await query("SELECT * FROM instance WHERE uniqueId = ?", [uniqueId]);
+    if (existing) {
+      if (existing.uid !== req.decode.uid) {
+        return res.json({
+          success: false,
+          msg: "This instance ID is already in use by another user.",
+        });
+      }
+      await query(
+        "UPDATE instance SET title = ?, status = ? WHERE uniqueId = ?",
+        [title, "GENERATING", uniqueId]
+      );
+    } else {
+      await query(
+        `INSERT INTO instance (uid, title, uniqueId, status) VALUES (?,?,?,?)`,
+        [req.decode.uid, title, uniqueId, "GENERATING"]
+      );
+    }
 
     await createSession(
       uniqueId,
@@ -89,7 +103,7 @@ router.post("/gen_qr", validateUser, checkPlan, async (req, res) => {
 });
 
 // get all instances
-router.get("/get_all", validateUser, async (req, res) => {
+router.get("/get_all", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
   try {
     const instances = await query(`SELECT * FROM instance WHERE uid = ?`, [
       req.decode.uid,
@@ -104,13 +118,14 @@ router.get("/get_all", validateUser, async (req, res) => {
 
     // Process each instance
     for (let instance of instances) {
-      const check = getSession(instance.uniqueId);
+      const instId = instance.uniqueid || instance.uniqueId;
+      const check = getSession(instId);
 
-      if (!check) {
-        // If no session, update status to "INACTIVE"
+      if (!check && instance.status === "CONNECTED") {
+        // If no session and status was CONNECTED, update status to "INACTIVE"
         await query(`UPDATE instance SET status = ? WHERE uniqueId = ?`, [
           "INACTIVE",
-          instance.uniqueId,
+          instId,
         ]);
         instance.status = "INACTIVE"; // Update status in response as well
       }
@@ -131,7 +146,7 @@ router.get("/get_all", validateUser, async (req, res) => {
 });
 
 // del an instance
-router.post("/del_instance", validateUser, async (req, res) => {
+router.post("/del_instance", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
   try {
     const { uniqueId } = req.body;
     if (!uniqueId) {
@@ -145,7 +160,7 @@ router.post("/del_instance", validateUser, async (req, res) => {
 
     if (session) {
       try {
-        await session.logout();
+        session.end();
       } catch {
       } finally {
         deleteSession(uniqueId);
@@ -172,7 +187,7 @@ router.post("/del_instance", validateUser, async (req, res) => {
 });
 
 // change instance status
-router.post("/change_instance_status", validateUser, async (req, res) => {
+router.post("/change_instance_status", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
   try {
     const statuses = [
       "unavailable",
@@ -183,6 +198,11 @@ router.post("/change_instance_status", validateUser, async (req, res) => {
     ];
 
     const { insId, status, jid } = req.body;
+
+    const [existing] = await query(`SELECT * FROM instance WHERE uniqueId = ? AND uid = ?`, [insId, req.decode.uid]);
+    if (!existing) {
+      return res.json({ success: false, msg: "Instance was not found or unauthorized" });
+    }
 
     const session = await getSession(insId);
 
@@ -201,9 +221,10 @@ router.post("/change_instance_status", validateUser, async (req, res) => {
     const finalUpdate = { onlineStatus: status };
 
     await session.sendPresenceUpdate(status);
-    await query(`UPDATE instance SET other = ? WHERE uniqueId = ?`, [
+    await query(`UPDATE instance SET other = ? WHERE uniqueId = ? AND uid = ?`, [
       JSON.stringify(finalUpdate),
       insId,
+      req.decode.uid
     ]);
 
     res.json({

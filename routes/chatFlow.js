@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const { query, withTransaction } = require("../database/dbpromise.js");
 const randomstring = require("randomstring");
 const bcrypt = require("bcrypt");
 const {
@@ -10,10 +10,10 @@ const {
   readJsonFromFile,
 } = require("../functions/function.js");
 const { sign } = require("jsonwebtoken");
-const validateUser = require("../middlewares/user.js");
+const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
 const { checkPlan } = require("../middlewares/plan.js");
 
-router.post("/add_new", validateUser, checkPlan, async (req, res) => {
+router.post("/add_new", validateUserOrAgent, verifyPermission("flows_access"), checkPlan, async (req, res) => {
   try {
     const { title, nodes, edges, flowId } = req.body;
     if (!title) {
@@ -61,7 +61,7 @@ router.post("/add_new", validateUser, checkPlan, async (req, res) => {
 });
 
 // get my flows
-router.get("/get_mine", validateUser, async (req, res) => {
+router.get("/get_mine", validateUserOrAgent, verifyPermission("flows_access"), async (req, res) => {
   try {
     const data = await query(`SELECT * FROM flow WHERE uid = ?`, [
       req.decode.uid,
@@ -74,14 +74,22 @@ router.get("/get_mine", validateUser, async (req, res) => {
 });
 
 // del a flow
-router.post("/del_flow", validateUser, async (req, res) => {
+router.post("/del_flow", validateUserOrAgent, verifyPermission("flows_access"), async (req, res) => {
   try {
     const { id, flowId } = req.body;
 
-    await query(`DELETE FROM flow WHERE uid = ? AND id = ?`, [
-      req.decode.uid,
-      id,
-    ]);
+    await withTransaction(async (tx) => {
+      await tx(`DELETE FROM flow WHERE uid = ? AND id = ?`, [
+        req.decode.uid,
+        id,
+      ]);
+
+      // Update chatbots using this flow to prevent runtime execution errors
+      await tx(
+        `UPDATE chatbot SET flow_id = NULL, active = 0 WHERE flow_id = ? AND uid = ?`,
+        [flowId, req.decode.uid]
+      );
+    });
 
     const nodePath = `${__dirname}/../flow-json/nodes/${req.decode.uid}/${flowId}.json`;
     const edgePath = `${__dirname}/../flow-json/edges/${req.decode.uid}/${flowId}.json`;
@@ -97,7 +105,7 @@ router.post("/del_flow", validateUser, async (req, res) => {
 });
 
 // get flow using flow id
-router.post("/get_by_flow_id", validateUser, async (req, res) => {
+router.post("/get_by_flow_id", validateUserOrAgent, verifyPermission("flows_access"), async (req, res) => {
   try {
     const { flowId } = req.body;
 
@@ -127,7 +135,7 @@ router.post("/get_by_flow_id", validateUser, async (req, res) => {
   }
 });
 // get chats activity
-router.post("/get_activity", validateUser, checkPlan, async (req, res) => {
+router.post("/get_activity", validateUserOrAgent, verifyPermission("flows_access"), checkPlan, async (req, res) => {
   try {
     const { flowId } = req.body;
 
@@ -171,7 +179,7 @@ router.post("/get_activity", validateUser, checkPlan, async (req, res) => {
 });
 
 // remove number from flow activiy
-router.post("/remove_number_from_activity", validateUser, async (req, res) => {
+router.post("/remove_number_from_activity", validateUserOrAgent, verifyPermission("flows_access"), async (req, res) => {
   try {
     const { type, number, flowId } = req.body;
 

@@ -89,6 +89,35 @@ async function updateChatInMysql({
   const [user] = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
   if (!user) return;
 
+  // Ensure contact exists to maintain consistency
+  if (senderMobile && senderMobile !== "NA") {
+    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [uid, senderMobile]);
+    if (checkContact.length === 0) {
+      const pbName = "WhatsApp QR Ingest";
+      let pbId;
+      const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+      if (existingPb.length > 0) {
+        pbId = existingPb[0].id;
+      } else {
+        const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [uid, pbName]);
+        if (insertPb && insertPb.length > 0) {
+          pbId = insertPb[0].id;
+        } else {
+          const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+          pbId = getPb[0]?.id;
+        }
+      }
+      await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`, [
+        uid,
+        pbId,
+        pbName,
+        senderName || "QR Contact",
+        senderMobile,
+        "Auto Created via QR Ingest"
+      ]);
+    }
+  }
+
   const userTimezone = getCurrentTimestampInTimeZone(
     user?.timezone || Date.now() / 1000
   );
@@ -447,16 +476,21 @@ async function processBaileysMsg({
       origin: "qr",
     };
 
-    // Append new message and update the conversation file.
-    conversationArray.push(newMessage);
-    fs.writeFileSync(
-      conversationPath,
-      JSON.stringify(conversationArray, null, 2)
+    // Append new message and update the conversation file if not already present.
+    const exists = conversationArray.some(
+      (msg) => msg.metaChatId === body.key.id
     );
+    if (!exists) {
+      conversationArray.push(newMessage);
+      fs.writeFileSync(
+        conversationPath,
+        JSON.stringify(conversationArray, null, 2)
+      );
+    }
 
     // Retrieve the latest 10 messages.
     const latestMessages = conversationArray.slice(-10);
-    return { newMessage, latestMessages };
+    return { newMessage: exists ? null : newMessage, latestMessages };
   } catch (err) {
     console.error("Error processing Baileys message:", err.message);
     return null;

@@ -12,7 +12,7 @@ export const USER_MODULES = [
   'Phonebook',
   'Agent Login',
   'Agent Task',
-  'Chat Widget',
+  'Click-to-Chat Launcher',
   'Billing and Checkout',
   'Manage Webhooks',
 ]

@@ -20,3 +20,36 @@ client/dist/
 .gemini/
 # Keep media uploads but ignore exact files inside if needed
 !client/public/media/
+
+# Runtime state and tenant cache directories
+conversations/
+flow-json/
+sessions/
+logs/
+# Verification / audit artifacts
+verification_artifacts/
+coverage/
+playwright-report/
+test-results/
+
+# Build outputs
+dist/
+dist-ssr/
+
+# Temporary audit files
+*.webm
+*.har
+verification_artifacts/
+coverage/
+playwright-report/
+
+client/dist/
+dist/
+
+.github/*.local
+
+*.webm
+*.har
+*.trace
+# Local AI agent workspaces
+.antigravity/

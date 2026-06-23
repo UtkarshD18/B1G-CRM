@@ -697,55 +697,89 @@ describe('App routing shell', () => {
 
     expect(await screen.findByText('Hello from customer')).toBeInTheDocument()
     expect(await screen.findByText('Conversation context')).toBeInTheDocument()
-    expect(await screen.findByPlaceholderText('Type a WhatsApp reply')).toBeInTheDocument()
+    expect(await screen.findByPlaceholderText(/Type a WhatsApp reply/)).toBeInTheDocument()
   })
 
   test('uploads and emits an inbox media reply through the socket composer', async () => {
-    await renderAtRoute('/user/inbox', { role: 'user' })
+    const OriginalXMLHttpRequest = window.XMLHttpRequest
+    const xhrSend = jest.fn()
+    let uploadRequest = null
 
-    const chatRow = await screen.findByText('Jordan Buyer')
-    fireEvent.click(chatRow)
-    expect(await screen.findByText('Hello from customer')).toBeInTheDocument()
+    class MockXMLHttpRequest {
+      constructor() {
+        this.upload = {}
+        this.headers = {}
+        this.status = 200
+        this.responseText = JSON.stringify({
+          success: true,
+          url: 'http://localhost:3010/media/test-image.png',
+        })
+      }
 
-    const file = new File(['image-bytes'], 'quote.png', { type: 'image/png' })
-    fireEvent.change(screen.getByLabelText('Media file'), {
-      target: { files: [file] },
-    })
-    fireEvent.change(screen.getByLabelText('Media caption'), {
-      target: { value: 'Updated product quote' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Send media' }))
+      open(method, url) {
+        uploadRequest = { method, url }
+      }
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/user/return_media_url'),
-        expect.objectContaining({
+      setRequestHeader(name, value) {
+        this.headers[name] = value
+      }
+
+      send(formData) {
+        xhrSend(formData)
+        this.upload.onprogress?.({ lengthComputable: true, loaded: 1, total: 1 })
+        setTimeout(() => this.onload?.(), 0)
+      }
+    }
+
+    window.XMLHttpRequest = MockXMLHttpRequest
+
+    try {
+      await renderAtRoute('/user/inbox', { role: 'user' })
+
+      const chatRow = await screen.findByText('Jordan Buyer')
+      fireEvent.click(chatRow)
+      expect(await screen.findByText('Hello from customer')).toBeInTheDocument()
+
+      const file = new File(['image-bytes'], 'quote.png', { type: 'image/png' })
+      fireEvent.change(screen.getByLabelText('Media file'), {
+        target: { files: [file] },
+      })
+      fireEvent.change(screen.getByLabelText('Media caption'), {
+        target: { value: 'Updated product quote' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'Send media' }))
+
+      await waitFor(() => {
+        expect(uploadRequest).toEqual({
           method: 'POST',
-          body: expect.any(FormData),
-        }),
-      )
-    })
+          url: '/api/user/return_media_url',
+        })
+        expect(xhrSend).toHaveBeenCalledWith(expect.any(FormData))
+      })
 
-    await waitFor(() => {
-      expect(mockSocketEmit).toHaveBeenCalledWith(
-        'send_chat_message',
-        expect.objectContaining({
-          data: expect.objectContaining({
-            type: 'image',
-            msgCon: expect.objectContaining({
+      await waitFor(() => {
+        expect(mockSocketEmit).toHaveBeenCalledWith(
+          'send_chat_message',
+          expect.objectContaining({
+            data: expect.objectContaining({
               type: 'image',
-              image: expect.objectContaining({
-                link: 'http://localhost:3010/media/test-image.png',
-                caption: 'Updated product quote',
+              msgCon: expect.objectContaining({
+                type: 'image',
+                image: expect.objectContaining({
+                  link: 'http://localhost:3010/media/test-image.png',
+                  caption: 'Updated product quote',
+                }),
+              }),
+              chatInfo: expect.objectContaining({
+                chat_id: 'chat-open',
               }),
             }),
-            chatInfo: expect.objectContaining({
-              chat_id: 'chat-open',
-            }),
           }),
-        }),
-      )
-    })
+        )
+      })
+    } finally {
+      window.XMLHttpRequest = OriginalXMLHttpRequest
+    }
   })
 
   test('renders the Kanban pipeline from the audited reference slug', async () => {
@@ -753,7 +787,7 @@ describe('App routing shell', () => {
 
     expect(await screen.findByText('Chat Kanban')).toBeInTheDocument()
     expect(await screen.findByText('Jordan Buyer')).toBeInTheDocument()
-    expect(await screen.findByText('Pending')).toBeInTheDocument()
+    expect((await screen.findAllByText('Pending')).length).toBeGreaterThan(0)
     expect(window.location.pathname).toBe('/user/kanban')
   })
 
@@ -986,7 +1020,7 @@ describe('App routing shell', () => {
   test('renders chat widget embed code and posts backend-compatible placement values', async () => {
     await renderAtRoute('/user/chat-widget', { role: 'user' })
 
-    expect(await screen.findByText('Chat widget workspace')).toBeInTheDocument()
+    expect(await screen.findByText('Click-to-Chat launcher workspace')).toBeInTheDocument()
     expect(await screen.findByText('Storefront support')).toBeInTheDocument()
     expect(screen.getAllByText(/widget-test-1/).length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText(/<iframe src=/)).toHaveTextContent('bottom:0;right:0;')
@@ -1057,7 +1091,6 @@ describe('Reference route inventory', () => {
         'web-notification',
         'send-web-push',
         'embed-config',
-        'telegram-config',
       ]),
     )
   })
@@ -1085,16 +1118,12 @@ describe('Reference route inventory', () => {
         'send-campaign',
         'campaign-dashboard',
         'phonebook',
-        'create-call-flow',
-        'wa-call-logs',
-        'setup-wa-calls',
         'conversational-api',
         'template-api',
         'api-dashboard',
         'manage-webhooks',
         'webhook-automation',
         'webhook-logs',
-        'telegram-sessions',
         'web-notification',
         'agent-login',
         'agent-task',

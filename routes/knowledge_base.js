@@ -1,0 +1,153 @@
+const router = require("express").Router();
+const { query } = require("../database/dbpromise.js");
+const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
+const pdfParse = require("pdf-parse");
+const mammoth = require("mammoth");
+const fetch = require("node-fetch");
+
+// GET all knowledge base articles
+router.get("/get_all", validateUserOrAgent, verifyPermission("knowledgebase_access"), async (req, res) => {
+  try {
+    const data = await query(
+      "SELECT id, title, type, source_path, LENGTH(content) as content_length, created_at FROM knowledge_base WHERE uid = ? ORDER BY created_at DESC",
+      [req.decode.uid]
+    );
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Failed to retrieve knowledge base entries" });
+  }
+});
+
+// POST to upload a PDF, DOCX, or TXT document
+router.post("/upload", validateUserOrAgent, verifyPermission("knowledgebase_access"), async (req, res) => {
+  try {
+    if (!req.files || !req.files.file) {
+      return res.json({ success: false, msg: "No file was uploaded" });
+    }
+
+    const file = req.files.file;
+    const extension = file.name.split(".").pop().toLowerCase();
+    let contentText = "";
+
+    if (extension === "pdf") {
+      const parsed = await pdfParse(file.data);
+      contentText = parsed.text;
+    } else if (extension === "docx") {
+      const parsed = await mammoth.extractRawText({ buffer: file.data });
+      contentText = parsed.value;
+    } else if (extension === "txt") {
+      contentText = file.data.toString("utf8");
+    } else {
+      return res.json({ success: false, msg: "Unsupported file type. Use PDF, DOCX, or TXT" });
+    }
+
+    if (!contentText.trim()) {
+      return res.json({ success: false, msg: "Document content was empty" });
+    }
+
+    await query(
+      "INSERT INTO knowledge_base (uid, title, type, source_path, content) VALUES (?, ?, ?, ?, ?)",
+      [req.decode.uid, file.name, extension, `file://${file.name}`, contentText]
+    );
+
+    res.json({ success: true, msg: "File successfully added to Knowledge Base." });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Error parsing document", error: err.message });
+  }
+});
+
+// POST to scrape text from a website URL
+router.post("/url", validateUserOrAgent, verifyPermission("knowledgebase_access"), async (req, res) => {
+  try {
+    let { url } = req.body;
+    if (!url) {
+      return res.json({ success: false, msg: "Website URL is required" });
+    }
+
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      url = "https://" + url;
+    }
+
+    const response = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+      timeout: 15000
+    });
+    if (!response.ok) {
+      return res.json({ success: false, msg: `Failed to fetch URL: HTTP ${response.status}` });
+    }
+
+    const html = await response.text();
+    const bodyHtml = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
+    const contentText = bodyHtml
+      .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
+      .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!contentText) {
+      return res.json({ success: false, msg: "No text could be extracted from this page" });
+    }
+
+    // Extract title from HTML title tag
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : url;
+
+    await query(
+      "INSERT INTO knowledge_base (uid, title, type, source_path, content) VALUES (?, ?, ?, ?, ?)",
+      [req.decode.uid, title, "url", url, contentText]
+    );
+
+    res.json({ success: true, msg: "URL crawled and stored successfully." });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Error scraping URL", error: err.message });
+  }
+});
+
+// DELETE a knowledge base entry
+router.delete("/delete/:id", validateUserOrAgent, verifyPermission("knowledgebase_access"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await query(
+      "DELETE FROM knowledge_base WHERE id = ? AND uid = ? RETURNING id",
+      [id, req.decode.uid]
+    );
+
+    if (result.length === 0) {
+      return res.json({ success: false, msg: "Entry not found" });
+    }
+
+    res.json({ success: true, msg: "Entry deleted successfully." });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Failed to delete entry" });
+  }
+});
+
+// SEARCH knowledge base content
+router.get("/search", validateUserOrAgent, verifyPermission("knowledgebase_access"), async (req, res) => {
+  try {
+    const q = req.query.q || "";
+    if (!q.trim()) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const data = await query(
+      `SELECT id, title, type, source_path, 
+              SUBSTRING(content, 1, 300) as snippet, created_at 
+       FROM knowledge_base 
+       WHERE uid = ? AND (LOWER(content) LIKE ? OR LOWER(title) LIKE ?)
+       ORDER BY created_at DESC LIMIT 20`,
+      [req.decode.uid, `%${q.toLowerCase()}%`, `%${q.toLowerCase()}%`]
+    );
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Failed to search knowledge base" });
+  }
+});
+
+module.exports = router;
