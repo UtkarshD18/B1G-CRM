@@ -51,20 +51,42 @@ dist/
 *.webm
 *.har
 *.trace
-# Local AI agent workspaces
+# Local AI workspaces
 .antigravity/
+.gemini/
+.continue/
 
-# AI generated reports
+# Generated reports
 *_AUDIT.md
 *_REPORT.md
-**VERIFICATION.md
-REFERENCE_GAP**.md
+*_VERIFICATION.md
+*VERIFICATION*.md
+*_PROOF.md
+*_TRACKER.md
+*_PLAN.md
+*_STATUS.md
+*_MATRIX.md
+
+REFERENCE_GAP*.md
 FAILURE_ROOT_CAUSE.md
 FIX_APPLIED_REPORT.md
 IMPLEMENTATION_PLAN.md
 HANDOFF_REPORT.md
 FINAL_RELEASE_READINESS.md
 
-# Verification outputs
+# Generated outputs
 verification_artifacts/
+playwright-report/
+coverage/
+reports/
+
+# Temporary verification outputs
 scratch/check_runs*.json
+scratch/*.webm
+scratch/*.png
+scratch/*.jpg
+scratch/*.jpeg
+scratch/*.pdf
+
+# Audit folders
+docs/audits/
