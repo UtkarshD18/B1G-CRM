@@ -3,10 +3,8 @@
 A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichannel Inbox, Chatbots, and Agent Management.
 
 ## Project Documentation
-- [PROJECT_PLAN.md](./PROJECT_PLAN.md): Architecture, data flow, and team distribution strategy.
-- [FEATURE_TRACKER.md](./FEATURE_TRACKER.md): Live progress tracker of all CRM modules. **(Update this actively)**
-- [ENGINEERING_TRACKER.md](./ENGINEERING_TRACKER.md): Engineering setup progress, repo structure, and remaining enablement work.
-- [REFERENCE_APP_AUDIT.md](./REFERENCE_APP_AUDIT.md): Live-app sitemap and parity matrix against the local repo.
+- [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md): Setup and deployment guidelines.
+- [COMPANY_DEPLOYMENT_REQUIREMENTS.md](./COMPANY_DEPLOYMENT_REQUIREMENTS.md): Company integration deployment specifications.
 
 ## Tech Stack
 - **Backend:** Node.js, Express, PostgreSQL, Socket.IO, WhatsApp Web/Cloud API integration.
@@ -77,13 +75,11 @@ Access points after Docker starts:
 |-- middlewares/     Role validation and request middleware
 |-- database/        PostgreSQL schema and connection helpers
 |-- functions/       Backend function handlers
-|-- helper/          Legacy helper modules
-|-- helpers/         Active helper modules for inbox, websockets, and addons
+|-- helper/          Active helper modules for inbox, websockets, chatbots, and addons
 |-- loops/           Campaign and background loop logic
 |-- emails/          Email return helpers
 |-- languages/       Translation assets
 |-- flow-json/       Flow builder node and edge storage
 |-- server.js        Express application bootstrap
-|-- socket.js        Socket.IO message routing
-`-- websocket.js     Websocket integration entrypoint
+`-- socket.js        Socket.IO message routing
 ```

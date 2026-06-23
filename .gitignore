@@ -53,3 +53,34 @@ dist/
 *.trace
 # Local AI agent workspaces
 .antigravity/
+
+# AI generated reports
+*_AUDIT.md
+*_REPORT.md
+*_VERIFICATION.md
+*_TRACKER.md
+*_MATRIX.md
+REFERENCE_GAP*.md
+
+AUTH_AUDIT.md
+AUTH_ACCOUNTS.md
+FEATURE_TRACKER.md
+ENGINEERING_TRACKER.md
+PENDING_TASKS.md
+NEXT_10_FEATURES.md
+PROJECT_COMPLETION_REPORT.md
+PROJECT_PLAN.md
+
+# Verification / audit outputs
+verification_artifacts/
+coverage/
+playwright-report/
+
+node_modules/
+client/node_modules/
+
+dist/
+client/dist/
+
+.env
+.env.*

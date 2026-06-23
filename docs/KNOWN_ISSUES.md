@@ -30,10 +30,9 @@ Last audited: 2026-06-20
 | Issue | Evidence | Impact | Suggested fix |
 | --- | --- | --- | --- |
 | Typos in route names | `send_resovery`, `del_cotact_entry`, `templet`. | API naming inconsistency. | Keep backward compatibility; add aliases if needed. |
-| Root `FEATURE_TRACKER.md` has mojibake | Status icons render as corrupted characters in places. | Readability issue. | Replace with ASCII or clean encoding. |
 | Debug routes remain public | `/api/inbox/`, `/api/qr/create`, `/api/qr/send`, `/api/web/`. | Noise/security surface. | [RESOLVED] Protected `/api/inbox/`, `/api/qr/create`, `/api/qr/send`, and `/api/web/` under `validateUser`/`adminValidator` in Final. |
 | Broad `functions/function.js` | Large mixed-responsibility helper. | Hard maintenance. | Split by domain gradually. |
 
 ## Do Not Forget
 
-When an issue is fixed, update this file, [CURRENT_STATUS.md](CURRENT_STATUS.md), [FEATURE_TRACKER.md](FEATURE_TRACKER.md), [AI_CONTEXT.md](AI_CONTEXT.md), and append [CHANGELOG_AI.md](CHANGELOG_AI.md).
+When an issue is fixed, update this file, [CURRENT_STATUS.md](CURRENT_STATUS.md), [AI_CONTEXT.md](AI_CONTEXT.md), and append [CHANGELOG_AI.md](CHANGELOG_AI.md).

@@ -56,7 +56,6 @@ Last audited: 2026-06-15
 | `websocket.js` | Alternate legacy realtime server; not initialized by `server.js`. |
 | `env.js` | Central config. |
 | `README.md` | Human setup overview. |
-| `PROJECT_PLAN.md`, `FEATURE_TRACKER.md`, `ENGINEERING_TRACKER.md`, `REFERENCE_APP_AUDIT.md`, `PENDING_TASKS.md` | Existing planning/tracking docs. |
 | `CLAUDE.md` | AI entrypoint/update instructions. |
 
 ## Important Directories

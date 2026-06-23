@@ -22,7 +22,7 @@ Rules:
 - Preserve the current project architecture unless the task explicitly requires a change.
 - Avoid duplicate implementations or reintroducing legacy paths when an active path already exists.
 - **Documentation Governance Policy**: Whenever an AI agent modifies functionality, architecture, database schema, migrations, routes, business logic, infrastructure, integrations, feature status, completion status, roadmap priorities, or project state, the agent must review and update the relevant project documentation before concluding the task.
-- **Documentation Review**: Explicitly review affected documents (e.g. `PROJECT_CONTEXT.source.md`, `CURRENT_STATUS.md`, `FEATURE_TRACKER.md`, `ROADMAP.md`, `SYSTEM_ARCHITECTURE.md`) after any implementation changes to verify they reflect the repository reality.
+- **Documentation Review**: Explicitly review affected documents (e.g. `PROJECT_CONTEXT.source.md`, `CURRENT_STATUS.md`, `ROADMAP.md`, `SYSTEM_ARCHITECTURE.md`) after any implementation changes to verify they reflect the repository reality.
 - **Documentation Regeneration**: Run `npm run docs:ai` after any changes to regenerate `docs/PROJECT_CONTEXT.md` and `docs/CHANGELOG_AI.md`.
 - **Changelog Updates**: Ensure `docs/CHANGELOG_AI.source.md` and `docs/CHANGELOG_AI.md` are updated with clear implementation details.
 

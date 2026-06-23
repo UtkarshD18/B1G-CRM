@@ -42,7 +42,6 @@ Last audited: 2026-06-20
 After every successful roadmap item, update:
 
 - [CURRENT_STATUS.md](CURRENT_STATUS.md)
-- [FEATURE_TRACKER.md](FEATURE_TRACKER.md)
 - [CHANGELOG_AI.md](CHANGELOG_AI.md)
 - [AI_CONTEXT.md](AI_CONTEXT.md)
 - Any conditional docs listed in [AI_DOC_UPDATE_PROTOCOL.md](AI_DOC_UPDATE_PROTOCOL.md)

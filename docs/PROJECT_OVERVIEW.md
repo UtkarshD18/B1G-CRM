@@ -24,20 +24,12 @@ B1G-CRM is a multi-tenant WhatsApp/omnichannel CRM SaaS. The repo contains one E
 | Realtime | `socket.js`, `helper/socket/*`, `helper/inbox/*` |
 | Frontend | `client/src/App.jsx`, `client/src/routes/AppRoutes.jsx`, `client/src/pages/**/*`, `client/src/shared/*` |
 | Deployment | `Dockerfile`, `docker-compose.yml`, `.env.example` |
-| Existing trackers | `PROJECT_PLAN.md`, `FEATURE_TRACKER.md`, `ENGINEERING_TRACKER.md`, `REFERENCE_APP_AUDIT.md`, `PENDING_TASKS.md` |
 
 ## Existing Documentation
-
-The root docs predate this AI documentation system:
 
 | File | Meaning |
 | --- | --- |
 | `README.md` | Project summary, setup, and high-level repo structure. |
-| `PROJECT_PLAN.md` | Product architecture, phases, and current snapshot. |
-| `FEATURE_TRACKER.md` | Root-level feature checklist. It contains mojibake in some status icons, but the content is usable. |
-| `ENGINEERING_TRACKER.md` | Engineering progress and enablement work. |
-| `REFERENCE_APP_AUDIT.md` | Live reference app parity notes. |
-| `PENDING_TASKS.md` | Longer task backlog. |
 
 ## What Exists Today
 

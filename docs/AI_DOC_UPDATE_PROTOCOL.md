@@ -10,7 +10,6 @@ This repo uses `/docs` as living AI memory. After every successful implementatio
 | --- | --- |
 | [AI_CONTEXT.md](AI_CONTEXT.md) | Always, if the change affects project shape, status, warnings, commands, or common files. |
 | [CURRENT_STATUS.md](CURRENT_STATUS.md) | Always, to keep status/debt/readiness current. |
-| [FEATURE_TRACKER.md](FEATURE_TRACKER.md) | Always, if any feature status, risk, dependency, or files changed. |
 | [CHANGELOG_AI.md](CHANGELOG_AI.md) | Always append one entry for the successful change. |
 
 ## Conditional Updates

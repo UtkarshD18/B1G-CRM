@@ -76,7 +76,6 @@ The goal of B1GCRM is to serve as a high-fidelity WhatsApp marketing and manual 
 
 *   **Reference Coordinates**: The live reference CRM is hosted at `https://crm.oneoftheprojects.com`.
 *   **Reference Sources**:
-    -   [AUTHENTICATED_REFERENCE_SITEMAP.md](AUTHENTICATED_REFERENCE_SITEMAP.md)
     -   [LIVE_REFERENCE_COMPONENT_LIBRARY.md](LIVE_REFERENCE_COMPONENT_LIBRARY.md)
     -   [REFERENCE_GAP_REFINEMENT.md](REFERENCE_GAP_REFINEMENT.md)
     -   `docs/reference-pages/*`
@@ -184,7 +183,7 @@ When auditing database CRUD operations, perform complete execution loops:
 ## 17. Documentation Governance
 
 Whenever modifying routes, controller business logic, schemas, or migrations, execute these steps before ending a turn:
-1.  Review and update relevant context documents inside the `docs/` folder (e.g. `docs/CURRENT_STATUS.md`, `docs/FEATURE_TRACKER.md`).
+1.  Review and update relevant context documents inside the `docs/` folder (e.g. `docs/CURRENT_STATUS.md`, `docs/ROADMAP.md`).
 2.  Update the AI changelog files: `docs/CHANGELOG_AI.source.md`.
 3.  Rebuild AI documentation using the script:
     `npm run docs:ai`
