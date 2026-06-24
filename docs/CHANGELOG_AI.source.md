@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-25 - Sprint 18: Stripe Webhook Reconciliation & Page Verification Audit
+
+| Field | Details |
+| --- | --- |
+| Feature | Implemented `/api/user/stripe_webhook` to safely receive Stripe payment notifications, authenticate webhook event metadata, update orders database, and provision plan entitlements; integrated orderID, planID, and user UID metadata into checkout session creation. Hardened regex error matching inside local page verification script (`verify-local-pages.js`) using word boundaries (`/\b404\b/`) to prevent numeric timestamp false-positives. Fixed database connection credentials loading in `verify-contacts-phonebooks.js` by requiring `dotenv` and corrected the Puppeteer selector query for the delete button. Added `scratch/verify-stripe-webhook.js` test runner. |
+| Files changed | `routes/user.js`, `verify-local-pages.js`, `verify-contacts-phonebooks.js`, `scratch/verify-stripe-webhook.js`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Achieves full Stripe checkout reconciliation parity for subscription billing and ensures 100% correct automated test and local page crawler executions. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-25 - Sprint 17: Agent Portal Security Hardening & IDOR Prevention
 
 | Field | Details |

@@ -4,51 +4,51 @@
       "slug": "dashboard",
       "status": "Loaded",
       "title": "Operational SaaS overview",
-      "inputs": 0,
+      "inputs": 1,
       "buttons": 1,
       "tables": 1,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nADMIN DASHBOARD\nOperational SaaS overview\n\nTenant growth, revenue trends, and platform health at a glance.\n\nManage Users\nView Orders\n\nTOTAL TENANTS\n\n2"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\n🔍\n📊\nDashboard\nUSERS & PLANS\n💎\nManage Plans\n👥\nManage Users\n🛒\nOrders\nFRONT-END CONTENT\n🤝\nFront Partners\n❓\nFAQ\n📄\nManage Pages\n💬\nTestimonial\n📋\nContact Form\nDATA & INTEGRATIONS\n🔗\nWA Links data\n💳\nPayment Gateways\n🔧\nFlowbuilder Template\nSETTINGS\n🎨\nTheme Settings\n🔐\nSocial Login\n⚙️\nS"
     },
     {
       "slug": "manage-plans",
       "status": "Loaded",
       "title": "Pricing and entitlement controls",
-      "inputs": 11,
+      "inputs": 12,
       "buttons": 8,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nMANAGE PLANS\nPricing and entitlement controls\n\nCreate, edit, and remove plans used by signup, billing, and tenant access checks.\n\nCreate plan\nTitle\nPr"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\n🔍\n📊\nDashboard\nUSERS & PLANS\n💎\nManage Plans\n👥\nManage Users\n🛒\nOrders\nFRONT-END CONTENT\n🤝\nFront Partners\n❓\nFAQ\n📄\nManage Pages\n💬\nTestimonial\n📋\nContact Form\nDATA & INTEGRATIONS\n🔗\nWA Links data\n💳\nPayment Gateways\n🔧\nFlowbuilder Template\nSETTINGS\n🎨\nTheme Settings\n🔐\nSocial Login\n⚙️\nS"
     },
     {
       "slug": "manage-users",
       "status": "Loaded",
       "title": "Tenant roster and plan assignment",
-      "inputs": 5,
-      "buttons": 76,
+      "inputs": 6,
+      "buttons": 103,
       "tables": 1,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nMANAGE USERS\nTenant roster and plan assignment\n\nEdit tenant profiles, assign plans, delete users, or open a tenant session.\n\nSelect a user to edit\nNam"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\n🔍\n📊\nDashboard\nUSERS & PLANS\n💎\nManage Plans\n👥\nManage Users\n🛒\nOrders\nFRONT-END CONTENT\n🤝\nFront Partners\n❓\nFAQ\n📄\nManage Pages\n💬\nTestimonial\n📋\nContact Form\nDATA & INTEGRATIONS\n🔗\nWA Links data\n💳\nPayment Gateways\n🔧\nFlowbuilder Template\nSETTINGS\n🎨\nTheme Settings\n🔐\nSocial Login\n⚙️\nS"
     },
     {
       "slug": "orders",
       "status": "Loaded",
       "title": "Recent Transactions",
-      "inputs": 1,
+      "inputs": 2,
       "buttons": 1,
       "tables": 1,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nBILLING & PAYMENTS\nRecent Transactions\n\nAll subscription payments and order records across tenant accounts.\n\nTOTAL ORDERS\n0\nAll time records\nTOTAL REV"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\n🔍\n📊\nDashboard\nUSERS & PLANS\n💎\nManage Plans\n👥\nManage Users\n🛒\nOrders\nFRONT-END CONTENT\n🤝\nFront Partners\n❓\nFAQ\n📄\nManage Pages\n💬\nTestimonial\n📋\nContact Form\nDATA & INTEGRATIONS\n🔗\nWA Links data\n💳\nPayment Gateways\n🔧\nFlowbuilder Template\nSETTINGS\n🎨\nTheme Settings\n🔐\nSocial Login\n⚙️\nS"
     },
     {
       "slug": "settings",
       "status": "Loaded",
       "title": "SaaS configuration workspace",
-      "inputs": 10,
-      "buttons": 9,
+      "inputs": 11,
+      "buttons": 12,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAdmin Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nManage Plans\nManage Users\nOrders\nSettings\nSign out\nADMIN SETTINGS\nSaaS configuration workspace\n\nManage the operational settings already exposed by the backend.\n\nWeb\nPayments\nSMTP\nCMS\nLeads\nSocial\nDeplo"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\n🔍\n📊\nDashboard\nUSERS & PLANS\n💎\nManage Plans\n👥\nManage Users\n🛒\nOrders\nFRONT-END CONTENT\n🤝\nFront Partners\n❓\nFAQ\n📄\nManage Pages\n💬\nTestimonial\n📋\nContact Form\nDATA & INTEGRATIONS\n🔗\nWA Links data\n💳\nPayment Gateways\n🔧\nFlowbuilder Template\nSETTINGS\n🎨\nTheme Settings\n🔐\nSocial Login\n⚙️\nS"
     }
   ],
   "user": [
@@ -59,38 +59,38 @@
       "inputs": 0,
       "buttons": 1,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "UI Only",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "inbox",
       "status": "Loaded",
       "title": "Omnichannel operator inbox",
-      "inputs": 3,
-      "buttons": 13,
+      "inputs": 4,
+      "buttons": 15,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "kanban",
       "status": "Loaded",
       "title": "Chat Kanban",
       "inputs": 0,
-      "buttons": 10,
+      "buttons": 12,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "contacts",
       "status": "Loaded",
       "title": "Phonebooks and contact records",
-      "inputs": 40,
-      "buttons": 47,
+      "inputs": 49,
+      "buttons": 62,
       "tables": 2,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "campaigns",
@@ -99,28 +99,28 @@
       "inputs": 0,
       "buttons": 2,
       "tables": 1,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "automation-flows",
       "status": "Loaded",
       "title": "Real flow CRUD over `/api/chat_flow`",
       "inputs": 3,
-      "buttons": 51,
+      "buttons": 69,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "wa-chatbot",
       "status": "Loaded",
       "title": "Chatbot automation over saved flows",
-      "inputs": 6,
-      "buttons": 57,
+      "inputs": 7,
+      "buttons": 84,
       "tables": 2,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "integrations",
@@ -129,28 +129,28 @@
       "inputs": 7,
       "buttons": 6,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "agent-login",
       "status": "Loaded",
       "title": "Tenant-managed staff accounts",
       "inputs": 4,
-      "buttons": 19,
+      "buttons": 28,
       "tables": 1,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "agent-task",
       "status": "Loaded",
       "title": "Task queue assigned to tenant agents",
       "inputs": 1,
-      "buttons": 18,
+      "buttons": 27,
       "tables": 1,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "chat-widget",
@@ -159,8 +159,8 @@
       "inputs": 4,
       "buttons": 2,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "billing",
@@ -169,18 +169,18 @@
       "inputs": 0,
       "buttons": 5,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "api-dashboard",
       "status": "Loaded",
       "title": "REST API, template API, and webhook setup",
       "inputs": 5,
-      "buttons": 43,
+      "buttons": 63,
       "tables": 1,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     },
     {
       "slug": "settings",
@@ -189,8 +189,8 @@
       "inputs": 5,
       "buttons": 4,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nUser Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manage"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
     }
   ],
   "agent": [
@@ -201,8 +201,8 @@
       "inputs": 0,
       "buttons": 1,
       "tables": 2,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAgent Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nWorkspace\nAssigned Chats\nSign out\nAGENT WORKSPACE\nRestricted staff portal\n\nReady for direct auto-login from the tenant `Agent Login` screen.\n\nAGENT\n\nLocal Agent\nagent@example.com\n\nASSIGNED CHATS\n\n0\nScoped to own"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nWorkspace\nAssigned Chats\nSign out\nwhatsCRM\n5.9.5\n🏠\n›\ndashboard\n🌐 English\nAGENT WORKSPACE\nRestricted staff portal\n\nReady for direct auto-login from the tenant `Agent Login` screen.\n\nAGENT\n\nLocal Agent\nagent@example.com\n\nASSIGNED CHATS\n\n0\nScoped to owner_uid and agent_chats\n\nOPEN TASKS\n\n0"
     },
     {
       "slug": "chats",
@@ -211,8 +211,8 @@
       "inputs": 3,
       "buttons": 9,
       "tables": 0,
-      "classification": "Placeholder",
-      "textSnippet": "B1GCRM\nAgent Portal\n\nBuilt from the verified live portal model, not a placeholder mock.\n\nWorkspace\nAssigned Chats\nSign out\nWORKSPACE\nAgent assigned inbox\n\nRestricted chat console listing only chats assigned to you.\n\nLive\nChats\n0\nAll\nWhatsApp\nInstagram\nWebsite\nAll\nRead\nUnread\n\nNo chats match this fil"
+      "classification": "Fully Functional",
+      "textSnippet": "W\nwhatsCRM\nWorkspace\nAssigned Chats\nSign out\nwhatsCRM\n5.9.5\n🏠\n›\nchats\n🌐 English\nWORKSPACE\nAgent assigned inbox\n\nRestricted chat console listing only chats assigned to you.\n\nLive\nChats\n0\nAll\nWhatsApp\nInstagram\nWebsite\nAll\nRead\nUnread\n\nNo chats match this filter.\n\nConversation\n\nOpen an assigned chat"
     }
   ]
 }

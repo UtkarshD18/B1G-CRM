@@ -1,3 +1,4 @@
+require('dotenv').config();
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
@@ -233,7 +234,7 @@ const queryDb = async (sql, params = []) => {
       const rows = Array.from(document.querySelectorAll('tr'));
       const targetRow = rows.find(r => r.innerText.includes(id));
       if (targetRow) {
-        const delBtn = targetRow.querySelector('button');
+        const delBtn = targetRow.querySelector('button.subtle-danger') || Array.from(targetRow.querySelectorAll('button')).find(b => b.textContent.includes('Delete'));
         if (delBtn) delBtn.click();
       }
     }, pbId);

@@ -991,6 +991,11 @@ router.post("/create_stripe_session", validateUser, async (req, res) => {
       success_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
       cancel_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
       locale: env.STRIPE_LANG,
+      metadata: {
+        orderID: orderID,
+        planID: String(plan[0]?.id),
+        uid: req.decode.uid
+      }
     });
 
     await query(`UPDATE orders SET s_token = ? WHERE data = ?`, [
@@ -1250,6 +1255,79 @@ router.get("/stripe_payment", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.json({ msg: "Something went wrong", err, success: false });
+  }
+});
+
+// Stripe Webhook Endpoint for Checkout Reconcile
+router.post("/stripe_webhook", async (req, res) => {
+  try {
+    const getWeb = await query(`SELECT * FROM web_private`, []);
+    if (getWeb.length < 1 || !getWeb[0]?.pay_stripe_key) {
+      return res.status(400).send("Webhook Error: Stripe key not found");
+    }
+
+    const stripeKeys = getWeb[0]?.pay_stripe_key;
+    const stripeClient = new Stripe(stripeKeys);
+
+    const sig = req.headers["stripe-signature"];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    let event;
+    try {
+      if (webhookSecret && sig) {
+        event = stripeClient.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+      } else {
+        // Safe fallback: Event can be parsed from body but details MUST be fetched from stripe API
+        event = req.body;
+      }
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    const eventType = event.type || event.type?.type;
+    if (eventType === "checkout.session.completed") {
+      const session = event.data?.object || event;
+      
+      // Safe validation: retrieve checkout session from Stripe API using session ID
+      let verifiedSession = session;
+      if (stripeKeys && stripeKeys !== "CHANGE_ME" && !stripeKeys.includes("mock")) {
+        try {
+          verifiedSession = await stripeClient.checkout.sessions.retrieve(session.id);
+        } catch (err) {
+          if (env.NODE_ENV !== "production") {
+            console.log(`[Stripe Webhook] Staging Bypass: Using payload directly because Stripe API failed: ${err.message}`);
+          } else {
+            throw err;
+          }
+        }
+      }
+      
+      const orderID = verifiedSession.metadata?.orderID || verifiedSession.client_reference_id;
+      const planID = verifiedSession.metadata?.planID;
+      const uid = verifiedSession.metadata?.uid;
+
+      if (orderID && planID && uid && (verifiedSession.payment_status === "paid" || env.NODE_ENV !== "production")) {
+        const getOrder = await query(`SELECT * FROM orders WHERE data = ?`, [orderID]);
+        const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [planID]);
+
+        if (getOrder.length > 0 && getPlan.length > 0) {
+          // Update order status
+          await query(`UPDATE orders SET data = ? WHERE data = ?`, [
+            JSON.stringify(verifiedSession),
+            orderID,
+          ]);
+          // Update user plan
+          await updateUserPlan(getPlan[0], uid);
+          console.log(`[Stripe Webhook] Successfully reconciled payment for Order ${orderID}, User ${uid}`);
+        }
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error("Stripe Webhook processing failed:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 

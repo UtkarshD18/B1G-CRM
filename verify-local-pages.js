@@ -42,9 +42,9 @@ async function verifyPage(page, role, url, slug) {
       const textLower = text.toLowerCase();
       let hasError = false;
       if (s === 'campaigns') {
-        hasError = textLower.includes('unable to load') || textLower.includes('something went wrong') || textLower.includes('404') || textLower.includes('not found') || textLower.includes('failed to load');
+        hasError = textLower.includes('unable to load') || textLower.includes('something went wrong') || /\b404\b/.test(textLower) || textLower.includes('not found') || textLower.includes('failed to load');
       } else {
-        hasError = textLower.includes('error') || textLower.includes('failed') || textLower.includes('not found') || textLower.includes('404');
+        hasError = textLower.includes('error') || textLower.includes('failed') || textLower.includes('not found') || /\b404\b/.test(textLower);
       }
       const isPlaceholder = textLower.includes('placeholder') || textLower.includes('coming soon') || textLower.includes('under construction') || textLower.includes('planned');
       
