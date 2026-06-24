@@ -175,6 +175,10 @@ function UserInboxPage() {
   const [hoveredMsgIndex, setHoveredMsgIndex] = useState(null)
   const [newTagInput, setNewTagInput] = useState('')
 
+  const [templateForm, setTemplateForm] = useState({ id: null, title: '', body: '' })
+  const [templateError, setTemplateError] = useState('')
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false)
+
   const filteredTemplates = useMemo(() => {
     if (!shortcutFilter) return templates
     return templates.filter(
@@ -198,6 +202,94 @@ function UserInboxPage() {
   useEffect(() => {
     loadTemplatesList()
   }, [loadTemplatesList])
+
+  const saveTemplate = async (e) => {
+    e.preventDefault()
+    setTemplateError('')
+    if (!templateForm.title.trim() || !templateForm.body.trim()) {
+      setTemplateError('Title and Body are required.')
+      return
+    }
+
+    try {
+      let result
+      if (isEditingTemplate && templateForm.id) {
+        result = await apiRequest('/api/templet/update', {
+          method: 'POST',
+          token: tokens.user,
+          body: {
+            id: templateForm.id,
+            title: templateForm.title.trim(),
+            type: 'text',
+            content: { body: templateForm.body.trim() },
+          },
+        })
+      } else {
+        result = await apiRequest('/api/templet/add_new', {
+          method: 'POST',
+          token: tokens.user,
+          body: {
+            title: templateForm.title.trim(),
+            type: 'text',
+            content: { body: templateForm.body.trim() },
+          },
+        })
+      }
+
+      if (result?.success) {
+        setTemplateForm({ id: null, title: '', body: '' })
+        setIsEditingTemplate(false)
+        await loadTemplatesList()
+      } else {
+        setTemplateError(result?.msg || 'Failed to save template.')
+      }
+    } catch (err) {
+      setTemplateError(err.message || 'An error occurred.')
+    }
+  }
+
+  const deleteTemplate = async (templateId) => {
+    if (!window.confirm('Are you sure you want to delete this template?')) {
+      return
+    }
+    setTemplateError('')
+    try {
+      const result = await apiRequest('/api/templet/del_templets', {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          selected: [templateId],
+        },
+      })
+      if (result?.success) {
+        await loadTemplatesList()
+      } else {
+        setTemplateError(result?.msg || 'Failed to delete template.')
+      }
+    } catch (err) {
+      setTemplateError(err.message || 'An error occurred.')
+    }
+  }
+
+  const editTemplate = (template) => {
+    let body = ''
+    try {
+      const parsedContent = typeof template.content === 'string'
+        ? JSON.parse(template.content)
+        : template.content
+      body = parsedContent?.body || parsedContent?.text || String(parsedContent || '')
+    } catch {
+      body = String(template.content || '')
+    }
+
+    setTemplateForm({
+      id: template.id,
+      title: template.title,
+      body: body,
+    })
+    setIsEditingTemplate(true)
+    setTemplateError('')
+  }
 
   function openChat(chat) {
     if (!socketRef.current || !chat?.chat_id) {
@@ -1133,6 +1225,115 @@ function UserInboxPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="panel form-panel">
+            <div className="panel-header">
+              <h2>Quick Text Templates</h2>
+            </div>
+            {templateError && <p className="status-line error-line" style={{ color: 'red', fontSize: '0.8rem', margin: '0 0 8px 0' }}>{templateError}</p>}
+            
+            <form onSubmit={saveTemplate} style={{ display: 'grid', gap: '8px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#365261', fontWeight: '800' }}>
+                {isEditingTemplate ? 'Edit Template' : 'Create Quick Reply Template'}
+              </span>
+              <label style={{ fontSize: '0.75rem', display: 'grid', gap: '4px' }}>
+                Template Name
+                <input
+                  type="text"
+                  placeholder="e.g. welcome_msg"
+                  value={templateForm.title}
+                  onChange={(e) => setTemplateForm({ ...templateForm, title: e.target.value })}
+                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #c5d0d6' }}
+                />
+              </label>
+              <label style={{ fontSize: '0.75rem', display: 'grid', gap: '4px' }}>
+                Template Content (Body)
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Hello, thanks for reaching out!"
+                  value={templateForm.body}
+                  onChange={(e) => setTemplateForm({ ...templateForm, body: e.target.value })}
+                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #c5d0d6', fontFamily: 'inherit' }}
+                />
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button className="primary-button" type="submit" style={{ padding: '6px 12px', fontSize: '0.8rem', marginTop: 0, flex: 1 }}>
+                  {isEditingTemplate ? 'Update' : 'Save'}
+                </button>
+                {isEditingTemplate && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => {
+                      setTemplateForm({ id: null, title: '', body: '' })
+                      setIsEditingTemplate(false)
+                      setTemplateError('')
+                    }}
+                    style={{ padding: '6px 12px', fontSize: '0.8rem', marginTop: 0 }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+
+            <div style={{ borderTop: '1px solid rgba(16, 33, 45, 0.1)', paddingTop: '12px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#10212d', fontWeight: '700', display: 'block', marginBottom: '8px' }}>
+                Saved Templates ({templates.length})
+              </span>
+              {templates.length > 0 ? (
+                <div style={{ display: 'grid', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+                  {templates.map((t) => {
+                    let contentBody = ''
+                    try {
+                      const parsed = typeof t.content === 'string' ? JSON.parse(t.content) : t.content
+                      contentBody = parsed?.body || parsed?.text || String(parsed || '')
+                    } catch {
+                      contentBody = String(t.content || '')
+                    }
+                    return (
+                      <div
+                        key={t.id}
+                        style={{
+                          padding: '8px',
+                          backgroundColor: 'rgba(16, 33, 45, 0.03)',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(16, 33, 45, 0.08)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '0.8rem', color: '#1ea085' }}>/{t.title}</strong>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => editTemplate(t)}
+                              style={{ background: 'none', border: 'none', color: '#3498db', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteTemplate(t.id)}
+                              style={{ background: 'none', border: 'none', color: '#e74c3c', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {contentBody}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
+                  No templates saved yet.
+                </p>
+              )}
             </div>
           </div>
         </aside>

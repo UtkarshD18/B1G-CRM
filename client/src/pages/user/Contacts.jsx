@@ -39,6 +39,7 @@ function UserContactsPage() {
   const [selectedIds, setSelectedIds] = useState([])
   const [phonebookName, setPhonebookName] = useState('')
   const [csvFile, setCsvFile] = useState(null)
+  const [csvErrors, setCsvErrors] = useState([])
   
   // Custom edit states
   const [renamingPhonebook, setRenamingPhonebook] = useState(null)
@@ -134,6 +135,9 @@ function UserContactsPage() {
   }
 
   async function deletePhonebook(id) {
+    if (!window.confirm('Are you sure you want to delete this phonebook and all of its contacts? This action cannot be undone.')) {
+      return
+    }
     setSaving(true)
     setStatus('Deleting phonebook and its contacts...')
 
@@ -218,6 +222,7 @@ function UserContactsPage() {
 
   async function importContacts(event) {
     event.preventDefault()
+    setCsvErrors([])
 
     if (!selectedPhonebook || !csvFile) {
       setStatus('Select a phonebook and CSV file before importing.')
@@ -240,6 +245,13 @@ function UserContactsPage() {
 
       if (!result?.success) {
         setStatus(result?.msg || 'Unable to import contacts')
+        if (result?.csvData) {
+          // Find rows where mobile is missing
+          const invalidRows = result.csvData
+            .map((row, idx) => ({ ...row, rowNum: idx + 2 }))
+            .filter(row => !row.mobile || !String(row.mobile).trim())
+          setCsvErrors(invalidRows)
+        }
         return
       }
 
@@ -257,6 +269,10 @@ function UserContactsPage() {
   async function deleteSelectedContacts() {
     if (!selectedIds.length) {
       setStatus('Select at least one contact to delete.')
+      return
+    }
+
+    if (!window.confirm(`Are you sure you want to delete the ${selectedIds.length} selected contact(s)? This action cannot be undone.`)) {
       return
     }
 
@@ -454,7 +470,36 @@ function UserContactsPage() {
               onChange={(event) => setCsvFile(event.target.files?.[0] || null)}
             />
           </label>
-          <p className="muted-copy">CSV columns: name, mobile, var1, var2, var3, var4, var5.</p>
+          
+          <div style={{ background: 'rgba(10,25,37,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(10,25,37,0.06)', margin: '12px 0' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 'bold', display: 'block', marginBottom: '6px', color: '#333' }}>
+              Expected CSV Format:
+            </span>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0 0 6px 0' }}>
+              The CSV must contain a header row. &apos;name&apos; and &apos;mobile&apos; are mandatory columns.
+            </p>
+            <pre style={{ fontSize: '11px', background: '#fff', padding: '6px 8px', borderRadius: '6px', border: '1px solid rgba(10,25,37,0.08)', margin: 0, overflowX: 'auto', color: 'var(--text)' }}>
+              name,mobile,var1,var2,var3,var4,var5{"\n"}
+              John Doe,+1234567890,Value1,,,{"\n"}
+              Jane Smith,+0987654321,Value2,,,
+            </pre>
+          </div>
+
+          {csvErrors.length > 0 && (
+            <div style={{ marginBottom: '12px', padding: '12px', background: 'rgba(231, 76, 60, 0.1)', border: '1px solid #e74c3c', borderRadius: '12px' }}>
+              <strong style={{ color: '#c0392b', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+                Validation Error: The following rows are missing mobile numbers:
+              </strong>
+              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#c0392b', maxHeight: '120px', overflowY: 'auto' }}>
+                {csvErrors.map((err, idx) => (
+                  <li key={idx}>
+                    Row {err.rowNum}: name &quot;{err.name || 'N/A'}&quot;
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <button className="primary-button" type="submit" disabled={saving}>
             {saving ? 'Importing...' : 'Import contacts'}
           </button>

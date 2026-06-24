@@ -396,6 +396,9 @@ function UserCampaignsPage() {
   }
 
   async function deleteCampaign(broadcast_id) {
+    if (!window.confirm('Are you sure you want to delete this campaign and all its history/logs?')) {
+      return
+    }
     setStatus('Deleting campaign...')
     try {
       const result = await apiRequest('/api/broadcast/del_broadcast', {

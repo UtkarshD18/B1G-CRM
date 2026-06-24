@@ -199,6 +199,9 @@ function UserChatBotPage() {
   }
 
   async function deleteBot(id) {
+    if (!window.confirm('Are you sure you want to delete this chatbot?')) {
+      return
+    }
     setStatus('Deleting chatbot...')
     try {
       const result = await apiRequest('/api/chatbot/del_chatbot', {

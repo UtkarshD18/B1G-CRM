@@ -461,6 +461,10 @@ function UserMetaTemplatesPage() {
       return
     }
 
+    if (!window.confirm(`Are you sure you want to delete the Meta template "${name}"? This action cannot be undone.`)) {
+      return
+    }
+
     setStatus(`Deleting ${name}...`)
     try {
       const result = await apiRequest('/api/user/del_meta_templet', {

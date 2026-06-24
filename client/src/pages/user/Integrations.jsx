@@ -313,6 +313,9 @@ function UserIntegrationsPage() {
   }
 
   async function deleteQr(uniqueId) {
+    if (!window.confirm('Are you sure you want to delete this QR instance? This will disconnect your WhatsApp session.')) {
+      return
+    }
     setStatus('Deleting QR instance...')
     try {
       const result = await apiRequest('/api/qr/del_instance', {

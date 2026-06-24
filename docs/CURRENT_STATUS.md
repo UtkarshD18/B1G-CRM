@@ -42,6 +42,8 @@ Last audited: 2026-06-25
 | Sprint 18 Stripe Webhook Reconciliation & Page Verification Audit | Implemented `/api/user/stripe_webhook` to safely provision subscription plan entitlements, hardened Puppeteer page verification checks, and resolved dotenv database connection dependencies. |
 | Sprint 19 Admin SMTP Settings & User Dashboard KPI Metrics | Added "Send Test Email" form to Admin SmtpSettings and expanded the User Dashboard with 2 additional KPI cards, 2 chart series, and a metrics Refresh button. |
 | Sprint 20 Admin Completeness & Safeguards | Added warning confirmation dialogs to Admin plans, FAQs, testimonials, and contact submissions; implemented Add Custom Page creation form with featured image uploader, and custom logo uploader/preview in Site Settings. |
+| Sprint 21 User Completeness & Safety | Added local Quick Text Templates CRUD management inside User Inbox sidebar. Enforced delete warning confirmation dialogs across all User Portal modules (Contacts, Meta Templates, QR instances, webhook rules, chat widgets, chatbots, campaigns, flows). Enhanced CSV import interface with pre-import validation details and expected formatting instructions. |
+
 
 ## Partially Implemented
 

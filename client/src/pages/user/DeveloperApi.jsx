@@ -160,6 +160,9 @@ function UserDeveloperApiPage() {
   }
 
   async function deleteWebhookRule(rule) {
+    if (!window.confirm(`Are you sure you want to delete the webhook rule "${rule.name || rule.id}"?`)) {
+      return
+    }
     setStatus('Deleting webhook rule...')
     try {
       const result = await apiRequest('/api/webhooks/rules/delete', {

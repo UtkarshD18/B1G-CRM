@@ -109,6 +109,9 @@ function UserChatWidgetPage() {
   }
 
   async function deleteWidget(id) {
+    if (!window.confirm('Are you sure you want to delete this Click-to-Chat Launcher widget?')) {
+      return
+    }
     setStatus('Deleting widget...')
     try {
       const result = await apiRequest('/api/user/del_widget', {

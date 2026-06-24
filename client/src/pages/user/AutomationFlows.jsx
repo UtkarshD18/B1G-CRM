@@ -776,6 +776,9 @@ function UserAutomationFlowsPage() {
   }
 
   async function deleteFlow(flow) {
+    if (!window.confirm(`Are you sure you want to delete the flow "${flow.title}"?`)) {
+      return
+    }
     setStatus('Deleting flow...')
     try {
       const result = await apiRequest('/api/chat_flow/del_flow', {
