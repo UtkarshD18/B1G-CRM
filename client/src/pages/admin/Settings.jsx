@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 import { formatDateTime } from '../../shared/format'
 
-const tabs = ['Web', 'Payments', 'SMTP', 'CMS', 'Leads', 'Social', 'Deployment']
+const tabs = ['Web', 'Payments', 'SMTP', 'CMS', 'Leads', 'Social', 'Deployment', 'Theme', 'Translation', 'Update Web']
 
 const paymentDefaults = {
   pay_offline_id: '',
@@ -97,6 +97,254 @@ function AdminSettingsPage() {
   const [terms, setTerms] = useState({ title: 'Terms and Conditions', content: '' })
   const [privacy, setPrivacy] = useState({ title: 'Privacy Policy', content: '' })
   const [leads, setLeads] = useState([])
+
+  // Theme, Translation & Update States
+  const [theme, setTheme] = useState(null)
+  const [langs, setLangs] = useState([])
+  const [selectedLang, setSelectedLang] = useState('')
+  const [langData, setLangData] = useState(null)
+  const [newLangName, setNewLangName] = useState('')
+  const [langSearch, setLangSearch] = useState('')
+  const [editedLangData, setEditedLangData] = useState({})
+  const [langPage, setLangPage] = useState(1)
+
+  const [updatePassword, setUpdatePassword] = useState('')
+  const [updateQueries, setUpdateQueries] = useState('')
+  const [updateNewQueries, setUpdateNewQueries] = useState('')
+  const [updateFile, setUpdateFile] = useState(null)
+
+  // Auto detect tab based on URL path
+  useEffect(() => {
+    const path = window.location.pathname
+    if (path.endsWith('/web-theme')) {
+      setActiveTab('Theme')
+    } else if (path.endsWith('/translation')) {
+      setActiveTab('Translation')
+    } else if (path.endsWith('/update-web')) {
+      setActiveTab('Update Web')
+    }
+  }, [])
+
+  const loadTheme = useCallback(async () => {
+    try {
+      const res = await apiRequest('/api/web/get_theme', { token: tokens.admin })
+      if (res?.success) {
+        setTheme(res.data)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [tokens.admin])
+
+  const loadLangs = useCallback(async () => {
+    try {
+      const res = await apiRequest('/api/web/get-all-translation-name', { token: tokens.admin })
+      if (res?.success && Array.isArray(res.data)) {
+        const cleanNames = res.data.map(name => name.replace('.json', ''))
+        setLangs(cleanNames)
+        if (cleanNames.length > 0 && !selectedLang) {
+          setSelectedLang(cleanNames[0])
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [tokens.admin, selectedLang])
+
+  const loadOneLang = useCallback(async (code) => {
+    if (!code) return
+    setStatus(`Loading translation for ${code}...`)
+    try {
+      const res = await apiRequest(`/api/web/get-one-translation?code=${code}`, { token: tokens.admin })
+      if (res?.success) {
+        setLangData(res.data)
+        setEditedLangData(res.data || {})
+        setLangPage(1)
+        setStatus('')
+      } else {
+        setStatus(res?.msg || `Unable to load translation for ${code}`)
+      }
+    } catch (e) {
+      setStatus(e.message)
+    }
+  }, [tokens.admin])
+
+  useEffect(() => {
+    if (activeTab === 'Theme' && !theme) {
+      loadTheme()
+    } else if (activeTab === 'Translation') {
+      loadLangs()
+    }
+  }, [activeTab, theme, loadTheme, loadLangs])
+
+  useEffect(() => {
+    if (selectedLang) {
+      loadOneLang(selectedLang)
+    }
+  }, [selectedLang, loadOneLang])
+
+  function handleThemeChange(key, subKey, val) {
+    setTheme(prev => {
+      if (subKey) {
+        return {
+          ...prev,
+          [key]: {
+            ...prev[key],
+            [subKey]: val
+          }
+        }
+      } else {
+        return {
+          ...prev,
+          [key]: val
+        }
+      }
+    })
+  }
+
+  async function saveTheme(event) {
+    event.preventDefault()
+    setStatus('Saving theme settings...')
+    try {
+      const result = await apiRequest('/api/web/save_theme', {
+        method: 'POST',
+        token: tokens.admin,
+        body: { updatedJson: theme },
+      })
+      if (result?.success) {
+        setStatus('Theme updated successfully.')
+      } else {
+        setStatus(result?.msg || 'Unable to update theme')
+      }
+    } catch (e) {
+      setStatus(e.message)
+    }
+  }
+
+  const filteredKeys = useMemo(() => {
+    if (!editedLangData) return []
+    const allKeys = Object.keys(editedLangData)
+    if (!langSearch) return allKeys
+    const q = langSearch.toLowerCase()
+    return allKeys.filter(k =>
+      k.toLowerCase().includes(q) ||
+      String(editedLangData[k] || '').toLowerCase().includes(q)
+    )
+  }, [editedLangData, langSearch])
+
+  const langPageSize = 50
+  const totalPages = Math.ceil(filteredKeys.length / langPageSize) || 1
+  const paginatedKeys = useMemo(() => {
+    const start = (langPage - 1) * langPageSize
+    return filteredKeys.slice(start, start + langPageSize)
+  }, [filteredKeys, langPage])
+
+  function handleLangValueChange(key, val) {
+    setEditedLangData(prev => ({
+      ...prev,
+      [key]: val
+    }))
+  }
+
+  async function saveTranslation(event) {
+    event.preventDefault()
+    setStatus('Saving translation...')
+    try {
+      const result = await apiRequest('/api/web/update-one-translation', {
+        method: 'POST',
+        token: tokens.admin,
+        body: { code: selectedLang, updatedjson: editedLangData },
+      })
+      if (result?.success) {
+        setStatus(result.msg || 'Translation saved.')
+      } else {
+        setStatus(result?.msg || 'Unable to save translation')
+      }
+    } catch (e) {
+      setStatus(e.message)
+    }
+  }
+
+  async function addLanguage(event) {
+    event.preventDefault()
+    if (!newLangName.trim()) return
+    setStatus('Adding new language...')
+    try {
+      const result = await apiRequest('/api/web/add-new-translation', {
+        method: 'POST',
+        token: tokens.admin,
+        body: { newcode: newLangName.trim() },
+      })
+      if (result?.success) {
+        setStatus(result.msg || 'Language added.')
+        setNewLangName('')
+        loadLangs()
+      } else {
+        setStatus(result?.msg || 'Unable to add language')
+      }
+    } catch (e) {
+      setStatus(e.message)
+    }
+  }
+
+  async function deleteLanguage(code) {
+    if (!window.confirm(`Are you sure you want to delete ${code} language?`)) return
+    setStatus(`Deleting ${code}...`)
+    try {
+      const result = await apiRequest('/api/web/del-one-translation', {
+        method: 'POST',
+        token: tokens.admin,
+        body: { code },
+      })
+      if (result?.success) {
+        setStatus(result.msg || 'Language deleted.')
+        setSelectedLang('')
+        loadLangs()
+      } else {
+        setStatus(result?.msg || 'Unable to delete language')
+      }
+    } catch (e) {
+      setStatus(e.message)
+    }
+  }
+
+  async function handleUpdateApp(event) {
+    event.preventDefault()
+    if (!updatePassword) {
+      setStatus('Admin password is required.')
+      return
+    }
+    setStatus('Updating application codebase...')
+    try {
+      const formData = new FormData()
+      formData.append('password', updatePassword)
+      if (updateFile) {
+        formData.append('file', updateFile)
+      }
+      if (updateQueries) {
+        formData.append('queries', updateQueries)
+      }
+      if (updateNewQueries) {
+        formData.append('newQueries', updateNewQueries)
+      }
+
+      const res = await fetch('/api/web/update_app', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${tokens.admin}` },
+        body: formData,
+      })
+      const result = await res.json()
+      if (result?.success) {
+        setStatus(result.msg || 'App updated successfully.')
+        setUpdatePassword('')
+        setUpdateFile(null)
+      } else {
+        setStatus(result?.msg || 'Unable to update app')
+      }
+    } catch (e) {
+      setStatus(e.message)
+    }
+  }
 
   const loadSettings = useCallback(async () => {
     setStatus('Loading settings...')
@@ -686,6 +934,235 @@ function AdminSettingsPage() {
 
           <button className="primary-button" type="submit" style={{ marginTop: '24px' }}>
             Save Deployment Configuration
+          </button>
+        </form>
+      ) : null}
+
+      {activeTab === 'Theme' && theme ? (
+        <form className="panel form-panel" onSubmit={saveTheme}>
+          <div className="panel-header">
+            <h2>Theme settings</h2>
+            <p>Customize system branding colors persisted in theme.json.</p>
+          </div>
+          <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+            {Object.entries(theme).map(([key, val]) => {
+              if (typeof val === 'object' && val !== null) {
+                return (
+                  <div key={key} className="theme-group-panel" style={{ border: '1px solid rgba(10,25,37,0.06)', borderRadius: '12px', padding: '16px', background: '#fcfcfc' }}>
+                    <h3 style={{ textTransform: 'capitalize', color: '#1ea085', margin: '0 0 12px 0', fontSize: '0.95rem' }}>{key} Colors</h3>
+                    <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
+                      {Object.entries(val).map(([subKey, subVal]) => {
+                        const isColor = String(subVal).startsWith('#')
+                        return (
+                          <label key={subKey} style={{ display: 'grid', gap: '6px' }}>
+                            <span style={{ textTransform: 'capitalize', fontSize: '0.82rem', fontWeight: 600, color: '#365261' }}>{subKey}</span>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <input
+                                type={isColor ? 'color' : 'text'}
+                                value={subVal || ''}
+                                onChange={e => handleThemeChange(key, subKey, e.target.value)}
+                                style={{ padding: isColor ? '0' : '8px 12px', height: isColor ? '38px' : 'auto', width: isColor ? '50px' : '100%', border: '1px solid #c5d0d6', borderRadius: '8px', cursor: isColor ? 'pointer' : 'text' }}
+                              />
+                              {!isColor ? null : (
+                                <input
+                                  type="text"
+                                  value={subVal || ''}
+                                  onChange={e => handleThemeChange(key, subKey, e.target.value)}
+                                  style={{ padding: '8px 12px', border: '1px solid #c5d0d6', borderRadius: '8px', width: '90px', fontSize: '0.85rem' }}
+                                />
+                              )}
+                            </div>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              } else {
+                return (
+                  <label key={key} style={{ display: 'grid', gap: '6px' }}>
+                    <span style={{ textTransform: 'capitalize', fontSize: '0.82rem', fontWeight: 600, color: '#365261' }}>{key}</span>
+                    <input
+                      type="text"
+                      value={val || ''}
+                      onChange={e => handleThemeChange(key, null, e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #c5d0d6', borderRadius: '8px' }}
+                    />
+                  </label>
+                )
+              }
+            })}
+          </div>
+          <button className="primary-button" type="submit" style={{ marginTop: '24px' }}>
+            Save Theme Colors
+          </button>
+        </form>
+      ) : null}
+
+      {activeTab === 'Translation' ? (
+        <div className="page-stack">
+          <div className="two-column-grid" style={{ gridTemplateColumns: '1fr 1.5fr' }}>
+            <div className="panel" style={{ padding: '20px', borderRadius: '16px' }}>
+              <div className="panel-header">
+                <h2>Translation roster</h2>
+              </div>
+              <div style={{ display: 'grid', gap: '16px' }}>
+                <label style={{ display: 'grid', gap: '6px' }}>
+                  Select dictionary language
+                  <select
+                    value={selectedLang}
+                    onChange={e => setSelectedLang(e.target.value)}
+                    style={{ borderRadius: '12px', padding: '10px 14px' }}
+                  >
+                    <option value="">Select language</option>
+                    {langs.map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </label>
+                
+                <form onSubmit={addLanguage} style={{ borderTop: '1px solid rgba(10,25,37,0.06)', paddingTop: '16px', display: 'grid', gap: '12px' }}>
+                  <strong>Create new language</strong>
+                  <input
+                    value={newLangName}
+                    onChange={e => setNewLangName(e.target.value)}
+                    placeholder="e.g. Spanish"
+                    style={{ borderRadius: '12px', padding: '10px 14px' }}
+                  />
+                  <button className="primary-button" type="submit">➕ Add language</button>
+                </form>
+
+                {selectedLang && (
+                  <div style={{ borderTop: '1px solid rgba(10,25,37,0.06)', paddingTop: '16px' }}>
+                    <button
+                      className="primary-button subtle-danger"
+                      type="button"
+                      onClick={() => deleteLanguage(selectedLang)}
+                      style={{ width: '100%' }}
+                    >
+                      🗑️ Delete {selectedLang}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {selectedLang && langData ? (
+              <form className="panel form-panel" style={{ padding: '24px', borderRadius: '16px' }} onSubmit={saveTranslation}>
+                <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <h2>{selectedLang} Translation Dictionary</h2>
+                  <input
+                    type="text"
+                    value={langSearch}
+                    onChange={e => { setLangSearch(e.target.value); setLangPage(1) }}
+                    placeholder="Search keys or values..."
+                    style={{ width: '200px', padding: '6px 12px', borderRadius: '12px', border: '1px solid rgba(10,25,37,0.12)', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gap: '14px', maxHeight: '550px', overflowY: 'auto', paddingRight: '6px', margin: '12px 0' }}>
+                  {paginatedKeys.map(k => (
+                    <label key={k} style={{ display: 'grid', gap: '4px', borderBottom: '1px solid rgba(10,25,37,0.04)', paddingBottom: '8px' }}>
+                      <code style={{ fontSize: '0.78rem', color: '#1ea085', fontWeight: 600 }}>{k}</code>
+                      <input
+                        value={editedLangData[k] || ''}
+                        onChange={e => handleLangValueChange(k, e.target.value)}
+                        style={{ borderRadius: '10px', padding: '8px 12px', border: '1px solid #c5d0d6', fontSize: '0.88rem' }}
+                      />
+                    </label>
+                  ))}
+                  {filteredKeys.length === 0 && (
+                    <p className="empty-state">No matching translation keys found.</p>
+                  )}
+                </div>
+
+                {totalPages > 1 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(10,25,37,0.06)', paddingTop: '12px' }}>
+                    <button
+                      type="button"
+                      className="mini-button"
+                      disabled={langPage === 1}
+                      onClick={() => setLangPage(prev => Math.max(1, prev - 1))}
+                    >
+                      ◀ Prev
+                    </button>
+                    <span style={{ fontSize: '0.85rem', color: '#607481' }}>Page {langPage} of {totalPages}</span>
+                    <button
+                      type="button"
+                      className="mini-button"
+                      disabled={langPage === totalPages}
+                      onClick={() => setLangPage(prev => Math.min(totalPages, prev + 1))}
+                    >
+                      Next ▶
+                    </button>
+                  </div>
+                )}
+
+                <button className="primary-button" type="submit" style={{ marginTop: '16px', width: '100%' }}>
+                  Save Translation Changes
+                </button>
+              </form>
+            ) : (
+              <div className="panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', borderRadius: '16px' }}>
+                <span className="muted-copy">Choose or create a language from the roster to edit its translations.</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {activeTab === 'Update Web' ? (
+        <form className="panel form-panel" onSubmit={handleUpdateApp} style={{ maxWidth: '650px' }}>
+          <div className="panel-header">
+            <h2>System Updates & Upgrades</h2>
+            <p>Upload a system update package, run migration queries, and keep the application code up to date.</p>
+          </div>
+          <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
+            <label>
+              Admin Password (Required)
+              <input
+                type="password"
+                value={updatePassword}
+                onChange={e => setUpdatePassword(e.target.value)}
+                placeholder="Enter current admin password"
+                style={{ borderRadius: '12px', padding: '10px 14px' }}
+              />
+            </label>
+            
+            <label style={{ display: 'grid', gap: '6px' }}>
+              Select update zip package
+              <input
+                type="file"
+                accept=".zip"
+                onChange={e => setUpdateFile(e.target.files?.[0] || null)}
+                style={{ border: '1px solid #c5d0d6', borderRadius: '12px', padding: '8px' }}
+              />
+            </label>
+
+            <label>
+              Migration Queries (JSON String Array - Optional)
+              <textarea
+                rows={4}
+                value={updateQueries}
+                onChange={e => setUpdateQueries(e.target.value)}
+                placeholder='e.g. ["CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY)"]'
+                style={{ borderRadius: '12px', padding: '10px 14px', fontFamily: 'monospace', fontSize: '13px' }}
+              />
+            </label>
+
+            <label>
+              New Schema Assertion Queries (JSON format - Optional)
+              <textarea
+                rows={4}
+                value={updateNewQueries}
+                onChange={e => setUpdateNewQueries(e.target.value)}
+                placeholder='e.g. [{"run": "ALTER TABLE users ADD COLUMN age INT", "check": "SELECT column_name FROM information_schema.columns WHERE table_name = \"users\" AND column_name = \"age\""}]'
+                style={{ borderRadius: '12px', padding: '10px 14px', fontFamily: 'monospace', fontSize: '13px' }}
+              />
+            </label>
+          </div>
+          <button className="primary-button" type="submit" style={{ marginTop: '24px', width: '100%' }}>
+            🚀 Deploy Update Package
           </button>
         </form>
       ) : null}
