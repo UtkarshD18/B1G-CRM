@@ -544,19 +544,27 @@ router.get("/ai-execution-logs", validateUserOrAgent, async (req, res) => {
 router.get("/ai-execution-detail", validateUserOrAgent, async (req, res) => {
   try {
     const userId = req.decode.agentUid || req.decode.uid;
-    const { msgText } = req.query;
+    const { msgText, executionId } = req.query;
 
-    if (!msgText) {
-      return res.status(400).json({ success: false, msg: "msgText parameter is required" });
+    if (!msgText && !executionId) {
+      return res.status(400).json({ success: false, msg: "msgText or executionId parameter is required" });
     }
 
-    // Match logs where the flow builder's aiResponseValue contains or equals msgText
-    const rows = await query(
-      `SELECT * FROM ai_execution_logs 
-       WHERE uid = ? AND flow_builder LIKE ? 
-       ORDER BY timestamp DESC LIMIT 1`,
-      [req.decode.uid, `%${msgText}%`]
-    );
+    let rows;
+    if (executionId) {
+      rows = await query(
+        `SELECT * FROM ai_execution_logs WHERE uid = ? AND execution_id = ? LIMIT 1`,
+        [req.decode.uid, executionId]
+      );
+    } else {
+      // Match logs where the flow builder's aiResponseValue contains or equals msgText
+      rows = await query(
+        `SELECT * FROM ai_execution_logs 
+         WHERE uid = ? AND flow_builder LIKE ? 
+         ORDER BY timestamp DESC LIMIT 1`,
+        [req.decode.uid, `%${msgText}%`]
+      );
+    }
 
     if (rows.length === 0) {
       return res.json({ success: false, msg: "No matching AI execution found" });
@@ -665,6 +673,217 @@ router.get("/ai-execution-detail", validateUserOrAgent, async (req, res) => {
   }
 });
 
+// POST /api/chatbot-automation/suggest-response
+router.post("/suggest-response", validateUserOrAgent, async (req, res) => {
+  try {
+    const { chatId } = req.body;
+    if (!chatId) {
+      return res.status(400).json({ success: false, msg: "chatId parameter is required" });
+    }
+
+    const userId = req.decode.agentUid || req.decode.uid;
+    const canExecute = await hasPermission(userId, "ai.execution");
+
+    if (!canExecute) {
+      return res.status(403).json({ success: false, msg: "Permission denied", code: "PERMISSION_DENIED" });
+    }
+
+    // 1. Fetch last incoming message from the conversation json on disk
+    const path = require("path");
+    const fs = require("fs");
+    const conversationPath = path.join(__dirname, `../conversations/inbox/${req.decode.uid}/${chatId}.json`);
+    let lastIncomingMsg = "hello";
+    if (fs.existsSync(conversationPath)) {
+      try {
+        const messages = JSON.parse(fs.readFileSync(conversationPath, "utf8"));
+        if (Array.isArray(messages)) {
+          const incoming = [...messages].reverse().find(m => m.route === "INCOMING");
+          if (incoming) {
+            lastIncomingMsg = incoming.msgContext?.text?.body || incoming.content || "hello";
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse conversation json", e);
+      }
+    }
+
+    // 2. Locate active flow id for workspace
+    const [chatbot] = await query("SELECT flow_id FROM chatbot WHERE uid = ? AND active = 1 LIMIT 1", [req.decode.uid]);
+    let flowId = chatbot?.flow_id;
+    if (!flowId) {
+      const [latestFlow] = await query("SELECT flow_id FROM automation_flows WHERE uid = ? ORDER BY updated_at DESC LIMIT 1", [req.decode.uid]);
+      flowId = latestFlow?.flow_id;
+    }
+
+    if (!flowId) {
+      return res.json({ success: false, msg: "No active automation flow found for this workspace." });
+    }
+
+    // 3. Trigger flow runner in test mode to generate suggestion
+    const { startFlow } = require("../functions/chatbotAutomationEngine");
+    const executionId = await startFlow(
+      flowId,
+      lastIncomingMsg,
+      chatId, // senderNumber
+      "Inbox Suggestion", // name
+      req.decode.uid, // tenant uid
+      null, // chatbot
+      true // isTest = true
+    );
+
+    if (!executionId) {
+      return res.json({ success: false, msg: "Failed to generate suggestion." });
+    }
+
+    // 4. Fetch the generated execution log
+    const rows = await query(
+      `SELECT * FROM ai_execution_logs WHERE uid = ? AND flow_id = ? ORDER BY timestamp DESC LIMIT 1`,
+      [req.decode.uid, String(flowId)]
+    );
+
+    if (rows.length === 0) {
+      return res.json({ success: false, msg: "No suggestion execution details found" });
+    }
+
+    const log = rows[0];
+
+    // Check granular permissions for response details sanitization
+    const viewSources = await hasPermission(userId, "ai.sources");
+    const viewChunks = await hasPermission(userId, "ai.chunks");
+    const viewExecution = await hasPermission(userId, "ai.execution");
+    const viewPayload = await hasPermission(userId, "ai.payload");
+    const viewPrompt = await hasPermission(userId, "ai.prompt");
+
+    let llm = {};
+    let merged = {};
+    let vec = {};
+    let kw = {};
+
+    try { llm = JSON.parse(log.llm_call || "{}"); } catch(e) {}
+    try { merged = JSON.parse(log.merged_context || "{}"); } catch(e) {}
+    try { vec = JSON.parse(log.vector_retrieval || "{}"); } catch(e) {}
+    try { kw = JSON.parse(log.keyword_retrieval || "{}"); } catch(e) {}
+
+    // Calculate RAG Confidence dynamically
+    let confidencePercentage = 0;
+    let confidenceLabel = "Low";
+
+    if (merged.finalChunksSelected && merged.finalChunksSelected.length > 0) {
+      const vectorScores = merged.finalChunksSelected
+        .filter(c => c.type === "vector" || c.type === "hybrid")
+        .map(c => c.vectorScore || 0);
+      const maxVectorScore = vectorScores.length > 0 ? Math.max(...vectorScores) : 0;
+
+      const keywordScores = merged.finalChunksSelected
+        .filter(c => c.type === "keyword" || c.type === "hybrid")
+        .map(c => c.keywordScore || 0);
+      const maxKeywordScore = keywordScores.length > 0 ? Math.max(...keywordScores) : 0;
+
+      confidencePercentage = Math.round((maxVectorScore * 70) + (Math.min(1, maxKeywordScore / 2) * 30));
+      confidencePercentage = Math.max(10, Math.min(100, confidencePercentage));
+
+      if (confidencePercentage >= 70) {
+        confidenceLabel = "High";
+      } else if (confidencePercentage >= 40) {
+        confidenceLabel = "Medium";
+      }
+    }
+
+    const resultDetails = {
+      execution_id: log.execution_id,
+      flow_id: log.flow_id,
+      node_id: log.node_id,
+      timestamp: log.timestamp,
+      suggestedResponse: llm.responsePayload?.choices?.[0]?.message?.content || llm.responsePayload?.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    };
+
+    if (!resultDetails.suggestedResponse && log.result) {
+      try {
+        resultDetails.suggestedResponse = JSON.parse(log.result)?.response || "";
+      } catch(e) {}
+    }
+
+    if (!resultDetails.suggestedResponse) {
+      let flowBuilderData = {};
+      try { flowBuilderData = JSON.parse(log.flow_builder || "{}"); } catch(e) {}
+      resultDetails.suggestedResponse = flowBuilderData.aiResponseValue || "";
+    }
+
+    if (viewExecution) {
+      resultDetails.confidence_percentage = confidencePercentage;
+      resultDetails.confidence_label = confidenceLabel;
+      resultDetails.latency = llm.latency || 0;
+      resultDetails.tokenEstimate = llm.tokenEstimate || 0;
+    }
+
+    if (viewPayload) {
+      resultDetails.model = llm.model || "gemini-1.5-flash";
+      resultDetails.provider = llm.provider || "gemini";
+      resultDetails.systemPrompt = viewPrompt ? (llm.systemPrompt || "") : undefined;
+      resultDetails.userPrompt = viewPrompt ? (llm.userPrompt || "") : undefined;
+      resultDetails.rawPayload = llm;
+    }
+
+    if (viewSources && merged.finalChunksSelected) {
+      resultDetails.sources = merged.finalChunksSelected.map(c => c.title).filter(Boolean);
+      resultDetails.sources = [...new Set(resultDetails.sources)];
+    }
+
+    if (viewChunks && merged.finalChunksSelected) {
+      resultDetails.chunks = merged.finalChunksSelected.map(c => ({
+        chunk_id: c.chunk_id,
+        title: viewSources ? c.title : "Document",
+        content: c.content || c.text,
+        vectorScore: c.vectorScore,
+        keywordScore: c.keywordScore,
+        freshnessScore: c.freshnessScore,
+        finalScore: c.finalScore,
+        type: c.type
+      }));
+    }
+
+    await logActivity(req, "AI", "ai_suggest_response", chatId, { executionId });
+
+    res.json({ success: true, data: resultDetails });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Failed to generate AI suggestion response" });
+  }
+});
+
+// POST /api/chatbot-automation/toggle-autopilot
+router.post("/toggle-autopilot", validateUserOrAgent, async (req, res) => {
+  try {
+    const { chatId, paused } = req.body;
+    if (!chatId) {
+      return res.status(400).json({ success: false, msg: "chatId parameter is required" });
+    }
+
+    const userId = req.decode.agentUid || req.decode.uid;
+    const canReply = await hasPermission(userId, "inbox.reply");
+
+    if (!canReply) {
+      return res.status(403).json({ success: false, msg: "Permission denied", code: "PERMISSION_DENIED" });
+    }
+
+    const disabledUntil = paused ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null;
+
+    const [existing] = await query("SELECT id FROM contact WHERE uid = ? AND mobile = ? LIMIT 1", [req.decode.uid, chatId]);
+    if (existing) {
+      await query("UPDATE contact SET auto_reply_disabled_until = ? WHERE uid = ? AND mobile = ?", [disabledUntil, req.decode.uid, chatId]);
+    } else {
+      await query("INSERT INTO contact (uid, mobile, name, auto_reply_disabled_until) VALUES (?, ?, ?, ?)", [req.decode.uid, chatId, "WhatsApp User", disabledUntil]);
+    }
+
+    await logActivity(req, "AI", paused ? "ai_autopilot_pause" : "ai_autopilot_resume", chatId, { disabledUntil });
+
+    res.json({ success: true, msg: paused ? "Autopilot paused for 24 hours" : "Autopilot resumed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "Failed to toggle autopilot status" });
+  }
+});
+
 // POST /api/chatbot-automation/ai-feedback
 router.post("/ai-feedback", validateUserOrAgent, async (req, res) => {
   try {
@@ -691,3 +910,4 @@ router.post("/ai-feedback", validateUserOrAgent, async (req, res) => {
 });
 
 module.exports = router;
+

@@ -174,6 +174,111 @@ function UserInboxPage() {
   const [shortcutIndex, setShortcutIndex] = useState(0)
   const [hoveredMsgIndex, setHoveredMsgIndex] = useState(null)
 
+  const [aiSuggestion, setAiSuggestion] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
+  const [feedbackRating, setFeedbackRating] = useState(null)
+  const [autopilotPaused, setAutopilotPaused] = useState(false)
+
+  const userRole = decoded?.role || 'user';
+  const hasPermissionClient = useCallback((permission) => {
+    if (userRole === 'user') return true;
+    const agentPerms = decoded?.permissions || [];
+    return agentPerms.includes(permission);
+  }, [userRole, decoded?.permissions]);
+
+  const fetchAiSuggestion = useCallback(async (chatId) => {
+    if (!chatId) return;
+    setAiSuggestion(null);
+    setAiLoading(true);
+    setAiError(null);
+    setFeedbackRating(null);
+    try {
+      const endpoint = '/api/chatbot-automation/suggest-response';
+      const token = tokens.user;
+      const res = await apiRequest(endpoint, {
+        method: 'POST',
+        token,
+        body: { chatId }
+      });
+      if (res?.success && res?.data) {
+        setAiSuggestion(res.data);
+      } else {
+        setAiError(res?.msg || 'Could not fetch suggestion');
+      }
+    } catch (err) {
+      setAiError(err.message || 'Error loading suggestion');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [tokens.user]);
+
+  useEffect(() => {
+    if (selectedChat?.chat_id) {
+      fetchAiSuggestion(selectedChat.chat_id);
+      const disabledUntil = selectedChat.auto_reply_disabled_until;
+      const isPaused = disabledUntil ? new Date(disabledUntil) > new Date() : false;
+      setAutopilotPaused(isPaused);
+    } else {
+      setAiSuggestion(null);
+      setAutopilotPaused(false);
+    }
+  }, [selectedChat?.chat_id, selectedChat?.auto_reply_disabled_until, fetchAiSuggestion]);
+
+  async function toggleAutopilot() {
+    if (!selectedChat?.chat_id) return;
+    const nextState = !autopilotPaused;
+    try {
+      const token = tokens.user;
+      const res = await apiRequest('/api/chatbot-automation/toggle-autopilot', {
+        method: 'POST',
+        token,
+        body: { chatId: selectedChat.chat_id, paused: nextState }
+      });
+      if (res?.success) {
+        setAutopilotPaused(nextState);
+        setSelectedChat(prev => prev ? {
+          ...prev,
+          auto_reply_disabled_until: nextState ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : null
+        } : null);
+      } else {
+        alert(res?.msg || 'Failed to toggle autopilot');
+      }
+    } catch (err) {
+      alert(err.message || 'Error toggling autopilot');
+    }
+  }
+
+  async function submitAiFeedback(rating) {
+    if (!aiSuggestion?.execution_id) return;
+    setFeedbackRating(rating);
+    const comment = window.prompt(rating === 1 ? 'Glad you liked it! Any extra comment? (Optional)' : 'What was wrong with the AI answer? (Optional)');
+    if (comment === null) return; // User cancelled prompt
+
+    try {
+      const token = tokens.user;
+      const res = await apiRequest('/api/chatbot-automation/ai-feedback', {
+        method: 'POST',
+        token,
+        body: {
+          executionId: aiSuggestion.execution_id,
+          rating,
+          comment,
+          model: aiSuggestion.model,
+          flowId: aiSuggestion.flow_id,
+          conversationId: selectedChat?.chat_id
+        }
+      });
+      if (res?.success) {
+        alert('Feedback submitted successfully!');
+      } else {
+        alert(res?.msg || 'Failed to submit feedback');
+      }
+    } catch (err) {
+      alert(err.message || 'Error submitting feedback');
+    }
+  }
+
   const filteredTemplates = useMemo(() => {
     if (!shortcutFilter) return templates
     return templates.filter(
@@ -803,7 +908,224 @@ function UserInboxPage() {
                   ))}
                 </div>
               )}
-              <form className="wa-composer" onSubmit={sendMessage}>
+            {selectedChat && (
+              <div className="ai-answer-card" style={{
+                margin: '8px 24px',
+                padding: '16px',
+                background: 'rgba(30, 41, 59, 0.4)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      background: 'linear-gradient(135deg, #10b981, #3b82f6)',
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      padding: '2px 8px',
+                      borderRadius: '20px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      AI Suggestion
+                    </span>
+
+                    {hasPermissionClient('ai.execution') && aiSuggestion?.confidence_percentage !== undefined && (
+                      <span style={{
+                        background: aiSuggestion.confidence_percentage >= 70 ? 'rgba(16, 185, 129, 0.15)' : aiSuggestion.confidence_percentage >= 40 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        color: aiSuggestion.confidence_percentage >= 70 ? '#10b981' : aiSuggestion.confidence_percentage >= 40 ? '#f55e0b' : '#ef4444',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        padding: '2px 8px',
+                        borderRadius: '20px'
+                      }}>
+                        {aiSuggestion.confidence_percentage}% Confidence ({aiSuggestion.confidence_label})
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={toggleAutopilot}
+                      className="mini-button"
+                      style={{
+                        background: autopilotPaused ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                        color: autopilotPaused ? '#ef4444' : '#10b981',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
+                      title={autopilotPaused ? 'Click to Resume Autopilot' : 'Click to Pause Autopilot'}
+                    >
+                      {autopilotPaused ? '🔴 Autopilot Paused' : '🟢 Autopilot Active'}
+                    </button>
+                  </div>
+                </div>
+
+                {aiLoading ? (
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#9ca3af' }}>Thinking and searching KB...</p>
+                ) : aiError ? (
+                  <p style={{ margin: 0, fontSize: '0.875rem', color: '#ef4444' }}>{aiError}</p>
+                ) : aiSuggestion ? (
+                  <div>
+                    <div style={{
+                      fontSize: '0.9rem',
+                      lineHeight: '1.5',
+                      color: '#f3f4f6',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      marginBottom: '10px',
+                      borderLeft: '3px solid #10b981'
+                    }}>
+                      {aiSuggestion.suggestedResponse || "No suggestion generated."}
+                    </div>
+
+                    {/* Sources Badge */}
+                    {hasPermissionClient('ai.sources') && aiSuggestion.sources && aiSuggestion.sources.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: '500' }}>Sources:</span>
+                        {aiSuggestion.sources.map((src, i) => (
+                          <span key={i} style={{
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            color: '#e5e7eb',
+                            fontSize: '0.7rem',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(255,255,255,0.05)'
+                          }}>
+                            📖 {src}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Evidence / Chunks Toggle */}
+                    {hasPermissionClient('ai.chunks') && aiSuggestion.chunks && aiSuggestion.chunks.length > 0 && (
+                      <details style={{ marginBottom: '10px' }}>
+                        <summary style={{ fontSize: '0.75rem', color: '#3b82f6', cursor: 'pointer', userSelect: 'none', fontWeight: '600' }}>
+                          View Match Evidence ({aiSuggestion.chunks.length} chunks)
+                        </summary>
+                        <div style={{
+                          maxHeight: '150px',
+                          overflowY: 'auto',
+                          background: 'rgba(0,0,0,0.2)',
+                          borderRadius: '6px',
+                          padding: '8px',
+                          marginTop: '6px',
+                          fontSize: '0.75rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px'
+                        }}>
+                          {aiSuggestion.chunks.map((chk, i) => (
+                            <div key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#9ca3af', marginBottom: '2px' }}>
+                                <strong>Chunk #{chk.chunk_id || i+1} ({chk.title})</strong>
+                                <span>Score: {chk.finalScore ? Math.round(chk.finalScore * 100) / 100 : 'N/A'}</span>
+                              </div>
+                              <div style={{ color: '#d1d5db', fontStyle: 'italic' }}>
+                                "{chk.content}"
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button
+                          type="button"
+                          className="mini-button"
+                          onClick={() => {
+                            if (aiSuggestion.suggestedResponse) {
+                              setMessageDraft(aiSuggestion.suggestedResponse);
+                            }
+                          }}
+                          style={{
+                            background: '#10b981',
+                            color: '#ffffff',
+                            fontWeight: '600'
+                          }}
+                        >
+                          Use Suggestion
+                        </button>
+                        <button
+                          type="button"
+                          className="mini-button"
+                          onClick={() => fetchAiSuggestion(selectedChat.chat_id)}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            color: '#e5e7eb'
+                          }}
+                        >
+                          🔄 Regenerate
+                        </button>
+
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginLeft: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => submitAiFeedback(1)}
+                            style={{
+                              background: feedbackRating === 1 ? 'rgba(16, 185, 129, 0.2)' : 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '1rem',
+                              padding: '2px 4px',
+                              borderRadius: '4px'
+                            }}
+                            title="Helpful (Thumbs Up)"
+                          >
+                            👍
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => submitAiFeedback(0)}
+                            style={{
+                              background: feedbackRating === 0 ? 'rgba(239, 68, 68, 0.2)' : 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '1rem',
+                              padding: '2px 4px',
+                              borderRadius: '4px'
+                            }}
+                            title="Not helpful (Thumbs Down)"
+                          >
+                            👎
+                          </button>
+                        </div>
+                      </div>
+
+                      {hasPermissionClient('ai.payload') && (
+                        <div style={{ fontSize: '0.7rem', color: '#6b7280', display: 'flex', gap: '8px' }}>
+                          <span>Model: {aiSuggestion.model}</span>
+                          {hasPermissionClient('ai.execution') && (
+                            <span>Latency: {aiSuggestion.latency}ms</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p style={{ margin: 0, fontSize: '0.875rem', color: '#9ca3af' }}>No suggestion generated yet.</p>
+                    <button
+                      type="button"
+                      className="mini-button"
+                      onClick={() => fetchAiSuggestion(selectedChat.chat_id)}
+                      style={{ background: '#3b82f6', color: '#fff' }}
+                    >
+                      Ask AI
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            <form className="wa-composer" onSubmit={sendMessage}>
                 {templates.length > 0 && (
                   <select
                     className="quick-reply-select"

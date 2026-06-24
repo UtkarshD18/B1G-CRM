@@ -319,9 +319,20 @@ function processSocketEvent({
           [chat?.chat_id, agent ? connectionInfo?.decodedValue?.owner_uid : uid]
         );
 
+        const tenantUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
+
+        const [contactData] = await query(
+          "SELECT auto_reply_disabled_until FROM contact WHERE uid = ? AND mobile = ? LIMIT 1",
+          [tenantUid, chatData?.sender_mobile || chat?.sender_mobile || ""]
+        );
+
         const onChatSelectData = {
           conversation: conversation || [],
-          chatinfo: chat,
+          chatinfo: {
+            ...chat,
+            ...chatData,
+            auto_reply_disabled_until: contactData?.auto_reply_disabled_until || null
+          },
           chatnote: chatData?.chat_note,
           countDownTimer: {
             timestamp: chatData?.last_message_came,
