@@ -12,7 +12,7 @@ Last audited: 2026-06-25
 | React SPA shell | `client/src/routes/AppRoutes.jsx`, `PortalLayout`, role gates. |
 | Admin core pages | Dashboard, plans, users, orders, settings pages exist and call APIs. |
 | User workspace pages | Dashboard, inbox, contacts, campaigns, automation flows, chatbot, integrations, billing, API/webhooks, widgets, settings. |
-| Agent page | Agent dashboard loads profile, assigned chats, and tasks. |
+| Agent page | Agent dashboard with task filter, comment validation, open chat navigation, and query parameter-based inbox selection. |
 | Meta WhatsApp Cloud support | Credential storage, template operations, outbound message APIs, webhook ingest. |
 | Campaign scheduling | Campaign rows/logs plus recursive loop processor. |
 | Chatbot diagnostics | `chatbot_log` table and `/api/chatbot/get_logs`. |
@@ -43,6 +43,7 @@ Last audited: 2026-06-25
 | Sprint 19 Admin SMTP Settings & User Dashboard KPI Metrics | Added "Send Test Email" form to Admin SmtpSettings and expanded the User Dashboard with 2 additional KPI cards, 2 chart series, and a metrics Refresh button. |
 | Sprint 20 Admin Completeness & Safeguards | Added warning confirmation dialogs to Admin plans, FAQs, testimonials, and contact submissions; implemented Add Custom Page creation form with featured image uploader, and custom logo uploader/preview in Site Settings. |
 | Sprint 21 User Completeness & Safety | Added local Quick Text Templates CRUD management inside User Inbox sidebar. Enforced delete warning confirmation dialogs across all User Portal modules (Contacts, Meta Templates, QR instances, webhook rules, chat widgets, chatbots, campaigns, flows). Enhanced CSV import interface with pre-import validation details and expected formatting instructions. Integrated a real-time Webhook & API Analytics telemetry dashboard in the Developer API page. |
+| Sprint 22 Agent Portal Parity & UX Completeness | Upgraded Agent Dashboard with task filters, timestamp/description formatting, comment validation, open chat navigation links, and added query parameter auto-selection to Agent Inbox socket handler. |
 
 
 ## Partially Implemented

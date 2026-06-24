@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-25 - Sprint 22: Agent Portal Parity & UX Completeness (Task Filters, Navigation & Validation)
+
+| Field | Details |
+| --- | --- |
+| Feature | Completed Agent Portal feature and UI/UX parity. Upgraded the Agent Dashboard (`Dashboard.jsx`) by adding task status filtering (All, Pending, Completed), showing task description and created timestamps in a readable format, initializing task comments on load, rendering notes as read-only for completed tasks, and enforcing client-side validation to prevent empty task completion notes. Added direct "Open Chat" buttons/links to Assigned Chats to jump directly to the Inbox. Upgraded the Agent Inbox (`Inbox.jsx`) with URL-based parameter auto-selection to automatically open the designated chat when routed from the dashboard, clearing the URL query parameter state afterwards to prevent loops. |
+| Files changed | `client/src/pages/agent/Dashboard.jsx`, `client/src/pages/agent/Inbox.jsx`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Achieves full feature and UI/UX parity for support agents, enabling streamlined task management, instant direct navigation from dashboard to assigned chats, and proper validation checks. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-25 - Sprint 21: User Portal Completeness & Safety (Templates CRUD, Webhook Analytics & Delete Warnings)
 
 | Field | Details |

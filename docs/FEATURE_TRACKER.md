@@ -86,6 +86,6 @@ Status legend:
 
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
-| Agent dashboard | Partial | Loads identity, assigned chats, tasks. | Add richer chat workflow. | `routes/agent.js`, `client/src/pages/agent/Dashboard.jsx` | PostgreSQL | Medium |
-| Restricted inbox | Complete | Assigned chat list/conversation/send routes exist, enforcing owner and agent assignment on all REST and socket paths. | None. | routes/agent.js, middlewares/agent.js, helper/socket/index.js | Meta API | Low |
-| Agent tasks | Complete/partial | Agent can view and mark tasks complete. | More task statuses/comments history. | `routes/agent.js`, `client/src/pages/agent/Dashboard.jsx` | PostgreSQL | Medium |
+| Agent dashboard | Complete | Loads identity, assigned chats, tasks, with status filters, formatting, and open chat link. | None. | `routes/agent.js`, `client/src/pages/agent/Dashboard.jsx` | PostgreSQL | Medium |
+| Restricted inbox | Complete | Enforces owner/agent assignment, WebSocket updates, and query parameter chat auto-open. | None. | `routes/agent.js`, `middlewares/agent.js`, `helper/socket/index.js`, `client/src/pages/agent/Inbox.jsx` | Meta API | Low |
+| Agent tasks | Complete | Agent tasks execution with client-side comment validation and read-only comment history. | None. | `routes/agent.js`, `client/src/pages/agent/Dashboard.jsx` | PostgreSQL | Medium |

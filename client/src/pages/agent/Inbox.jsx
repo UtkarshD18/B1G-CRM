@@ -254,8 +254,31 @@ function AgentInboxPage() {
     })
 
     socket.on('get_chat', (data) => {
-      setChats(Array.isArray(data) ? data : [])
+      const chatList = Array.isArray(data) ? data : []
+      setChats(chatList)
       setStatus('')
+
+      // Auto-open chat if URL query has chatId
+      const params = new URLSearchParams(window.location.search)
+      const queryChatId = params.get('chatId')
+      if (queryChatId) {
+        const found = chatList.find((c) => String(c.chat_id) === String(queryChatId))
+        if (found) {
+          setStatus(`Opening ${getContactName(found)}...`)
+          socket.emit('on_open_chat', {
+            data: {
+              chatId: found.chat_id,
+              limit: 200,
+              chat: found,
+            },
+          })
+          // Clean the query parameter from the URL
+          params.delete('chatId')
+          const newSearch = params.toString()
+          const newPath = window.location.pathname + (newSearch ? '?' + newSearch : '')
+          window.history.replaceState(null, '', newPath)
+        }
+      }
     })
 
     socket.on('update_chat_list', (data) => {
