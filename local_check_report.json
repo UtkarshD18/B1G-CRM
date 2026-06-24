@@ -25,7 +25,7 @@
       "status": "Loaded",
       "title": "Tenant roster and plan assignment",
       "inputs": 6,
-      "buttons": 103,
+      "buttons": 106,
       "tables": 1,
       "classification": "Fully Functional",
       "textSnippet": "W\nwhatsCRM\n🔍\n📊\nDashboard\nUSERS & PLANS\n💎\nManage Plans\n👥\nManage Users\n🛒\nOrders\nFRONT-END CONTENT\n🤝\nFront Partners\n❓\nFAQ\n📄\nManage Pages\n💬\nTestimonial\n📋\nContact Form\nDATA & INTEGRATIONS\n🔗\nWA Links data\n💳\nPayment Gateways\n🔧\nFlowbuilder Template\nSETTINGS\n🎨\nTheme Settings\n🔐\nSocial Login\n⚙️\nS"
@@ -86,8 +86,8 @@
       "slug": "contacts",
       "status": "Loaded",
       "title": "Phonebooks and contact records",
-      "inputs": 49,
-      "buttons": 62,
+      "inputs": 50,
+      "buttons": 65,
       "tables": 2,
       "classification": "Fully Functional",
       "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
@@ -107,7 +107,7 @@
       "status": "Loaded",
       "title": "Real flow CRUD over `/api/chat_flow`",
       "inputs": 3,
-      "buttons": 69,
+      "buttons": 71,
       "tables": 0,
       "classification": "Fully Functional",
       "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
@@ -117,7 +117,7 @@
       "status": "Loaded",
       "title": "Chatbot automation over saved flows",
       "inputs": 7,
-      "buttons": 84,
+      "buttons": 87,
       "tables": 2,
       "classification": "Fully Functional",
       "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
@@ -137,7 +137,7 @@
       "status": "Loaded",
       "title": "Tenant-managed staff accounts",
       "inputs": 4,
-      "buttons": 28,
+      "buttons": 29,
       "tables": 1,
       "classification": "Fully Functional",
       "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
@@ -147,7 +147,7 @@
       "status": "Loaded",
       "title": "Task queue assigned to tenant agents",
       "inputs": 1,
-      "buttons": 27,
+      "buttons": 28,
       "tables": 1,
       "classification": "Fully Functional",
       "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"
@@ -177,7 +177,7 @@
       "status": "Loaded",
       "title": "REST API, template API, and webhook setup",
       "inputs": 5,
-      "buttons": 63,
+      "buttons": 67,
       "tables": 1,
       "classification": "Fully Functional",
       "textSnippet": "W\nwhatsCRM\nDashboard\nInbox\nKanban\nContacts\nCampaigns\nAutomation Flows\nChatBot\nMeta Templates\nIntegrations\nMeta WhatsApp\nAgent Login\nAgent Task\nClick-to-Chat Launcher\nLead Pipeline\nAI Providers\nKnowledge Base\nWebsites Manager\nSupervisor Dashboard\nBilling\nAPI & Webhooks\nWebhook Logs\nSettings\nSign out\n"

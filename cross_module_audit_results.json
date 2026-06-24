@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-24T22:46:48.408Z",
+  "timestamp": "2026-06-24T23:03:50.726Z",
   "total": 41,
   "passed": 41,
   "failed": 0,
@@ -69,7 +69,7 @@
       "module": "CONTACT→CAMPAIGN",
       "test": "Get phonebooks",
       "pass": true,
-      "detail": "Found 8 phonebooks"
+      "detail": "Found 9 phonebooks"
     },
     {
       "module": "CONTACT→CAMPAIGN",
@@ -135,7 +135,7 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 62"
+      "detail": "ID: 66"
     },
     {
       "module": "CRM→CONTACTS",
@@ -195,7 +195,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 27 rules"
+      "detail": "Found 28 rules"
     },
     {
       "module": "WEBHOOK→INBOX",

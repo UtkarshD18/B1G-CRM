@@ -1,3 +1,4 @@
+require('dotenv').config();
 const axios = require('axios');
 const { Client } = require('pg');
 const fs = require('fs');
@@ -34,7 +35,7 @@ const queryDb = async (sql, params = []) => {
     console.log('Logging in as User...');
     const loginRes = await axios.post('http://localhost:3010/api/user/login', {
       email: 'user@example.com',
-      password: process.env.TEST_USER_PASSWORD || 'User@123'
+      password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME'
     });
 
     const token = loginRes.data.token;

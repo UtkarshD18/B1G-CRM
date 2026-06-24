@@ -81,6 +81,9 @@ function UserDashboardPage() {
           <span className="eyebrow">user dashboard</span>
           <h2>Tenant operations snapshot</h2>
         </div>
+        <button className="primary-button" type="button" onClick={loadDashboard}>
+          Refresh
+        </button>
       </div>
       {status ? <p className="status-line">{status}</p> : null}
 
@@ -110,10 +113,16 @@ function UserDashboardPage() {
         <DashboardCard title="Chatbots" value={data?.totalChatbots ?? '-'} detail="Configured bots" />
         <DashboardCard title="Contacts" value={data?.totalContacts ?? '-'} detail="Phonebook size" />
         <DashboardCard title="Flows" value={data?.totalFlows ?? '-'} detail="Automation definitions" />
+        <DashboardCard title="Campaigns" value={data?.totalBroadcast ?? '-'} detail="Broadcast campaigns" />
+        <DashboardCard title="Templates" value={data?.totalTemplets ?? '-'} detail="Saved reply templates" />
       </div>
       <div className="two-column-grid">
         <DashboardSeries title="Open chats" data={formatMonthSeries(data?.opened)} />
         <DashboardSeries title="Resolved chats" data={formatMonthSeries(data?.resolved)} />
+      </div>
+      <div className="two-column-grid">
+        <DashboardSeries title="Pending chats" data={formatMonthSeries(data?.pending)} />
+        <DashboardSeries title="Active bots" data={formatMonthSeries(data?.activeBot)} />
       </div>
     </div>
   )

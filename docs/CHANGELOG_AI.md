@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-25 - Sprint 19: Admin SmtpSettings Test Email & User Dashboard KPI Metrics
+
+| Field | Details |
+| --- | --- |
+| Feature | Added "Send Test Email" recipient input field and button to the Admin SMTP settings page (`SmtpSettings.jsx`) mapping directly to `/api/admin/send_test_email`, along with visual connection tips for major email providers. Expanded the User Dashboard page (`Dashboard.jsx`) with 2 additional KPI cards (Campaigns, Templates count), 2 additional chart series (Pending chats, Active bots), and an interactive manual metrics Refresh button. |
+| Files changed | `client/src/pages/admin/SmtpSettings.jsx`, `client/src/pages/user/Dashboard.jsx`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Achieves feature-parity for SMTP testing and expands user operational monitoring capability with real-time campaigns, templates, and active bots telemetry. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-25 - Sprint 18: Stripe Webhook Reconciliation & Page Verification Audit
 
 | Field | Details |
