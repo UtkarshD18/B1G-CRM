@@ -11,6 +11,8 @@ const {
 function extractBodyText(newMessage) {
   const messageBody =
     newMessage?.msgContext?.text?.body ||
+    newMessage?.msgContext?.interactive?.nfm_reply?.response_json ||
+    newMessage?.msgContext?.interactive?.nfm_reply?.body ||
     newMessage?.msgContext?.interactive?.body?.text ||
     newMessage?.msgContext?.image?.caption ||
     newMessage?.msgContext?.image?.link ||
@@ -38,6 +40,21 @@ function getChatId(body) {
 
 async function runChatbot(i, incomingMsg, uid, senderNumber, toName) {
   try {
+    // Check if auto-reply is disabled for this contact
+    if (senderNumber) {
+      const [contact] = await query(
+        `SELECT auto_reply_disabled_until FROM contact WHERE uid = ? AND mobile = ? LIMIT 1`,
+        [uid, senderNumber]
+      );
+      if (contact && contact.auto_reply_disabled_until) {
+        const disabledUntil = new Date(contact.auto_reply_disabled_until);
+        if (disabledUntil > new Date()) {
+          console.log(`Chatbot run skipped: Auto-reply disabled for contact ${senderNumber} until ${contact.auto_reply_disabled_until}`);
+          return;
+        }
+      }
+    }
+
     const chatbot = i;
     const forAll = i?.for_all > 0 ? true : false;
     const chatId = convertNumberToRandomString(senderNumber || "");
@@ -60,6 +77,31 @@ async function runChatbot(i, incomingMsg, uid, senderNumber, toName) {
       return;
     }
 
+    // Check if there is an active execution paused on Form/Input for this sender/flow
+    const [activeExec] = await query(
+      `SELECT * FROM flow_executions WHERE flow_id = ? AND sender_mobile = ? AND status = 'paused' LIMIT 1`,
+      [flow.flow_id, senderNumber]
+    );
+
+    if (activeExec) {
+      const { resumeFlow } = require("../../../functions/chatbotAutomationEngine");
+      await resumeFlow(activeExec.id, incomingMsg, chatbot);
+      return;
+    }
+
+    // Check if this flow is a new visual automation flow
+    const [automationFlow] = await query(
+      `SELECT * FROM automation_flows WHERE flow_id = ? AND uid = ?`,
+      [flow.flow_id, uid]
+    );
+
+    if (automationFlow) {
+      const { startFlow } = require("../../../functions/chatbotAutomationEngine");
+      await startFlow(flow.flow_id, incomingMsg, senderNumber, toName, uid, chatbot);
+      return;
+    }
+
+    // Fallback to legacy keyword matching chatbot
     const nodePath = `${__dirname}/../../../flow-json/nodes/${uid}/${flow?.flow_id}.json`;
     const edgePath = `${__dirname}/../../../flow-json/edges/${uid}/${flow?.flow_id}.json`;
 

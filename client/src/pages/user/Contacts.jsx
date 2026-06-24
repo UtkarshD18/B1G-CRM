@@ -17,11 +17,12 @@ const overlayStyle = {
 };
 
 const modalStyle = {
-  backgroundColor: '#f8f3eb',
+  backgroundColor: 'var(--bg-card)',
+  color: 'var(--text-primary)',
   padding: '24px',
   borderRadius: '24px',
-  border: '1px solid rgba(10, 25, 37, 0.12)',
-  boxShadow: '0 24px 70px rgba(7, 19, 29, 0.14)',
+  border: '1px solid var(--border-color)',
+  boxShadow: '0 24px 70px rgba(0, 0, 0, 0.5)',
   width: 'min(500px, 90%)',
   maxHeight: '90vh',
   overflowY: 'auto',

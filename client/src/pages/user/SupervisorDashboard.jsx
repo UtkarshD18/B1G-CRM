@@ -86,7 +86,7 @@ function UserSupervisorDashboardPage() {
         {/* KPI 1 */}
         <div className="panel" style={{ padding: '20px', borderLeft: '4px solid #1ea085', borderRadius: '12px' }}>
           <span className="muted-copy" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Response Speed</span>
-          <h2 style={{ fontSize: '28px', margin: '8px 0 0 0', color: '#102a43' }}>
+          <h2 style={{ fontSize: '28px', margin: '8px 0 0 0', color: 'var(--text-primary)' }}>
             {formatSeconds(kpis.averageResponseTimeOverall)}
           </h2>
           <span style={{ fontSize: '11px', color: '#1ea085' }}>Across all responses</span>
@@ -95,7 +95,7 @@ function UserSupervisorDashboardPage() {
         {/* KPI 2 */}
         <div className="panel" style={{ padding: '20px', borderLeft: '4px solid #3182ce', borderRadius: '12px' }}>
           <span className="muted-copy" style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Chats</span>
-          <h2 style={{ fontSize: '28px', margin: '8px 0 0 0', color: '#102a43' }}>{kpis.openChatsCount}</h2>
+          <h2 style={{ fontSize: '28px', margin: '8px 0 0 0', color: 'var(--text-primary)' }}>{kpis.openChatsCount}</h2>
           <span style={{ fontSize: '11px', color: '#3182ce' }}>Currently in 'open' status</span>
         </div>
 
@@ -127,9 +127,9 @@ function UserSupervisorDashboardPage() {
           {loading ? (
             <p className="status-line">Retrieving escalations...</p>
           ) : escalations.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '36px', background: 'rgba(30,160,133,0.02)', borderRadius: '12px', border: '1px dashed rgba(0,0,0,0.06)' }}>
-              <span style={{ fontSize: '24px' }}>✓</span>
-              <p className="muted-copy" style={{ margin: '8px 0 0 0', fontSize: '13px' }}>
+            <div style={{ textAlign: 'center', padding: '36px', background: 'rgba(16,185,129,0.02)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+              <span style={{ fontSize: '24px', color: 'var(--accent-primary)' }}>✓</span>
+              <p className="muted-copy" style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
                 All SLA targets are green. No active escalations.
               </p>
             </div>
@@ -141,9 +141,9 @@ function UserSupervisorDashboardPage() {
                   style={{
                     padding: '16px',
                     borderRadius: '16px',
-                    background: '#ffffff',
-                    border: '1px solid rgba(229, 62, 62, 0.15)',
-                    boxShadow: '0 4px 6px rgba(229, 62, 62, 0.02)',
+                    background: 'var(--bg-panel)',
+                    border: '1px solid var(--border-color)',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.2)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '10px'
@@ -151,17 +151,17 @@ function UserSupervisorDashboardPage() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                     <div>
-                      <strong style={{ fontSize: '14px' }}>{esc.sender_name} ({esc.sender_mobile})</strong>
-                      <div className="muted-copy" style={{ fontSize: '11px', textTransform: 'capitalize' }}>
+                      <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{esc.sender_name} ({esc.sender_mobile})</strong>
+                      <div className="muted-copy" style={{ fontSize: '11px', textTransform: 'capitalize', color: 'var(--text-secondary)' }}>
                         Source: {esc.origin} | Escalated at: {new Date(esc.escalated_at).toLocaleTimeString()}
                       </div>
                     </div>
-                    <span className="status-chip active" style={{ backgroundColor: 'rgba(229,62,62,0.1)', color: '#e53e3e', fontSize: '10px' }}>
+                    <span className="status-chip active" style={{ backgroundColor: 'rgba(239,68,68,0.15)', color: 'var(--color-danger)', fontSize: '10px', border: '1px solid rgba(239,68,68,0.3)' }}>
                       Breached
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '13px', background: '#fff5f5', padding: '10px', borderRadius: '8px', border: '1px solid rgba(229,62,62,0.08)' }}>
+                  <div style={{ fontSize: '13px', background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.15)', color: 'var(--text-primary)' }}>
                     ⚠️ {esc.reason}
                   </div>
 
@@ -170,7 +170,7 @@ function UserSupervisorDashboardPage() {
                       type="button"
                       className="primary-button"
                       onClick={() => handleResolveEscalation(esc.chat_id)}
-                      style={{ padding: '6px 12px', fontSize: '12px', background: '#1ea085' }}
+                      style={{ padding: '6px 12px', fontSize: '12px', background: 'var(--accent-primary)' }}
                     >
                       Resolve Escalation
                     </button>

@@ -18,11 +18,12 @@ const overlayStyle = {
 };
 
 const modalStyle = {
-  backgroundColor: '#f8f3eb',
+  backgroundColor: 'var(--bg-card)',
+  color: 'var(--text-primary)',
   padding: '24px',
   borderRadius: '24px',
-  border: '1px solid rgba(10, 25, 37, 0.12)',
-  boxShadow: '0 24px 70px rgba(7, 19, 29, 0.14)',
+  border: '1px solid var(--border-color)',
+  boxShadow: '0 24px 70px rgba(0, 0, 0, 0.5)',
   width: 'min(700px, 95%)',
   maxHeight: '90vh',
   overflowY: 'auto',
@@ -44,20 +45,20 @@ function renderStatusBadge(status) {
   const code = Number(status)
   if (!status) {
     return (
-      <span className="status-chip" style={{ backgroundColor: '#f3f4f6', color: '#374151', fontSize: '0.82rem', padding: '6px 12px' }}>
+      <span className="status-chip" style={{ backgroundColor: 'var(--bg-panel)', color: 'var(--text-secondary)', fontSize: '0.82rem', padding: '6px 12px', border: '1px solid var(--border-color)' }}>
         UNKNOWN
       </span>
     )
   }
   if (code >= 200 && code < 300) {
     return (
-      <span className="status-chip" style={{ backgroundColor: '#d8f0ea', color: '#031016', fontSize: '0.82rem', padding: '6px 12px' }}>
+      <span className="status-chip" style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-primary)', fontSize: '0.82rem', padding: '6px 12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
         {status} OK
       </span>
     )
   }
   return (
-    <span className="status-chip" style={{ backgroundColor: '#fee2e2', color: '#991b1b', fontSize: '0.82rem', padding: '6px 12px' }}>
+    <span className="status-chip" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: 'var(--color-danger)', fontSize: '0.82rem', padding: '6px 12px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
       {status} ERROR
     </span>
   )
@@ -229,29 +230,30 @@ function UserWebhookLogsPage() {
             </div>
             
             <div style={{ display: 'grid', gap: '14px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '8px', borderBottom: '1px solid #d9e1e4', paddingBottom: '10px' }}>
-                <span className="muted-copy" style={{ fontWeight: 600 }}>Execution Time:</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                <span className="muted-copy" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Execution Time:</span>
                 <span>{formatDateTime(selectedLog.createdAt)}</span>
                 
-                <span className="muted-copy" style={{ fontWeight: 600 }}>Rule Name:</span>
+                <span className="muted-copy" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Rule Name:</span>
                 <span>{selectedLog.rule_name || 'N/A'} (ID: {selectedLog.rule_id || 'N/A'})</span>
                 
-                <span className="muted-copy" style={{ fontWeight: 600 }}>Target URL:</span>
+                <span className="muted-copy" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Target URL:</span>
                 <span style={{ wordBreak: 'break-all' }}>{selectedLog.target_url}</span>
                 
-                <span className="muted-copy" style={{ fontWeight: 600 }}>HTTP Status:</span>
+                <span className="muted-copy" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>HTTP Status:</span>
                 <div>{renderStatusBadge(selectedLog.response_status)}</div>
               </div>
 
               <div>
-                <h4 style={{ margin: '8px 0', color: '#10212d' }}>Request Payload (POST Body)</h4>
+                <h4 style={{ margin: '8px 0', color: 'var(--text-primary)' }}>Request Payload (POST Body)</h4>
                 <pre className="code-block" style={{
                   padding: '12px',
                   borderRadius: '12px',
-                  background: '#f1ebd9',
+                  background: 'var(--bg-panel)',
+                  color: 'var(--text-primary)',
                   maxHeight: '200px',
                   overflowY: 'auto',
-                  border: '1px solid rgba(16,33,45,0.08)',
+                  border: '1px solid var(--border-color)',
                   fontSize: '0.85rem'
                 }}>
                   {formatPayload(selectedLog.payload)}
@@ -259,14 +261,15 @@ function UserWebhookLogsPage() {
               </div>
 
               <div>
-                <h4 style={{ margin: '8px 0', color: '#10212d' }}>Response Body</h4>
+                <h4 style={{ margin: '8px 0', color: 'var(--text-primary)' }}>Response Body</h4>
                 <pre className="code-block" style={{
                   padding: '12px',
                   borderRadius: '12px',
-                  background: '#f1ebd9',
+                  background: 'var(--bg-panel)',
+                  color: 'var(--text-primary)',
                   maxHeight: '200px',
                   overflowY: 'auto',
-                  border: '1px solid rgba(16,33,45,0.08)',
+                  border: '1px solid var(--border-color)',
                   fontSize: '0.85rem'
                 }}>
                   {formatPayload(selectedLog.response_body)}

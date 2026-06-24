@@ -17,7 +17,7 @@ const SALT_ROUNDS = 10;
 const DEV_ACCOUNTS = {
   admin: { email: 'admin@example.com', password: process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME' },
   user:  { email: 'user@example.com',  password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME' },
-  agent: { email: 'agent@example.com', password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME' },
+  agent: { email: 'agent@example.com', password: process.env.TEST_AGENT_PASSWORD || 'CHANGE_ME' },
 };
 
 async function seedDevCredentials({ logger = console } = {}) {

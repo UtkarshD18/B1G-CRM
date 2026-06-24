@@ -41,13 +41,13 @@ function AdminFaqPage() {
     <div className="page-stack">
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #d8f0ea, #b8e6d8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>❓</div>
+          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>❓</div>
           <div>
             <h2 style={{ margin: 0 }}>FAQ</h2>
-            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Add or delete FAQs displayed on your website</p>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Add or delete FAQs displayed on your website</p>
           </div>
         </div>
-        <button className="mini-button" onClick={load} style={{ border: '1px solid #1ea085', color: '#1ea085', borderRadius: '10px', padding: '10px 20px' }}>🔄 Refresh</button>
+        <button className="mini-button" onClick={load} style={{ border: '1px solid var(--accent-primary)', color: 'var(--accent-primary)', borderRadius: '10px', padding: '10px 20px' }}>🔄 Refresh</button>
       </div>
 
       {status && <p className="status-line">{status}</p>}
@@ -76,13 +76,13 @@ function AdminFaqPage() {
           </div>
           <div style={{ display: 'grid', gap: '12px' }}>
             {faqs.map(faq => (
-              <div key={faq.id} style={{ border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', background: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div key={faq.id} style={{ border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', background: 'var(--bg-panel)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#1ea085', flexShrink: 0 }}></span>
-                    <strong style={{ color: '#1b2d38', fontSize: '0.92rem' }}>{faq.question}</strong>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)', flexShrink: 0 }}></span>
+                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.92rem' }}>{faq.question}</strong>
                   </div>
-                  <p style={{ color: '#607481', fontSize: '0.85rem', margin: 0, paddingLeft: '16px' }}>{faq.answer}</p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0, paddingLeft: '16px' }}>{faq.answer}</p>
                 </div>
                 <button onClick={() => deleteFaq(faq.id)} className="mini-button subtle-danger" style={{ padding: '6px 10px', fontSize: '0.75rem', flexShrink: 0 }}>🗑️</button>
               </div>

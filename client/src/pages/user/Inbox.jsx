@@ -686,7 +686,7 @@ function UserInboxPage() {
                     style={{ position: 'relative' }}
                   >
                     {hoveredMsgIndex === index && (
-                      <div className="message-actions-bar" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '-14px', right: '10px', background: '#f8f3eb', border: '1px solid rgba(10,25,37,0.12)', borderRadius: '4px', padding: '2px 4px', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                      <div className="message-actions-bar" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '-14px', right: '10px', background: 'var(--bg-panel)', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '2px 4px', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
                         <button
                           type="button"
                           onClick={() => {
@@ -782,7 +782,7 @@ function UserInboxPage() {
             </div>
             <div style={{ position: 'relative' }}>
               {showShortcuts && filteredTemplates.length > 0 && (
-                <div className="shortcuts-popover" style={{ position: 'absolute', bottom: '100%', left: '16px', background: '#f8f3eb', border: '1px solid rgba(10,25,37,0.12)', borderRadius: '12px', zIndex: 100, width: '280px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 30px rgba(7,19,29,0.1)' }}>
+                <div className="shortcuts-popover" style={{ position: 'absolute', bottom: '100%', left: '16px', background: 'var(--bg-panel)', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 100, width: '280px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 30px rgba(0,0,0,0.5)' }}>
                   {filteredTemplates.map((t, idx) => (
                     <div
                       key={t.id}
@@ -790,13 +790,13 @@ function UserInboxPage() {
                       style={{
                         padding: '10px 14px',
                         cursor: 'pointer',
-                        background: idx === shortcutIndex ? 'rgba(30,160,133,0.1)' : 'transparent',
-                        borderBottom: '1px solid rgba(10,25,37,0.06)',
-                        color: 'var(--text)'
+                        background: idx === shortcutIndex ? 'rgba(16,185,129,0.15)' : 'transparent',
+                        borderBottom: '1px solid var(--border-color)',
+                        color: 'var(--text-primary)'
                       }}
                     >
-                      <strong style={{ color: '#1ea085', fontSize: '13px' }}>/{t.title}</strong>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
+                      <strong style={{ color: 'var(--accent-primary)', fontSize: '13px' }}>/{t.title}</strong>
+                      <div style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
                         {typeof t.content === 'string' ? t.content : JSON.stringify(t.content)}
                       </div>
                     </div>

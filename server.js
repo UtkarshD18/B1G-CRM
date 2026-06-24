@@ -81,6 +81,9 @@ app.use("/api/templet", templetRoute);
 const chatbotRoute = require("./routes/chatbot");
 app.use("/api/chatbot", chatbotRoute);
 
+const chatbotAutomationRoute = require("./routes/chatbotAutomation");
+app.use("/api/chatbot-automation", chatbotAutomationRoute);
+
 const broadcastRoute = require("./routes/broadcast");
 app.use("/api/broadcast", broadcastRoute);
 

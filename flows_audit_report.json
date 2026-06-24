@@ -1,23 +1,23 @@
 {
   "create": {
-    "flowId": "audit-flow-1782014731762",
-    "title": "Audit Flow 1782014731762",
+    "flowId": "audit-flow-1782239021373",
+    "title": "Audit Flow 1782239021373",
     "successResponse": true,
     "persistedInDb": true,
     "row": {
-      "id": 100,
+      "id": 7,
       "uid": "local-user-uid",
-      "flow_id": "audit-flow-1782014731762",
-      "title": "Audit Flow 1782014731762",
+      "flow_id": "audit-flow-1782239021373",
+      "title": "Audit Flow 1782239021373",
       "prevent_list": null,
       "ai_list": null,
-      "createdat": "2026-06-21T04:05:31.768Z",
-      "updatedat": "2026-06-21T04:05:31.768Z"
+      "createdat": "2026-06-23T18:23:41.380Z",
+      "updatedat": "2026-06-23T18:23:41.380Z"
     }
   },
   "filesystem": {
-    "nodesPath": "/app/flow-json/nodes/local-user-uid/audit-flow-1782014731762.json",
-    "edgesPath": "/app/flow-json/edges/local-user-uid/audit-flow-1782014731762.json",
+    "nodesPath": "/app/flow-json/nodes/local-user-uid/audit-flow-1782239021373.json",
+    "edgesPath": "/app/flow-json/edges/local-user-uid/audit-flow-1782239021373.json",
     "notes": "Files are saved inside docker app container."
   },
   "reload": {

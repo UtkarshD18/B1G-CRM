@@ -18,11 +18,12 @@ const overlayStyle = {
 }
 
 const modalStyle = {
-  backgroundColor: '#f8f3eb',
+  backgroundColor: 'var(--bg-card)',
+  color: 'var(--text-primary)',
   padding: '24px',
   borderRadius: '24px',
-  border: '1px solid rgba(10, 25, 37, 0.12)',
-  boxShadow: '0 24px 70px rgba(7, 19, 29, 0.14)',
+  border: '1px solid var(--border-color)',
+  boxShadow: '0 24px 70px rgba(0, 0, 0, 0.5)',
   width: 'min(900px, 95%)',
   maxHeight: '90vh',
   overflowY: 'auto',
@@ -417,18 +418,18 @@ function UserCrmPipelinePage() {
       </div>
 
       {/* Search & Filter Controls */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', background: '#fcfcfc', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(10,25,37,0.06)', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--border-color)', marginBottom: '16px' }}>
         <input
           type="text"
           placeholder="Search name, mobile, or notes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ flex: '1', minWidth: '200px', fontSize: '13px', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(10,25,37,0.12)', background: '#fff', color: '#333' }}
+          style={{ flex: '1', minWidth: '200px', fontSize: '13px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-panel)', color: 'var(--text-primary)' }}
         />
         <select
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
-          style={{ fontSize: '13px', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(10,25,37,0.12)', minWidth: '150px', background: '#fff', color: '#333' }}
+          style={{ fontSize: '13px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', minWidth: '150px', background: 'var(--bg-panel)', color: 'var(--text-primary)' }}
         >
           <option value="all">All Agents</option>
           <option value="unassigned">Unassigned</option>
@@ -455,25 +456,26 @@ function UserCrmPipelinePage() {
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, stage)}
               style={{
-                background: draggedOverStage === stage ? 'rgba(30, 160, 133, 0.08)' : '#fcfcfc',
+                background: draggedOverStage === stage ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card)',
                 borderRadius: '16px',
-                border: draggedOverStage === stage ? '2px dashed #1ea085' : '1px solid rgba(10,25,37,0.06)',
+                border: draggedOverStage === stage ? '2px dashed var(--accent-primary)' : '1px solid var(--border-color)',
                 padding: '12px',
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: '500px',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                color: 'var(--text-primary)'
               }}
             >
               {/* Column Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid rgba(10,25,37,0.04)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '2px solid var(--border-color)' }}>
                 <div>
-                  <h3 style={{ fontSize: '15px', margin: 0 }}>{stage}</h3>
-                  <span className="muted-copy" style={{ fontSize: '11px' }}>
+                  <h3 style={{ fontSize: '15px', margin: 0, color: 'var(--text-primary)' }}>{stage}</h3>
+                  <span className="muted-copy" style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     {stageLeads.length} leads
                   </span>
                 </div>
-                <div style={{ background: 'rgba(30, 160, 133, 0.1)', color: '#1ea085', padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent-primary)', padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' }}>
                   ${totalValue.toLocaleString()}
                 </div>
               </div>
@@ -490,39 +492,40 @@ function UserCrmPipelinePage() {
                     onDragOver={handleCardDragOver}
                     onDrop={(e) => handleCardDrop(e, lead, stage)}
                     style={{
-                      background: '#ffffff',
+                      background: 'var(--bg-panel)',
                       padding: '12px',
                       borderRadius: '12px',
-                      border: '1px solid rgba(10,25,37,0.08)',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                      border: '1px solid var(--border-color)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
                       cursor: 'grab',
                       opacity: draggedLead?.id === lead.id ? 0.4 : 1,
                       transition: 'transform 0.2s ease, box-shadow 0.2s ease, opacity 0.15s ease',
+                      color: 'var(--text-primary)'
                     }}
                     onMouseEnter={e => {
                       e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.06)'
+                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)'
                     }}
                     onMouseLeave={e => {
                       e.currentTarget.style.transform = 'none'
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)'
+                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.15)'
                     }}
                   >
-                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>{lead.name}</div>
-                    <div className="muted-copy" style={{ fontSize: '12px', marginBottom: '8px' }}>{lead.mobile}</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px', color: 'var(--text-primary)' }}>{lead.name}</div>
+                    <div className="muted-copy" style={{ fontSize: '12px', marginBottom: '8px', color: 'var(--text-secondary)' }}>{lead.mobile}</div>
                     
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-                      <span className="muted-copy" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        👤 {lead.owner_name || <em style={{ color: '#aaa' }}>Unassigned</em>}
+                      <span className="muted-copy" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)' }}>
+                        👤 {lead.owner_name || <em style={{ color: 'var(--text-secondary)' }}>Unassigned</em>}
                       </span>
-                      <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#1ea085' }}>
+                      <span style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--accent-primary)' }}>
                         ${Number(lead.value || 0).toLocaleString()}
                       </span>
                     </div>
-
+ 
                     {/* Quick stage switch actions */}
-                    <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(10,25,37,0.04)', display: 'flex', gap: '4px', overflowX: 'auto' }} onClick={e => e.stopPropagation()}>
-                      <span style={{ fontSize: '10px' }} className="muted-copy">Move:</span>
+                    <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '4px', overflowX: 'auto' }} onClick={e => e.stopPropagation()}>
+                      <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }} className="muted-copy">Move:</span>
                       {STAGES.filter(s => s !== stage).slice(0, 3).map(st => (
                         <button
                           key={st}
@@ -631,10 +634,10 @@ function UserCrmPipelinePage() {
           <div style={modalStyle} onClick={e => e.stopPropagation()}>
             
             {/* Left: Lead Details / Edit form */}
-            <div style={{ borderRight: '1px solid rgba(10, 25, 37, 0.08)', paddingRight: '20px' }}>
+            <div style={{ borderRight: '1px solid var(--border-color)', paddingRight: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h2>Edit Lead Details</h2>
-                <span className="status-chip active" style={{ backgroundColor: 'rgba(30,160,133,0.1)', color: '#1ea085', fontSize: '11px' }}>
+                <span className="status-chip active" style={{ backgroundColor: 'rgba(16,185,129,0.15)', color: 'var(--accent-primary)', fontSize: '11px' }}>
                   ID: {selectedLead.id}
                 </span>
               </div>
@@ -710,11 +713,11 @@ function UserCrmPipelinePage() {
                     className="mini-button"
                     onClick={handleDeleteLead}
                     disabled={loading}
-                    style={{ border: '1px solid #c94b4b', color: '#a22f2f' }}
+                    style={{ border: '1px solid var(--color-danger)', color: 'var(--color-danger)', background: 'transparent' }}
                   >
                     {loading ? 'Deleting…' : 'Delete'}
                   </button>
-                  <button type="button" className="mini-button" onClick={() => setSelectedLead(null)} style={{ border: '1px solid #ccc', color: '#333' }}>
+                  <button type="button" className="mini-button" onClick={() => setSelectedLead(null)}>
                     Close
                   </button>
                 </div>
@@ -724,8 +727,8 @@ function UserCrmPipelinePage() {
             {/* Right: Reminders & Activity Timeline */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Reminders section */}
-              <div style={{ background: '#ffffff', padding: '16px', borderRadius: '16px', border: '1px solid rgba(10,25,37,0.06)' }}>
-                <h3 style={{ fontSize: '15px', margin: '0 0 12px 0' }}>Schedule Follow-up Reminder</h3>
+              <div style={{ background: 'var(--bg-panel)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ fontSize: '15px', margin: '0 0 12px 0', color: 'var(--text-primary)' }}>Schedule Follow-up Reminder</h3>
                 <form onSubmit={handleAddReminder} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
                   <input
                     type="text"
@@ -743,7 +746,7 @@ function UserCrmPipelinePage() {
                       required
                       style={{ fontSize: '13px', flex: 1 }}
                     />
-                    <button type="submit" className="mini-button" style={{ background: '#1ea085', color: '#fff', border: 'none' }}>
+                    <button type="submit" className="mini-button" style={{ background: 'var(--accent-primary)', color: '#fff', border: 'none' }}>
                       Add
                     </button>
                   </div>
@@ -752,12 +755,12 @@ function UserCrmPipelinePage() {
                 {/* List Reminders */}
                 <div style={{ maxHeight: '120px', overflowY: 'auto', display: 'grid', gap: '6px' }}>
                   {reminders.length === 0 ? (
-                    <p className="muted-copy" style={{ fontSize: '11px', margin: 0 }}>No reminders set.</p>
+                    <p className="muted-copy" style={{ fontSize: '11px', margin: 0, color: 'var(--text-secondary)' }}>No reminders set.</p>
                   ) : (
                     reminders.map(rem => (
-                      <div key={rem.id} style={{ display: 'flex', justifyContent: 'space-between', background: '#fafafa', padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.03)', fontSize: '12px' }}>
+                      <div key={rem.id} style={{ display: 'flex', justifyContent: 'space-between', background: 'var(--bg-card)', padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '12px' }}>
                         <span>🔔 {rem.title}</span>
-                        <span className="muted-copy" style={{ fontSize: '10px' }}>
+                        <span className="muted-copy" style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                           {new Date(rem.remind_at).toLocaleString()}
                         </span>
                       </div>
@@ -768,7 +771,7 @@ function UserCrmPipelinePage() {
 
               {/* Activity timelines */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ fontSize: '15px', margin: '0 0 8px 0' }}>Activity logs & timeline</h3>
+                <h3 style={{ fontSize: '15px', margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Activity logs & timeline</h3>
                 
                 {/* Add activity note quick input */}
                 <form onSubmit={handleAddActivity} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -788,12 +791,12 @@ function UserCrmPipelinePage() {
                 {/* Activities log feed */}
                 <div style={{ flex: 1, maxHeight: '250px', overflowY: 'auto', display: 'grid', gap: '8px' }}>
                   {activities.length === 0 ? (
-                    <p className="muted-copy" style={{ fontSize: '12px' }}>No activities logged for this lead yet.</p>
+                    <p className="muted-copy" style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>No activities logged for this lead yet.</p>
                   ) : (
                     activities.map(act => (
-                      <div key={act.id} style={{ borderLeft: '2px solid #1ea085', paddingLeft: '10px', fontSize: '12px' }}>
-                        <div style={{ fontWeight: 'bold' }}>{act.description}</div>
-                        <div className="muted-copy" style={{ fontSize: '10px' }}>
+                      <div key={act.id} style={{ borderLeft: '2px solid var(--accent-primary)', paddingLeft: '10px', fontSize: '12px' }}>
+                        <div style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{act.description}</div>
+                        <div className="muted-copy" style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
                           {act.agent_name ? `by ${act.agent_name} | ` : ''}
                           {new Date(act.created_at).toLocaleString()}
                         </div>
