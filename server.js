@@ -15,6 +15,17 @@ const { runMigrations } = require("./database/migrate");
 const { seedDevCredentials } = require("./database/seed-dev");
 const { runCampaign } = require("./loops/campaignLoop.js");
 const { init, cleanup } = require("./helper/addon/qr");
+const { startKbIndexWorker, stopKbIndexWorker } = require("./workers/kbIndexWorker");
+
+function cleanupAll() {
+  try {
+    stopKbIndexWorker();
+  } catch (err) {
+    logger.error("Failed to stop KB Index Worker", { error: err.message });
+  }
+  cleanup();
+}
+
 
 const app = express();
 
@@ -80,6 +91,9 @@ app.use("/api/templet", templetRoute);
 
 const chatbotRoute = require("./routes/chatbot");
 app.use("/api/chatbot", chatbotRoute);
+
+const chatbotAutomationRoute = require("./routes/chatbotAutomation");
+app.use("/api/chatbot-automation", chatbotAutomationRoute);
 
 const broadcastRoute = require("./routes/broadcast");
 app.use("/api/broadcast", broadcastRoute);
@@ -193,6 +207,12 @@ async function startServer() {
         } catch (err) {
           logger.error("Campaign loop failed", { error: err.message });
         }
+        try {
+          startKbIndexWorker();
+          logger.info("Knowledge Base Indexing worker started");
+        } catch (err) {
+          logger.error("Knowledge Base Indexing worker failed to start", { error: err.message });
+        }
       }, 1000);
     });
 
@@ -209,12 +229,12 @@ async function startServer() {
 function shutdown(signal) {
   logger.info(`${signal} received, shutting down`);
   if (!runtime.server) {
-    cleanup();
+    cleanupAll();
     process.exit(0);
   }
 
   runtime.server.close(() => {
-    cleanup();
+    cleanupAll();
     process.exit(0);
   });
 }
@@ -236,7 +256,7 @@ process.on("unhandledRejection", (reason) => {
   });
 });
 
-nodeCleanup(cleanup);
+nodeCleanup(cleanupAll);
 
 // Background SLA escalations checker (5 minutes SLA)
 const { query: dbQuery } = require("./database/dbpromise");

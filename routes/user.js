@@ -40,6 +40,8 @@ const jwt = require("jsonwebtoken");
 const { checkQr } = require("../helper/addon/qr/index.js");
 const env = require("../env.js");
 const { addON } = env;
+const { invalidatePermissionCache } = require("../utils/permissionResolver.js");
+const { logActivity } = require("../utils/activityLogger.js");
 
 // facebook login
 router.post("/login_with_facebook", async (req, res) => {
@@ -1339,6 +1341,9 @@ router.post("/update_profile", validateUser, async (req, res) => {
       );
     }
 
+    invalidatePermissionCache(req.decode.uid);
+    await logActivity(req, "Users", "update_profile", email, { name, timezone });
+
     res.json({ success: true, msg: "Profile was updated" });
   } catch (err) {
     console.log(err);
@@ -1834,6 +1839,9 @@ router.post("/update_agent_profile", validateUser, async (req, res) => {
         [email, name, mobile, permissionsJson, uid, req.decode.uid]
       );
     }
+
+    invalidatePermissionCache(uid);
+    await logActivity(req, "Users", "update_agent_profile", email, { agent_uid: uid });
 
     res.json({ msg: "Agent profile was updated", success: true });
   } catch (err) {

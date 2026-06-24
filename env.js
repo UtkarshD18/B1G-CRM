@@ -83,6 +83,7 @@ const META_APP_SECRET = envValue("META_APP_SECRET");
 const REDIS_URL = envValue("REDIS_URL") || "redis://localhost:6379";
 const REDIS_ENABLED = boolValue("REDIS_ENABLED", false);
 const MOCK_META_DELIVERY = boolValue("MOCK_META_DELIVERY", false);
+const UNIFIED_AI_RUNTIME = boolValue("UNIFIED_AI_RUNTIME", false);
 
 const AWS_ACCESS_KEY = envValue("AWS_ACCESS_KEY");
 const AWS_SECRET_KEY = envValue("AWS_SECRET_KEY");
@@ -176,4 +177,5 @@ module.exports = {
   LOG_LEVEL,
   FEATURES,
   MOCK_META_DELIVERY,
+  UNIFIED_AI_RUNTIME,
 };

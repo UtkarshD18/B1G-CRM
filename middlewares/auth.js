@@ -185,17 +185,25 @@ async function adminValidator(req, res, next) {
   }
 }
 
+const { hasPermission } = require("../utils/permissionResolver");
+
 function verifyPermission(permission) {
-  return (req, res, next) => {
-    if (req.decode && req.decode.role === "user") {
+  return async (req, res, next) => {
+    if (!req.decode) {
+      return res.status(401).json({
+        success: false,
+        msg: "Unauthorized. Token missing.",
+        code: "UNAUTHORIZED"
+      });
+    }
+
+    const userId = req.decode.agentUid || req.decode.uid;
+    const permitted = await hasPermission(userId, permission);
+
+    if (permitted) {
       return next();
     }
-    if (req.decode && req.decode.role === "agent") {
-      const perms = req.decode.permissions || [];
-      if (perms.includes(permission)) {
-        return next();
-      }
-    }
+
     return res.status(403).json({
       success: false,
       msg: `Permission denied. Required: ${permission}`,

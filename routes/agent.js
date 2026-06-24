@@ -32,8 +32,9 @@ const {
   checkContactLimit,
 } = require("../middlewares/plan.js");
 const { recoverEmail } = require("../emails/returnEmails.js");
-const moment = require("moment");
 const env = require("../env.js");
+const { invalidatePermissionCache } = require("../utils/permissionResolver.js");
+const { logActivity } = require("../utils/activityLogger.js");
 
 // Helper: check if an agent is assigned to a specific chat
 async function isAgentAssigned(agentUid, chatId) {
@@ -92,6 +93,9 @@ router.post("/add_agent", validateUser, checkPlan, async (req, res) => {
       ]
     );
 
+    await logActivity(req, "Users", "create_agent", email?.toLowerCase(), { agent_uid: uid, name });
+    invalidatePermissionCache(uid);
+
     res.json({
       msg: "Agent account was created",
       success: true,
@@ -126,6 +130,9 @@ router.post("/change_agent_activeness", validateUser, async (req, res) => {
       [activeness ? 1 : 0, agentUid, req.decode.uid]
     );
 
+    invalidatePermissionCache(agentUid);
+    await logActivity(req, "Users", "change_agent_activeness", agentUid, { activeness });
+
     res.json({
       success: true,
       msg: "Success",
@@ -155,6 +162,9 @@ router.post("/del_agent", validateUser, async (req, res) => {
         req.decode.uid,
       ]);
     });
+
+    invalidatePermissionCache(uid);
+    await logActivity(req, "Users", "delete_agent", uid);
 
     res.json({
       success: true,

@@ -318,6 +318,15 @@ async function processMetaMsg({
             if (referencedMessage) {
               msgContext.context = referencedMessage;
             }
+          } else if (interactive?.nfm_reply) {
+            msgContext = formatMessage("interactive", {
+              type: "nfm_reply",
+              nfm_reply: {
+                response_json: interactive.nfm_reply.response_json,
+                body: interactive.nfm_reply.body || "Form Submission",
+                name: interactive.nfm_reply.name || "flow"
+              }
+            });
           } else {
             console.warn(`Unsupported message type: ${msgType}`);
             return null;

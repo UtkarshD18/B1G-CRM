@@ -54,6 +54,9 @@ dist/
 # Local AI agent workspaces
 .antigravity/
 
+# Local test scripts (may contain API keys)
+scratch/
+
 # AI generated reports
 *_AUDIT.md
 *_REPORT.md

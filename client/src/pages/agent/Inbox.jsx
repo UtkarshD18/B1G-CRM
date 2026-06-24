@@ -729,7 +729,7 @@ function AgentInboxPage() {
             </div>
             <form className="wa-composer" onSubmit={sendMessage} style={{ position: 'relative' }}>
               {showShortcuts && filteredTemplates.length > 0 && (
-                <div className="shortcuts-popover" style={{ position: 'absolute', bottom: '100%', left: '16px', background: '#f8f3eb', border: '1px solid rgba(10,25,37,0.12)', borderRadius: '12px', zIndex: 100, width: '280px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 30px rgba(7,19,29,0.1)' }}>
+                <div className="shortcuts-popover" style={{ position: 'absolute', bottom: '100%', left: '16px', background: 'var(--bg-panel)', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 100, width: '280px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 30px rgba(0,0,0,0.5)' }}>
                   {filteredTemplates.map((t, idx) => (
                     <div
                       key={t.id}
@@ -738,12 +738,13 @@ function AgentInboxPage() {
                         padding: '10px 14px',
                         cursor: 'pointer',
                         borderRadius: idx === 0 ? '12px 12px 0 0' : idx === filteredTemplates.length - 1 ? '0 0 12px 12px' : '0',
-                        background: idx === shortcutIndex ? 'rgba(30,160,133,0.1)' : 'transparent',
-                        borderBottom: idx < filteredTemplates.length - 1 ? '1px solid rgba(10,25,37,0.06)' : 'none',
+                        background: idx === shortcutIndex ? 'rgba(16,185,129,0.15)' : 'transparent',
+                        borderBottom: idx < filteredTemplates.length - 1 ? '1px solid var(--border-color)' : 'none',
+                        color: 'var(--text-primary)'
                       }}
                     >
-                      <strong style={{ fontSize: '13px', display: 'block' }}>{t.title}</strong>
-                      <span style={{ fontSize: '11px', color: '#6b7280', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <strong style={{ fontSize: '13px', display: 'block', color: 'var(--accent-primary)' }}>{t.title}</strong>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {(() => { try { const p = typeof t.content === 'string' ? JSON.parse(t.content) : t.content; return p?.body || p?.text || String(p || '') } catch { return String(t.content || '') } })()}
                       </span>
                     </div>
