@@ -87,5 +87,5 @@ Status legend:
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
 | Agent dashboard | Partial | Loads identity, assigned chats, tasks. | Add richer chat workflow. | `routes/agent.js`, `client/src/pages/agent/Dashboard.jsx` | PostgreSQL | Medium |
-| Restricted inbox | Partial | Assigned chat list/conversation/send routes exist. | Ensure all queries enforce owner and assignment. | `routes/agent.js`, `middlewares/agent.js` | Meta API | High |
+| Restricted inbox | Complete | Assigned chat list/conversation/send routes exist, enforcing owner and agent assignment on all REST and socket paths. | None. | routes/agent.js, middlewares/agent.js, helper/socket/index.js | Meta API | Low |
 | Agent tasks | Complete/partial | Agent can view and mark tasks complete. | More task statuses/comments history. | `routes/agent.js`, `client/src/pages/agent/Dashboard.jsx` | PostgreSQL | Medium |

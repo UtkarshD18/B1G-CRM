@@ -34,6 +34,14 @@ const { recoverEmail } = require("../emails/returnEmails.js");
 const moment = require("moment");
 const env = require("../env.js");
 
+async function isChatAssignedToAgent(agentUid, chatId, ownerUid) {
+  const assignment = await query(
+    `SELECT 1 FROM agent_chats WHERE uid = ? AND chat_id = ? AND owner_uid = ?`,
+    [agentUid, chatId, ownerUid]
+  );
+  return assignment.length > 0;
+}
+
 // adding agent
 router.post("/add_agent", validateUser, checkPlan, async (req, res) => {
   try {
@@ -394,6 +402,11 @@ router.post("/get_convo", validateAgent, async (req, res) => {
   try {
     const { chatId } = req.body;
 
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
+    }
+
     const filePath = `${__dirname}/../conversations/inbox/${req.owner.uid}/${chatId}.json`;
     const data = readJSONFile(filePath, 100);
 
@@ -411,6 +424,11 @@ router.post("/send_text", validateAgent, checkPlan, async (req, res) => {
 
     if (!text || !toNumber || !toName || !chatId) {
       return res.json({ success: false, msg: "Not enough input provided" });
+    }
+
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
     }
 
     const msgObj = {
@@ -462,6 +480,11 @@ router.post("/send_audio", validateAgent, checkPlan, async (req, res) => {
 
     if (!url || !toNumber || !toName || !chatId) {
       return res.json({ success: false, msg: "Not enough input provided" });
+    }
+
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
     }
 
     const msgObj = {
@@ -540,6 +563,11 @@ router.post("/send_doc", validateAgent, checkPlan, async (req, res) => {
       return res.json({ success: false, msg: "Not enough input provided" });
     }
 
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
+    }
+
     const msgObj = {
       type: "document",
       document: {
@@ -591,6 +619,11 @@ router.post("/send_video", validateAgent, checkPlan, async (req, res) => {
       return res.json({ success: false, msg: "Not enough input provided" });
     }
 
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
+    }
+
     const msgObj = {
       type: "video",
       video: {
@@ -640,6 +673,11 @@ router.post("/send_image", validateAgent, checkPlan, async (req, res) => {
 
     if (!url || !toNumber || !toName || !chatId) {
       return res.json({ success: false, msg: "Not enough input provided" });
+    }
+
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
     }
 
     const msgObj = {
@@ -707,9 +745,14 @@ router.post("/mark_task_complete", validateAgent, async (req, res) => {
       return res.json({ msg: "Please type your comments." });
     }
 
+    const task = await query(`SELECT 1 FROM agent_task WHERE id = ? AND uid = ?`, [id, req.decode.uid]);
+    if (task.length < 1) {
+      return res.json({ success: false, msg: "Task not found or not assigned to this agent" });
+    }
+
     await query(
-      `UPDATE agent_task SET status = ?, agent_comments = ? WHERE id = ?`,
-      ["COMPLETED", comment, id]
+      `UPDATE agent_task SET status = ?, agent_comments = ? WHERE id = ? AND uid = ?`,
+      ["COMPLETED", comment, id, req.decode.uid]
     );
 
     res.json({ msg: "Task updated", success: true });
@@ -728,9 +771,15 @@ router.post("/change_chat_ticket_status", validateAgent, async (req, res) => {
       return res.json({ msg: "invalid request" });
     }
 
-    await query(`UPDATE chats SET chat_status = ? WHERE chat_id = ?`, [
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
+    }
+
+    await query(`UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ?`, [
       status,
       chatId,
+      req.owner.uid,
     ]);
 
     res.json({
@@ -750,10 +799,14 @@ router.post("/save_note", validateAgent, async (req, res) => {
     if (!chatId) {
       return res.json({ success: false, msg: "chatId is required" });
     }
+    const assigned = await isChatAssignedToAgent(req.decode.uid, chatId, req.owner.uid);
+    if (!assigned) {
+      return res.json({ success: false, msg: "Unauthorized: Chat not assigned to this agent" });
+    }
     await query("UPDATE chats SET chat_note = ? WHERE chat_id = ? AND uid = ?", [
       note,
       chatId,
-      req.decode.owner_uid
+      req.owner.uid
     ]);
     res.json({ success: true, msg: "Note updated" });
   } catch (err) {

@@ -38,6 +38,7 @@ Last audited: 2026-06-25
 | Sprint 14 Payment Gateway Parity | Integrated MercadoPago credentials into database/APIs and customized form labels/input types dynamically per payment gateway provider (Stripe, PayPal, Razorpay, Paystack, MercadoPago, Offline). |
 | Sprint 15 Audit & Parity Verification | Completed definitive Repository Reality Audit and Parity Verification against live reference CRM, verified all core CRM pages, role sessions, database persistence, and API schemas. |
 | Sprint 16 Interactive Tag UI | Implemented high-fidelity label/tag management UI in User Inbox context sidebar, allowing managers to dynamically select predefined labels and type custom tags, integrated directly with `/api/user/push_tag` and `/api/user/del_tag` REST endpoints. |
+| Sprint 17 Agent security hardening | Hardened Agent Portal backend endpoints and Socket.IO real-time channels against IDOR vulnerabilities, enforcing agent assignment checking on retrieval and mutating REST routes, task completion, and socket event emissions. |
 
 ## Partially Implemented
 

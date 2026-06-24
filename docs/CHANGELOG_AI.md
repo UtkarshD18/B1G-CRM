@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-25 - Sprint 17: Agent Portal Security Hardening & IDOR Prevention
+
+| Field | Details |
+| --- | --- |
+| Feature | Hardened Agent Portal backend endpoints and Socket.IO real-time channels against Insecure Direct Object Reference (IDOR) vulnerabilities. Enforced agent assignment verification checks on `get_convo`, `send_text`, `send_audio`, `send_doc`, `send_video`, `send_image`, `change_chat_ticket_status`, and `save_note` endpoints; enforced task ownership checks on `/mark_task_complete`; enforced agent assignment verification on socket events `on_open_chat` and `send_chat_message`, and verified tenant boundaries on `save_chat_note` and `set_chat_label` socket listeners. Added comprehensive agent-level IDOR test assertions to `adversarial_security_test.js`. |
+| Files changed | `routes/agent.js`, `helper/socket/index.js`, `adversarial_security_test.js`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Guarantees complete workspace security isolation for support agents, preventing unauthorized chat retrieval, message dispatches, notes modification, and task completion across tenant boundaries. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-25 - Sprint 16: Interactive Tag/Label Management UI
 
 | Field | Details |

@@ -260,6 +260,17 @@ function processSocketEvent({
       const { chatId, limit, chat } = payload?.data;
       const { uid, id, agent } = connectionInfo;
       if (chatId && limit) {
+        if (agent) {
+          const assignment = await query(
+            `SELECT 1 FROM agent_chats WHERE uid = ? AND chat_id = ? AND owner_uid = ?`,
+            [connectionInfo.decodedValue.uid, chatId, connectionInfo.decodedValue.owner_uid]
+          );
+          if (assignment.length < 1) {
+            sendToSocketId(id, { msg: "Unauthorized: Chat not assigned to this agent" }, "error");
+            return;
+          }
+        }
+
         const conversationPath = `${__dirname}/../../conversations/inbox/${
           agent ? connectionInfo?.decodedValue?.owner_uid : uid
         }/${chatId}.json`;
@@ -341,11 +352,14 @@ function processSocketEvent({
   socket.on("save_chat_note", async (payload) => {
     try {
       const { id, chatNote } = payload?.data;
+      const { uid, agent } = connectionInfo;
+      const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
 
       if (id) {
-        await query(`UPDATE chats SET chat_note = ? WHERE id = ?`, [
+        await query(`UPDATE chats SET chat_note = ? WHERE id = ? AND uid = ?`, [
           chatNote,
           id,
+          ownerUid,
         ]);
       }
     } catch (err) {
@@ -421,9 +435,10 @@ function processSocketEvent({
         return sendToSocketId(id, { msg: "Invalid request" }, "error");
       }
 
-      await query(`UPDATE chats SET chat_tags = ? WHERE id = ?`, [
+      await query(`UPDATE chats SET chat_tags = ? WHERE id = ? AND uid = ?`, [
         JSON.stringify(labelData),
         chatIdRow,
+        ownerUid,
       ]);
 
       // updating chat info
@@ -471,6 +486,16 @@ function processSocketEvent({
           { msg: "Please open the chat again you server faced socket issue" },
           "error"
         );
+      }
+
+      if (agent) {
+        const assignment = await query(
+          `SELECT 1 FROM agent_chats WHERE uid = ? AND chat_id = ? AND owner_uid = ?`,
+          [connectionInfo.decodedValue.uid, selectedChat.chat_id, connectionInfo.decodedValue.owner_uid]
+        );
+        if (assignment.length < 1) {
+          return sendToSocketId(id, { msg: "Unauthorized: Chat not assigned to this agent" }, "error");
+        }
       }
 
       const senderName = selectedChat?.sender_name;

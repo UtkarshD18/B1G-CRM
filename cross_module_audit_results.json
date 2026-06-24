@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-24T22:11:38.221Z",
+  "timestamp": "2026-06-24T22:26:32.320Z",
   "total": 41,
   "passed": 41,
   "failed": 0,
@@ -21,7 +21,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Get flows",
       "pass": true,
-      "detail": "Found 18 flows"
+      "detail": "Found 24 flows"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -51,7 +51,7 @@
       "module": "CHATBOT→DIAG",
       "test": "Get chatbots",
       "pass": true,
-      "detail": "Found 18 chatbots"
+      "detail": "Found 24 chatbots"
     },
     {
       "module": "CHATBOT→DIAG",
@@ -75,7 +75,7 @@
       "module": "CONTACT→CAMPAIGN",
       "test": "Get contacts",
       "pass": true,
-      "detail": "Found 31 contacts"
+      "detail": "Found 37 contacts"
     },
     {
       "module": "CONTACT→CAMPAIGN",
@@ -87,13 +87,13 @@
       "module": "CONTACT→INBOX",
       "test": "Get chat list",
       "pass": true,
-      "detail": "Found 4 chats"
+      "detail": "Found 5 chats"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Chats have sender identity",
       "pass": true,
-      "detail": "4/4 chats have sender names"
+      "detail": "5/5 chats have sender names"
     },
     {
       "module": "AI→CHATBOT",
@@ -135,7 +135,7 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 48"
+      "detail": "ID: 54"
     },
     {
       "module": "CRM→CONTACTS",
@@ -153,7 +153,7 @@
       "module": "AGENT→INBOX",
       "test": "Get agents",
       "pass": true,
-      "detail": "Found 17 agents"
+      "detail": "Found 23 agents"
     },
     {
       "module": "AGENT→INBOX",
@@ -177,7 +177,7 @@
       "module": "SUPERVISOR→AGENT",
       "test": "Get KPIs",
       "pass": true,
-      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":4,\"escalatedChatsCount\":1}"
+      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":5,\"escalatedChatsCount\":1}"
     },
     {
       "module": "SUPERVISOR→AGENT",
@@ -195,7 +195,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 18 rules"
+      "detail": "Found 24 rules"
     },
     {
       "module": "WEBHOOK→INBOX",

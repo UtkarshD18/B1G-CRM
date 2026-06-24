@@ -3,7 +3,7 @@
     "attackType": "Cross-Tenant Rule Update",
     "endpoint": "/webhooks/rules/update",
     "payload": {
-      "id": 56
+      "id": 66
     },
     "expectedOutcome": "Fail to update rule",
     "actualResponseStatus": 200,
@@ -17,7 +17,7 @@
     "attackType": "Cross-Tenant Rule Delete",
     "endpoint": "/webhooks/rules/delete",
     "payload": {
-      "id": 56
+      "id": 66
     },
     "expectedOutcome": "Fail to delete rule",
     "actualResponseStatus": 200,
@@ -67,7 +67,7 @@
     "actualResponseStatus": 200,
     "actualResponseData": {
       "success": false,
-      "msg": "Please subscribe a plan to proceed this."
+      "msg": "Select a saved flow first."
     },
     "passed": true
   },
@@ -89,7 +89,7 @@
     "attackType": "Cross-Tenant Flow Delete",
     "endpoint": "/chat_flow/del_flow",
     "payload": {
-      "flowId": "t1-flow-id-1781988349021"
+      "flowId": "t1-flow-id-1782339999551"
     },
     "expectedOutcome": "Flow persists in T1's list",
     "actualResponseStatus": 200,
@@ -203,13 +203,83 @@
     "attackType": "Cross-Tenant Task Delete",
     "endpoint": "/user/del_task_for_agent",
     "payload": {
-      "id": 18
+      "id": 26
     },
     "expectedOutcome": "Task persists in T1's list",
     "actualResponseStatus": 200,
     "actualResponseData": {
       "msg": "Task was deleted",
       "success": true
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Agent IDOR Chat Convo Retrieval",
+    "endpoint": "/agent/get_convo",
+    "payload": {
+      "chatId": "t1-chat-id"
+    },
+    "expectedOutcome": "Fail to fetch unassigned chat conversation",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Unauthorized: Chat not assigned to this agent"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Agent IDOR Message Send",
+    "endpoint": "/agent/send_text",
+    "payload": {
+      "chatId": "t1-chat-id"
+    },
+    "expectedOutcome": "Fail to send message to unassigned chat",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Unauthorized: Chat not assigned to this agent"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Agent IDOR Save Note",
+    "endpoint": "/agent/save_note",
+    "payload": {
+      "chatId": "t1-chat-id"
+    },
+    "expectedOutcome": "Fail to save note on unassigned chat",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Unauthorized: Chat not assigned to this agent"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Agent IDOR Change Chat Status",
+    "endpoint": "/agent/change_chat_ticket_status",
+    "payload": {
+      "chatId": "t1-chat-id"
+    },
+    "expectedOutcome": "Fail to change status of unassigned chat",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Unauthorized: Chat not assigned to this agent"
+    },
+    "passed": true
+  },
+  {
+    "attackType": "Agent IDOR Mark Task Complete",
+    "endpoint": "/agent/mark_task_complete",
+    "payload": {
+      "id": 26
+    },
+    "expectedOutcome": "Fail to complete task of another agent",
+    "actualResponseStatus": 200,
+    "actualResponseData": {
+      "success": false,
+      "msg": "Task not found or not assigned to this agent"
     },
     "passed": true
   }

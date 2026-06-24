@@ -26,10 +26,10 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 | Field | Value |
 | --- | --- |
 | Current branch | `sprint13-final-audit` |
-| Current sprint | `Sprint 16: Interactive Tag Management & Handoff` |
-| Current priority | `Add Interactive Tag Management UI in User Inbox sidebar panel and verify system integration.` |
+| Current sprint | `Sprint 17: Agent Portal Security Hardening` |
+| Current priority | `Enforce agent assignment checking on messaging, note, status, and task endpoints.` |
 | Current feature in progress | `None` |
-| Last completed feature | `Interactive Tag/Label Management UI in the User Inbox context sidebar panel calling push_tag and del_tag endpoints.` |
+| Last completed feature | `Agent Portal Security Hardening and IDOR Isolation check coverage in routes/agent.js and helper/socket/index.js.` |
 | Recommended next task | `Staging deployment and Redis-based Socket.IO adapters setup.` |
 | Known blockers | `None` |
 

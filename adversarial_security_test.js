@@ -1,3 +1,4 @@
+require("dotenv").config();
 const axios = require("axios");
 const fs = require("fs");
 
@@ -55,6 +56,26 @@ async function setupTenants() {
       headers: { Authorization: `Bearer ${tenant2Token}` }
     });
     tenant2Uid = profileRes.data.uid || profileRes.data.data?.uid;
+
+    const { Client } = require("pg");
+    const pgClient = new Client({
+      host: "127.0.0.1",
+      port: 5432,
+      user: "b1gcrm",
+      password: TEST_CONFIG.db.password,
+      database: TEST_CONFIG.db.database
+    });
+    await pgClient.connect();
+    await pgClient.query(
+      `UPDATE "user" SET plan = $1, plan_expire = $2 WHERE uid = $3`,
+      [
+        '{"contact_limit":100000,"allow_note":1,"allow_tag":1,"allow_chatbot":1,"allow_api":1}',
+        4102444800000,
+        tenant2Uid
+      ]
+    );
+    await pgClient.end();
+
     console.log(`Tenant 2 Setup complete. Email: ${tenant2Email}, UID: ${tenant2Uid}`);
   } catch (err) {
     console.error("Tenant 2 Setup failed:", err.message);
@@ -445,6 +466,125 @@ async function runAdversarialAudit() {
       logTest("Cross-Tenant Task Delete", "/user/del_task_for_agent", { id: t1TaskId }, "Task persists in T1's list", res, exists);
     } catch (err) {
       logTest("Cross-Tenant Task Delete", "/user/del_task_for_agent", { id: t1TaskId }, "Task persists", err.response, true);
+    }
+  }
+
+  // ==================== 7. Agent-Level IDOR Isolation Bypass ====================
+  console.log("\nAuditing Agent-Level IDOR Isolation...");
+  console.log("t1AgentUid:", t1AgentUid, "t1TaskId:", t1TaskId);
+  if (t1AgentUid && t1TaskId) {
+    let agent2Token = "";
+    const agent2Email = `t2agent_${Date.now()}@example.com`;
+    try {
+      // Create Agent 2 under Tenant 2
+      await axios.post(`${BASE_URL}/agent/add_agent`, {
+        name: "T2 Agent",
+        password: TEST_CONFIG.agentPassword,
+        email: agent2Email,
+        mobile: "2223334444",
+        comments: "T2 comments"
+      }, { headers: t2Headers });
+
+      // Login Agent 2
+      const agent2Login = await axios.post(`${BASE_URL}/agent/login`, {
+        email: agent2Email,
+        password: TEST_CONFIG.agentPassword
+      });
+      agent2Token = agent2Login.data.token;
+      console.log("Logged in Agent 2:", agent2Email, "token:", agent2Token);
+    } catch (err) {
+      console.error("Agent 2 setup failed:", err.message);
+    }
+
+    console.log("agent2Token truthiness:", !!agent2Token);
+    if (agent2Token) {
+      const a2Headers = { Authorization: `Bearer ${agent2Token}` };
+      const { Client } = require("pg");
+
+      // Setup a test chat assigned to Agent 1 in the DB directly
+      try {
+        const pgClient = new Client({
+          host: "127.0.0.1",
+          port: 5432,
+          user: "b1gcrm",
+          password: TEST_CONFIG.db.password,
+          database: TEST_CONFIG.db.database
+        });
+        await pgClient.connect();
+        
+        // Insert chat
+        await pgClient.query(`INSERT INTO chats (chat_id, uid, sender_name, sender_mobile) 
+                              VALUES ('t1-chat-id', 'local-user-uid', 'T1 Sender', '15550001111')
+                              ON CONFLICT (chat_id, uid) DO NOTHING`);
+        
+        // Ensure Agent 1 is assigned to it (clear first to prevent unique constraint error)
+        await pgClient.query(`DELETE FROM agent_chats WHERE chat_id = 't1-chat-id'`);
+        await pgClient.query(`INSERT INTO agent_chats (owner_uid, uid, chat_id) 
+                              VALUES ('local-user-uid', $1, 't1-chat-id')`, [t1AgentUid]);
+        await pgClient.end();
+        console.log("Test chat 't1-chat-id' assigned to Agent 1.");
+      } catch (err) {
+        console.error("Failed to setup test chat in DB:", err.message);
+      }
+
+      // Attack 1: Agent 2 tries to get conversation of t1-chat-id
+      try {
+        const res = await axios.post(`${BASE_URL}/agent/get_convo`, { chatId: "t1-chat-id" }, { headers: a2Headers });
+        const passed = res.data.success === false || res.data.msg?.toLowerCase().includes("unauthorized");
+        logTest("Agent IDOR Chat Convo Retrieval", "/agent/get_convo", { chatId: "t1-chat-id" }, "Fail to fetch unassigned chat conversation", res, passed);
+      } catch (err) {
+        logTest("Agent IDOR Chat Convo Retrieval", "/agent/get_convo", { chatId: "t1-chat-id" }, "Fail to fetch", err.response, true);
+      }
+
+      // Attack 2: Agent 2 tries to send text message to t1-chat-id
+      try {
+        const res = await axios.post(`${BASE_URL}/agent/send_text`, {
+          text: "Hacked msg",
+          toNumber: "15550001111",
+          toName: "T1 Sender",
+          chatId: "t1-chat-id"
+        }, { headers: a2Headers });
+        const passed = res.data.success === false || res.data.msg?.toLowerCase().includes("unauthorized");
+        logTest("Agent IDOR Message Send", "/agent/send_text", { chatId: "t1-chat-id" }, "Fail to send message to unassigned chat", res, passed);
+      } catch (err) {
+        logTest("Agent IDOR Message Send", "/agent/send_text", { chatId: "t1-chat-id" }, "Fail to send", err.response, true);
+      }
+
+      // Attack 3: Agent 2 tries to save note for t1-chat-id
+      try {
+        const res = await axios.post(`${BASE_URL}/agent/save_note`, {
+          chatId: "t1-chat-id",
+          note: "Hacked note"
+        }, { headers: a2Headers });
+        const passed = res.data.success === false || res.data.msg?.toLowerCase().includes("unauthorized");
+        logTest("Agent IDOR Save Note", "/agent/save_note", { chatId: "t1-chat-id" }, "Fail to save note on unassigned chat", res, passed);
+      } catch (err) {
+        logTest("Agent IDOR Save Note", "/agent/save_note", { chatId: "t1-chat-id" }, "Fail to save", err.response, true);
+      }
+
+      // Attack 4: Agent 2 tries to change ticket status of t1-chat-id
+      try {
+        const res = await axios.post(`${BASE_URL}/agent/change_chat_ticket_status`, {
+          chatId: "t1-chat-id",
+          status: "solved"
+        }, { headers: a2Headers });
+        const passed = res.data.success === false || res.data.msg?.toLowerCase().includes("unauthorized");
+        logTest("Agent IDOR Change Chat Status", "/agent/change_chat_ticket_status", { chatId: "t1-chat-id" }, "Fail to change status of unassigned chat", res, passed);
+      } catch (err) {
+        logTest("Agent IDOR Change Chat Status", "/agent/change_chat_ticket_status", { chatId: "t1-chat-id" }, "Fail to change status", err.response, true);
+      }
+
+      // Attack 5: Agent 2 tries to mark Agent 1's task t1TaskId as complete
+      try {
+        const res = await axios.post(`${BASE_URL}/agent/mark_task_complete`, {
+          id: t1TaskId,
+          comment: "Hacked completion comment"
+        }, { headers: a2Headers });
+        const passed = res.data.success === false || res.data.msg?.toLowerCase().includes("not found") || res.data.msg?.toLowerCase().includes("not assigned");
+        logTest("Agent IDOR Mark Task Complete", "/agent/mark_task_complete", { id: t1TaskId }, "Fail to complete task of another agent", res, passed);
+      } catch (err) {
+        logTest("Agent IDOR Mark Task Complete", "/agent/mark_task_complete", { id: t1TaskId }, "Fail to complete", err.response, true);
+      }
     }
   }
 
