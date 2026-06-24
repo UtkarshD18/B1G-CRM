@@ -18,17 +18,17 @@
         "method": "POST"
       },
       {
+        "url": "http://localhost:3010/api/admin/get_users",
+        "status": 200,
+        "method": "GET"
+      },
+      {
         "url": "http://localhost:3010/api/admin/get_dashboard_for_user",
         "status": 200,
         "method": "GET"
       },
       {
         "url": "http://localhost:3010/api/admin/get_plans",
-        "status": 200,
-        "method": "GET"
-      },
-      {
-        "url": "http://localhost:3010/api/admin/get_users",
         "status": 200,
         "method": "GET"
       },
@@ -58,12 +58,12 @@
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_users",
+        "url": "http://localhost:3010/api/admin/get_dashboard_for_user",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_dashboard_for_user",
+        "url": "http://localhost:3010/api/admin/get_users",
         "status": 304,
         "method": "GET"
       }
@@ -133,13 +133,18 @@
         "method": "GET"
       },
       {
+        "url": "http://localhost:3010/api/agent/get_my_task",
+        "status": 200,
+        "method": "GET"
+      },
+      {
         "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
         "status": 200,
         "method": "GET"
       },
       {
         "url": "http://localhost:3010/api/agent/get_my_task",
-        "status": 200,
+        "status": 304,
         "method": "GET"
       },
       {
@@ -149,11 +154,6 @@
       },
       {
         "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
-        "status": 304,
-        "method": "GET"
-      },
-      {
-        "url": "http://localhost:3010/api/agent/get_my_task",
         "status": 304,
         "method": "GET"
       },
@@ -163,17 +163,17 @@
         "method": "POST"
       },
       {
+        "url": "http://localhost:3010/api/agent/get_me",
+        "status": 304,
+        "method": "GET"
+      },
+      {
         "url": "http://localhost:3010/api/agent/get_my_task",
         "status": 304,
         "method": "GET"
       },
       {
         "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
-        "status": 304,
-        "method": "GET"
-      },
-      {
-        "url": "http://localhost:3010/api/agent/get_me",
         "status": 304,
         "method": "GET"
       }

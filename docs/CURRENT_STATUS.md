@@ -39,6 +39,9 @@ Last audited: 2026-06-25
 | Sprint 15 Audit & Parity Verification | Completed definitive Repository Reality Audit and Parity Verification against live reference CRM, verified all core CRM pages, role sessions, database persistence, and API schemas. |
 | Sprint 16 Interactive Tag UI | Implemented high-fidelity label/tag management UI in User Inbox context sidebar, allowing managers to dynamically select predefined labels and type custom tags, integrated directly with `/api/user/push_tag` and `/api/user/del_tag` REST endpoints. |
 | Sprint 17 Agent security hardening | Hardened Agent Portal backend endpoints and Socket.IO real-time channels against IDOR vulnerabilities, enforcing agent assignment checking on retrieval and mutating REST routes, task completion, and socket event emissions. |
+| Sprint 18 Stripe Webhook Reconciliation & Page Verification Audit | Implemented `/api/user/stripe_webhook` to safely provision subscription plan entitlements, hardened Puppeteer page verification checks, and resolved dotenv database connection dependencies. |
+| Sprint 19 Admin SMTP Settings & User Dashboard KPI Metrics | Added "Send Test Email" form to Admin SmtpSettings and expanded the User Dashboard with 2 additional KPI cards, 2 chart series, and a metrics Refresh button. |
+| Sprint 20 Admin Completeness & Safeguards | Added warning confirmation dialogs to Admin plans, FAQs, testimonials, and contact submissions; implemented Add Custom Page creation form with featured image uploader, and custom logo uploader/preview in Site Settings. |
 
 ## Partially Implemented
 

@@ -18,7 +18,10 @@ function AdminContactFormPage() {
 
   useEffect(() => { load() }, [load])
 
-  async function deleteItem(id) {
+  async function deleteItem(id, name) {
+    if (!window.confirm(`Are you sure you want to permanently delete the contact lead entry from "${name || id}"?`)) {
+      return
+    }
     setStatus('Deleting...')
     try {
       const result = await apiRequest('/api/admin/del_cotact_entry', { method: 'POST', token: tokens.admin, body: { id } })
@@ -63,7 +66,7 @@ function AdminContactFormPage() {
                 <td>
                   <div className="action-row">
                     <button className="mini-button" onClick={() => setViewItem(lead)} style={{ padding: '6px 10px', fontSize: '0.78rem' }}>👁️ View</button>
-                    <button className="mini-button subtle-danger" onClick={() => deleteItem(lead.id)} style={{ padding: '6px 10px', fontSize: '0.78rem' }}>🗑️</button>
+                    <button className="mini-button subtle-danger" onClick={() => deleteItem(lead.id, lead.name)} style={{ padding: '6px 10px', fontSize: '0.78rem' }}>🗑️</button>
                   </div>
                 </td>
               </tr>

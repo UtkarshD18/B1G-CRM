@@ -77,7 +77,10 @@ function AdminPlansPage() {
     }
   }
 
-  async function deletePlan(id) {
+  async function deletePlan(id, title) {
+    if (!window.confirm(`Are you sure you want to permanently delete plan "${title || id}"?`)) {
+      return
+    }
     setStatus('Deleting plan...')
     try {
       const result = await apiRequest('/api/admin/del_plan', {
@@ -216,7 +219,7 @@ function AdminPlansPage() {
               <button className="mini-button" type="button" onClick={() => setForm(planToForm(plan))}>
                 Edit
               </button>
-              <button className="mini-button subtle-danger" type="button" onClick={() => deletePlan(plan.id)}>
+              <button className="mini-button subtle-danger" type="button" onClick={() => deletePlan(plan.id, plan.title)}>
                 Delete
               </button>
             </div>

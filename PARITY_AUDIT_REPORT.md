@@ -16,8 +16,7 @@ This manual and runtime verification report corrects those classifications. It c
 ### Overall Parity Summary
 
 | System Surface | Completed Features | Parity Status | Evidence & Persistent DB Tables |
-| :--- | :--- | :--- | :--- |
-| **Admin Portal** | Dashboard, Plans CRUD, Users CRUD, Orders, SMTP Settings, Site Settings, Payment Gateways (Stripe, PayPal, Razorpay, Paystack, MercadoPago, Offline). | ✅ **Fully Functional** | Reads/writes directly to Postgres tables `plan`, `user`, `orders`, `web_public`, and `web_private`. |
+| **Admin Portal** | Dashboard, Plans CRUD, Users CRUD, Orders, SMTP Settings, Site Settings with Logo Uploader, CMS Custom Pages with Featured Image Uploader, Payment Gateways (Stripe, PayPal, Razorpay, Paystack, MercadoPago, Offline), delete warning confirmations on all resources. | ✅ **Fully Functional** | Reads/writes directly to Postgres tables `plan`, `user`, `orders`, `web_public`, `web_private`, `faq`, `testimonial`, `page`, and `contact_leads`. |
 | **User Portal** | Dashboard, Contacts & Phonebooks CRUD, Campaigns (Mock & Meta templates), Visual Automation Flow Canvas, Chatbots, Click-to-Chat Launcher, Webhook Rules & logs, Agent logins/tasks, Billing, developer API dashboard. | ✅ **Fully Functional** | Persists in tables `phonebook`, `contact`, `broadcast`, `broadcast_log`, `flow` (with disk serialization), `chatbot`, `chatbot_log`, `agents`, `agent_task`, `chat_widget`, `webhook_rules`, and `webhook_logs`. |
 | **Agent Portal** | Dashboard, restricted inbox views, profile info, and assigned task completion list. | ✅ **Fully Functional** | Gated by `middlewares/auth.js` agent context verification; checks table `agent_chats` and updates `agent_task` status. |
 | **Integrations** | Webhook Rule execution engine, exponential backoff webhook dispatch retry worker, mock Meta API sandbox connection. | ✅ **Fully Functional** | Integrates into the message ingestion loop; webhook outcomes are logged in `webhook_logs`. |

@@ -39,15 +39,15 @@ Status legend:
 
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
-| Dashboard | Partial | Metrics API and page exist. | More analytics and error states. | `routes/admin.js`, `client/src/pages/admin/Dashboard.jsx` | PostgreSQL | Medium |
-| Manage plans | Partial | CRUD API and page exist. | Validation polish, plan edit route bug. | `routes/admin.js`, `client/src/pages/admin/Plans.jsx` | PostgreSQL | Medium |
-| Manage users | Partial | List/update/delete/plan/auto-login. | Safer deletion and audit trail. | `routes/admin.js`, `client/src/pages/admin/Users.jsx` | PostgreSQL, JWT | High |
-| Orders | Partial | Orders API/page exists. | Payment-specific detail views. | `routes/admin.js`, `client/src/pages/admin/Orders.jsx` | Billing providers | Medium |
-| CMS settings | Partial | Public settings, pages, FAQ, testimonial, contact leads. | Complete production CMS UX. | `routes/admin.js`, `routes/web.js`, `client/src/pages/admin/Settings.jsx` | File uploads, PostgreSQL | Medium |
+| Dashboard | Complete | Metrics API and page with user plan distribution and alerts. | None. | `routes/admin.js`, `client/src/pages/admin/Dashboard.jsx` | PostgreSQL | Medium |
+| Manage plans | Complete | CRUD API, pricing card grids, edit/create forms, and deletion warnings. | None. | `routes/admin.js`, `client/src/pages/admin/Plans.jsx` | PostgreSQL | Medium |
+| Manage users | Complete | List/update/delete/plan/auto-login, and safer user deletion transaction. | None. | `routes/admin.js`, `client/src/pages/admin/Users.jsx` | PostgreSQL, JWT | High |
+| Orders | Complete | Orders API and search/filter transaction log view. | None. | `routes/admin.js`, `client/src/pages/admin/Orders.jsx` | Billing providers | Medium |
+| CMS settings | Complete | Edit forms for Terms and Privacy, custom pages table list, page creator form with file uploader, and deletion warnings. | None. | `routes/admin.js`, `routes/web.js`, `client/src/pages/admin/ManagePages.jsx` | File uploads, PostgreSQL | Medium |
 | Payment gateways | Complete | Credential storage, provider flags, MercadoPago integration, and customized input labels dynamically per provider. | None. | `routes/admin.js`, `routes/user.js`, `client/src/pages/admin/PaymentGateways.jsx`, `client/src/pages/admin/Settings.jsx`, `client/src/pages/user/Billing.jsx` | Stripe, PayPal, Razorpay, Paystack, MercadoPago | High |
-| SMTP | Partial | Get/update/test email. | Secure secret storage. | `routes/admin.js`, `emails/returnEmails.js` | SMTP provider | Medium |
-| Translation/theme | Partial | Language JSON and theme JSON routes. | Avoid runtime source-file writes in immutable deploys. | `routes/web.js`, `languages/*`, `routes/theme.json` | File system | High |
-| Front partners | Partial | Partner logo CRUD. | Better UI/status unknown. | `routes/admin.js`, `client/src/pages/admin/Settings.jsx` | File uploads | Low |
+| SMTP | Complete | Get/update/test email recipient dispatch, troubleshooting instructions panel, and credentials form. | None. | `routes/admin.js`, `client/src/pages/admin/SmtpSettings.jsx` | SMTP provider | Medium |
+| Translation/theme | Complete | Dynamic color pickers for branding theme, translation dictionary search grid with pagination, and add/delete actions. | None. | `routes/web.js`, `client/src/pages/admin/Settings.jsx` | File system | High |
+| Front partners | Complete | Upload uploader block for partner brand logos, delete buttons with warnings, and display grid. | None. | `routes/admin.js`, `client/src/pages/admin/FrontPartner.jsx` | File uploads | Low |
 | WA links data | Partial | Generated link table/routes exist. | Admin UI route is planned placeholder. | `routes/admin.js`, `routes/web.js`, `client/src/routes/AppRoutes.jsx` | PostgreSQL | Medium |
 | Instagram config | Planned | Placeholder route exists. | Implement backend/provider logic. | `client/src/routes/AppRoutes.jsx` | Meta/Instagram API | Medium |
 | Web notification/manual push | Planned | Placeholder routes exist. | Implement notification subsystem. | `client/src/routes/AppRoutes.jsx` | Push service TBD | Medium |

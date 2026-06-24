@@ -28,7 +28,10 @@ function AdminFaqPage() {
     } catch (err) { setStatus(err.message) }
   }
 
-  async function deleteFaq(id) {
+  async function deleteFaq(id, question) {
+    if (!window.confirm(`Are you sure you want to permanently delete the FAQ: "${question || id}"?`)) {
+      return
+    }
     setStatus('Deleting...')
     try {
       const result = await apiRequest('/api/admin/del_faq', { method: 'POST', token: tokens.admin, body: { id } })
@@ -84,7 +87,7 @@ function AdminFaqPage() {
                   </div>
                   <p style={{ color: '#607481', fontSize: '0.85rem', margin: 0, paddingLeft: '16px' }}>{faq.answer}</p>
                 </div>
-                <button onClick={() => deleteFaq(faq.id)} className="mini-button subtle-danger" style={{ padding: '6px 10px', fontSize: '0.75rem', flexShrink: 0 }}>🗑️</button>
+                <button onClick={() => deleteFaq(faq.id, faq.question)} className="mini-button subtle-danger" style={{ padding: '6px 10px', fontSize: '0.75rem', flexShrink: 0 }}>🗑️</button>
               </div>
             ))}
             {faqs.length === 0 && <p className="empty-state">No FAQs added yet.</p>}

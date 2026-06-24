@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-25 - Sprint 20: Admin Portal Completeness (Delete Confirmations, Logo & Page Uploaders)
+
+| Field | Details |
+| --- | --- |
+| Feature | Added warning confirmation prompts (`window.confirm`) prior to deleting plans (`Plans.jsx`), FAQs (`Faq.jsx`), Testimonials (`Testimonial.jsx`), and Contact Form Submissions (`ContactForm.jsx`). Developed the "Add Custom Page" uploader form side-by-side with custom pages table in `ManagePages.jsx` and updated its View Page modal to display the featured image. Upgraded `SiteSettings.jsx` to replace the text logo input with a custom file logo uploader and dynamic preview block. |
+| Files changed | `client/src/pages/admin/Plans.jsx`, `client/src/pages/admin/Faq.jsx`, `client/src/pages/admin/Testimonial.jsx`, `client/src/pages/admin/ContactForm.jsx`, `client/src/pages/admin/ManagePages.jsx`, `client/src/pages/admin/SiteSettings.jsx`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Achieves full CRUD completeness for Admin custom pages and logo uploads matching the live reference CRM, and adds crucial deletion safeguards to prevent accidental administrative data loss. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-25 - Sprint 19: Admin SmtpSettings Test Email & User Dashboard KPI Metrics
 
 | Field | Details |

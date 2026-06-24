@@ -30,7 +30,10 @@ function AdminTestimonialPage() {
     } catch (err) { setStatus(err.message) }
   }
 
-  async function deleteItem(id) {
+  async function deleteItem(id, name) {
+    if (!window.confirm(`Are you sure you want to permanently delete the testimonial from "${name || id}"?`)) {
+      return
+    }
     setStatus('Deleting...')
     try {
       const result = await apiRequest('/api/admin/del_testi', { method: 'POST', token: tokens.admin, body: { id } })
@@ -87,7 +90,7 @@ function AdminTestimonialPage() {
                     <span style={{ fontSize: '0.78rem', color: '#607481' }}>{item.reviewer_position}</span>
                   </div>
                 </div>
-                <button onClick={() => deleteItem(item.id)} className="mini-button subtle-danger" style={{ position: 'absolute', top: '12px', right: '12px', padding: '4px 8px', fontSize: '0.72rem' }}>🗑️</button>
+                 <button onClick={() => deleteItem(item.id, item.reviewer_name)} className="mini-button subtle-danger" style={{ position: 'absolute', top: '12px', right: '12px', padding: '4px 8px', fontSize: '0.72rem' }}>🗑️</button>
               </div>
             ))}
             {items.length === 0 && <p className="empty-state">No testimonials added yet.</p>}
