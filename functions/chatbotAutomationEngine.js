@@ -164,7 +164,7 @@ async function saveContextState(executionId, context) {
 // Trigger flow execution (from incoming webhook or tester)
 async function startFlow(flowId, incomingMsg, senderNumber, toName, uid, chatbot = null, isTest = false, initialVariables = {}) {
   try {
-    // 1. Fetch active flow schema
+    // 1. Fetch flow header
     const [flowRow] = await query(
       `SELECT * FROM automation_flows WHERE flow_id = ? AND uid = ?`,
       [flowId, uid]
@@ -174,15 +174,65 @@ async function startFlow(flowId, incomingMsg, senderNumber, toName, uid, chatbot
       return null;
     }
 
-    // Load nodes and edges
-    const nodes = await query(
-      `SELECT * FROM automation_nodes WHERE flow_id = ?`,
-      [flowId]
-    );
-    const edges = await query(
-      `SELECT * FROM automation_edges WHERE flow_id = ?`,
-      [flowId]
-    );
+    let nodes = [];
+    let edges = [];
+    let versionNumber = null;
+
+    // Load specific version based on isTest simulation flag
+    let verRow;
+    if (isTest) {
+      // Simulator tests run on the latest draft or published version
+      [verRow] = await query(
+        `SELECT * FROM automation_flow_versions WHERE flow_id = ? AND uid = ? ORDER BY version DESC LIMIT 1`,
+        [flowId, uid]
+      );
+    } else {
+      // Production webhook runs run on the active published version
+      [verRow] = await query(
+        `SELECT * FROM automation_flow_versions WHERE flow_id = ? AND uid = ? AND status = 'published' LIMIT 1`,
+        [flowId, uid]
+      );
+    }
+
+    if (verRow) {
+      versionNumber = verRow.version;
+      try {
+        const flowJson = typeof verRow.flow_json === 'string' ? JSON.parse(verRow.flow_json) : verRow.flow_json;
+        const rawNodes = flowJson.nodes || [];
+        const rawEdges = flowJson.edges || [];
+        
+        // Format nodes into db shape for compatibility with execution loops
+        nodes = rawNodes.map(n => ({
+          node_id: n.id,
+          type: n.type,
+          position_x: n.position?.x || 0,
+          position_y: n.position?.y || 0,
+          data: JSON.stringify(n.data || {})
+        }));
+
+        edges = rawEdges.map(e => ({
+          edge_id: e.id,
+          source: e.source,
+          target: e.target,
+          source_handle: e.sourceHandle,
+          target_handle: e.targetHandle
+        }));
+      } catch (parseErr) {
+        console.error("Failed to parse flow_json for version", versionNumber, parseErr);
+      }
+    }
+
+    // Legacy fallback if no versioning records exist
+    if (nodes.length === 0) {
+      nodes = await query(
+        `SELECT * FROM automation_nodes WHERE flow_id = ?`,
+        [flowId]
+      );
+      edges = await query(
+        `SELECT * FROM automation_edges WHERE flow_id = ?`,
+        [flowId]
+      );
+    }
 
     if (nodes.length === 0) {
       console.error(`Flow ${flowId} has no nodes.`);
@@ -226,8 +276,8 @@ async function startFlow(flowId, incomingMsg, senderNumber, toName, uid, chatbot
 
     const [execRow] = await query(
       `INSERT INTO flow_executions 
-        (flow_id, uid, sender_name, sender_mobile, status, current_node_id, variables, labels, execution_path)
-       VALUES (?, ?, ?, ?, 'running', ?, ?, ?, ?)
+        (flow_id, uid, sender_name, sender_mobile, status, current_node_id, variables, labels, execution_path, version)
+       VALUES (?, ?, ?, ?, 'running', ?, ?, ?, ?, ?)
        RETURNING id`,
       [
         flowId,
@@ -237,7 +287,8 @@ async function startFlow(flowId, incomingMsg, senderNumber, toName, uid, chatbot
         initialNode.node_id,
         JSON.stringify(payload),
         JSON.stringify(context.labels),
-        JSON.stringify(context.executionPath)
+        JSON.stringify(context.executionPath),
+        versionNumber
       ]
     );
 
@@ -266,15 +317,54 @@ async function resumeFlow(executionId, incomingMsg, chatbot = null) {
 
     const flowId = execRow.flow_id;
     const uid = execRow.uid;
+    const versionNumber = execRow.version;
 
-    const nodes = await query(
-      `SELECT * FROM automation_nodes WHERE flow_id = ?`,
-      [flowId]
-    );
-    const edges = await query(
-      `SELECT * FROM automation_edges WHERE flow_id = ?`,
-      [flowId]
-    );
+    let nodes = [];
+    let edges = [];
+
+    if (versionNumber) {
+      const [verRow] = await query(
+        `SELECT * FROM automation_flow_versions WHERE flow_id = ? AND version = ? AND uid = ?`,
+        [flowId, versionNumber, uid]
+      );
+      if (verRow) {
+        try {
+          const flowJson = typeof verRow.flow_json === 'string' ? JSON.parse(verRow.flow_json) : verRow.flow_json;
+          const rawNodes = flowJson.nodes || [];
+          const rawEdges = flowJson.edges || [];
+
+          nodes = rawNodes.map(n => ({
+            node_id: n.id,
+            type: n.type,
+            position_x: n.position?.x || 0,
+            position_y: n.position?.y || 0,
+            data: JSON.stringify(n.data || {})
+          }));
+
+          edges = rawEdges.map(e => ({
+            edge_id: e.id,
+            source: e.source,
+            target: e.target,
+            source_handle: e.sourceHandle,
+            target_handle: e.targetHandle
+          }));
+        } catch (e) {
+          console.error("Failed to parse flow_json for version in resumeFlow", versionNumber, e);
+        }
+      }
+    }
+
+    // Legacy fallback
+    if (nodes.length === 0) {
+      nodes = await query(
+        `SELECT * FROM automation_nodes WHERE flow_id = ?`,
+        [flowId]
+      );
+      edges = await query(
+        `SELECT * FROM automation_edges WHERE flow_id = ?`,
+        [flowId]
+      );
+    }
 
         const parsedVars = JSON.parse(execRow.variables || "{}");
     const context = {

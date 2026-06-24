@@ -20,6 +20,11 @@ function FlowToolbar() {
     setIsTesterOpen,
     isInspectorOpen,
     setIsInspectorOpen,
+    isHistoryOpen,
+    setIsHistoryOpen,
+    isPublishReviewOpen,
+    setIsPublishReviewOpen,
+    loadFlowHistory,
     setNodes,
     setEdges
   } = useChatbotAutomationStore()
@@ -85,8 +90,12 @@ function FlowToolbar() {
   }
 
   const handleTogglePublish = async () => {
-    if (!token) return
-    await togglePublishFlow(token)
+    if (!token || !selectedFlow) return
+    if (selectedFlow.isPublished) {
+      await togglePublishFlow(token)
+    } else {
+      setIsPublishReviewOpen(true)
+    }
   }
 
   return (
@@ -131,8 +140,12 @@ function FlowToolbar() {
             <button
               className={`secondary-button ${isTesterOpen ? 'active-tester-btn' : 'dark-text'}`}
               onClick={() => {
-                setIsTesterOpen(!isTesterOpen)
-                if (!isTesterOpen) setIsInspectorOpen(false)
+                const nextOpen = !isTesterOpen
+                setIsTesterOpen(nextOpen)
+                if (nextOpen) {
+                  setIsInspectorOpen(false)
+                  setIsHistoryOpen(false)
+                }
               }}
               style={{
                 background: isTesterOpen ? '#1ea085' : '',
@@ -144,8 +157,12 @@ function FlowToolbar() {
             <button
               className={`secondary-button ${isInspectorOpen ? 'active-inspector-btn' : 'dark-text'}`}
               onClick={() => {
-                setIsInspectorOpen(!isInspectorOpen)
-                if (!isInspectorOpen) setIsTesterOpen(false)
+                const nextOpen = !isInspectorOpen
+                setIsInspectorOpen(nextOpen)
+                if (nextOpen) {
+                  setIsTesterOpen(false)
+                  setIsHistoryOpen(false)
+                }
               }}
               style={{
                 background: isInspectorOpen ? '#3b82f6' : '',
@@ -153,6 +170,24 @@ function FlowToolbar() {
               }}
             >
               🔍 AI Inspector
+            </button>
+            <button
+              className={`secondary-button ${isHistoryOpen ? 'active-history-btn' : 'dark-text'}`}
+              onClick={() => {
+                const nextOpen = !isHistoryOpen
+                setIsHistoryOpen(nextOpen)
+                if (nextOpen) {
+                  setIsTesterOpen(false)
+                  setIsInspectorOpen(false)
+                  loadFlowHistory(selectedFlow.flow_id, token)
+                }
+              }}
+              style={{
+                background: isHistoryOpen ? '#8b5cf6' : '',
+                color: isHistoryOpen ? '#ffffff' : ''
+              }}
+            >
+              📜 History & Templates
             </button>
           </>
         )}

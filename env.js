@@ -178,4 +178,5 @@ module.exports = {
   FEATURES,
   MOCK_META_DELIVERY,
   UNIFIED_AI_RUNTIME,
+  FLOW_LOCK_TIMEOUT: numberValue(["FLOW_LOCK_TIMEOUT"], 15), // minutes
 };

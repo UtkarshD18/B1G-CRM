@@ -9,8 +9,17 @@ export const useChatbotAutomationStore = create((set, get) => ({
   isNodeMenuOpen: false,
   isTesterOpen: false,
   isInspectorOpen: false,
+  isHistoryOpen: false,
+  isPublishReviewOpen: false,
   searchQuery: '',
   language: 'en_US',
+  
+  // Version history & validation states
+  flowHistory: [],
+  flowTemplates: [],
+  comparisonResult: null,
+  validationResult: null,
+  isValidationRunning: false,
   
   // Inspection & Simulation states
   selectedNodeId: null,
@@ -29,6 +38,8 @@ export const useChatbotAutomationStore = create((set, get) => ({
   setIsNodeMenuOpen: (isNodeMenuOpen) => set({ isNodeMenuOpen }),
   setIsTesterOpen: (isTesterOpen) => set({ isTesterOpen }),
   setIsInspectorOpen: (isInspectorOpen) => set({ isInspectorOpen }),
+  setIsHistoryOpen: (isHistoryOpen) => set({ isHistoryOpen }),
+  setIsPublishReviewOpen: (isPublishReviewOpen) => set({ isPublishReviewOpen }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setLanguage: (language) => set({ language }),
   setSelectedNodeId: (selectedNodeId) => set({ selectedNodeId }),
@@ -324,5 +335,147 @@ export const useChatbotAutomationStore = create((set, get) => ({
         selectedNodeId: nextSelectedId
       }
     })
+  },
+
+  // Load flow version history
+  loadFlowHistory: async (flowId, token) => {
+    try {
+      const res = await apiRequest(`/api/chatbot-automation/flows/${flowId}/versions`, { token })
+      if (res?.success) {
+        set({ flowHistory: res.data || [] })
+      }
+    } catch (err) {
+      console.error('Failed to load flow history', err)
+    }
+  },
+
+  // Load flow templates
+  loadFlowTemplates: async (token) => {
+    try {
+      const res = await apiRequest('/api/chatbot-automation/flows/templates', { token })
+      if (res?.success) {
+        set({ flowTemplates: res.data || [] })
+      }
+    } catch (err) {
+      console.error('Failed to load flow templates', err)
+    }
+  },
+
+  // Clone template
+  cloneFlowTemplate: async (templateId, name, token) => {
+    try {
+      const res = await apiRequest('/api/chatbot-automation/flows/clone-template', {
+        method: 'POST',
+        token,
+        body: { templateId, name }
+      })
+      if (res?.success) {
+        await get().loadFlows(token)
+      }
+      return res
+    } catch (err) {
+      console.error('Failed to clone flow template', err)
+      return { success: false, msg: 'Network error during template cloning' }
+    }
+  },
+
+  // Rollback flow to specific version
+  rollbackToVersion: async (flowId, version, notes, token) => {
+    try {
+      const res = await apiRequest('/api/chatbot-automation/flows/rollback', {
+        method: 'POST',
+        token,
+        body: { flowId, version, versionNotes: notes }
+      })
+      if (res?.success) {
+        await get().loadFlows(token)
+        const updatedFlow = get().flows.find(f => f.flow_id === flowId)
+        if (updatedFlow) {
+          await get().selectFlow(updatedFlow, token)
+        }
+        await get().loadFlowHistory(flowId, token)
+      }
+      return res
+    } catch (err) {
+      console.error('Failed to rollback to version', err)
+      return { success: false, msg: 'Network error during rollback' }
+    }
+  },
+
+  // Toggle Template settings for version
+  toggleTemplate: async (flowId, version, isTemplate, category, description, token) => {
+    try {
+      const res = await apiRequest(`/api/chatbot-automation/flows/${flowId}/template`, {
+        method: 'POST',
+        token,
+        body: { version, isTemplate, category, description }
+      })
+      if (res?.success) {
+        await get().loadFlowHistory(flowId, token)
+      }
+      return res
+    } catch (err) {
+      console.error('Failed to toggle template setting', err)
+      return { success: false, msg: 'Network error during template configuration' }
+    }
+  },
+
+  // Compare two versions
+  compareVersions: async (flowId, v1, v2, token) => {
+    try {
+      const res = await apiRequest(`/api/chatbot-automation/flows/${flowId}/compare?v1=${v1}&v2=${v2}`, { token })
+      if (res?.success) {
+        set({ comparisonResult: res.diff })
+      }
+      return res
+    } catch (err) {
+      console.error('Failed to compare versions', err)
+      return { success: false, msg: 'Network error during comparison' }
+    }
+  },
+
+  // Validate current flow
+  validateCurrentFlow: async (token) => {
+    const { nodes, edges } = get()
+    set({ isValidationRunning: true, validationResult: null })
+    try {
+      const res = await apiRequest('/api/chatbot-automation/flows/validate', {
+        method: 'POST',
+        token,
+        body: { nodes, edges }
+      })
+      if (res?.success) {
+        set({ validationResult: res.validationResult })
+      }
+      return res
+    } catch (err) {
+      console.error('Failed to validate flow', err)
+      return { success: false, msg: 'Network error during validation' }
+    } finally {
+      set({ isValidationRunning: false })
+    }
+  },
+
+  // Publish flow with release notes and tag
+  publishFlowWithDetails: async (flowId, releaseTag, versionNotes, token) => {
+    try {
+      const res = await apiRequest('/api/chatbot-automation/flows/publish', {
+        method: 'POST',
+        token,
+        body: { flowId, releaseTag, versionNotes }
+      })
+      if (res?.success) {
+        await get().loadFlows(token)
+        const updatedFlow = get().flows.find(f => f.flow_id === flowId)
+        if (updatedFlow) {
+          await get().selectFlow(updatedFlow, token)
+        }
+        await get().loadFlowHistory(flowId, token)
+      }
+      return res
+    } catch (err) {
+      console.error('Failed to publish flow with details', err)
+      return { success: false, msg: 'Network error during publish' }
+    }
   }
 }))

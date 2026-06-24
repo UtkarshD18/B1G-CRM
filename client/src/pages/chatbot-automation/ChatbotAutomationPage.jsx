@@ -19,6 +19,8 @@ import NodeMenu from '../../components/chatbot-automation/NodeMenu'
 import FlowInspector from '../../components/chatbot-automation/FlowInspector'
 import { AutomationNode, InitialNode } from '../../components/chatbot-automation/CustomNode'
 import AiExecutionInspector from '../../components/chatbot-automation/AiExecutionInspector'
+import PublishPreviewModal from '../../components/chatbot-automation/PublishPreviewModal'
+import FlowHistoryDrawer from '../../components/chatbot-automation/FlowHistoryDrawer'
 import './ChatbotAutomation.css'
 
 
@@ -59,6 +61,10 @@ function ChatbotAutomationPage() {
     setIsTesterOpen,
     isInspectorOpen,
     setIsInspectorOpen,
+    isHistoryOpen,
+    setIsHistoryOpen,
+    isPublishReviewOpen,
+    setIsPublishReviewOpen,
     isSimulating,
     simulationInputs,
     setSimulationInputs,
@@ -390,11 +396,27 @@ function ChatbotAutomationPage() {
                 {isInspectorOpen && (
                   <AiExecutionInspector token={token} onClose={() => setIsInspectorOpen(false)} />
                 )}
+
+                {/* Flow Version History Drawer */}
+                {isHistoryOpen && (
+                  <FlowHistoryDrawer flowId={selectedFlow.flow_id} token={token} onClose={() => setIsHistoryOpen(false)} />
+                )}
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {isPublishReviewOpen && selectedFlow && (
+        <PublishPreviewModal
+          flowId={selectedFlow.flow_id}
+          token={token}
+          onClose={() => setIsPublishReviewOpen(false)}
+          onPublishSuccess={(msg) => {
+            alert(msg)
+          }}
+        />
+      )}
     </div>
   )
 }
