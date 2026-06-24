@@ -2,13 +2,13 @@
 
 Keep this file short. Retain only recent implementation history.
 
-## 2026-06-25 - Sprint 21: User Portal Completeness & Safety (Templates CRUD & Delete Warnings)
+## 2026-06-25 - Sprint 21: User Portal Completeness & Safety (Templates CRUD, Webhook Analytics & Delete Warnings)
 
 | Field | Details |
 | --- | --- |
-| Feature | Added full CRUD management for local Quick Text Templates in the User Inbox sidebar (`Inbox.jsx`), including edit forms, cancel modes, and delete actions with confirmation dialogs. Enforced `window.confirm` warnings on all critical delete paths across the User Portal: Contacts page (`Contacts.jsx` phonebook and contacts list), Meta Templates page (`MetaTemplates.jsx`), Integrations page (`Integrations.jsx` QR instances), Developer API page (`DeveloperApi.jsx` webhook rules), Chat Widget page (`ChatWidget.jsx`), Chatbot page (`ChatBot.jsx`), Campaigns page (`Campaigns.jsx`), and Automation Flows page (`AutomationFlows.jsx`). Enhanced contact CSV imports in `Contacts.jsx` by rendering pre-import validation details showing missing row boundaries and format guidelines. |
+| Feature | Added full CRUD management for local Quick Text Templates in the User Inbox sidebar (`Inbox.jsx`), including edit forms, cancel modes, and delete actions with confirmation dialogs. Enforced `window.confirm` warnings on all critical delete paths across the User Portal: Contacts page (`Contacts.jsx` phonebook and contacts list), Meta Templates page (`MetaTemplates.jsx`), Integrations page (`Integrations.jsx` QR instances), Developer API page (`DeveloperApi.jsx` webhook rules), Chat Widget page (`ChatWidget.jsx`), Chatbot page (`ChatBot.jsx`), Campaigns page (`Campaigns.jsx`), and Automation Flows page (`AutomationFlows.jsx`). Enhanced contact CSV imports in `Contacts.jsx` by rendering pre-import validation details showing missing row boundaries and format guidelines. Integrated a real-time Webhook & API Analytics telemetry dashboard in the Developer API page (`DeveloperApi.jsx`) displaying execution counts, delivery success rate, and logs per rule. |
 | Files changed | `client/src/pages/user/Inbox.jsx`, `client/src/pages/user/Contacts.jsx`, `client/src/pages/user/MetaTemplates.jsx`, `client/src/pages/user/Integrations.jsx`, `client/src/pages/user/DeveloperApi.jsx`, `client/src/pages/user/ChatWidget.jsx`, `client/src/pages/user/ChatBot.jsx`, `client/src/pages/user/Campaigns.jsx`, `client/src/pages/user/AutomationFlows.jsx`, `docs/CHANGELOG_AI.source.md`. |
-| Impact | Achieves full feature parity for template customization, protects the User workspace against accidental resource deletions, and improves CSV import validation feedback. |
+| Impact | Achieves full feature parity for template customization, protects the User workspace against accidental resource deletions, improves CSV import validation feedback, and provides real-time Webhook API execution analytics. |
 | Breaking changes | None. |
 | Migration notes | None. |
 

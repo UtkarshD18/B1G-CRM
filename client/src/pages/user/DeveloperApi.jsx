@@ -57,6 +57,7 @@ function UserDeveloperApiPage() {
   const [webhookRules, setWebhookRules] = useState([])
   const [ruleForm, setRuleForm] = useState(defaultWebhookRule)
   const [editingRuleId, setEditingRuleId] = useState('')
+  const [logs, setLogs] = useState([])
 
   const baseUrl = getDisplayBaseUrl()
   const webhookUrl = `${baseUrl}/api/inbox/webhook/${decoded?.uid || ':uid'}`
@@ -66,9 +67,10 @@ function UserDeveloperApiPage() {
   const loadProfile = useCallback(async () => {
     setStatus('Loading API workspace...')
     try {
-      const [result, rulesResult] = await Promise.all([
+      const [result, rulesResult, logsResult] = await Promise.all([
         apiRequest('/api/user/get_me', { token: tokens.user }),
         apiRequest('/api/webhooks/rules', { token: tokens.user }),
+        apiRequest('/api/webhooks/logs', { token: tokens.user }),
       ])
       if (!result?.success) {
         setStatus(result?.msg || 'Unable to load API profile')
@@ -78,6 +80,7 @@ function UserDeveloperApiPage() {
       setProfile(result.data || null)
       setApiKey(result.data?.api_key || '')
       setWebhookRules(Array.isArray(rulesResult?.data) ? rulesResult.data : [])
+      setLogs(Array.isArray(logsResult?.data) ? logsResult.data : [])
       setStatus('')
     } catch (error) {
       setStatus(error.message || 'Unable to load API workspace')
@@ -223,6 +226,38 @@ function UserDeveloperApiPage() {
     ],
     [apiKey, decoded?.uid, profile?.plan, profile?.plan_expire, webhookRules.length],
   )
+
+  const analytics = useMemo(() => {
+    let total = logs.length
+    let successes = 0
+    let failures = 0
+    const ruleCounts = {}
+    const statusCounts = {}
+
+    logs.forEach(log => {
+      const code = Number(log.response_status)
+      if (code >= 200 && code < 300) {
+        successes++
+      } else {
+        failures++
+      }
+
+      const ruleName = log.rule_name || 'Anonymous Rule'
+      ruleCounts[ruleName] = (ruleCounts[ruleName] || 0) + 1
+
+      const statusLabel = log.response_status ? String(log.response_status) : 'FAILED'
+      statusCounts[statusLabel] = (statusCounts[statusLabel] || 0) + 1
+    })
+
+    return {
+      total,
+      successes,
+      failures,
+      successRate: total ? Math.round((successes / total) * 100) : 100,
+      ruleCounts: Object.entries(ruleCounts).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      statusCounts: Object.entries(statusCounts).sort((a, b) => b[1] - a[1]).slice(0, 5),
+    }
+  }, [logs])
 
   return (
     <div className="page-stack">
@@ -448,11 +483,62 @@ function UserDeveloperApiPage() {
 
       <div className="panel">
         <div className="panel-header">
-          <h2>What is still pending</h2>
+          <h2>Webhook &amp; API Analytics</h2>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Realtime traffic telemetry</span>
         </div>
-        <ul className="signal-list">
-          <li>API analytics need counters around `/api/v1` traffic before charts can be real.</li>
-        </ul>
+        
+        <div className="two-column-grid" style={{ marginTop: '16px' }}>
+          <div style={{ background: '#fcfcfc', border: '1px solid rgba(10,25,37,0.06)', borderRadius: '16px', padding: '16px' }}>
+            <h3 style={{ fontSize: '14px', margin: '0 0 12px 0', color: 'var(--text)' }}>Execution Metrics</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ background: '#fff', padding: '12px', borderRadius: '12px', border: '1px solid rgba(10,25,37,0.04)' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Total Webhook Dispatches</span>
+                <strong style={{ fontSize: '20px', color: 'var(--text)', display: 'block', marginTop: '4px' }}>{analytics.total}</strong>
+              </div>
+              <div style={{ background: '#fff', padding: '12px', borderRadius: '12px', border: '1px solid rgba(10,25,37,0.04)' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block' }}>Success Delivery Rate</span>
+                <strong style={{ fontSize: '20px', color: '#1ea085', display: 'block', marginTop: '4px' }}>{analytics.successRate}%</strong>
+              </div>
+            </div>
+            
+            <div style={{ marginTop: '16px' }}>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Delivery Success/Failure</span>
+              <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(231,76,60,0.2)', overflow: 'hidden', display: 'flex' }}>
+                <div style={{ width: `${analytics.successRate}%`, background: '#1ea085', height: '100%' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px', color: 'var(--text-muted)' }}>
+                <span>{analytics.successes} Successes (2xx)</span>
+                <span>{analytics.failures} Failures</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: '#fcfcfc', border: '1px solid rgba(10,25,37,0.06)', borderRadius: '16px', padding: '16px' }}>
+            <h3 style={{ fontSize: '14px', margin: '0 0 12px 0', color: 'var(--text)' }}>Dispatches per Rule</h3>
+            {analytics.ruleCounts.length > 0 ? (
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {analytics.ruleCounts.map(([ruleName, count]) => {
+                  const pct = Math.round((count / analytics.total) * 100)
+                  return (
+                    <div key={ruleName} style={{ fontSize: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: 'var(--text)' }}>
+                        <span style={{ fontWeight: '500' }}>{ruleName}</span>
+                        <span style={{ fontWeight: 'bold' }}>{count} ({pct}%)</span>
+                      </div>
+                      <div style={{ height: '6px', borderRadius: '3px', background: 'rgba(10,25,37,0.05)', overflow: 'hidden' }}>
+                        <div style={{ width: `${pct}%`, background: '#1ea085', height: '100%' }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
+                No active rule executions to display.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
