@@ -1,13 +1,13 @@
 {
   "crud": {
     "create": {
-      "name": "Audit Webhook Rule 1782015030787",
+      "name": "Audit Webhook Rule 1782338363779",
       "successResponse": true,
       "persistedInDb": true,
       "row": {
-        "id": 20,
+        "id": 58,
         "uid": "local-user-uid",
-        "name": "Audit Webhook Rule 1782015030787",
+        "name": "Audit Webhook Rule 1782338363779",
         "source": "external",
         "event_type": "message",
         "match_field": "body.text",
@@ -16,21 +16,21 @@
         "action_type": "send_webhook",
         "action_payload": "{\"url\":\"https://example.com/webhook\",\"method\":\"POST\"}",
         "active": 1,
-        "createdat": "2026-06-21T04:10:30.790Z",
-        "updatedat": "2026-06-21T04:10:30.790Z"
+        "createdat": "2026-06-24T21:59:23.783Z",
+        "updatedat": "2026-06-24T21:59:23.783Z"
       }
     },
     "read": {
       "success": true,
-      "count": 7,
+      "count": 19,
       "containsAuditRule": true
     },
     "update": {
       "successResponse": true,
       "updatedRow": {
-        "id": 20,
+        "id": 58,
         "uid": "local-user-uid",
-        "name": "Audit Webhook Rule 1782015030787 Updated",
+        "name": "Audit Webhook Rule 1782338363779 Updated",
         "source": "external",
         "event_type": "message",
         "match_field": "body.text",
@@ -39,8 +39,8 @@
         "action_type": "tag_chat",
         "action_payload": "{\"tag\":\"customer\"}",
         "active": 0,
-        "createdat": "2026-06-21T04:10:30.790Z",
-        "updatedat": "2026-06-21T04:10:30.813Z"
+        "createdat": "2026-06-24T21:59:23.783Z",
+        "updatedat": "2026-06-24T21:59:23.819Z"
       },
       "activeValInDb": 0
     },
@@ -50,9 +50,9 @@
     }
   },
   "trigger": {
-    "engineStatus": "Missing",
+    "engineStatus": "Active",
     "webhookLogsTableExists": true,
-    "processWebhookRulesReferenced": false,
-    "reason": "Missing integration or schema."
+    "processWebhookRulesReferenced": true,
+    "reason": "Webhook rules evaluation engine is fully integrated in helper/inbox/inbox.js and webhook_logs table is available in PostgreSQL."
   }
 }

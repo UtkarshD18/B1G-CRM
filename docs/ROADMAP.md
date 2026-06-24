@@ -1,6 +1,6 @@
 # Roadmap
 
-Last audited: 2026-06-20
+Last audited: 2026-06-25
 
 ## Priority 1 - Critical Parity Fixes (Sprint 4)
 

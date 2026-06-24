@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-21T04:01:31.838Z",
+  "timestamp": "2026-06-24T22:11:38.221Z",
   "total": 41,
   "passed": 41,
   "failed": 0,
@@ -21,7 +21,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Get flows",
       "pass": true,
-      "detail": "Found 14 flows"
+      "detail": "Found 18 flows"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -33,7 +33,7 @@
       "module": "FLOW→CHATBOT",
       "test": "Chatbot has flow_id",
       "pass": true,
-      "detail": "flow_id: t1-flow-id-1781808183128"
+      "detail": "flow_id: flow_demo_welcome"
     },
     {
       "module": "FLOW→CHATBOT",
@@ -45,19 +45,19 @@
       "module": "FLOW→CHATBOT",
       "test": "Flow JSON loadable",
       "pass": true,
-      "detail": "nodes: 0, edges: 0"
+      "detail": "nodes: 2, edges: 1"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get chatbots",
       "pass": true,
-      "detail": "Found 3 chatbots"
+      "detail": "Found 18 chatbots"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get diagnostic logs",
       "pass": true,
-      "detail": "Found 24 logs"
+      "detail": "Found 25 logs"
     },
     {
       "module": "CHATBOT→DIAG",
@@ -69,13 +69,13 @@
       "module": "CONTACT→CAMPAIGN",
       "test": "Get phonebooks",
       "pass": true,
-      "detail": "Found 20 phonebooks"
+      "detail": "Found 6 phonebooks"
     },
     {
       "module": "CONTACT→CAMPAIGN",
       "test": "Get contacts",
       "pass": true,
-      "detail": "Found 29 contacts"
+      "detail": "Found 31 contacts"
     },
     {
       "module": "CONTACT→CAMPAIGN",
@@ -87,19 +87,19 @@
       "module": "CONTACT→INBOX",
       "test": "Get chat list",
       "pass": true,
-      "detail": "Found 15 chats"
+      "detail": "Found 4 chats"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Chats have sender identity",
       "pass": true,
-      "detail": "15/15 chats have sender names"
+      "detail": "4/4 chats have sender names"
     },
     {
       "module": "AI→CHATBOT",
       "test": "Get AI providers",
       "pass": true,
-      "detail": "Found 6 providers"
+      "detail": "Found 0 providers"
     },
     {
       "module": "AI→CHATBOT",
@@ -111,7 +111,7 @@
       "module": "KB→AI",
       "test": "Get knowledge base",
       "pass": true,
-      "detail": "Found 3 items"
+      "detail": "Found 0 items"
     },
     {
       "module": "KB→AI",
@@ -123,7 +123,7 @@
       "module": "CRM→CONTACTS",
       "test": "Get CRM leads",
       "pass": true,
-      "detail": "Found 13 leads"
+      "detail": "Found 17 leads"
     },
     {
       "module": "CRM→CONTACTS",
@@ -135,7 +135,7 @@
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
       "pass": true,
-      "detail": "ID: 23"
+      "detail": "ID: 48"
     },
     {
       "module": "CRM→CONTACTS",
@@ -153,7 +153,7 @@
       "module": "AGENT→INBOX",
       "test": "Get agents",
       "pass": true,
-      "detail": "Found 9 agents"
+      "detail": "Found 17 agents"
     },
     {
       "module": "AGENT→INBOX",
@@ -171,19 +171,19 @@
       "module": "WEBSITE→WIDGET",
       "test": "Get websites",
       "pass": true,
-      "detail": "Found 1 websites"
+      "detail": "Found 0 websites"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get KPIs",
       "pass": true,
-      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":15,\"escalatedChatsCount\":0}"
+      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":4,\"escalatedChatsCount\":1}"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get escalations",
       "pass": true,
-      "detail": "Found 0 escalations"
+      "detail": "Found 1 escalations"
     },
     {
       "module": "SUPERVISOR→AGENT",
@@ -195,7 +195,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 6 rules"
+      "detail": "Found 18 rules"
     },
     {
       "module": "WEBHOOK→INBOX",

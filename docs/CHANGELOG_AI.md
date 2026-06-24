@@ -2,6 +2,26 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-06-25 - Sprint 16: Interactive Tag/Label Management UI
+
+| Field | Details |
+| --- | --- |
+| Feature | Created high-fidelity interactive label/tag management UI in User Inbox context sidebar, allowing managers to dynamically select predefined labels and type custom tags, integrated directly with `/api/user/push_tag` and `/api/user/del_tag` REST endpoints. Written `verify-tags.js` verification script validating the tag additions/deletions database transactions. |
+| Files changed | `client/src/pages/user/Inbox.jsx`, `verify-tags.js`, `docs/CHANGELOG_AI.source.md`, `docs/CURRENT_STATUS.md`, `docs/FEATURE_TRACKER.md`, `docs/PROJECT_CONTEXT.source.md`. |
+| Impact | Standardizes customer conversation tagging workspace with clean interactive UI widgets, verifies REST endpoints integration with Postgres database backend. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
+## 2026-06-25 - Final Audit: Repository Reality & Parity Verification
+
+| Field | Details |
+| --- | --- |
+| Feature | Completed definitive Repository Reality Audit and Parity Verification against live reference CRM. Verified all core CRM portal pages, authenticated roles, database persistence, and API schemas. Created the master PARITY_AUDIT_REPORT.md mapping planned/placeholder modules and UI/UX distinctions. Verified 100% PASS on the backend integration and frontend Jest test suites. |
+| Files changed | `PARITY_AUDIT_REPORT.md`, `docs/CHANGELOG_AI.source.md`, `docs/CURRENT_STATUS.md`, `docs/FEATURE_TRACKER.md`, `docs/ROADMAP.md`, `docs/PROJECT_CONTEXT.source.md`. |
+| Impact | Proves the local project's readiness for production staging, aligns the feature tracker with verified source codes, and clarifies sitemap routing behaviors. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-21 - Sprint 14: Payment Gateway Parity & MercadoPago Integration
 
 | Field | Details |

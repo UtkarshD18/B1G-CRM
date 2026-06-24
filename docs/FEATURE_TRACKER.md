@@ -1,6 +1,6 @@
 # Feature Tracker
 
-Last audited: 2026-06-20
+Last audited: 2026-06-25
 
 Status legend:
 
@@ -59,7 +59,7 @@ Status legend:
 | Feature | Status | Completed | In progress/planned | Files involved | Dependencies | Risk |
 | --- | --- | --- | --- | --- | --- | --- |
 | Dashboard | Partial | Tenant metrics route/page. | Better charts and loading/error states. | `routes/user.js`, `client/src/pages/user/Dashboard.jsx` | PostgreSQL | Medium |
-| Inbox | Complete | Chat list/conversation/send APIs, socket handlers, and inline media rendering (images, videos, audio, documents). | Refine/align REST and socket paths further if needed. | `routes/inbox.js`, `socket.js`, `helper/socket/*`, `client/src/pages/user/Inbox.jsx` | Meta API, filesystem | High |
+| Inbox | Complete | Chat list/conversation/send APIs, socket handlers, inline media rendering, and interactive tag/label management. | None. | `routes/inbox.js`, `socket.js`, `helper/socket/*`, `client/src/pages/user/Inbox.jsx` | Meta API, filesystem | High |
 | Kanban | Complete | Chat status grouped view, ticket status change API, and interactive drag-and-drop. | Keep refining transitions/animations. | `routes/inbox.js`, `client/src/pages/user/Kanban.jsx` | PostgreSQL | Low |
 | CRM Pipeline | Complete | Stage-grouped leads view, reminders & activity feeds, stage-shifting API, and interactive drag-and-drop. | None. | `routes/crm_leads.js`, `client/src/pages/user/CrmPipeline.jsx` | PostgreSQL | Low |
 | Contacts/phonebook | Complete/partial | Phonebook CRUD, Phonebook Rename API (POST /update), Contact CRUD, Contact Edit API (POST /update_contact), and CSV import. | Import validation and dedupe polish. | `routes/phonebook.js`, `client/src/pages/user/Contacts.jsx` | csv-parser | Medium |

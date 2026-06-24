@@ -173,6 +173,7 @@ function UserInboxPage() {
   const [shortcutFilter, setShortcutFilter] = useState('')
   const [shortcutIndex, setShortcutIndex] = useState(0)
   const [hoveredMsgIndex, setHoveredMsgIndex] = useState(null)
+  const [newTagInput, setNewTagInput] = useState('')
 
   const filteredTemplates = useMemo(() => {
     if (!shortcutFilter) return templates
@@ -338,6 +339,83 @@ function UserInboxPage() {
       assignAgentUid ? agentData.find((agent) => agent.uid === assignAgentUid) || {} : {},
     )
     refreshChatList()
+  }
+
+  async function handleAddTag(tagTitle) {
+    if (!selectedChat?.chat_id || !tagTitle.trim()) {
+      return
+    }
+    const cleanTag = tagTitle.trim()
+    const currentTags = parseTags(selectedChat.chat_tags)
+    if (currentTags.includes(cleanTag)) {
+      setStatus('Tag already added')
+      return
+    }
+
+    setStatus('Adding tag...')
+    try {
+      const result = await apiRequest('/api/user/push_tag', {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          chatId: selectedChat.chat_id,
+          tag: cleanTag,
+        },
+      })
+
+      if (result?.success) {
+        setSelectedChat((prev) => {
+          if (!prev) return prev
+          const updatedTags = [...parseTags(prev.chat_tags), cleanTag]
+          return {
+            ...prev,
+            chat_tags: JSON.stringify(updatedTags),
+          }
+        })
+        setNewTagInput('')
+        setStatus('Tag added.')
+        refreshChatList(search, filterType)
+      } else {
+        setStatus(result?.msg || 'Unable to add tag')
+      }
+    } catch (error) {
+      setStatus(error.message || 'Unable to add tag')
+    }
+  }
+
+  async function handleRemoveTag(tagTitle) {
+    if (!selectedChat?.chat_id) {
+      return
+    }
+
+    setStatus('Removing tag...')
+    try {
+      const result = await apiRequest('/api/user/del_tag', {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          chatId: selectedChat.chat_id,
+          tag: tagTitle,
+        },
+      })
+
+      if (result?.success) {
+        setSelectedChat((prev) => {
+          if (!prev) return prev
+          const updatedTags = parseTags(prev.chat_tags).filter((t) => t !== tagTitle)
+          return {
+            ...prev,
+            chat_tags: JSON.stringify(updatedTags),
+          }
+        })
+        setStatus('Tag removed.')
+        refreshChatList(search, filterType)
+      } else {
+        setStatus(result?.msg || 'Unable to remove tag')
+      }
+    } catch (error) {
+      setStatus(error.message || 'Unable to remove tag')
+    }
   }
 
   function sendMessage(event) {
@@ -937,16 +1015,124 @@ function UserInboxPage() {
             <button className="primary-button" type="button" onClick={assignAgent} disabled={!selectedChat}>
               {assignAgentUid ? 'Save assignment' : 'Remove assignment'}
             </button>
-            <div className="meta-block">
-              <p>
-                Active labels:{' '}
-                {selectedChat?.chat_tags
-                  ? Array.isArray(selectedChat.chat_tags)
-                    ? selectedChat.chat_tags.join(', ')
-                    : String(selectedChat.chat_tags)
-                  : 'None'}
-              </p>
-              <p>Available labels: {labelsAdded.map((label) => label.title).join(', ') || 'None'}</p>
+            <div className="meta-block" style={{ marginTop: '16px', borderTop: '1px solid rgba(16, 33, 45, 0.1)', paddingTop: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.85rem', color: '#10212d', fontWeight: '700' }}>Active tags:</span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                {parseTags(selectedChat?.chat_tags).length > 0 ? (
+                  parseTags(selectedChat.chat_tags).map((tag, idx) => {
+                    const tagTitle = typeof tag === 'object' ? tag?.title : tag
+                    const tagHex = typeof tag === 'object' ? tag?.hex : '#1ea085'
+                    return (
+                      <span
+                        key={idx}
+                        className="chat-card-tag"
+                        style={{
+                          backgroundColor: tagHex + '1a',
+                          color: tagHex,
+                          border: `1px solid ${tagHex}4d`,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
+                        }}
+                      >
+                        {tagTitle}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tagTitle)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'inherit',
+                            cursor: 'pointer',
+                            padding: '0 2px',
+                            fontWeight: 'bold',
+                            fontSize: '0.75rem',
+                            lineHeight: 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title={`Remove ${tagTitle}`}
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    )
+                  })
+                ) : (
+                  <span style={{ color: '#5d7280', fontSize: '0.82rem', fontStyle: 'italic' }}>No active tags</span>
+                )}
+              </div>
+
+              {labelsAdded.length > 0 && (
+                <label style={{ display: 'grid', gap: '4px', marginTop: '12px' }}>
+                  Select predefined label
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleAddTag(e.target.value)
+                      }
+                    }}
+                    disabled={!selectedChat}
+                  >
+                    <option value="">-- Choose label --</option>
+                    {labelsAdded
+                      .filter(l => !parseTags(selectedChat?.chat_tags).map(t => typeof t === 'object' ? t.title : t).includes(l.title))
+                      .map((label) => (
+                        <option key={label.id || label.title} value={label.title}>
+                          {label.title}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              )}
+
+              <div style={{ display: 'grid', gap: '4px', marginTop: '12px' }}>
+                <span style={{ fontSize: '0.75rem', color: '#365261', fontWeight: '800' }}>Add custom tag</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Follow-up"
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    disabled={!selectedChat}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #c5d0d6',
+                      fontSize: '0.85rem'
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddTag(newTagInput)
+                      }
+                    }}
+                  />
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => handleAddTag(newTagInput)}
+                    disabled={!selectedChat || !newTagInput.trim()}
+                    style={{
+                      padding: '8px 14px',
+                      fontSize: '0.85rem',
+                      whiteSpace: 'nowrap',
+                      marginTop: 0
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </aside>

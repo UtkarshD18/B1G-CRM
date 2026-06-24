@@ -1,6 +1,6 @@
 # Project Context
 
-Last audited: 2026-06-18
+Last audited: 2026-06-25
 
 ## Overview
 
@@ -26,11 +26,11 @@ B1G-CRM is a multi-tenant WhatsApp CRM/SaaS with four surfaces:
 | Field | Value |
 | --- | --- |
 | Current branch | `sprint13-final-audit` |
-| Current sprint | `Sprint 14: Payment Gateway Parity & MercadoPago Integration` |
-| Current priority | `Finalizing Sprint 14 verification and documentation.` |
+| Current sprint | `Sprint 16: Interactive Tag Management & Handoff` |
+| Current priority | `Add Interactive Tag Management UI in User Inbox sidebar panel and verify system integration.` |
 | Current feature in progress | `None` |
-| Last completed feature | `Integrated MercadoPago credentials into database/APIs and customized form labels/input types dynamically per payment gateway provider.` |
-| Recommended next task | `Handoff report generation and commit push.` |
+| Last completed feature | `Interactive Tag/Label Management UI in the User Inbox context sidebar panel calling push_tag and del_tag endpoints.` |
+| Recommended next task | `Staging deployment and Redis-based Socket.IO adapters setup.` |
 | Known blockers | `None` |
 
 ## Architecture Summary
