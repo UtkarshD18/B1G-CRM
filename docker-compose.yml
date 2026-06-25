@@ -49,6 +49,78 @@ services:
       - app-flow-json:/app/flow-json
       - app-media:/app/client/public/media
 
+  retry-worker:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${PGUSER:-b1gcrm}
+      PGPASSWORD: ${PGPASSWORD}
+      PGDATABASE: ${PGDATABASE:-b1gcrm}
+    command: node workers/retryWorker.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  health-worker:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${PGUSER:-b1gcrm}
+      PGPASSWORD: ${PGPASSWORD}
+      PGDATABASE: ${PGDATABASE:-b1gcrm}
+    command: node workers/healthWorker.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  incoming-worker:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${PGUSER:-b1gcrm}
+      PGPASSWORD: ${PGPASSWORD}
+      PGDATABASE: ${PGDATABASE:-b1gcrm}
+    command: node workers/incomingWorker.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  scheduler-worker:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${PGUSER:-b1gcrm}
+      PGPASSWORD: ${PGPASSWORD}
+      PGDATABASE: ${PGDATABASE:-b1gcrm}
+    command: node workers/schedulerWorker.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:
   app-logs:

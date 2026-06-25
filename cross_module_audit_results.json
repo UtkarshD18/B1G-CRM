@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-06-24T12:15:22.654Z",
-  "total": 40,
-  "passed": 40,
-  "failed": 0,
-  "score": 100,
+  "timestamp": "2026-06-25T00:13:41.856Z",
+  "total": 34,
+  "passed": 22,
+  "failed": 12,
+  "score": 65,
   "results": [
     {
       "module": "AUTH",
@@ -20,80 +20,56 @@
     {
       "module": "FLOW→CHATBOT",
       "test": "Get flows",
-      "pass": true,
-      "detail": "Found 16 flows"
+      "pass": false,
+      "detail": "Found 0 flows"
     },
     {
       "module": "FLOW→CHATBOT",
-      "test": "Create chatbot with flow",
-      "pass": true,
-      "detail": "Chatbot was added"
-    },
-    {
-      "module": "FLOW→CHATBOT",
-      "test": "Chatbot has flow_id",
-      "pass": true,
-      "detail": "flow_id: t1-flow-id-1781808183128"
-    },
-    {
-      "module": "FLOW→CHATBOT",
-      "test": "Chatbot active",
-      "pass": true,
-      "detail": "active: 1"
-    },
-    {
-      "module": "FLOW→CHATBOT",
-      "test": "Flow JSON loadable",
-      "pass": true,
-      "detail": "nodes: 0, edges: 0"
+      "test": "Flow existence",
+      "pass": false,
+      "detail": "No flows exist"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get chatbots",
-      "pass": true,
-      "detail": "Found 4 chatbots"
+      "pass": false,
+      "detail": "Found 0 chatbots"
     },
     {
       "module": "CHATBOT→DIAG",
       "test": "Get diagnostic logs",
-      "pass": true,
+      "pass": false,
       "detail": "Found 0 logs"
     },
     {
       "module": "CONTACT→CAMPAIGN",
       "test": "Get phonebooks",
-      "pass": true,
-      "detail": "Found 23 phonebooks"
+      "pass": false,
+      "detail": "Found 0 phonebooks"
     },
     {
       "module": "CONTACT→CAMPAIGN",
-      "test": "Get contacts",
-      "pass": true,
-      "detail": "Found 30 contacts"
-    },
-    {
-      "module": "CONTACT→CAMPAIGN",
-      "test": "Get campaigns",
-      "pass": true,
-      "detail": "Found 0 campaigns"
+      "test": "Phonebook existence",
+      "pass": false,
+      "detail": "No phonebooks — cannot test campaign"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Get chat list",
       "pass": true,
-      "detail": "Found 17 chats"
+      "detail": "Found 18 chats"
     },
     {
       "module": "CONTACT→INBOX",
       "test": "Chats have sender identity",
       "pass": true,
-      "detail": "16/17 chats have sender names"
+      "detail": "17/18 chats have sender names"
     },
     {
       "module": "AI→CHATBOT",
       "test": "Get AI providers",
-      "pass": true,
-      "detail": "Found 6 providers"
+      "pass": false,
+      "detail": "Found 0 providers"
     },
     {
       "module": "AI→CHATBOT",
@@ -105,7 +81,7 @@
       "module": "KB→AI",
       "test": "Get knowledge base",
       "pass": true,
-      "detail": "Found 4 items"
+      "detail": "Found 1 items"
     },
     {
       "module": "KB→AI",
@@ -116,32 +92,20 @@
     {
       "module": "CRM→CONTACTS",
       "test": "Get CRM leads",
-      "pass": true,
-      "detail": "Found 14 leads"
+      "pass": false,
+      "detail": "Found 0 leads"
     },
     {
       "module": "CRM→CONTACTS",
       "test": "Create lead",
-      "pass": true,
-      "detail": "Lead created successfully."
+      "pass": false,
+      "detail": "Permission denied. Required: leads_access"
     },
     {
       "module": "CRM→CONTACTS",
       "test": "Lead in list after creation",
-      "pass": true,
-      "detail": "ID: 40"
-    },
-    {
-      "module": "CRM→CONTACTS",
-      "test": "Delete test lead",
-      "pass": true,
-      "detail": "Lead deleted successfully."
-    },
-    {
-      "module": "CRM→CONTACTS",
-      "test": "Lead absent after deletion",
-      "pass": true,
-      "detail": "Cleanup verified"
+      "pass": false,
+      "detail": "Not found"
     },
     {
       "module": "AGENT→INBOX",
@@ -164,20 +128,20 @@
     {
       "module": "WEBSITE→WIDGET",
       "test": "Get websites",
-      "pass": true,
-      "detail": "Found 2 websites"
+      "pass": false,
+      "detail": "Found 0 websites"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get KPIs",
       "pass": true,
-      "detail": "{\"averageResponseTimeOverall\":583,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":1,\"openChatsCount\":17,\"escalatedChatsCount\":1}"
+      "detail": "{\"averageResponseTimeOverall\":583,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":1,\"openChatsCount\":18,\"escalatedChatsCount\":2}"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get escalations",
       "pass": true,
-      "detail": "Found 1 escalations"
+      "detail": "Found 2 escalations"
     },
     {
       "module": "SUPERVISOR→AGENT",
@@ -242,8 +206,8 @@
     {
       "module": "DASHBOARD→CAMPAIGN",
       "test": "Campaign dashboard summary",
-      "pass": true,
-      "detail": "Campaigns: 0, Delivery: 0"
+      "pass": false,
+      "detail": "No data"
     }
   ]
 }

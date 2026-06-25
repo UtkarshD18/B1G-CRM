@@ -132,6 +132,18 @@ router.post("/webhook/:uid", async (req, res) => {
     }
 
     // Acknowledge Meta Hook quickly
+    const [conn] = await query(
+      `SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'instagram'`,
+      [uid]
+    );
+    if (conn) {
+      await query(
+        `INSERT INTO channel_incoming_queue (uid, channel_type, payload) VALUES (?, 'instagram', ?)`,
+        [uid, JSON.stringify(req.body)]
+      );
+      return res.sendStatus(200);
+    }
+
     res.sendStatus(200);
 
     const body = req.body;

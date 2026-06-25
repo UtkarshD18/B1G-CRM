@@ -28,6 +28,18 @@ router.post("/webhook/:uid", async (req, res) => {
     const body = req.body;
     const userUID = req.params.uid;
 
+    const [conn] = await query(
+      `SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'whatsapp_cloud'`,
+      [userUID]
+    );
+    if (conn) {
+      await query(
+        `INSERT INTO channel_incoming_queue (uid, channel_type, payload) VALUES (?, 'whatsapp_cloud', ?)`,
+        [userUID, JSON.stringify(body)]
+      );
+      return res.sendStatus(200);
+    }
+
     res.sendStatus(200);
 
     const getDays = await getUserPlayDays(userUID);
