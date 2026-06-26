@@ -57,6 +57,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      DATABASE_URL: ""
       PGHOST: postgres
       PGPORT: 5432
       PGUSER: ${PGUSER:-b1gcrm}
@@ -75,6 +76,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      DATABASE_URL: ""
       PGHOST: postgres
       PGPORT: 5432
       PGUSER: ${PGUSER:-b1gcrm}
@@ -93,6 +95,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      DATABASE_URL: ""
       PGHOST: postgres
       PGPORT: 5432
       PGUSER: ${PGUSER:-b1gcrm}
@@ -111,6 +114,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      DATABASE_URL: ""
       PGHOST: postgres
       PGPORT: 5432
       PGUSER: ${PGUSER:-b1gcrm}
