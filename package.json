@@ -80,7 +80,7 @@
     "*.{js,jsx}": [
       "eslint --fix",
       "prettier --write",
-      "npm run test -- --findRelatedTests"
+      "npm run test -- --findRelatedTests --passWithNoTests"
     ],
     "*.{json,md}": [
       "prettier --write"

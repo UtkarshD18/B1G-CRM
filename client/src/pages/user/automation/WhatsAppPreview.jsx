@@ -1,21 +1,21 @@
-import { useMemo } from 'react'
+import { useMemo } from 'react';
 
 function renderBodyWithVariables(text, exampleValues) {
-  if (!text) return null
-  const parts = text.split(/({{\s*\d+\s*}})/g)
+  if (!text) return null;
+  const parts = text.split(/({{\s*\d+\s*}})/g);
   return parts.map((part, i) => {
-    const match = part.match(/{{\s*(\d+)\s*}}/)
+    const match = part.match(/{{\s*(\d+)\s*}}/);
     if (match) {
-      const varNum = match[1]
-      const example = exampleValues?.[varNum]
+      const varNum = match[1];
+      const example = exampleValues?.[varNum];
       return (
         <span className="af-wa-bubble-var" key={i}>
           {example || `{{${varNum}}}`}
         </span>
-      )
+      );
     }
-    return <span key={i}>{part}</span>
-  })
+    return <span key={i}>{part}</span>;
+  });
 }
 
 const EMPTY_CARD = {
@@ -23,36 +23,38 @@ const EMPTY_CARD = {
   mediaUrl: '',
   bodyText: '',
   buttons: [],
-}
+};
 
 function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
-  const isCarousel = form?.templateType === 'CAROUSEL'
-  const isCatalog = form?.templateType === 'CATALOG'
-  const carouselCards = form?.carouselCards || []
-  const activeCarouselCard = carouselCards[selectedCardIndex] || carouselCards[0] || EMPTY_CARD
-  const activeCardImage = activeCarouselCard.mediaPreviewUrl || activeCarouselCard.mediaUrl
-  const activeCardButtons = (activeCarouselCard.buttons || []).filter((button) => button.text?.trim())
-  const catalogThumbnail = form?.catalogThumbnailPreviewUrl || form?.catalogThumbnailUrl
+  const isCarousel = form?.templateType === 'CAROUSEL';
+  const isCatalog = form?.templateType === 'CATALOG';
+  const carouselCards = form?.carouselCards || [];
+  const activeCarouselCard = carouselCards[selectedCardIndex] || carouselCards[0] || EMPTY_CARD;
+  const activeCardImage = activeCarouselCard.mediaPreviewUrl || activeCarouselCard.mediaUrl;
+  const activeCardButtons = (activeCarouselCard.buttons || []).filter((button) =>
+    button.text?.trim(),
+  );
+  const catalogThumbnail = form?.catalogThumbnailPreviewUrl || form?.catalogThumbnailUrl;
 
   const goToCarouselCard = (index) => {
-    if (typeof setSelectedCardIndex !== 'function') return
-    const nextIndex = Math.min(Math.max(0, index), Math.max(0, carouselCards.length - 1))
-    setSelectedCardIndex(nextIndex)
-  }
+    if (typeof setSelectedCardIndex !== 'function') return;
+    const nextIndex = Math.min(Math.max(0, index), Math.max(0, carouselCards.length - 1));
+    setSelectedCardIndex(nextIndex);
+  };
 
   const headerContent = useMemo(() => {
-    if (!form || isCarousel || isCatalog) return null
+    if (!form || isCarousel || isCatalog) return null;
 
     if (form.headerFormat === 'TEXT' && form.headerText?.trim()) {
       return (
         <div className="af-wa-bubble-header">
           {renderBodyWithVariables(form.headerText, form.headerExampleValues)}
         </div>
-      )
+      );
     }
 
     if (form.headerFormat === 'IMAGE') {
-      const src = form.mediaPreviewUrl || form.mediaUrl
+      const src = form.mediaPreviewUrl || form.mediaUrl;
       return (
         <div className="af-wa-bubble-header-media image">
           {src ? (
@@ -63,11 +65,11 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
             </div>
           )}
         </div>
-      )
+      );
     }
 
     if (form.headerFormat === 'VIDEO') {
-      const src = form.mediaPreviewUrl || form.mediaUrl
+      const src = form.mediaPreviewUrl || form.mediaUrl;
       return (
         <div className="af-wa-bubble-header-media video">
           {src ? (
@@ -82,7 +84,7 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
             </div>
           )}
         </div>
-      )
+      );
     }
 
     if (form.headerFormat === 'DOCUMENT') {
@@ -96,10 +98,10 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
             </div>
           </div>
         </div>
-      )
+      );
     }
 
-    return null
+    return null;
   }, [
     form,
     form?.headerFormat,
@@ -111,28 +113,28 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
     form?.mediaFilesize,
     isCarousel,
     isCatalog,
-  ])
+  ]);
 
   const buttons = useMemo(() => {
-    if (isCarousel || isCatalog || !form?.buttons?.length) return []
+    if (isCarousel || isCatalog || !form?.buttons?.length) return [];
     return form.buttons
       .filter((button) => button.text?.trim())
       .slice(0, 3)
       .map((button, index) => {
-        let icon = '↩'
-        if (button.type === 'URL') icon = '↗'
-        if (button.type === 'PHONE_NUMBER') icon = '☎'
+        let icon = '↩';
+        if (button.type === 'URL') icon = '↗';
+        if (button.type === 'PHONE_NUMBER') icon = '☎';
         return (
           <div className="af-wa-button" key={index}>
             <span className="af-wa-btn-icon">{icon}</span>
             {button.text}
           </div>
-        )
-      })
-  }, [form?.buttons, isCarousel, isCatalog])
+        );
+      });
+  }, [form, isCarousel, isCatalog]);
 
-  const now = new Date()
-  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div className="af-preview-wrapper">
@@ -200,7 +202,11 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
                   <div className="af-carousel-preview-card af-carousel-preview-card-active">
                     <div className="af-carousel-preview-card-img-wrap">
                       {activeCardImage ? (
-                        <img src={activeCardImage} alt="Card" className="af-carousel-preview-card-img" />
+                        <img
+                          src={activeCardImage}
+                          alt="Card"
+                          className="af-carousel-preview-card-img"
+                        />
                       ) : (
                         <div className="af-carousel-card-img-placeholder">
                           <span>Image</span>
@@ -217,15 +223,19 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
                     {activeCardButtons.length > 0 && (
                       <div className="af-carousel-preview-card-buttons">
                         {activeCardButtons.map((button, index) => {
-                          let icon = '↩'
-                          if (button.type === 'URL') icon = '↗'
-                          if (button.type === 'PHONE_NUMBER') icon = '☎'
+                          let icon = '↩';
+                          if (button.type === 'URL') icon = '↗';
+                          if (button.type === 'PHONE_NUMBER') icon = '☎';
                           return (
-                            <div key={index} className="af-wa-button" style={{ padding: '6px 4px' }}>
+                            <div
+                              key={index}
+                              className="af-wa-button"
+                              style={{ padding: '6px 4px' }}
+                            >
                               <span style={{ marginRight: 4, fontSize: '0.78rem' }}>{icon}</span>
                               {button.text}
                             </div>
-                          )
+                          );
                         })}
                       </div>
                     )}
@@ -281,7 +291,9 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
             </div>
           ) : (
             <>
-              {form?.bodyText?.trim() || form?.headerText?.trim() || form?.headerFormat !== 'NONE' ? (
+              {form?.bodyText?.trim() ||
+              form?.headerText?.trim() ||
+              form?.headerFormat !== 'NONE' ? (
                 <div className="af-wa-bubble">
                   {headerContent}
 
@@ -325,7 +337,7 @@ function WhatsAppPreview({ form, selectedCardIndex, setSelectedCardIndex }) {
       </div>
       <div className="af-preview-label">Live WhatsApp Preview</div>
     </div>
-  )
+  );
 }
 
-export default WhatsAppPreview
+export default WhatsAppPreview;
