@@ -10,6 +10,7 @@ const fs = require("fs");
 
 const env = require("./env");
 const logger = require("./utils/logger");
+const metrics = require("./utils/metrics");
 const { errorHandler } = require("./middlewares/errorHandler");
 const { runMigrations } = require("./database/migrate");
 const { seedDevCredentials } = require("./database/seed-dev");
@@ -43,6 +44,37 @@ app.use(express.urlencoded({ limit: env.MAX_FILE_SIZE, extended: true }));
 app.use(httpContextMiddleware);
 app.use(correlationIdMiddleware);
 app.use(xssMiddleware);
+
+// Expose Prometheus Metrics
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', metrics.register.contentType);
+    res.end(await metrics.register.metrics());
+  } catch (ex) {
+    res.status(500).end(ex);
+  }
+});
+
+// Middleware for metrics collection
+app.use((req, res, next) => {
+  const startEpoch = Date.now();
+  res.on('finish', () => {
+    const responseTimeInMs = Date.now() - startEpoch;
+    // Don't record metrics for the metrics endpoint itself
+    if (req.path !== '/metrics') {
+      metrics.httpRequestsTotal.inc({
+        method: req.method,
+        route: req.route ? req.route.path : req.path,
+        status_code: res.statusCode
+      });
+      metrics.httpRequestDurationMicroseconds.observe(
+        { method: req.method, route: req.route ? req.route.path : req.path, status_code: res.statusCode },
+        responseTimeInMs / 1000
+      );
+    }
+  });
+  next();
+});
 
 app.use(
   cors({
