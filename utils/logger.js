@@ -1,81 +1,75 @@
-const fs = require("fs");
-const path = require("path");
+const pino = require("pino");
 const env = require("../env");
+const path = require("path");
+const fs = require("fs");
 
 const logsDir = path.join(__dirname, "../logs");
-
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
-const priorities = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  debug: 3,
-  trace: 4,
-};
+const transport = pino.transport({
+  targets: [
+    {
+      target: 'pino/file',
+      options: { destination: path.join(logsDir, 'app.log') },
+      level: 'info',
+    },
+    {
+      target: 'pino/file',
+      options: { destination: path.join(logsDir, 'error.log') },
+      level: 'error',
+    },
+    ...(env.NODE_ENV !== 'production' ? [{
+      target: 'pino-pretty',
+      options: { colorize: true }
+    }] : [])
+  ]
+});
+
+const logger = pino({
+  level: env.LOG_LEVEL || "info",
+  formatters: {
+    level: (label) => {
+      return { level: label };
+    },
+  },
+  base: {
+    pid: process.pid,
+    hostname: require('os').hostname()
+  }
+}, transport);
 
 class Logger {
-  constructor(level = env.LOG_LEVEL) {
-    this.level = String(level || "info").toLowerCase();
-    this.minPriority = priorities[this.level] ?? priorities.info;
+  constructor() {
+    this.pino = logger;
   }
 
-  shouldWrite(level) {
-    return priorities[level] <= this.minPriority;
-  }
-
-  format(level, message, data = {}) {
-    return {
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      ...data,
-    };
-  }
-
-  write(level, message, data = {}) {
-    if (!this.shouldWrite(level)) {
-      return;
-    }
-
-    const entry = this.format(level, message, data);
-    const line = JSON.stringify(entry);
-
-    if (level === "error") {
-      console.error(`[${entry.timestamp}] ERROR ${message}`, data);
-    } else if (level === "warn") {
-      console.warn(`[${entry.timestamp}] WARN ${message}`, data);
-    } else {
-      console.log(`[${entry.timestamp}] ${level.toUpperCase()} ${message}`, data);
-    }
-
-    if (env.NODE_ENV === "production" || level === "error") {
-      fs.appendFileSync(path.join(logsDir, `${level}.log`), `${line}\n`, {
-        flag: "a",
-      });
-    }
+  // Helper to extract correlation_id from data if present
+  formatArgs(message, data = {}) {
+    const { correlation_id, ...rest } = data;
+    const baseObj = correlation_id ? { correlation_id, ...rest } : { ...rest };
+    return [baseObj, message];
   }
 
   error(message, data = {}) {
-    this.write("error", message, data);
+    this.pino.error(...this.formatArgs(message, data));
   }
 
   warn(message, data = {}) {
-    this.write("warn", message, data);
+    this.pino.warn(...this.formatArgs(message, data));
   }
 
   info(message, data = {}) {
-    this.write("info", message, data);
+    this.pino.info(...this.formatArgs(message, data));
   }
 
   debug(message, data = {}) {
-    this.write("debug", message, data);
+    this.pino.debug(...this.formatArgs(message, data));
   }
 
   trace(message, data = {}) {
-    this.write("trace", message, data);
+    this.pino.trace(...this.formatArgs(message, data));
   }
 }
 
