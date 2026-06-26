@@ -61,7 +61,16 @@ app.use(
 );
 
 app.use((req, res, next) => {
-  logger.debug(`${req.method} ${req.path}`);
+  const start = Date.now();
+  res.on('finish', () => {
+    const latency = Date.now() - start;
+    logger.info(`[ACCESS] ${req.method} ${req.path}`, {
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      latencyMs: latency
+    });
+  });
   next();
 });
 
