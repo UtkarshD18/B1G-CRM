@@ -1,0 +1,26 @@
+# Code Owners for B1GCRM
+
+# Default fallback
+*       @teammate-lead
+
+# Backend Layer
+/controllers/   @teammate-backend
+/routes/        @teammate-backend
+/middlewares/   @teammate-backend
+/functions/     @teammate-backend
+server.js       @teammate-backend
+
+# Database Layer
+/database/      @teammate-database
+/models/        @teammate-database
+
+# Frontend Layer
+/client/        @teammate-frontend
+
+# Workers / Schedulers
+/workers/       @teammate-workers
+/loops/         @teammate-workers
+
+# Documentation
+/docs/          @teammate-docs
+/*.md           @teammate-docs

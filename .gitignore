@@ -86,4 +86,4 @@ dist/
 client/dist/
 
 .env
-.env.*
+.env.*dump.sql

@@ -3,7 +3,7 @@ const { app } = require('../../server');
 
 describe('Admin API Integration Tests', () => {
   it('should reject access to admin routes for unauthenticated users', async () => {
-    const res = await request(app).get('/api/v1/admin/dashboard-stats');
+    const res = await request(app).get('/api/v1/admin/get_users');
     expect(res.status).toBe(401);
   });
 });

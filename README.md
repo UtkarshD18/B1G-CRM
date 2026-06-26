@@ -3,14 +3,17 @@
 A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichannel Inbox, Chatbots, and Agent Management.
 
 ## Project Documentation
+
 - [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md): Setup and deployment guidelines.
 - [COMPANY_DEPLOYMENT_REQUIREMENTS.md](./COMPANY_DEPLOYMENT_REQUIREMENTS.md): Company integration deployment specifications.
 
 ## Tech Stack
+
 - **Backend:** Node.js, Express, PostgreSQL, Socket.IO, WhatsApp Web/Cloud API integration.
-- **Frontend:** React (Vite SPA) - *In Progress*
+- **Frontend:** React (Vite SPA) - _In Progress_
 
 ## Requirements
+
 - Node.js (v20.19+ recommended)
 - PostgreSQL 16+
 
@@ -41,6 +44,7 @@ Access points after Docker starts:
 ### Manual Setup
 
 1. **Install Backend Dependencies**
+
    ```bash
    npm install
    ```
@@ -49,11 +53,13 @@ Access points after Docker starts:
    Create a `.env` file based on your environment configurations.
 
 3. **Start the Express Server**
+
    ```bash
    npm run dev
    ```
 
 4. **Start the Frontend (React Vite)**
+
    ```bash
    cd client
    npm install
@@ -85,7 +91,10 @@ Access points after Docker starts:
 ```
 
 ## Enterprise Hardening
+
 - **Metrics**: Available at `/metrics` (Prometheus format)
 - **API Documentation**: Available at `/docs` (Swagger UI)
 - **Health Checks**: `/live`, `/ready`, `/health`
 - **Database Seed**: `npm run seed`, `npm run seed:clean`, `npm run seed:large`
+
+- **Queue Architecture**: B1GCRM relies entirely on PostgreSQL for queue/state logic. No Redis, BullMQ, Kafka, or RabbitMQ is used or required.
