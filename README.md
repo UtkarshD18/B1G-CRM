@@ -83,3 +83,9 @@ Access points after Docker starts:
 |-- server.js        Express application bootstrap
 `-- socket.js        Socket.IO message routing
 ```
+
+## Enterprise Hardening
+- **Metrics**: Available at `/metrics` (Prometheus format)
+- **API Documentation**: Available at `/docs` (Swagger UI)
+- **Health Checks**: `/live`, `/ready`, `/health`
+- **Database Seed**: `npm run seed`, `npm run seed:clean`, `npm run seed:large`
