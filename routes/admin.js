@@ -1213,4 +1213,32 @@ router.post("/update_deployment_settings", adminValidator, async (req, res) => {
   }
 });
 
+// get transport metrics
+router.get("/get_transport_metrics", adminValidator, async (req, res) => {
+  try {
+    const queueMetrics = await query(`
+      SELECT 
+        (SELECT COUNT(*) FROM channel_outgoing_queue WHERE state = 'pending') as pending_out,
+        (SELECT COUNT(*) FROM channel_outgoing_queue WHERE state = 'failed' OR state = 'dead_letter') as failed_out,
+        (SELECT COUNT(*) FROM channel_incoming_queue WHERE state = 'pending') as pending_in
+    `);
+
+    const channelMetrics = await query(`SELECT * FROM channel_metrics ORDER BY updated_at DESC LIMIT 50`);
+    
+    const workers = await query(`SELECT * FROM transport_workers ORDER BY last_seen DESC`);
+
+    res.json({
+      success: true,
+      data: {
+        queue: queueMetrics[0] || { pending_out: 0, failed_out: 0, pending_in: 0 },
+        channels: channelMetrics,
+        workers
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: "failed to fetch metrics" });
+  }
+});
+
 module.exports = router;
