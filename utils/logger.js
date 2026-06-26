@@ -2,6 +2,7 @@ const pino = require("pino");
 const env = require("../env");
 const path = require("path");
 const fs = require("fs");
+const httpContext = require('express-http-context');
 
 const logsDir = path.join(__dirname, "../logs");
 if (!fs.existsSync(logsDir)) {
@@ -45,10 +46,12 @@ class Logger {
     this.pino = logger;
   }
 
-  // Helper to extract correlation_id from data if present
+  // Helper to extract correlation_id from data or context
   formatArgs(message, data = {}) {
     const { correlation_id, ...rest } = data;
-    const baseObj = correlation_id ? { correlation_id, ...rest } : { ...rest };
+    const contextId = httpContext.get('correlation_id');
+    const finalId = correlation_id || contextId;
+    const baseObj = finalId ? { correlation_id: finalId, ...rest } : { ...rest };
     return [baseObj, message];
   }
 
