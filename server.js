@@ -2,6 +2,9 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
+const timeout = require("connect-timeout");
 const fileUpload = require("express-fileupload");
 const rateLimit = require("express-rate-limit");
 const nodeCleanup = require("node-cleanup");
@@ -31,8 +34,16 @@ function cleanupAll() {
   cleanup();
 }
 
+nodeCleanup(cleanupAll);
 
 const app = express();
+
+// Production Hardening Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Don't break React frontend or WebSockets
+}));
+app.use(compression());
+app.use(timeout('30s')); // Request timeout
 
 app.use(express.json({
   limit: env.MAX_FILE_SIZE,
