@@ -7,6 +7,9 @@
     "db:migrate": "node database/migrate.js",
     "docs:ai": "node scripts/generate-ai-docs.js",
     "test": "jest --forceExit",
+    "seed": "node scripts/seed.js",
+    "seed:clean": "node scripts/seed-clean.js",
+    "seed:large": "node scripts/seed-large.js",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prepare": "husky || true"
