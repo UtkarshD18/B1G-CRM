@@ -825,7 +825,15 @@ function AgentInboxPage() {
                     ) : (
                       <strong>{normalizeConversationMessage(message)}</strong>
                     )}
-                    <small>{formatRelativeTimestamp(message.timestamp)}</small>
+                    <small>
+                      {formatRelativeTimestamp(message.timestamp)}
+                      {message.route === 'OUTGOING' && (
+                        <span style={{ marginLeft: '4px' }}>
+                          {(message.status === 'queued' || message.status === 'sending' || message.status === 'pending') && '🕒'}
+                          {(message.status === 'failed' || message.status === 'dead_letter') && '⚠️'}
+                        </span>
+                      )}
+                    </small>
                   </article>
                 ))
               ) : (

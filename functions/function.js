@@ -12,6 +12,7 @@ const unzipper = require("unzipper");
 const { destributeTaskFlow } = require("./chatbot");
 const { recordChatbotLog } = require("./chatbotDiagnostics");
 const env = require("../env");
+const { v7: uuidv7 } = require("uuid");
 
 function executeQueries(queries, connection) {
   return new Promise(async (resolve) => {
@@ -1107,156 +1108,90 @@ function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
         [uid, channelType]
       );
 
+      const correlation_id = uuidv7();
+
       if (conn) {
-        const registry = require("../utils/channels/ChannelAdapterRegistry");
-        const { decrypt } = require("../utils/channels/encryption");
-        const adapterClass = registry.getAdapterClass(channelType);
-        
-        if (adapterClass) {
-          const [credRow] = await query(
-            `SELECT credentials FROM channel_credentials WHERE uid = ? AND channel_type = ?`,
-            [uid, channelType]
-          );
-          const [settingRow] = await query(
-            `SELECT settings FROM channel_settings WHERE uid = ? AND channel_type = ?`,
-            [uid, channelType]
-          );
+        // Build normalized outgoing message
+        const normalizedOutgoing = {
+          channel: channelType,
+          recipientId: toNumber,
+          messageType: msgObj.type || "text",
+          text: msgObj.text?.body || msgObj.body || "",
+          attachments: []
+        };
 
-          let creds = {};
-          if (credRow?.credentials) {
-            try {
-              creds = JSON.parse(decrypt(credRow.credentials));
-            } catch (decErr) {
-              console.error("Decryption failed in sendMetaMsg:", decErr.message);
-            }
-          }
-          const settings = settingRow?.settings || {};
-          const adapter = new adapterClass(uid, creds, settings);
-
-          // Build normalized outgoing message
-          const normalizedOutgoing = {
-            channel: channelType,
-            recipientId: toNumber,
-            messageType: msgObj.type || "text",
-            text: msgObj.text?.body || msgObj.body || "",
-            attachments: []
-          };
-
-          if (msgObj.type === "image") {
-            normalizedOutgoing.attachments.push({
-              type: "image",
-              url: msgObj.image?.link || msgObj.image?.url,
-              caption: msgObj.image?.caption || ""
-            });
-          } else if (msgObj.type === "video") {
-            normalizedOutgoing.attachments.push({
-              type: "video",
-              url: msgObj.video?.link || msgObj.video?.url,
-              caption: msgObj.video?.caption || ""
-            });
-          } else if (msgObj.type === "audio") {
-            normalizedOutgoing.attachments.push({
-              type: "audio",
-              url: msgObj.audio?.link || msgObj.audio?.url
-            });
-          } else if (msgObj.type === "document" || msgObj.type === "file") {
-            const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
-            normalizedOutgoing.attachments.push({
-              type: "document",
-              url: docUrl,
-              caption: msgObj.document?.caption || ""
-            });
-          }
-
-          // Insert into channel_outgoing_queue as 'sending'
-          const [queueRow] = await query(
-            `INSERT INTO channel_outgoing_queue (uid, channel_type, payload, state) 
-             VALUES (?, ?, ?, 'sending') RETURNING id`,
-            [uid, channelType, JSON.stringify(normalizedOutgoing)]
-          );
-
-          let sendResult = null;
-          let sendError = null;
-          const startTime = Date.now();
-
-          try {
-            await adapter.beforeSend(normalizedOutgoing);
-            sendResult = await adapter.send(normalizedOutgoing);
-            await adapter.afterSend(normalizedOutgoing, sendResult);
-          } catch (sendErr) {
-            sendError = sendErr.message;
-          }
-
-          const latency = Date.now() - startTime;
-
-          if (sendResult?.success) {
-            // Update queue to sent
-            await query(
-              `UPDATE channel_outgoing_queue 
-               SET state = 'sent', provider_message_id = ?, attempts = attempts + 1, last_attempt_at = CURRENT_TIMESTAMP 
-               WHERE id = ?`,
-              [sendResult.provider_message_id, queueRow.id]
-            );
-
-            // Update Metrics
-            await query(
-              `INSERT INTO channel_metrics (uid, channel_type, messages_sent, avg_latency_ms, success_rate, updated_at)
-               VALUES (?, ?, 1, ?, 100.00, CURRENT_TIMESTAMP)
-               ON CONFLICT (uid, channel_type) DO UPDATE SET
-               messages_sent = channel_metrics.messages_sent + 1,
-               avg_latency_ms = (channel_metrics.avg_latency_ms * channel_metrics.messages_sent + ?) / (channel_metrics.messages_sent + 1),
-               success_rate = (channel_metrics.messages_sent + 1)::numeric / (channel_metrics.messages_sent + channel_metrics.messages_failed + 1)::numeric * 100.00,
-               updated_at = CURRENT_TIMESTAMP`,
-              [uid, channelType, latency, latency]
-            );
-
-            // Save conversation message locally
-            const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
-            const userTimezone = getCurrentTimestampInTimeZone(
-              getUser[0]?.timezone || Date.now() / 1000
-            );
-
-            const finalSaveMsg = {
-              ...savObj,
-              metaChatId: sendResult.provider_message_id,
-              timestamp: userTimezone,
-              status: "sent"
-            };
-
-            const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
-            addObjectToFile(finalSaveMsg, chatPath);
-
-            await query(
-              `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
-              [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
-            );
-
-            return resolve({ success: true, id: sendResult.provider_message_id });
-          } else {
-            // Update queue to failed/retrying
-            const maxAttempts = adapter.retryPolicy?.maxAttempts || 5;
-            const willRetry = 1 < maxAttempts;
-            await query(
-              `UPDATE channel_outgoing_queue 
-               SET state = ?, attempts = 1, last_attempt_at = CURRENT_TIMESTAMP, last_error = ? 
-               WHERE id = ?`,
-              [willRetry ? "retrying" : "dead_letter", sendError || "Send failed", queueRow.id]
-            );
-
-            // Update Metrics
-            await query(
-              `INSERT INTO channel_metrics (uid, channel_type, messages_failed, updated_at)
-               VALUES (?, ?, 1, CURRENT_TIMESTAMP)
-               ON CONFLICT (uid, channel_type) DO UPDATE SET
-               messages_failed = channel_metrics.messages_failed + 1,
-               success_rate = channel_metrics.messages_sent::numeric / (channel_metrics.messages_sent + channel_metrics.messages_failed + 1)::numeric * 100.00,
-               updated_at = CURRENT_TIMESTAMP`,
-              [uid, channelType]
-            );
-
-            return resolve({ success: false, msg: sendError || "Adapter failed to send message." });
-          }
+        if (msgObj.type === "image") {
+          normalizedOutgoing.attachments.push({
+            type: "image",
+            url: msgObj.image?.link || msgObj.image?.url,
+            caption: msgObj.image?.caption || ""
+          });
+        } else if (msgObj.type === "video") {
+          normalizedOutgoing.attachments.push({
+            type: "video",
+            url: msgObj.video?.link || msgObj.video?.url,
+            caption: msgObj.video?.caption || ""
+          });
+        } else if (msgObj.type === "audio") {
+          normalizedOutgoing.attachments.push({
+            type: "audio",
+            url: msgObj.audio?.link || msgObj.audio?.url
+          });
+        } else if (msgObj.type === "document" || msgObj.type === "file") {
+          const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
+          normalizedOutgoing.attachments.push({
+            type: "document",
+            url: docUrl,
+            caption: msgObj.document?.caption || ""
+          });
         }
+
+        // Insert into channel_outgoing_queue as 'pending'
+        const [queueRow] = await query(
+          `INSERT INTO channel_outgoing_queue (uid, channel_type, payload, state, correlation_id) 
+           VALUES (?, ?, ?, 'pending', ?) RETURNING id`,
+          [uid, channelType, JSON.stringify(normalizedOutgoing), correlation_id]
+        );
+
+        console.log(JSON.stringify({
+          event: "outbound_message_enqueue",
+          correlation_id,
+          queue_id: queueRow.id,
+          worker: "API",
+          channel: channelType,
+          message: "Enqueued outgoing message to outbox"
+        }));
+
+        // Save conversation message locally as queued
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: correlation_id, // Use correlation_id temporarily
+          timestamp: userTimezone,
+          status: "queued"
+        };
+
+        if (chatId) {
+          const chatPath = `${__dirname}/../conversations/inbox/${uid}/${chatId}.json`;
+          addObjectToFile(finalSaveMsg, chatPath);
+
+          await query(
+            `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
+            [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+          );
+        }
+
+        return resolve({ 
+          success: true, 
+          id: correlation_id, 
+          correlation_id: correlation_id, 
+          provider_message_id: null, 
+          queued: true 
+        });
       }
 
       // First check if target chat is an Instagram chat or QR chat
