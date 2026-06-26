@@ -120,6 +120,11 @@ app.use(
 const userRoute = require("./routes/user");
 app.use("/api/user", userRoute);
 
+const inboxRouter = require("./routes/inbox");
+const qrRouter = require("./routes/qr");
+const adminRouter = require("./routes/admin");
+const healthRouter = require("./routes/health");
+
 const webRoute = require("./routes/web");
 app.use("/api/web", webRoute);
 
@@ -207,6 +212,12 @@ const publicDir = fs.existsSync(path.join(clientDistDir, "index.html"))
   ? clientDistDir
   : clientPublicDir;
 const indexPath = path.resolve(publicDir, "index.html");
+
+app.use("/api/v1/inbox", inboxRouter);
+app.use("/api/v1/qr", qrRouter);
+app.use("/api/v1/admin", adminRouter);
+
+app.use("/", healthRouter);
 
 app.use("/media", express.static(path.join(clientPublicDir, "media")));
 app.use("/static", express.static(path.join(clientPublicDir, "static")));
