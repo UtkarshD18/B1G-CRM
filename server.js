@@ -14,6 +14,7 @@ const metrics = require("./utils/metrics");
 const { errorHandler } = require("./middlewares/errorHandler");
 const { runMigrations } = require("./database/migrate");
 const { seedDevCredentials } = require("./database/seed-dev");
+const setupSwagger = require("./utils/swagger");
 const { runCampaign } = require("./loops/campaignLoop.js");
 const { init, cleanup } = require("./helper/addon/qr");
 const { startKbIndexWorker, stopKbIndexWorker } = require("./workers/kbIndexWorker");
@@ -209,6 +210,12 @@ const indexPath = path.resolve(publicDir, "index.html");
 
 app.use("/media", express.static(path.join(clientPublicDir, "media")));
 app.use("/static", express.static(path.join(clientPublicDir, "static")));
+app.use(express.static(path.join(__dirname, "client/dist")));
+app.use("/assets", express.static(path.join(__dirname, "client/dist/assets")));
+
+// API Documentation
+setupSwagger(app);
+
 app.use(express.static(publicDir));
 
 app.get("*", (req, res) => {

@@ -49,6 +49,8 @@
     "randomstring": "^1.2.3",
     "socket.io": "^4.7.4",
     "stripe": "^12.13.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "unzipper": "^0.10.14",
     "uuid": "^14.0.1",
     "xss": "^1.0.15"
