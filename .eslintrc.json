@@ -16,6 +16,28 @@
   },
   "rules": {
     "no-unused-vars": "warn",
-    "no-console": "off"
+    "no-console": "off",
+    "no-empty": "warn",
+    "no-useless-escape": "warn",
+    "no-redeclare": "warn",
+    "no-constant-condition": "warn",
+    "no-prototype-builtins": "warn",
+    "no-undef": "warn",
+    "no-cond-assign": "warn",
+    "no-fallthrough": "warn",
+    "no-unsafe-finally": "warn",
+    "no-control-regex": "warn",
+    "no-inner-declarations": "warn",
+    "no-func-assign": "warn",
+    "no-case-declarations": "warn",
+    "no-self-assign": "warn",
+    "no-extra-boolean-cast": "warn",
+    "no-async-promise-executor": "warn",
+    "no-irregular-whitespace": "warn",
+    "no-unreachable": "warn",
+    "no-misleading-character-class": "warn",
+    "getter-return": "warn",
+    "valid-typeof": "warn",
+    "no-unsafe-optional-chaining": "warn"
   }
 }
