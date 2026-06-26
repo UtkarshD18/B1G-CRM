@@ -1,777 +1,323 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  Background,
-  Controls,
-  MiniMap,
-  ReactFlow,
-  addEdge,
-  applyEdgeChanges,
-  applyNodeChanges,
-} from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-import { apiRequest } from '../../shared/api'
+import { apiFormRequest, apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
-import { classNames, createFlowId, parseJsonField, prettyJson } from '../../shared/format'
+import { prettyJson } from '../../shared/format'
 
-const defaultTemplate = {
-  trigger: 'pricing',
-  reply: 'Thanks {{senderName}}, our team can help with pricing. What quantity do you need?',
-  fallback: 'Thanks for the message. A team member will review this shortly.',
+import TemplateBuilder from './automation/TemplateBuilder'
+import WhatsAppPreview from './automation/WhatsAppPreview'
+import FlowCanvas from './automation/FlowCanvas'
+import ChatbotConfig from './automation/ChatbotConfig'
+import './automation/AutomationFlows.css'
+
+/* ─── helpers ───────────────────────────────────────────── */
+
+function extractTemplateVariables(value) {
+  const variables = new Set()
+  const pattern = /\{\{\s*(\d+)\s*\}\}/g
+  let match = pattern.exec(value || '')
+  while (match) {
+    variables.add(match[1])
+    match = pattern.exec(value || '')
+  }
+  return Array.from(variables).sort((a, b) => Number(a) - Number(b))
 }
 
-const nodePalette = [
-  { type: 'TRIGGER', label: 'Trigger' },
-  { type: 'TEXT', label: 'Text reply' },
-  { type: 'IMAGE', label: 'Image reply' },
-  { type: 'DOCUMENT', label: 'Document reply' },
-  { type: 'LOCATION', label: 'Location' },
-  { type: 'BUTTON', label: 'Quick replies' },
-  { type: 'AI_BOT', label: 'AI handoff' },
-]
+function normalizeTemplateName(value) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '')
+}
 
-function createTextNode(id, label, body, x, y) {
+function statusTone(status) {
+  const n = String(status || '').toUpperCase()
+  if (n === 'APPROVED') return 'Configured'
+  if (n === 'REJECTED') return 'Needs review'
+  return n || 'Pending'
+}
+
+function createDefaultForm() {
   return {
-    id,
-    type: 'TEXT',
-    position: { x, y },
-    data: {
-      label,
-      msgContent: {
-        type: 'text',
-        text: {
-          preview_url: true,
-          body,
-        },
-      },
-    },
+    name: '',
+    language: 'en_US',
+    category: 'UTILITY',
+    templateType: 'STANDARD',
+    headerFormat: 'NONE',
+    headerText: '',
+    headerExampleValues: {},
+    mediaHash: '',
+    mediaUrl: '',
+    mediaPreviewUrl: '',
+    mediaFilename: '',
+    mediaFilesize: '',
+    selectedMediaFile: null,
+    bodyText: 'Hello {{1}}, your update is ready.',
+    bodyExampleValues: { 1: 'Customer' },
+    footerText: '',
+    buttons: [
+      { type: 'QUICK_REPLY', text: 'Track order', url: '', urlExampleValues: {}, phone_number: '' },
+    ],
+    carouselCards: [
+      { mediaPreviewUrl: '', mediaUrl: '', mediaHash: '', selectedMediaFile: null, bodyText: '', buttons: [{ type: 'QUICK_REPLY', text: '', url: '', urlExampleValues: {}, phone_number: '' }] },
+      { mediaPreviewUrl: '', mediaUrl: '', mediaHash: '', selectedMediaFile: null, bodyText: '', buttons: [{ type: 'QUICK_REPLY', text: '', url: '', urlExampleValues: {}, phone_number: '' }] },
+    ],
+    catalogId: '',
+    catalogThumbnailUrl: '',
+    catalogThumbnailPreviewUrl: '',
+    catalogThumbnailHash: '',
+    selectedCatalogFile: null,
+    _editingName: null,
   }
 }
 
-function createPaletteNode(flowType, id, x, y) {
-  if (flowType === 'TRIGGER') {
-    return {
-      id,
-      type: 'TRIGGER',
-      position: { x, y },
-      data: {
-        label: 'Incoming message',
-        msgContent: { type: 'trigger', body: 'keyword' },
-      },
+function populateFormFromTemplate(template) {
+  const f = createDefaultForm()
+  f.name = template.name
+  f.language = template.language || 'en_US'
+  f.category = template.category || 'UTILITY'
+
+  const components = template.components || []
+  const header = components.find((c) => c.type === 'HEADER')
+  if (header) {
+    f.headerFormat = header.format || 'NONE'
+    if (header.format === 'TEXT') {
+      f.headerText = header.text || ''
+      if (header.example?.header_text) {
+        extractTemplateVariables(header.text).forEach((v, i) => {
+          f.headerExampleValues[v] = header.example.header_text[i] || ''
+        })
+      }
+    } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(header.format)) {
+      f.mediaHash = header.example?.header_handle?.[0] || ''
     }
   }
 
-  if (flowType === 'IMAGE') {
-    return {
-      id,
-      type: 'IMAGE',
-      position: { x, y },
-      data: {
-        label: 'Image reply',
-        msgContent: {
-          type: 'image',
-          image: {
-            link: 'https://example.com/image.jpg',
-            caption: 'Image caption for {{senderName}}',
-          },
-        },
-      },
+  const body = components.find((c) => c.type === 'BODY')
+  if (body) {
+    f.bodyText = body.text || ''
+    if (body.example?.body_text?.[0]) {
+      extractTemplateVariables(body.text).forEach((v, i) => {
+        f.bodyExampleValues[v] = body.example.body_text[0][i] || ''
+      })
     }
   }
 
-  if (flowType === 'DOCUMENT') {
-    return {
-      id,
-      type: 'DOCUMENT',
-      position: { x, y },
-      data: {
-        label: 'Document reply',
-        msgContent: {
-          type: 'document',
-          document: {
-            link: 'https://example.com/file.pdf',
-            caption: 'Document caption for {{senderName}}',
-          },
-        },
-      },
-    }
-  }
+  const footer = components.find((c) => c.type === 'FOOTER')
+  if (footer) f.footerText = footer.text || ''
 
-  if (flowType === 'LOCATION') {
-    return {
-      id,
-      type: 'LOCATION',
-      position: { x, y },
-      data: {
-        label: 'Location reply',
-        msgContent: {
-          type: 'location',
-          location: {
-            latitude: '28.6139',
-            longitude: '77.2090',
-            name: 'Store location',
-            address: 'New Delhi',
-          },
-        },
-      },
-    }
-  }
-
-  if (flowType === 'BUTTON') {
-    return {
-      id,
-      type: 'BUTTON',
-      position: { x, y },
-      data: {
-        label: 'Quick replies',
-        msgContent: {
-          type: 'interactive',
-          interactive: {
-            type: 'button',
-            body: { text: 'Choose an option' },
-            action: {
-              buttons: [
-                { type: 'reply', reply: { id: 'pricing', title: 'Pricing' } },
-                { type: 'reply', reply: { id: 'demo', title: 'Book demo' } },
-              ],
-            },
-          },
-        },
-      },
-    }
-  }
-
-  if (flowType === 'AI_BOT') {
-    return {
-      id,
-      type: 'AI_BOT',
-      position: { x, y },
-      data: {
-        label: 'AI handoff',
-        msgContent: {
-          assignAi: true,
-          prompt: 'Answer using the business knowledge base and hand off when confidence is low.',
-        },
-      },
-    }
-  }
-
-  return createTextNode(id, 'Text reply', 'Write the reply message here.', x, y)
-}
-
-function buildBotReadyFlow({ trigger, reply, fallback }) {
-  const normalizedTrigger = trigger.trim()
-  const nodes = [
-    {
-      id: 'trigger-start',
-      type: 'TRIGGER',
-      position: { x: 40, y: 80 },
-      data: {
-        label: 'Incoming message',
-        msgContent: { type: 'trigger', body: normalizedTrigger },
-      },
-    },
-    createTextNode('reply-main', `Reply: ${normalizedTrigger}`, reply.trim(), 360, 60),
-  ]
-  const edges = [
-    {
-      id: 'edge-trigger-reply',
-      source: 'trigger-start',
-      target: 'reply-main',
-      sourceHandle: normalizedTrigger,
-    },
-  ]
-
-  if (fallback.trim()) {
-    nodes.push(createTextNode('reply-fallback', 'Fallback reply', fallback.trim(), 360, 220))
-    edges.push({
-      id: 'edge-fallback-reply',
-      source: 'trigger-start',
-      target: 'reply-fallback',
-      sourceHandle: '{{OTHER_MSG}}',
-    })
-  }
-
-  return { nodes, edges }
-}
-
-function countBotReadyTriggers(edges = []) {
-  return edges.filter((edge) => edge?.sourceHandle).length
-}
-
-function getFlowNodeType(node) {
-  if (node?.data?.flowType) {
-    return node.data.flowType
-  }
-
-  if (node?.nodeType) {
-    return node.nodeType
-  }
-
-  if (node?.type === 'TRIGGER' || node?.type === 'input') {
-    return 'TRIGGER'
-  }
-
-  if (node?.type && !['default', 'output', 'group'].includes(node.type)) {
-    return node.type
-  }
-
-  return 'TEXT'
-}
-
-function toCanvasNode(node) {
-  const flowType = getFlowNodeType(node)
-  return {
-    ...node,
-    type: flowType === 'TRIGGER' ? 'input' : 'default',
-    position: node?.position || { x: 80, y: 80 },
-    data: {
-      ...(node?.data || {}),
-      flowType,
-      label: node?.data?.label || (flowType === 'TRIGGER' ? 'Incoming message' : 'Reply message'),
-    },
-  }
-}
-
-function toPersistedNode(node) {
-  const flowType = getFlowNodeType(node)
-  const { flowType: _flowType, ...data } = node?.data || {}
-
-  return {
-    id: node.id,
-    type: flowType,
-    position: node.position || { x: 80, y: 80 },
-    data: {
-      ...data,
-      label: data.label || (flowType === 'TRIGGER' ? 'Incoming message' : 'Reply message'),
-    },
-  }
-}
-
-function toCanvasEdge(edge) {
-  const sourceHandle = edge?.sourceHandle || edge?.label || 'next'
-  return {
-    ...edge,
-    id: edge?.id || `edge-${edge?.source || 'source'}-${edge?.target || 'target'}`,
-    sourceHandle,
-    label: sourceHandle,
-    animated: sourceHandle === '{{OTHER_MSG}}',
-  }
-}
-
-function toPersistedEdge(edge) {
-  return {
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    sourceHandle: edge.sourceHandle || edge.label || 'next',
-  }
-}
-
-function getNodeMessage(node) {
-  const flowType = getFlowNodeType(node)
-  const msgContent = node?.data?.msgContent || {}
-
-  if (flowType === 'TRIGGER') {
-    return msgContent.body || ''
-  }
-
-  if (msgContent.type === 'image') {
-    return msgContent.image?.caption || ''
-  }
-
-  if (msgContent.type === 'document') {
-    return msgContent.document?.caption || ''
-  }
-
-  if (msgContent.type === 'location') {
-    return msgContent.location?.name || ''
-  }
-
-  if (msgContent.type === 'interactive') {
-    return msgContent.interactive?.body?.text || ''
-  }
-
-  if (flowType === 'AI_BOT') {
-    return msgContent.prompt || ''
-  }
-
-  return msgContent.text?.body || ''
-}
-
-function withNodeMessage(node, value) {
-  const flowType = getFlowNodeType(node)
-  const data = { ...(node?.data || {}) }
-  const msgContent = data.msgContent || {}
-
-  if (flowType === 'TRIGGER') {
-    data.msgContent = {
-      ...msgContent,
-      type: 'trigger',
-      body: value,
-    }
-  } else if (msgContent.type === 'image') {
-    data.msgContent = {
-      ...msgContent,
-      image: {
-        ...(msgContent.image || {}),
-        caption: value,
-      },
-    }
-  } else if (msgContent.type === 'document') {
-    data.msgContent = {
-      ...msgContent,
-      document: {
-        ...(msgContent.document || {}),
-        caption: value,
-      },
-    }
-  } else if (msgContent.type === 'location') {
-    data.msgContent = {
-      ...msgContent,
-      location: {
-        ...(msgContent.location || {}),
-        name: value,
-      },
-    }
-  } else if (msgContent.type === 'interactive') {
-    data.msgContent = {
-      ...msgContent,
-      interactive: {
-        ...(msgContent.interactive || {}),
-        body: {
-          ...(msgContent.interactive?.body || {}),
-          text: value,
-        },
-      },
-    }
-  } else if (flowType === 'AI_BOT') {
-    data.msgContent = {
-      ...msgContent,
-      assignAi: true,
-      prompt: value,
-    }
+  const buttonsComp = components.find((c) => c.type === 'BUTTONS')
+  if (buttonsComp?.buttons) {
+    f.buttons = buttonsComp.buttons.map((btn) => ({
+      type: btn.type || 'QUICK_REPLY',
+      text: btn.text || '',
+      url: btn.url || '',
+      urlExampleValues: {},
+      phone_number: btn.phone_number || '',
+    }))
   } else {
-    data.msgContent = {
-      ...msgContent,
-      type: 'text',
-      text: {
-        preview_url: true,
-        ...(msgContent.text || {}),
-        body: value,
-      },
-    }
+    f.buttons = []
   }
 
-  return {
-    ...node,
-    data,
-  }
-}
-
-function getNodeResource(node) {
-  const msgContent = node?.data?.msgContent || {}
-
-  if (msgContent.type === 'image') {
-    return msgContent.image?.link || ''
+  // Detect carousel
+  if (components.find((c) => c.type === 'CAROUSEL')) {
+    f.templateType = 'CAROUSEL'
   }
 
-  if (msgContent.type === 'document') {
-    return msgContent.document?.link || ''
+  f._editingName = template.name
+  return f
+}
+
+function buildTemplateButtons(buttons = []) {
+  return buttons
+    .filter((b) => b.text?.trim())
+    .slice(0, 3)
+    .map((b) => {
+      if (b.type === 'URL') {
+        const urlBtn = { type: 'URL', text: b.text.trim(), url: b.url?.trim() || '' }
+        const vars = extractTemplateVariables(b.url)
+        if (vars.length) urlBtn.example = vars.map((v) => b.urlExampleValues?.[v] || '')
+        return urlBtn
+      }
+      if (b.type === 'PHONE_NUMBER') {
+        return { type: 'PHONE_NUMBER', text: b.text.trim(), phone_number: b.phone_number?.trim() || '' }
+      }
+      return { type: 'QUICK_REPLY', text: b.text.trim() }
+    })
+}
+
+function buildComponents(form) {
+  const components = []
+
+  if (form.headerFormat === 'TEXT' && form.headerText?.trim()) {
+    const hdr = { type: 'HEADER', format: 'TEXT', text: form.headerText.trim() }
+    const vars = extractTemplateVariables(form.headerText)
+    if (vars.length) hdr.example = { header_text: vars.map((v) => form.headerExampleValues?.[v] || `Header ${v}`) }
+    components.push(hdr)
   }
 
-  return ''
-}
-
-function withNodeResource(node, value) {
-  const data = { ...(node?.data || {}) }
-  const msgContent = data.msgContent || {}
-
-  if (msgContent.type === 'image') {
-    data.msgContent = {
-      ...msgContent,
-      image: {
-        ...(msgContent.image || {}),
-        link: value,
-      },
-    }
-  } else if (msgContent.type === 'document') {
-    data.msgContent = {
-      ...msgContent,
-      document: {
-        ...(msgContent.document || {}),
-        link: value,
-      },
-    }
+  if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(form.headerFormat) && form.mediaHash) {
+    components.push({ type: 'HEADER', format: form.headerFormat, example: { header_handle: [form.mediaHash] } })
   }
 
-  return { ...node, data }
-}
+  const bodyComp = { type: 'BODY', text: form.bodyText?.trim() || '' }
+  const bodyVars = extractTemplateVariables(form.bodyText)
+  if (bodyVars.length) {
+    bodyComp.example = { body_text: [bodyVars.map((v) => form.bodyExampleValues?.[v] || `Example ${v}`)] }
+  }
+  components.push(bodyComp)
 
-function getLocationField(node, field) {
-  return node?.data?.msgContent?.location?.[field] || ''
-}
-
-function withLocationField(node, field, value) {
-  const data = { ...(node?.data || {}) }
-  const msgContent = data.msgContent || {}
-
-  data.msgContent = {
-    ...msgContent,
-    type: 'location',
-    location: {
-      ...(msgContent.location || {}),
-      [field]: value,
-    },
+  if (form.footerText?.trim()) {
+    components.push({ type: 'FOOTER', text: form.footerText.trim() })
   }
 
-  return { ...node, data }
-}
-
-function getQuickReplyLabels(node) {
-  const buttons = node?.data?.msgContent?.interactive?.action?.buttons || []
-  return buttons.map((button) => button?.reply?.title).filter(Boolean).join(', ')
-}
-
-function toReplyId(label, index) {
-  const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-  return slug || `option-${index + 1}`
-}
-
-function withQuickReplyLabels(node, value) {
-  const labels = value.split(',').map((label) => label.trim()).filter(Boolean).slice(0, 3)
-  const data = { ...(node?.data || {}) }
-  const msgContent = data.msgContent || {}
-  const interactive = msgContent.interactive || {}
-
-  data.msgContent = {
-    ...msgContent,
-    type: 'interactive',
-    interactive: {
-      ...interactive,
-      type: 'button',
-      action: {
-        ...(interactive.action || {}),
-        buttons: labels.map((label, index) => ({
-          type: 'reply',
-          reply: {
-            id: toReplyId(label, index),
-            title: label,
-          },
-        })),
-      },
-    },
+  const buttons = buildTemplateButtons(form.buttons)
+  if (buttons.length) {
+    components.push({ type: 'BUTTONS', buttons })
   }
 
-  return { ...node, data }
+  return components
 }
+
+/* ─── main page ────────────────────────────────────────── */
 
 function UserAutomationFlowsPage() {
   const { tokens } = useAuth()
+  const [activeTab, setActiveTab] = useState('templates')
+  const [status, setStatus] = useState('')
+
+  /* ── Template Builder state ─────────── */
+  const [templates, setTemplates] = useState([])
+  const [form, setForm] = useState(createDefaultForm)
+  const [submitting, setSubmitting] = useState(false)
+  const [selectedCardIndex, setSelectedCardIndex] = useState(0)
+
+  /* ── Flow state ─────────────────────── */
   const [flows, setFlows] = useState([])
-  const [status, setStatus] = useState('Loading flows...')
-  const [flowId, setFlowId] = useState('')
-  const [title, setTitle] = useState('')
-  const [nodesJson, setNodesJson] = useState(prettyJson([]))
-  const [edgesJson, setEdgesJson] = useState(prettyJson([]))
-  const [canvasNodes, setCanvasNodes] = useState([])
-  const [canvasEdges, setCanvasEdges] = useState([])
-  const [selectedNodeId, setSelectedNodeId] = useState('')
-  const [selectedEdgeId, setSelectedEdgeId] = useState('')
-  const [template, setTemplate] = useState(defaultTemplate)
-  const [activity, setActivity] = useState({ prevent: [], ai: [] })
-  const parsedNodes = parseJsonField(nodesJson, 'Nodes')
-  const parsedEdges = parseJsonField(edgesJson, 'Edges')
-  const nodeCount = parsedNodes.success && Array.isArray(parsedNodes.data) ? parsedNodes.data.length : 0
-  const edgeCount = parsedEdges.success && Array.isArray(parsedEdges.data) ? parsedEdges.data.length : 0
-  const triggerCount = parsedEdges.success && Array.isArray(parsedEdges.data) ? countBotReadyTriggers(parsedEdges.data) : 0
-  const selectedNode = useMemo(
-    () => canvasNodes.find((node) => node.id === selectedNodeId),
-    [canvasNodes, selectedNodeId],
-  )
-  const selectedEdge = useMemo(
-    () => canvasEdges.find((edge) => edge.id === selectedEdgeId),
-    [canvasEdges, selectedEdgeId],
-  )
+  const [selectedFlowId, setSelectedFlowId] = useState(null)
+  const [selectedFlowData, setSelectedFlowData] = useState(null)
 
-  const syncCanvasGraph = useCallback((nextNodes, nextEdges = canvasEdges) => {
-    const persistedNodes = nextNodes.map(toPersistedNode)
-    const persistedEdges = nextEdges.map(toPersistedEdge)
-
-    setCanvasNodes(nextNodes)
-    setCanvasEdges(nextEdges)
-    setNodesJson(prettyJson(persistedNodes))
-    setEdgesJson(prettyJson(persistedEdges))
-  }, [canvasEdges])
-
-  useEffect(() => {
-    if (!parsedNodes.success || !Array.isArray(parsedNodes.data)) {
-      return
+  /* ── Load templates ─────────────────── */
+  const loadTemplates = useCallback(async () => {
+    try {
+      const result = await apiRequest('/api/user/get_my_meta_templets', { token: tokens.user })
+      setTemplates(result?.success && Array.isArray(result.data) ? result.data : [])
+    } catch (err) {
+      setStatus(err.message || 'Unable to load templates')
     }
+  }, [tokens.user])
 
-    setCanvasNodes(parsedNodes.data.map(toCanvasNode))
-  }, [nodesJson, parsedNodes.success])
-
-  useEffect(() => {
-    if (!parsedEdges.success || !Array.isArray(parsedEdges.data)) {
-      return
-    }
-
-    setCanvasEdges(parsedEdges.data.map(toCanvasEdge))
-  }, [edgesJson, parsedEdges.success])
-
-  useEffect(() => {
-    if (selectedNodeId && !canvasNodes.some((node) => node.id === selectedNodeId)) {
-      setSelectedNodeId('')
-    }
-
-    if (selectedEdgeId && !canvasEdges.some((edge) => edge.id === selectedEdgeId)) {
-      setSelectedEdgeId('')
-    }
-  }, [canvasEdges, canvasNodes, selectedEdgeId, selectedNodeId])
-
-  const loadFlows = useCallback(async (options = {}) => {
-    const silent = options?.silent === true
-    const finalStatus = options?.finalStatus || ''
-
-    if (!silent) {
-      setStatus('Loading flows...')
-    }
-
+  /* ── Load flows ─────────────────────── */
+  const loadFlows = useCallback(async () => {
     try {
       const result = await apiRequest('/api/chat_flow/get_mine', { token: tokens.user })
       setFlows(Array.isArray(result?.data) ? result.data : [])
-      setStatus(finalStatus)
-    } catch (error) {
-      setStatus(error.message || 'Unable to load flows')
+    } catch (err) {
+      setStatus(err.message || 'Unable to load flows')
     }
   }, [tokens.user])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      loadFlows()
-    }, 0)
+    loadTemplates()
+    loadFlows()
+  }, [loadTemplates, loadFlows])
 
-    return () => {
-      window.clearTimeout(timer)
+  /* ── Template submit ────────────────── */
+  async function handleTemplateSubmit(event) {
+    event?.preventDefault?.()
+
+    const name = normalizeTemplateName(form.name)
+    if (!name) { setStatus('Template name is required.'); return }
+    if (!form.bodyText?.trim()) { setStatus('Body text is required.'); return }
+
+    // Validate header examples
+    if (form.headerFormat === 'TEXT') {
+      const hdrVars = extractTemplateVariables(form.headerText)
+      const missing = hdrVars.find((v) => !String(form.headerExampleValues?.[v] || '').trim())
+      if (missing) { setStatus(`Header variable {{${missing}}} needs an example.`); return }
     }
-  }, [loadFlows])
 
-  async function openFlow(nextFlowId, nextTitle = '') {
-    setFlowId(nextFlowId)
-    setTitle(nextTitle)
-    setStatus('Loading flow detail...')
+    // Validate body examples
+    const bodyVars = extractTemplateVariables(form.bodyText)
+    const missingBody = bodyVars.find((v) => !String(form.bodyExampleValues?.[v] || '').trim())
+    if (missingBody) { setStatus(`Body variable {{${missingBody}}} needs an example.`); return }
+
+    // Validate media
+    if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(form.headerFormat) && !form.mediaHash) {
+      setStatus('Upload header media before submitting.'); return
+    }
+
+    const isEdit = !!form._editingName
+    setSubmitting(true)
+    setStatus(isEdit ? 'Updating template...' : 'Submitting template to Meta...')
 
     try {
-      const [detailResult, activityResult] = await Promise.all([
-        apiRequest('/api/chat_flow/get_by_flow_id', {
-          method: 'POST',
-          token: tokens.user,
-          body: { flowId: nextFlowId },
-        }),
-        apiRequest('/api/chat_flow/get_activity', {
-          method: 'POST',
-          token: tokens.user,
-          body: { flowId: nextFlowId },
-        }),
-      ])
+      const payload = {
+        name,
+        language: form.language?.trim() || 'en_US',
+        category: form.category,
+        components: buildComponents(form),
+      }
 
-      setNodesJson(prettyJson(detailResult?.nodes || []))
-      setEdgesJson(prettyJson(detailResult?.edges || []))
-      setActivity({
-        prevent: Array.isArray(activityResult?.prevent) ? activityResult.prevent : [],
-        ai: Array.isArray(activityResult?.ai) ? activityResult.ai : [],
+      const endpoint = isEdit ? '/api/user/update_meta_templet' : '/api/user/add_meta_templet'
+      const result = await apiRequest(endpoint, { method: 'POST', token: tokens.user, body: payload })
+
+      if (!result?.success) { setStatus(result?.msg || 'Unable to save template'); return }
+
+      setForm(createDefaultForm())
+      setStatus(result.msg || (isEdit ? 'Template updated.' : 'Template submitted for Meta review.'))
+      loadTemplates()
+    } catch (err) {
+      setStatus(err.message || 'Unable to save template')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  function editTemplate(template) {
+    setForm(populateFormFromTemplate(template))
+    setActiveTab('templates')
+    setStatus(`Loaded "${template.name}" for editing.`)
+  }
+
+  function cancelEdit() {
+    setForm(createDefaultForm())
+    setStatus('')
+  }
+
+  async function deleteTemplate(name) {
+    if (!name) return
+    setStatus(`Deleting ${name}...`)
+    try {
+      const result = await apiRequest('/api/user/del_meta_templet', { method: 'POST', token: tokens.user, body: { name } })
+      setStatus(result?.success ? (result.msg || 'Template deleted.') : (result?.msg || 'Unable to delete'))
+      if (result?.success) loadTemplates()
+    } catch (err) {
+      setStatus(err.message || 'Unable to delete')
+    }
+  }
+
+  /* ── Flow operations ────────────────── */
+  async function openFlow(flow) {
+    setSelectedFlowId(flow.flow_id)
+    try {
+      const result = await apiRequest('/api/chat_flow/get_by_flow_id', {
+        method: 'POST', token: tokens.user, body: { flowId: flow.flow_id },
       })
-      setStatus('')
-    } catch (error) {
-      setStatus(error.message || 'Unable to load flow detail')
+      setSelectedFlowData({ nodes: result?.nodes || [], edges: result?.edges || [], title: flow.title, flowId: flow.flow_id })
+    } catch (err) {
+      setStatus(err.message || 'Unable to load flow')
     }
   }
 
-  function newFlow() {
-    setFlowId(createFlowId())
-    setTitle('Untitled Flow')
-    setNodesJson(prettyJson([]))
-    setEdgesJson(prettyJson([]))
-    setActivity({ prevent: [], ai: [] })
-    setStatus('New flow draft ready.')
-  }
-
-  function applyBotTemplate() {
-    if (!template.trigger.trim()) {
-      setStatus('Trigger phrase is required.')
-      return
-    }
-
-    if (!template.reply.trim()) {
-      setStatus('Reply message is required.')
-      return
-    }
-
-    const nextFlowId = flowId || createFlowId()
-    const flow = buildBotReadyFlow(template)
-    setFlowId(nextFlowId)
-    setTitle(title || `Bot reply for ${template.trigger.trim()}`)
-    setNodesJson(prettyJson(flow.nodes))
-    setEdgesJson(prettyJson(flow.edges))
-    setStatus('Bot-ready flow draft generated.')
-  }
-
-  const onNodesChange = useCallback((changes) => {
-    setCanvasNodes((currentNodes) => {
-      const nextNodes = applyNodeChanges(changes, currentNodes)
-      setNodesJson(prettyJson(nextNodes.map(toPersistedNode)))
-      return nextNodes
-    })
-  }, [])
-
-  const onEdgesChange = useCallback((changes) => {
-    setCanvasEdges((currentEdges) => {
-      const nextEdges = applyEdgeChanges(changes, currentEdges)
-      setEdgesJson(prettyJson(nextEdges.map(toPersistedEdge)))
-      return nextEdges
-    })
-  }, [])
-
-  const onConnect = useCallback((connection) => {
-    setCanvasEdges((currentEdges) => {
-      const nextEdge = {
-        ...connection,
-        id: `edge-${connection.source}-${connection.target}-${Date.now().toString(36)}`,
-        sourceHandle: connection.sourceHandle || 'next',
-      }
-      const nextEdges = addEdge(toCanvasEdge(nextEdge), currentEdges)
-      setEdgesJson(prettyJson(nextEdges.map(toPersistedEdge)))
-      return nextEdges
-    })
-  }, [])
-
-  function addVisualNode(flowType) {
-    const nextId = `${flowType.toLowerCase()}-${Date.now().toString(36)}`
-    const offset = canvasNodes.length * 42
-    const x = flowType === 'TRIGGER' ? 60 + offset : 360 + offset
-    const y = flowType === 'TRIGGER' ? 90 + offset : 120 + offset
-    const nextNode = toCanvasNode(createPaletteNode(flowType, nextId, x, y))
-    const paletteItem = nodePalette.find((item) => item.type === flowType)
-
-    syncCanvasGraph([...canvasNodes, nextNode], canvasEdges)
-    setSelectedNodeId(nextId)
-    setSelectedEdgeId('')
-    setStatus(`${paletteItem?.label || flowType} node added.`)
-  }
-
-  function updateSelectedNode(field, value) {
-    if (!selectedNode) {
-      return
-    }
-
-    const nextNodes = canvasNodes.map((node) => {
-      if (node.id !== selectedNode.id) {
-        return node
-      }
-
-      if (field === 'label') {
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            label: value,
-          },
-        }
-      }
-
-      return withNodeMessage(node, value)
-    })
-
-    syncCanvasGraph(nextNodes, canvasEdges)
-  }
-
-  function updateSelectedNodeResource(value) {
-    if (!selectedNode) {
-      return
-    }
-
-    const nextNodes = canvasNodes.map((node) => (node.id === selectedNode.id ? withNodeResource(node, value) : node))
-    syncCanvasGraph(nextNodes, canvasEdges)
-  }
-
-  function updateSelectedLocation(field, value) {
-    if (!selectedNode) {
-      return
-    }
-
-    const nextNodes = canvasNodes.map((node) =>
-      node.id === selectedNode.id ? withLocationField(node, field, value) : node,
-    )
-    syncCanvasGraph(nextNodes, canvasEdges)
-  }
-
-  function updateSelectedQuickReplies(value) {
-    if (!selectedNode) {
-      return
-    }
-
-    const nextNodes = canvasNodes.map((node) => (node.id === selectedNode.id ? withQuickReplyLabels(node, value) : node))
-    syncCanvasGraph(nextNodes, canvasEdges)
-  }
-
-  function updateSelectedEdgeSourceHandle(value) {
-    if (!selectedEdge) {
-      return
-    }
-
-    const nextEdges = canvasEdges.map((edge) => {
-      if (edge.id !== selectedEdge.id) {
-        return edge
-      }
-
-      return toCanvasEdge({
-        ...edge,
-        sourceHandle: value,
-      })
-    })
-
-    syncCanvasGraph(canvasNodes, nextEdges)
-  }
-
-  async function saveFlow(event) {
-    event.preventDefault()
-    const parsedNodes = parseJsonField(nodesJson, 'Nodes')
-    const parsedEdges = parseJsonField(edgesJson, 'Edges')
-
-    if (!parsedNodes.success) {
-      setStatus(parsedNodes.error)
-      return
-    }
-
-    if (!parsedEdges.success) {
-      setStatus(parsedEdges.error)
-      return
-    }
-
-    const nextFlowId = flowId || createFlowId()
+  async function saveFlowData(nodes, edges) {
+    if (!selectedFlowData) return
     setStatus('Saving flow...')
-
     try {
       const result = await apiRequest('/api/chat_flow/add_new', {
-        method: 'POST',
-        token: tokens.user,
-        body: {
-          title,
-          flowId: nextFlowId,
-          nodes: parsedNodes.data,
-          edges: parsedEdges.data,
-        },
+        method: 'POST', token: tokens.user,
+        body: { title: selectedFlowData.title, flowId: selectedFlowData.flowId, nodes, edges },
       })
-
-      if (!result?.success) {
-        setStatus(result?.msg || 'Unable to save flow')
-        return
-      }
-
-      setFlowId(nextFlowId)
-      await loadFlows({ silent: true, finalStatus: 'Flow saved.' })
-    } catch (error) {
-      setStatus(error.message || 'Unable to save flow')
+      setStatus(result?.success ? 'Flow saved.' : (result?.msg || 'Unable to save flow'))
+      loadFlows()
+    } catch (err) {
+      setStatus(err.message || 'Unable to save flow')
     }
   }
 
@@ -779,297 +325,305 @@ function UserAutomationFlowsPage() {
     setStatus('Deleting flow...')
     try {
       const result = await apiRequest('/api/chat_flow/del_flow', {
-        method: 'POST',
-        token: tokens.user,
-        body: {
-          id: flow.id,
-          flowId: flow.flow_id,
-        },
+        method: 'POST', token: tokens.user, body: { id: flow.id, flowId: flow.flow_id },
       })
-
-      if (!result?.success) {
+      if (result?.success) {
+        if (flow.flow_id === selectedFlowId) { setSelectedFlowId(null); setSelectedFlowData(null) }
+        loadFlows()
+        setStatus('Flow deleted.')
+      } else {
         setStatus(result?.msg || 'Unable to delete flow')
-        return
       }
-
-      if (flow.flow_id === flowId) {
-        setFlowId('')
-        setTitle('')
-        setNodesJson(prettyJson([]))
-        setEdgesJson(prettyJson([]))
-        setActivity({ prevent: [], ai: [] })
-      }
-
-      await loadFlows({ silent: true, finalStatus: 'Flow deleted.' })
-    } catch (error) {
-      setStatus(error.message || 'Unable to delete flow')
+    } catch (err) {
+      setStatus(err.message || 'Unable to delete flow')
     }
   }
 
+  /* ── Tabs ────────────────────────────── */
+  const tabs = [
+    { id: 'templates', label: 'Template Builder', icon: '📝' },
+    { id: 'flows', label: 'Flow Canvas', icon: '🔀' },
+    { id: 'chatbot', label: 'Chatbot Config', icon: '🤖' },
+    { id: 'library', label: 'Template Library', icon: '📚' },
+  ]
+
+  /* ── payload preview ─────────────────── */
+  const payload = useMemo(() => ({
+    name: normalizeTemplateName(form.name),
+    language: form.language?.trim() || 'en_US',
+    category: form.category,
+    components: buildComponents(form),
+  }), [form])
+
   return (
-    <div className="page-stack">
-      <div className="page-header">
-        <div>
-          <span className="eyebrow">automation flows</span>
-          <h2>Real flow CRUD over `/api/chat_flow`</h2>
-          <p>Flow list, detail loading, JSON editing, save, delete, and activity inspection are wired to the backend.</p>
+    <div className="af-page">
+      {/* Header */}
+      <div className="af-top-header">
+        <div className="af-top-header-left">
+          <h2>Flow Builder & Template Studio</h2>
+          <p>Create WhatsApp templates, build automation flows, and connect chatbot triggers — all in one place.</p>
         </div>
-        <button className="primary-button" type="button" onClick={newFlow}>
-          New flow
-        </button>
+        <div className="af-top-actions">
+          {activeTab === 'templates' && form._editingName && (
+            <button type="button" className="af-btn af-btn-secondary" onClick={cancelEdit}>
+              ✕ Cancel Edit
+            </button>
+          )}
+          <button type="button" className="af-btn af-btn-secondary" onClick={() => { loadTemplates(); loadFlows(); setStatus('Refreshed.') }}>
+            ↻ Refresh
+          </button>
+        </div>
       </div>
 
-      {status ? <p className="status-line">{status}</p> : null}
-
-      <div className="dashboard-grid">
-        <article className="dashboard-card">
-          <span>Saved flows</span>
-          <strong>{flows.length}</strong>
-        </article>
-        <article className="dashboard-card">
-          <span>Nodes</span>
-          <strong>{nodeCount}</strong>
-        </article>
-        <article className="dashboard-card">
-          <span>Edges</span>
-          <strong>{edgeCount}</strong>
-        </article>
-        <article className="dashboard-card">
-          <span>Bot triggers</span>
-          <strong>{triggerCount}</strong>
-        </article>
+      {/* Tab Bar */}
+      <div className="af-tab-bar">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`af-tab${activeTab === tab.id ? ' active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="af-tab-icon">{tab.icon}</span>
+            {tab.label}
+            {tab.id === 'library' && templates.length > 0 && (
+              <span className="af-tab-badge">{templates.length}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      <div className="inbox-layout">
-        <aside className="panel inbox-sidebar">
-          <div className="panel-header">
-            <h2>Saved flows</h2>
-          </div>
-          <div className="chat-list">
-            {flows.map((flow) => (
-              <div className="list-row" key={flow.flow_id}>
-                <button
-                  className={classNames('chat-list-item', flow.flow_id === flowId ? 'active' : '')}
-                  type="button"
-                  onClick={() => openFlow(flow.flow_id, flow.title)}
+      {/* Status */}
+      {status && (
+        <div className="af-status-bar">
+          <span>{status}</span>
+          <button type="button" onClick={() => setStatus('')} className="af-status-close">✕</button>
+        </div>
+      )}
+
+      {/* ── TAB: Template Builder ────────── */}
+      {activeTab === 'templates' && (
+        <div className="af-builder">
+          {/* Left sidebar: Template list */}
+          <aside className="af-sidebar">
+            <div className="af-sidebar-header">
+              <h3>Templates</h3>
+              <span className="af-sidebar-count">{templates.length}</span>
+            </div>
+            <button
+              type="button"
+              className="af-btn af-btn-primary af-sidebar-new-btn"
+              onClick={() => { setForm(createDefaultForm()); setStatus('New template draft.') }}
+            >
+              + New Template
+            </button>
+            <div className="af-sidebar-list">
+              {templates.map((t) => (
+                <div
+                  key={t.id || t.name}
+                  className={`af-sidebar-item${form._editingName === t.name ? ' active' : ''}`}
+                  onClick={() => editTemplate(t)}
                 >
-                  <strong>{flow.title}</strong>
-                  <span>{flow.flow_id}</span>
-                </button>
-                <button className="mini-button subtle-danger" type="button" onClick={() => deleteFlow(flow)}>
-                  Delete
-                </button>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        <section className="page-stack">
-          <div className="panel form-panel">
-            <div className="panel-header">
-              <h2>Bot-ready flow template</h2>
+                  <div className="af-sidebar-item-name">{t.name}</div>
+                  <div className="af-sidebar-item-meta">
+                    <span className={`af-status-dot ${String(t.status).toLowerCase()}`} />
+                    <span>{statusTone(t.status)}</span>
+                    <span>·</span>
+                    <span>{t.category || 'N/A'}</span>
+                  </div>
+                </div>
+              ))}
+              {!templates.length && (
+                <div className="af-sidebar-empty">
+                  <div className="af-sidebar-empty-icon">📝</div>
+                  <p>No templates yet. Create one to get started!</p>
+                </div>
+              )}
             </div>
-            <div className="form-grid">
-              <label>
-                Trigger phrase
-                <input
-                  value={template.trigger}
-                  onChange={(event) => setTemplate({ ...template, trigger: event.target.value })}
-                />
-              </label>
-              <label>
-                Reply message
-                <textarea
-                  rows={3}
-                  value={template.reply}
-                  onChange={(event) => setTemplate({ ...template, reply: event.target.value })}
-                />
-              </label>
-              <label>
-                Fallback reply
-                <textarea
-                  rows={3}
-                  value={template.fallback}
-                  onChange={(event) => setTemplate({ ...template, fallback: event.target.value })}
-                />
-              </label>
-            </div>
-            <button className="secondary-button dark-text" type="button" onClick={applyBotTemplate}>
-              Generate bot-ready flow
-            </button>
-          </div>
+          </aside>
 
-          <form className="panel form-panel" onSubmit={saveFlow}>
-            <div className="panel-header">
-              <h2>Flow editor</h2>
-            </div>
-            <label>
-              Title
-              <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Flow title" />
-            </label>
-            <label>
-              Flow ID
-              <input value={flowId} onChange={(event) => setFlowId(event.target.value)} placeholder="flow identifier" />
-            </label>
-            <details style={{ marginTop: '12px', marginBottom: '12px' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#1b2d38' }}>Advanced / Edit Raw JSON</summary>
-              <div style={{ display: 'grid', gap: '12px', marginTop: '10px' }}>
-                <label>
-                  Nodes JSON
-                  <textarea rows={10} value={nodesJson} onChange={(event) => setNodesJson(event.target.value)} />
-                </label>
-                <label>
-                  Edges JSON
-                  <textarea rows={10} value={edgesJson} onChange={(event) => setEdgesJson(event.target.value)} />
-                </label>
-              </div>
-            </details>
-            <button className="primary-button" type="submit">
-              Save flow
-            </button>
-          </form>
+          {/* Center: Wizard Builder */}
+          <main className="af-main-panel">
+            <TemplateBuilder
+              form={form}
+              setForm={setForm}
+              submitting={submitting}
+              onSubmit={handleTemplateSubmit}
+              onStatus={setStatus}
+              selectedCardIndex={selectedCardIndex}
+              setSelectedCardIndex={setSelectedCardIndex}
+            />
+          </main>
 
-          <div className="panel flow-canvas-panel">
-            <div className="panel-header">
-              <h2>Visual flow canvas</h2>
-              <div className="button-row flow-palette" aria-label="Flow node palette">
-                {nodePalette.map((item) => (
-                  <button className="mini-button" key={item.type} type="button" onClick={() => addVisualNode(item.type)}>
-                    {item.label}
+          {/* Right: WhatsApp Preview */}
+          <aside className="af-preview-panel">
+            <WhatsAppPreview
+              form={form}
+              selectedCardIndex={selectedCardIndex}
+              setSelectedCardIndex={setSelectedCardIndex}
+            />
+          </aside>
+        </div>
+      )}
+
+      {/* ── TAB: Flow Canvas ─────────────── */}
+      {activeTab === 'flows' && (
+        <div className="af-builder af-builder-no-preview">
+          {/* Left sidebar: Flow list */}
+          <aside className="af-sidebar">
+            <div className="af-sidebar-header">
+              <h3>Saved Flows</h3>
+              <span className="af-sidebar-count">{flows.length}</span>
+            </div>
+            <div className="af-sidebar-list">
+              {flows.map((flow) => (
+                <div
+                  key={flow.flow_id}
+                  className={`af-sidebar-item${selectedFlowId === flow.flow_id ? ' active' : ''}`}
+                >
+                  <div
+                    style={{ flex: 1, cursor: 'pointer' }}
+                    onClick={() => openFlow(flow)}
+                  >
+                    <div className="af-sidebar-item-name">{flow.title}</div>
+                    <div className="af-sidebar-item-meta">
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.7rem' }}>{flow.flow_id}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="af-btn af-btn-danger"
+                    style={{ padding: '4px 10px', fontSize: '0.72rem' }}
+                    onClick={(e) => { e.stopPropagation(); deleteFlow(flow) }}
+                  >
+                    Delete
                   </button>
-                ))}
-              </div>
+                </div>
+              ))}
+              {!flows.length && (
+                <div className="af-sidebar-empty">
+                  <div className="af-sidebar-empty-icon">🔀</div>
+                  <p>No flows created yet.</p>
+                </div>
+              )}
             </div>
-            <div className="flow-builder-grid">
-              <div className="flow-canvas" aria-label="Visual automation flow canvas">
-                <ReactFlow
-                  nodes={canvasNodes}
-                  edges={canvasEdges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  onNodeClick={(_, node) => {
-                    setSelectedNodeId(node.id)
-                    setSelectedEdgeId('')
-                  }}
-                  onEdgeClick={(_, edge) => {
-                    setSelectedEdgeId(edge.id)
-                    setSelectedNodeId('')
-                  }}
-                  fitView
-                >
-                  <MiniMap pannable zoomable />
-                  <Controls />
-                  <Background />
-                </ReactFlow>
-              </div>
-              <div className="flow-inspector">
-                <h3>Selected node</h3>
-                {selectedNode ? (
-                  <>
-                    <p>{getFlowNodeType(selectedNode)} node</p>
-                    <label>
-                      Node label
-                      <input
-                        value={selectedNode.data?.label || ''}
-                        onChange={(event) => updateSelectedNode('label', event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      {getFlowNodeType(selectedNode) === 'AI_BOT' ? 'AI instruction' : 'Message body'}
-                      <textarea
-                        rows={4}
-                        value={getNodeMessage(selectedNode)}
-                        onChange={(event) => updateSelectedNode('message', event.target.value)}
-                      />
-                    </label>
-                    {['IMAGE', 'DOCUMENT'].includes(getFlowNodeType(selectedNode)) ? (
-                      <label>
-                        Media URL
-                        <input value={getNodeResource(selectedNode)} onChange={(event) => updateSelectedNodeResource(event.target.value)} />
-                      </label>
-                    ) : null}
-                    {getFlowNodeType(selectedNode) === 'LOCATION' ? (
-                      <>
-                        <label>
-                          Latitude
-                          <input
-                            value={getLocationField(selectedNode, 'latitude')}
-                            onChange={(event) => updateSelectedLocation('latitude', event.target.value)}
-                          />
-                        </label>
-                        <label>
-                          Longitude
-                          <input
-                            value={getLocationField(selectedNode, 'longitude')}
-                            onChange={(event) => updateSelectedLocation('longitude', event.target.value)}
-                          />
-                        </label>
-                        <label>
-                          Address
-                          <input
-                            value={getLocationField(selectedNode, 'address')}
-                            onChange={(event) => updateSelectedLocation('address', event.target.value)}
-                          />
-                        </label>
-                      </>
-                    ) : null}
-                    {getFlowNodeType(selectedNode) === 'BUTTON' ? (
-                      <label>
-                        Quick replies
-                        <input
-                          value={getQuickReplyLabels(selectedNode)}
-                          onChange={(event) => updateSelectedQuickReplies(event.target.value)}
-                        />
-                      </label>
-                    ) : null}
-                  </>
-                ) : (
-                  <p>Select a node on the canvas to edit its label and message.</p>
-                )}
+          </aside>
 
-                <h3>Selected edge</h3>
-                {selectedEdge ? (
-                  <label>
-                    Trigger / source handle
-                    <input
-                      value={selectedEdge.sourceHandle || ''}
-                      onChange={(event) => updateSelectedEdgeSourceHandle(event.target.value)}
-                    />
-                  </label>
-                ) : (
-                  <p>Select an edge to edit the trigger value used by the chatbot runtime.</p>
-                )}
+          {/* Main: Flow Canvas */}
+          <main className="af-main-panel">
+            {selectedFlowData ? (
+              <FlowCanvas
+                key={selectedFlowId}
+                nodes={selectedFlowData.nodes}
+                edges={selectedFlowData.edges}
+                onSave={saveFlowData}
+                templates={templates}
+              />
+            ) : (
+              <div className="af-empty-state">
+                <div className="af-empty-icon">🔀</div>
+                <h3 className="af-empty-title">Select a flow to edit</h3>
+                <p className="af-empty-text">Choose a flow from the sidebar to view and edit it on the canvas, or create a new one from the Chatbot Config tab.</p>
               </div>
+            )}
+          </main>
+        </div>
+      )}
+
+      {/* ── TAB: Chatbot Config ──────────── */}
+      {activeTab === 'chatbot' && (
+        <div className="af-builder af-builder-no-preview">
+          <aside className="af-sidebar">
+            <div className="af-sidebar-header">
+              <h3>Flows</h3>
+              <span className="af-sidebar-count">{flows.length}</span>
             </div>
+            <div className="af-sidebar-list">
+              {flows.map((flow) => (
+                <div key={flow.flow_id} className="af-sidebar-item">
+                  <div className="af-sidebar-item-name">{flow.title}</div>
+                  <div className="af-sidebar-item-meta">
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.7rem' }}>{flow.flow_id}</span>
+                  </div>
+                </div>
+              ))}
+              {!flows.length && (
+                <div className="af-sidebar-empty">
+                  <div className="af-sidebar-empty-icon">🤖</div>
+                  <p>No flows to bind. Create one in the Flow Canvas tab.</p>
+                </div>
+              )}
+            </div>
+          </aside>
+
+          <main className="af-main-panel">
+            <ChatbotConfig flows={flows} onStatus={setStatus} />
+          </main>
+        </div>
+      )}
+
+      {/* ── TAB: Template Library ─────────── */}
+      {activeTab === 'library' && (
+        <div className="af-library">
+          <div className="af-library-header">
+            <h3>Meta Templates</h3>
+            <span className="af-sidebar-count">{templates.length} templates</span>
           </div>
 
-          <div className="two-column-grid">
-            <div className="panel">
-              <div className="panel-header">
-                <h2>AI activity</h2>
-              </div>
-              <ul className="signal-list">
-                {activity.ai.map((entry) => (
-                  <li key={entry.id}>{entry.senderNumber || entry.number || JSON.stringify(entry)}</li>
-                ))}
-                {!activity.ai.length ? <li>No AI activity entries.</li> : null}
-              </ul>
+          {!templates.length ? (
+            <div className="af-empty-state">
+              <div className="af-empty-icon">📚</div>
+              <h3 className="af-empty-title">No templates yet</h3>
+              <p className="af-empty-text">
+                Switch to the Template Builder tab to create your first WhatsApp template.
+              </p>
+              <button type="button" className="af-btn af-btn-primary" onClick={() => setActiveTab('templates')}>
+                📝 Create Template
+              </button>
             </div>
-            <div className="panel">
-              <div className="panel-header">
-                <h2>Disabled numbers</h2>
-              </div>
-              <ul className="signal-list">
-                {activity.prevent.map((entry) => (
-                  <li key={entry.id}>{entry.senderNumber || entry.number || JSON.stringify(entry)}</li>
-                ))}
-                {!activity.prevent.length ? <li>No disabled numbers.</li> : null}
-              </ul>
+          ) : (
+            <div className="af-library-grid">
+              {templates.map((template) => (
+                <div key={template.id || template.name} className="af-library-card">
+                  <div className="af-library-card-header">
+                    <h4>{template.name}</h4>
+                    <span className={`af-library-status ${String(template.status).toLowerCase()}`}>
+                      {statusTone(template.status)}
+                    </span>
+                  </div>
+                  <div className="af-library-card-meta">
+                    <span>{template.category || 'N/A'}</span>
+                    <span>·</span>
+                    <span>{template.language || 'en_US'}</span>
+                  </div>
+                  {template.components?.find((c) => c.type === 'BODY')?.text && (
+                    <p className="af-library-card-body">
+                      {template.components.find((c) => c.type === 'BODY').text.slice(0, 120)}
+                      {template.components.find((c) => c.type === 'BODY').text.length > 120 ? '…' : ''}
+                    </p>
+                  )}
+                  <div className="af-library-card-actions">
+                    <button type="button" className="af-btn af-btn-secondary" onClick={() => editTemplate(template)}>
+                      ✏️ Edit
+                    </button>
+                    <button type="button" className="af-btn af-btn-danger" onClick={() => deleteTemplate(template.name)}>
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        </section>
-      </div>
+          )}
+
+          {/* Payload Preview */}
+          {form._editingName && (
+            <div className="af-library-preview">
+              <h4>Payload Preview — {form._editingName}</h4>
+              <pre className="af-code-block">{prettyJson(payload)}</pre>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
