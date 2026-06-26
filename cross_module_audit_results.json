@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-06-25T00:13:41.856Z",
-  "total": 34,
-  "passed": 22,
-  "failed": 12,
-  "score": 65,
+  "timestamp": "2026-06-26T02:48:49.900Z",
+  "total": 33,
+  "passed": 19,
+  "failed": 14,
+  "score": 58,
   "results": [
     {
       "module": "AUTH",
@@ -57,13 +57,7 @@
       "module": "CONTACT→INBOX",
       "test": "Get chat list",
       "pass": true,
-      "detail": "Found 18 chats"
-    },
-    {
-      "module": "CONTACT→INBOX",
-      "test": "Chats have sender identity",
-      "pass": true,
-      "detail": "17/18 chats have sender names"
+      "detail": "Found 0 chats"
     },
     {
       "module": "AI→CHATBOT",
@@ -81,7 +75,7 @@
       "module": "KB→AI",
       "test": "Get knowledge base",
       "pass": true,
-      "detail": "Found 1 items"
+      "detail": "Found 0 items"
     },
     {
       "module": "KB→AI",
@@ -111,7 +105,7 @@
       "module": "AGENT→INBOX",
       "test": "Get agents",
       "pass": true,
-      "detail": "Found 11 agents"
+      "detail": "Found 1 agents"
     },
     {
       "module": "AGENT→INBOX",
@@ -135,13 +129,13 @@
       "module": "SUPERVISOR→AGENT",
       "test": "Get KPIs",
       "pass": true,
-      "detail": "{\"averageResponseTimeOverall\":583,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":1,\"openChatsCount\":18,\"escalatedChatsCount\":2}"
+      "detail": "{\"averageResponseTimeOverall\":0,\"averageResponseTimePerAgent\":[],\"totalSlaBreaches\":0,\"openChatsCount\":0,\"escalatedChatsCount\":0}"
     },
     {
       "module": "SUPERVISOR→AGENT",
       "test": "Get escalations",
       "pass": true,
-      "detail": "Found 2 escalations"
+      "detail": "Found 0 escalations"
     },
     {
       "module": "SUPERVISOR→AGENT",
@@ -153,7 +147,7 @@
       "module": "WEBHOOK→INBOX",
       "test": "Get webhook rules",
       "pass": true,
-      "detail": "Found 6 rules"
+      "detail": "Found 0 rules"
     },
     {
       "module": "WEBHOOK→INBOX",
@@ -188,13 +182,13 @@
     {
       "module": "SLA→SUPERVISOR",
       "test": "SLA checker exists",
-      "pass": true,
+      "pass": false,
       "detail": "interval running"
     },
     {
       "module": "SLA→SUPERVISOR",
       "test": "Escalation queue insert",
-      "pass": true,
+      "pass": false,
       "detail": "auto-escalation"
     },
     {

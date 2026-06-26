@@ -340,10 +340,16 @@ router.post(
     try {
       const { chatId, note } = req.body;
 
-      await query(`UPDATE chats SET chat_note = ? WHERE chat_id = ?`, [
+      const result = await query(`UPDATE chats SET chat_note = ? WHERE chat_id = ? AND uid = ? RETURNING id`, [
         note,
         chatId,
+        req.decode.uid
       ]);
+
+      if (result.length === 0) {
+        return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+      }
+
       res.json({ success: true, msg: "Notes were updated" });
     } catch (err) {
       res.json({ success: false, msg: "something went wrong", err });
@@ -366,8 +372,9 @@ router.post(
         return res.json({ success: false, msg: "Please type a tag" });
       }
 
-      const getChat = await query(`SELECT * FROM chats WHERE chat_id = ?`, [
+      const getChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [
         chatId,
+        req.decode.uid
       ]);
 
       if (getChat.length < 1) {
@@ -378,10 +385,15 @@ router.post(
         : [];
       const addNew = [...getTags, tag];
 
-      await query(`UPDATE chats SET chat_tags = ? WHERE chat_id = ?`, [
+      const result = await query(`UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ? RETURNING id`, [
         JSON.stringify(addNew),
         chatId,
+        req.decode.uid
       ]);
+
+      if (result.length === 0) {
+        return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+      }
 
       res.json({ success: true, msg: "Tag was added" });
     } catch (err) {
@@ -396,8 +408,9 @@ router.post("/del_tag", validateUser, async (req, res) => {
   try {
     const { tag, chatId } = req.body;
 
-    const getAll = await query(`SELECT * FROM chats WHERE chat_id = ?`, [
+    const getAll = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [
       chatId,
+      req.decode.uid
     ]);
     if (getAll.length < 1) {
       return res.json({ success: false, msg: "Chat not found" });
@@ -411,10 +424,15 @@ router.post("/del_tag", validateUser, async (req, res) => {
 
     console.log({ newOne });
 
-    await query(`UPDATE chats SET chat_tags = ? WHERE chat_id = ?`, [
+    const result = await query(`UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ? RETURNING id`, [
       JSON.stringify(newOne),
       chatId,
+      req.decode.uid
     ]);
+
+    if (result.length === 0) {
+      return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+    }
 
     res.json({ success: true, msg: "Tag was deleted" });
   } catch (err) {
@@ -516,7 +534,10 @@ router.post(
 router.post("/del_contact", validateUser, async (req, res) => {
   try {
     const { id } = req.body;
-    await query(`DELETE FROM contact WHERE id = ?`, [id]);
+    const result = await query(`DELETE FROM contact WHERE id = ? AND uid = ? RETURNING id`, [id, req.decode.uid]);
+    if (result.length === 0) {
+      return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+    }
     res.json({ success: true, msg: "Contact was deleted" });
   } catch (err) {
     res.json({ success: false, msg: "something went wrong", err });
@@ -1769,7 +1790,11 @@ router.post("/del_widget", validateUser, async (req, res) => {
   try {
     const { id } = req.body;
 
-    await query(`DELETE FROM chat_widget WHERE id = ?`, [id]);
+    const result = await query(`DELETE FROM chat_widget WHERE id = ? AND uid = ? RETURNING id`, [id, req.decode.uid]);
+
+    if (result.length === 0) {
+      return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+    }
 
     res.json({ msg: "Widget was deleted", success: true });
   } catch (err) {

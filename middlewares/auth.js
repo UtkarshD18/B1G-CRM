@@ -187,6 +187,18 @@ async function adminValidator(req, res, next) {
 
 const { hasPermission } = require("../utils/permissionResolver");
 
+const legacyMap = {
+  'contacts_access': 'contacts.read',
+  'inbox_access': 'inbox.read',
+  'kanban_access': 'inbox.read',
+  'chatbot_access': 'automation.read',
+  'settings_access': 'settings.users',
+  'campaigns_access': 'inbox.read',
+  'flows_access': 'automation.read',
+  'leads_access': 'contacts.read',
+  'website_access': 'settings.users'
+};
+
 function verifyPermission(permission) {
   return async (req, res, next) => {
     if (!req.decode) {
@@ -198,7 +210,8 @@ function verifyPermission(permission) {
     }
 
     const userId = req.decode.agentUid || req.decode.uid;
-    const permitted = await hasPermission(userId, permission);
+    const mappedPermission = legacyMap[permission] || permission;
+    const permitted = await hasPermission(userId, mappedPermission);
 
     if (permitted) {
       return next();

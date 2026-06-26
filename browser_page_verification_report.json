@@ -1,1 +1,102 @@
-[]
+[
+  {
+    "page": "inbox",
+    "url": "http://localhost:3010/user/login",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_inbox.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "USER PORTAL\nUser Sign In\n\nTenant workspace for inbox, automation, campaigns, contacts, and agent management.\n\nEmail\nPassword\nSign in\nBack to portal chooser\nCreate tenant account",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "templates",
+    "url": "http://localhost:3010/",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_templates.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "MULTI-PORTAL SAAS CRM\nPublic site, tenant workspace, staff portal, and admin controls in one product.\n\nThe live reference app is not a single dashboard. It is a complete SaaS flow with pricing, checko",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "automation-flows",
+    "url": "http://localhost:3010/",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_automation-flows.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "MULTI-PORTAL SAAS CRM\nPublic site, tenant workspace, staff portal, and admin controls in one product.\n\nThe live reference app is not a single dashboard. It is a complete SaaS flow with pricing, checko",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "wa-chatbot",
+    "url": "http://localhost:3010/user/login",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_wa-chatbot.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "USER PORTAL\nUser Sign In\n\nTenant workspace for inbox, automation, campaigns, contacts, and agent management.\n\nEmail\nPassword\nSign in\nBack to portal chooser\nCreate tenant account",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "campaigns",
+    "url": "http://localhost:3010/user/login",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_campaigns.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "USER PORTAL\nUser Sign In\n\nTenant workspace for inbox, automation, campaigns, contacts, and agent management.\n\nEmail\nPassword\nSign in\nBack to portal chooser\nCreate tenant account",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "contacts",
+    "url": "http://localhost:3010/user/login",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_contacts.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "USER PORTAL\nUser Sign In\n\nTenant workspace for inbox, automation, campaigns, contacts, and agent management.\n\nEmail\nPassword\nSign in\nBack to portal chooser\nCreate tenant account",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "integrations",
+    "url": "http://localhost:3010/user/login",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_integrations.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "USER PORTAL\nUser Sign In\n\nTenant workspace for inbox, automation, campaigns, contacts, and agent management.\n\nEmail\nPassword\nSign in\nBack to portal chooser\nCreate tenant account",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "settings",
+    "url": "http://localhost:3010/user/login",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_settings.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "USER PORTAL\nUser Sign In\n\nTenant workspace for inbox, automation, campaigns, contacts, and agent management.\n\nEmail\nPassword\nSign in\nBack to portal chooser\nCreate tenant account",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "billing",
+    "url": "http://localhost:3010/user/login",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_billing.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "USER PORTAL\nUser Sign In\n\nTenant workspace for inbox, automation, campaigns, contacts, and agent management.\n\nEmail\nPassword\nSign in\nBack to portal chooser\nCreate tenant account",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  },
+  {
+    "page": "api-dashboard",
+    "url": "http://localhost:3010/",
+    "screenshot": "/home/shadow/projects/B1GCRM/docs/reference-pages/local-reality/verified_api-dashboard.png",
+    "title": "client",
+    "hasContent": true,
+    "bodyTextPreview": "MULTI-PORTAL SAAS CRM\nPublic site, tenant workspace, staff portal, and admin controls in one product.\n\nThe live reference app is not a single dashboard. It is a complete SaaS flow with pricing, checko",
+    "consoleErrors": 0,
+    "status": "RENDERED"
+  }
+]

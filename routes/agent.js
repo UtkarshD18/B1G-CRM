@@ -810,10 +810,15 @@ router.post("/change_chat_ticket_status", validateAgent, async (req, res) => {
       return res.json({ success: false, msg: "Not assigned to this chat" });
     }
 
-    await query(`UPDATE chats SET chat_status = ? WHERE chat_id = ?`, [
+    const result = await query(`UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ? RETURNING id`, [
       status,
       chatId,
+      req.decode.owner_uid
     ]);
+
+    if (result.length === 0) {
+      return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+    }
 
     res.json({
       success: true,

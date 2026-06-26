@@ -21,6 +21,7 @@ const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.j
 const { getIOInstance } = require("../socket.js");
 const { checkPlan } = require("../middlewares/plan.js");
 const { processMessage } = require("../helper/inbox/inbox.js");
+const { v7: uuidv7 } = require("uuid");
 
 // handle post webhook
 router.post("/webhook/:uid", async (req, res) => {
@@ -33,10 +34,21 @@ router.post("/webhook/:uid", async (req, res) => {
       [userUID]
     );
     if (conn) {
-      await query(
-        `INSERT INTO channel_incoming_queue (uid, channel_type, payload) VALUES (?, 'whatsapp_cloud', ?)`,
-        [userUID, JSON.stringify(body)]
+      const correlation_id = uuidv7();
+      const [queueRow] = await query(
+        `INSERT INTO channel_incoming_queue (uid, channel_type, payload, correlation_id) VALUES (?, 'whatsapp_cloud', ?, ?) RETURNING id`,
+        [userUID, JSON.stringify(body), correlation_id]
       );
+      
+      console.log(JSON.stringify({
+        event: "inbound_webhook_enqueue",
+        correlation_id,
+        queue_id: queueRow.id,
+        worker: "API",
+        channel: 'whatsapp_cloud',
+        message: "Enqueued incoming webhook"
+      }));
+
       return res.sendStatus(200);
     }
 
