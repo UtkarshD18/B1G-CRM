@@ -279,6 +279,8 @@ nodeCleanup(cleanupAll);
 
 
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
 
-module.exports = runtime;
+module.exports = { app, runtime };
