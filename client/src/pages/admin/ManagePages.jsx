@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
+import DOMPurify from 'dompurify'
 
 function AdminManagePages() {
   const { tokens } = useAuth()
@@ -112,7 +113,7 @@ function AdminManagePages() {
               <strong style={{ fontSize: '1.1rem' }}>{viewItem.title}</strong>
               <button className="mini-button" onClick={() => setViewItem(null)} style={{ padding: '4px 10px' }}>✕</button>
             </div>
-            <div dangerouslySetInnerHTML={{ __html: viewItem.content || '<p>No content</p>' }} />
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(viewItem.content) || '<p>No content</p>' }} />
           </div>
         </div>
       )}
