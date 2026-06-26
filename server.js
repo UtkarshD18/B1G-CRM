@@ -17,6 +17,9 @@ const { runCampaign } = require("./loops/campaignLoop.js");
 const { init, cleanup } = require("./helper/addon/qr");
 const { startKbIndexWorker, stopKbIndexWorker } = require("./workers/kbIndexWorker");
 
+const { httpContextMiddleware, correlationIdMiddleware } = require("./middlewares/observability");
+const xssMiddleware = require("./middlewares/xss");
+
 function cleanupAll() {
   try {
     stopKbIndexWorker();
@@ -36,6 +39,10 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ limit: env.MAX_FILE_SIZE, extended: true }));
+
+app.use(httpContextMiddleware);
+app.use(correlationIdMiddleware);
+app.use(xssMiddleware);
 
 app.use(
   cors({
