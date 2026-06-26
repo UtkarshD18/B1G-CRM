@@ -10,6 +10,7 @@ const ConfigService = require('../ConfigService');
 const registry = require('./ChannelAdapterRegistry');
 const { decrypt } = require('./encryption');
 
+const logger = require('../logger');
 const WORKER_NAME = 'retryQueueWorker';
 const HOSTNAME = os.hostname();
 const PID = process.pid;
@@ -66,7 +67,7 @@ async function syncMessageState(uid, recipientId, correlationId, newState, provi
       try {
         chatData = JSON.parse(fs.readFileSync(chatPath, 'utf8'));
       } catch (e) {
-        console.warn(`[${WORKER_NAME}] Corrupt JSON file for ${uid}/${chatId}`);
+        logger.warn(`[${WORKER_NAME}] Corrupt JSON file for ${uid}/${chatId}`);
       }
     }
     
@@ -108,7 +109,7 @@ async function syncMessageState(uid, recipientId, correlationId, newState, provi
         } catch (e) {}
       }
     } else {
-      console.warn(JSON.stringify({
+      logger.warn(JSON.stringify({
         event: "json_sync_warning",
         correlation_id: correlationId,
         uid,
@@ -116,7 +117,7 @@ async function syncMessageState(uid, recipientId, correlationId, newState, provi
       }));
     }
   } catch (err) {
-    console.warn(`[${WORKER_NAME}] JSON sync isolated failure: ${err.message}`);
+    logger.warn(`[${WORKER_NAME}] JSON sync isolated failure: ${err.message}`);
   }
 }
 
@@ -133,12 +134,12 @@ async function upsertHeartbeat(status = 'RUNNING') {
           last_seen = NOW();
     `, [WORKER_NAME, HOSTNAME, PID, status, version]);
   } catch (err) {
-    console.error(`[${WORKER_NAME}] Error upserting heartbeat:`, err.message);
+    logger.error(`[${WORKER_NAME}] Error upserting heartbeat:`, err.message);
   }
 }
 
 async function startOutgoingQueueWorker() {
-  console.log(`[${WORKER_NAME}] Starting sequence...`);
+  logger.info(`[${WORKER_NAME}] Starting sequence...`);
   
   const config = await ConfigService.getAll();
 
@@ -162,7 +163,7 @@ async function startOutgoingQueueWorker() {
   });
 
   dedicatedClient.on('error', (err) => {
-    console.error(`[${WORKER_NAME}] Dedicated client error:`, err.message);
+    logger.error(`[${WORKER_NAME}] Dedicated client error:`, err.message);
     if (!isShuttingDown) reconnectDedicatedClient(config.listenReconnectRetryDelayMs);
   });
 
@@ -178,7 +179,7 @@ async function startOutgoingQueueWorker() {
   
   scheduleNextScan(config.recoveryScanIntervalSeconds * 1000 || 30000);
 
-  console.log(`[${WORKER_NAME}] Started successfully.`);
+  logger.info(`[${WORKER_NAME}] Started successfully.`);
 }
 
 async function reconnectDedicatedClient(delayMs) {
@@ -218,7 +219,7 @@ async function runRecoveryScan() {
       await processQueueRow(row.id);
     }
   } catch (err) {
-    console.error(`[${WORKER_NAME}] Recovery scan error:`, err.message);
+    logger.error(`[${WORKER_NAME}] Recovery scan error:`, err.message);
   }
 }
 
@@ -239,7 +240,7 @@ async function processQueueRow(id) {
       if (lockedRows.length === 0) return;
       item = lockedRows[0];
       
-      console.log(JSON.stringify({
+      logger.info(JSON.stringify({
         event: "outbound_message_processing",
         correlation_id: item.correlation_id,
         queue_id: item.id,
@@ -251,7 +252,7 @@ async function processQueueRow(id) {
       await txQuery(`UPDATE channel_outgoing_queue SET state = 'processing', processing_started_at = NOW(), last_attempt_at = NOW() WHERE id = ?`, [item.id]);
     });
   } catch (err) {
-    console.error(`[${WORKER_NAME}] Error locking row ${id}:`, err.message);
+    logger.error(`[${WORKER_NAME}] Error locking row ${id}:`, err.message);
     return;
   }
   
@@ -304,8 +305,11 @@ async function processQueueRow(id) {
     sendSuccess = !!result.success;
     await adapter.afterSend(item.payload, result);
     
-    cb.state = "CLOSED";
-    cb.failures = 0;
+    if (cb.state !== "CLOSED") {
+      cb.state = "CLOSED";
+      cb.failures = 0;
+      await query(`UPDATE channel_connections SET circuit_state = 'CLOSED', failure_count = 0 WHERE uid = ? AND channel_type = ?`, [item.uid, item.channel_type]);
+    }
   } catch (err) {
     errorMsg = err.message;
     sendSuccess = false;
@@ -313,7 +317,14 @@ async function processQueueRow(id) {
     const cb = getCircuitBreaker(item.uid, item.channel_type);
     cb.failures += 1;
     cb.lastFailureTime = Date.now();
-    if (cb.failures >= 3) cb.state = "OPEN";
+    let newState = cb.state;
+    if (cb.failures >= 3 && cb.state !== "OPEN") {
+      cb.state = "OPEN";
+      newState = "OPEN";
+    }
+    
+    await query(`UPDATE channel_connections SET circuit_state = ?, failure_count = ?, last_failure_at = NOW() WHERE uid = ? AND channel_type = ?`, 
+      [newState, cb.failures, item.uid, item.channel_type]);
   }
 
   const latency = Date.now() - startTime;
@@ -321,7 +332,7 @@ async function processQueueRow(id) {
   // -- FINALIZE STATE --
   try {
     if (sendSuccess) {
-      console.log(JSON.stringify({
+      logger.info(JSON.stringify({
         event: "outbound_message_processed",
         correlation_id: item.correlation_id,
         queue_id: item.id,
@@ -360,7 +371,7 @@ async function processQueueRow(id) {
       const attempts = item.attempts + 1;
       const willRetry = attempts < maxAttempts;
       
-      console.log(JSON.stringify({
+      logger.info(JSON.stringify({
         event: "outbound_message_failed",
         correlation_id: item.correlation_id,
         queue_id: item.id,
@@ -404,7 +415,7 @@ async function processQueueRow(id) {
       );
     }
   } catch (dbErr) {
-    console.error(`[${WORKER_NAME}] Error saving result for row ${id}:`, dbErr.message);
+    logger.error(`[${WORKER_NAME}] Error saving result for row ${id}:`, dbErr.message);
   }
 }
 
@@ -415,7 +426,7 @@ function stopOutgoingQueueWorker() {
 async function shutdown(signal) {
   if (isShuttingDown) return;
   isShuttingDown = true;
-  console.log(`\n[${WORKER_NAME}] Received ${signal}, starting graceful shutdown...`);
+  logger.info(`\n[${WORKER_NAME}] Received ${signal}, starting graceful shutdown...`);
 
   if (heartbeatInterval) clearInterval(heartbeatInterval);
   if (scanTimeout) clearTimeout(scanTimeout);
@@ -429,10 +440,10 @@ async function shutdown(signal) {
     await upsertHeartbeat('STOPPED');
     await pool.end();
 
-    console.log(`[${WORKER_NAME}] Graceful shutdown complete.`);
+    logger.info(`[${WORKER_NAME}] Graceful shutdown complete.`);
     process.exit(0);
   } catch (err) {
-    console.error(`[${WORKER_NAME}] Error during shutdown:`, err.message);
+    logger.error(`[${WORKER_NAME}] Error during shutdown:`, err.message);
     process.exit(1);
   }
 }
