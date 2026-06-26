@@ -26,12 +26,12 @@ jobs:
         cache-dependency-path: client/package-lock.json
     - name: Install dependencies
       working-directory: ./client
-      run: npm ci
+      run: npm ci --legacy-peer-deps
     - name: Build
       working-directory: ./client
       run: npm run build
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: frontend-build
+        name: frontend-build-${{ matrix.node-version }}
         path: client/dist/
