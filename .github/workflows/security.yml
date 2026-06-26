@@ -8,6 +8,8 @@ jobs:
   security-scan:
     name: Security Scans & Regression Tests
     runs-on: ubuntu-latest
+    env:
+      CHANNEL_SECRET_KEY: test-channel-secret-key-at-least-32-chars-long
 
     services:
       postgres:
