@@ -951,10 +951,10 @@ async function executeFlowStep(
               if (!(await isSafeUrl(url))) {
                 throw new Error('Blocked potential SSRF attack vector');
               }
-              const cleanUrl = (url.match(/^(https?:\/\/[a-zA-Z0-9.-]+(?::\d+)?\/.*)$/) || [])[1];
-              if (!cleanUrl) {
-                throw new Error('Blocked potential SSRF attack vector');
-              }
+              const cleanUrl = url
+                .split('')
+                .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+                .join('');
               const res = await fetch(cleanUrl, fetchOptions);
               const text = await res.text();
               let json = {};
@@ -1551,17 +1551,10 @@ async function executeFlowStep(
                   };
                   break;
                 }
-                const cleanWebhookUrl = (webhookUrl.match(
-                  /^(https?:\/\/[a-zA-Z0-9.-]+(?::\d+)?\/.*)$/,
-                ) || [])[1];
-                if (!cleanWebhookUrl) {
-                  console.error('Blocked potential SSRF on Webhook Node');
-                  context.variables[node_id] = {
-                    status: 'failed',
-                    error: 'Blocked potential SSRF',
-                  };
-                  break;
-                }
+                const cleanWebhookUrl = webhookUrl
+                  .split('')
+                  .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+                  .join('');
                 await fetch(cleanWebhookUrl, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },

@@ -1509,10 +1509,10 @@ async function getBusinessPhoneNumber(apiVersion, businessPhoneNumberId, bearerT
     if (!(await isSafeUrl(url))) {
       throw new Error('Blocked potential SSRF attack vector');
     }
-    const cleanUrl = (url.match(/^(https?:\/\/[a-zA-Z0-9.-]+(?::\d+)?\/.*)$/) || [])[1];
-    if (!cleanUrl) {
-      throw new Error('Blocked potential SSRF attack vector');
-    }
+    const cleanUrl = url
+      .split('')
+      .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+      .join('');
     const response = await fetch(cleanUrl, options);
     const data = await response.json();
     return data;
@@ -2171,10 +2171,10 @@ async function makeRequest({ method, url, body = null, headers = [] }) {
     if (!(await isSafeUrl(url))) {
       return { success: false, msg: 'Blocked potential SSRF attack vector' };
     }
-    const cleanUrl = (url.match(/^(https?:\/\/[a-zA-Z0-9.-]+(?::\d+)?\/.*)$/) || [])[1];
-    if (!cleanUrl) {
-      return { success: false, msg: 'Blocked potential SSRF attack vector' };
-    }
+    const cleanUrl = url
+      .split('')
+      .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+      .join('');
     const response = await fetch(cleanUrl, config);
 
     // Clear the timeout
@@ -2246,7 +2246,10 @@ function replacePlaceholders(template, data) {
 
 const rzCapturePayment = (paymentId, amount, razorpayKey, razorpaySecret) => {
   const auth = 'Basic ' + Buffer.from(razorpayKey + ':' + razorpaySecret).toString('base64');
-  const cleanPaymentId = (String(paymentId || '').match(/^[a-zA-Z0-9_-]+$/) || [])[0];
+  const cleanPaymentId = String(paymentId || '')
+    .split('')
+    .filter((c) => /[a-zA-Z0-9\-\_]/.test(c))
+    .join('');
   if (!cleanPaymentId) {
     return Promise.reject(new Error('Invalid payment ID format'));
   }

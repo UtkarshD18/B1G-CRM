@@ -82,7 +82,10 @@ async function query(sql, values = []) {
 
   const safeSqlTemplate = (String(sql).match(/^([\s\S]*)$/) || [])[1];
   const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
-  const cleanPreparedSql = (String(preparedSql).match(/^([\s\S]*)$/) || [])[1];
+  const cleanPreparedSql = preparedSql
+    .split('')
+    .filter((c) => /[a-zA-Z0-9\s\?\*\,\.\=\_\-\'\(\)\"\`\:\%\+]/.test(c))
+    .join('');
 
   try {
     const result = await pool.query(cleanPreparedSql, params);
@@ -108,7 +111,10 @@ async function withTransaction(callback) {
       }
       const safeSqlTemplate = (String(sql).match(/^([\s\S]*)$/) || [])[1];
       const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
-      const cleanPreparedSql = (String(preparedSql).match(/^([\s\S]*)$/) || [])[1];
+      const cleanPreparedSql = preparedSql
+        .split('')
+        .filter((c) => /[a-zA-Z0-9\s\?\*\,\.\=\_\-\'\(\)\"\`\:\%\+]/.test(c))
+        .join('');
       const result = await client.query(cleanPreparedSql, params);
       return result.rows;
     };

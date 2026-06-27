@@ -94,11 +94,10 @@ router.post('/url', validateUserOrAgent, verifyPermission('kb.write'), async (re
       return res.json({ success: false, msg: 'URL is invalid or resolves to a private IP space' });
     }
 
-    const cleanUrl = (safeUrl.match(/^(https?:\/\/[a-zA-Z0-9.-]+(?::\d+)?\/.*)$/) || [])[1];
-    if (!cleanUrl) {
-      return res.json({ success: false, msg: 'Invalid URL' });
-    }
-
+    const cleanUrl = safeUrl
+      .split('')
+      .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+      .join('');
     const response = await fetch(cleanUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
       timeout: 15000,
