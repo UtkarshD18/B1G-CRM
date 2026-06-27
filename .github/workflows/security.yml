@@ -77,7 +77,7 @@ jobs:
           fi
         env:
           DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
-          JWT_SECRET: change-me-local-jwt-key
+          JWT_SECRET: test-jwt-secret-key-at-least-32-chars-long
           PORT: 3010
           NODE_ENV: test
 
@@ -85,19 +85,19 @@ jobs:
         run: node scratch/verify-backend-auth.js
         env:
           DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
-          JWT_SECRET: change-me-local-jwt-key
+          JWT_SECRET: test-jwt-secret-key-at-least-32-chars-long
 
       - name: Run Agent Permission Reality Verification
         run: node scratch/verify-permissions-reality.js
         env:
           DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
-          JWT_SECRET: change-me-local-jwt-key
+          JWT_SECRET: test-jwt-secret-key-at-least-32-chars-long
 
       - name: Run Security Regression Tests
         run: node scratch/verify-regression-safety.js
         env:
           DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
-          JWT_SECRET: change-me-local-jwt-key
+          JWT_SECRET: test-jwt-secret-key-at-least-32-chars-long
 
       - name: Stop Backend Server
         if: always()
