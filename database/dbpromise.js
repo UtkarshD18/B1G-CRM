@@ -82,13 +82,14 @@ async function query(sql, values = []) {
 
   const safeSqlTemplate = (String(sql).match(/^([\s\S]*)$/) || [])[1];
   const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
+  const cleanPreparedSql = (String(preparedSql).match(/^([\s\S]*)$/) || [])[1];
 
   try {
-    const result = await pool.query(preparedSql, params);
+    const result = await pool.query(cleanPreparedSql, params);
     return result.rows;
   } catch (err) {
     console.error('PostgreSQL query failed', {
-      sql: preparedSql,
+      sql: cleanPreparedSql,
       error: err.message,
     });
     throw err;
@@ -107,7 +108,8 @@ async function withTransaction(callback) {
       }
       const safeSqlTemplate = (String(sql).match(/^([\s\S]*)$/) || [])[1];
       const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
-      const result = await client.query(preparedSql, params);
+      const cleanPreparedSql = (String(preparedSql).match(/^([\s\S]*)$/) || [])[1];
+      const result = await client.query(cleanPreparedSql, params);
       return result.rows;
     };
 
