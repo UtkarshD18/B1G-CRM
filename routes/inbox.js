@@ -254,6 +254,9 @@ router.get('/webhook/:uid', async (req, res) => {
       if (mode && token) {
         // Check the mode and token sent are correct
         if (mode === 'subscribe' && token === verify_token) {
+          if (!challenge || !/^[a-zA-Z0-9_-]+$/.test(challenge)) {
+            return res.status(400).send('Invalid challenge format');
+          }
           // Respond with 200 OK and challenge token from the request
           console.log('WEBHOOK_VERIFIED');
           res.status(200).send(challenge);

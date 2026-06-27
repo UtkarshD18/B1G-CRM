@@ -1,9 +1,9 @@
-const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
-const randomstring = require("randomstring");
-const bcrypt = require("bcrypt");
-const fs = require("fs");
-const path = require("path");
+const router = require('express').Router();
+const { query } = require('../database/dbpromise.js');
+const randomstring = require('randomstring');
+const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 const {
   isValidEmail,
   getFileExtension,
@@ -23,34 +23,29 @@ const {
   rzCapturePayment,
   validateFacebookToken,
   writeJsonToFile,
-} = require("../functions/function.js");
-const { sign } = require("jsonwebtoken");
-const validateUser = require("../middlewares/user.js");
-const Stripe = require("stripe");
-const {
-  checkPlan,
-  checkNote,
-  checkTags,
-  checkContactLimit,
-} = require("../middlewares/plan.js");
-const { recoverEmail } = require("../emails/returnEmails.js");
-const moment = require("moment");
-const fetch = require("node-fetch");
-const jwt = require("jsonwebtoken");
-const { checkQr } = require("../helper/addon/qr/index.js");
-const env = require("../env.js");
+} = require('../functions/function.js');
+const { sign } = require('jsonwebtoken');
+const validateUser = require('../middlewares/user.js');
+const Stripe = require('stripe');
+const { checkPlan, checkNote, checkTags, checkContactLimit } = require('../middlewares/plan.js');
+const { recoverEmail } = require('../emails/returnEmails.js');
+const moment = require('moment');
+const fetch = require('node-fetch');
+const jwt = require('jsonwebtoken');
+const { checkQr } = require('../helper/addon/qr/index.js');
+const env = require('../env.js');
 const { addON } = env;
-const { invalidatePermissionCache } = require("../utils/permissionResolver.js");
-const { logActivity } = require("../utils/activityLogger.js");
+const { invalidatePermissionCache } = require('../utils/permissionResolver.js');
+const { logActivity } = require('../utils/activityLogger.js');
 
 // facebook login
-router.post("/login_with_facebook", async (req, res) => {
+router.post('/login_with_facebook', async (req, res) => {
   try {
     const { token, userId, email, name } = req.body;
 
     if (!token || !userId || !email || !name) {
       return res.json({
-        msg: "Login can not be completed, Input not provided",
+        msg: 'Login can not be completed, Input not provided',
       });
     }
 
@@ -61,14 +56,14 @@ router.post("/login_with_facebook", async (req, res) => {
 
     if (!appId || !appSec) {
       return res.json({
-        msg: "Please fill the app ID and secrect from the admin panel to complete facebook login",
+        msg: 'Please fill the app ID and secrect from the admin panel to complete facebook login',
       });
     }
 
     const checkToken = await validateFacebookToken(token, appId, appSec);
     if (!checkToken?.success) {
       return res.json({
-        msg: "Can not complete your facebook login some perameteres could not match",
+        msg: 'Can not complete your facebook login some perameteres could not match',
       });
     }
 
@@ -79,27 +74,27 @@ router.post("/login_with_facebook", async (req, res) => {
     const decodedUserId = resp?.user_id;
 
     if (decodedUserId == userId && resp?.is_valid) {
-      const getUser = await query(`SELECT * FROM user WHERE email = ?`, [
-        email,
-      ]);
+      const getUser = await query(`SELECT * FROM user WHERE email = ?`, [email]);
 
       if (getUser?.length < 1) {
         const uid = randomstring.generate();
         const password = userId;
         const hasPass = await bcrypt.hash(password, 10);
-        await query(
-          `INSERT INTO user (name, uid, email, password) VALUES (?,?,?,?)`,
-          [name, uid, email, hasPass]
-        );
+        await query(`INSERT INTO user (name, uid, email, password) VALUES (?,?,?,?)`, [
+          name,
+          uid,
+          email,
+          hasPass,
+        ]);
 
         const loginToken = sign(
           {
             uid: uid,
-            role: "user",
+            role: 'user',
             email: email,
           },
           env.JWT_SECRET,
-          { expiresIn: env.JWT_EXPIRY }
+          { expiresIn: env.JWT_EXPIRY },
         );
 
         res.json({ token: loginToken, success: true });
@@ -107,11 +102,11 @@ router.post("/login_with_facebook", async (req, res) => {
         const loginToken = sign(
           {
             uid: getUser[0].uid,
-            role: "user",
+            role: 'user',
             email: getUser[0].email,
           },
           env.JWT_SECRET,
-          { expiresIn: env.JWT_EXPIRY }
+          { expiresIn: env.JWT_EXPIRY },
         );
         res.json({
           success: true,
@@ -119,21 +114,21 @@ router.post("/login_with_facebook", async (req, res) => {
         });
       }
     } else {
-      res.json({ msg: "The login token found invalid" });
+      res.json({ msg: 'The login token found invalid' });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // google login
-router.post("/login_with_google", async (req, res) => {
+router.post('/login_with_google', async (req, res) => {
   try {
     const { token } = req.body;
 
     if (!token) {
-      return res.json({ msg: "Please check your token its not valid" });
+      return res.json({ msg: 'Please check your token its not valid' });
     }
 
     const decoded = jwt.decode(token, { complete: true });
@@ -142,26 +137,26 @@ router.post("/login_with_google", async (req, res) => {
       const email = decoded?.payload?.email;
       const name = decoded?.payload?.name;
 
-      const getUser = await query(`SELECT * FROM user WHERE email = ?`, [
-        email,
-      ]);
+      const getUser = await query(`SELECT * FROM user WHERE email = ?`, [email]);
       if (getUser?.length < 1) {
         const uid = randomstring.generate();
         const password = decoded.header?.kid;
         const hasPass = await bcrypt.hash(password, 10);
-        await query(
-          `INSERT INTO user (name, uid, email, password) VALUES (?,?,?,?)`,
-          [name, uid, email, hasPass]
-        );
+        await query(`INSERT INTO user (name, uid, email, password) VALUES (?,?,?,?)`, [
+          name,
+          uid,
+          email,
+          hasPass,
+        ]);
 
         const loginToken = sign(
           {
             uid: uid,
-            role: "user",
+            role: 'user',
             email: email,
           },
           env.JWT_SECRET,
-          { expiresIn: env.JWT_EXPIRY }
+          { expiresIn: env.JWT_EXPIRY },
         );
 
         res.json({ token: loginToken, success: true });
@@ -169,11 +164,11 @@ router.post("/login_with_google", async (req, res) => {
         const loginToken = sign(
           {
             uid: getUser[0].uid,
-            role: "user",
+            role: 'user',
             email: getUser[0].email,
           },
           env.JWT_SECRET,
-          { expiresIn: env.JWT_EXPIRY }
+          { expiresIn: env.JWT_EXPIRY },
         );
         res.json({
           success: true,
@@ -183,40 +178,39 @@ router.post("/login_with_google", async (req, res) => {
     } else {
       res.json({
         success: false,
-        msg: "Count not complete google login",
+        msg: 'Count not complete google login',
       });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // aignup user
-router.post("/signup", async (req, res) => {
+router.post('/signup', async (req, res) => {
   try {
-    const { email, name, password, mobile_with_country_code, acceptPolicy } =
-      req.body;
+    const { email, name, password, mobile_with_country_code, acceptPolicy } = req.body;
 
     if (!email || !name || !password || !mobile_with_country_code) {
-      return res.json({ msg: "Please fill the details", success: false });
+      return res.json({ msg: 'Please fill the details', success: false });
     }
 
     if (!acceptPolicy) {
       return res.json({
-        msg: "You did not click on checkbox of Privacy & Terms",
+        msg: 'You did not click on checkbox of Privacy & Terms',
         success: false,
       });
     }
 
     if (!isValidEmail(email)) {
-      return res.json({ msg: "Please enter a valid email", success: false });
+      return res.json({ msg: 'Please enter a valid email', success: false });
     }
 
     // check if user already has same email
     const findEx = await query(`SELECT * FROM user WHERE email = ?`, email);
     if (findEx.length > 0) {
-      return res.json({ msg: "A user already exist with this email" });
+      return res.json({ msg: 'A user already exist with this email' });
     }
 
     const haspass = await bcrypt.hash(password, 10);
@@ -224,47 +218,47 @@ router.post("/signup", async (req, res) => {
 
     await query(
       `INSERT INTO user (name, uid, email, password, mobile_with_country_code) VALUES (?,?,?,?,?)`,
-      [name, uid, email, haspass, mobile_with_country_code]
+      [name, uid, email, haspass, mobile_with_country_code],
     );
 
-    res.json({ msg: "Signup Success", success: true });
+    res.json({ msg: 'Signup Success', success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // login user
-router.post("/login", async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
       return res.json({
         success: false,
-        msg: "Please provide email and password",
+        msg: 'Please provide email and password',
       });
     }
 
     // check for user
     const userFind = await query(`SELECT * FROM user WHERE email = ?`, [email]);
     if (userFind.length < 1) {
-      return res.json({ msg: "Invalid credentials" });
+      return res.json({ msg: 'Invalid credentials' });
     }
 
     const compare = await bcrypt.compare(password, userFind[0].password);
 
     if (!compare) {
-      return res.json({ msg: "Invalid credentials" });
+      return res.json({ msg: 'Invalid credentials' });
     } else {
       const token = sign(
         {
           uid: userFind[0].uid,
-          role: "user",
+          role: 'user',
           email: userFind[0].email,
         },
         env.JWT_SECRET,
-        { expiresIn: env.JWT_EXPIRY }
+        { expiresIn: env.JWT_EXPIRY },
       );
       res.json({
         success: true,
@@ -272,16 +266,16 @@ router.post("/login", async (req, res) => {
       });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // return image url
-router.post("/return_media_url", validateUser, async (req, res) => {
+router.post('/return_media_url', validateUser, async (req, res) => {
   try {
     if (!req.files || Object.keys(req.files).length === 0) {
-      return res.json({ success: false, msg: "No files were uploaded" });
+      return res.json({ success: false, msg: 'No files were uploaded' });
     }
 
     const randomString = randomstring.generate();
@@ -299,25 +293,21 @@ router.post("/return_media_url", validateUser, async (req, res) => {
     const url = `${env.FRONTEND_URL}/media/${filename}`;
     res.json({ success: true, url });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // get user
-router.get("/get_me", validateUser, async (req, res) => {
+router.get('/get_me', validateUser, async (req, res) => {
   try {
-    const data = await query(`SELECT * FROM user WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const data = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
 
     const qrCheck = checkQr();
-    const finalAddon = qrCheck ? [...addON, "QR"] : addON;
+    const finalAddon = qrCheck ? [...addON, 'QR'] : addON;
 
     // getting phonebook
-    const contact = await query(`SELECT * FROM contact WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const contact = await query(`SELECT * FROM contact WHERE uid = ?`, [req.decode.uid]);
 
     res.json({
       data: { ...data[0], contact: contact.length },
@@ -325,140 +315,118 @@ router.get("/get_me", validateUser, async (req, res) => {
       addon: finalAddon,
     });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // update notes
-router.post(
-  "/save_note",
-  validateUser,
-  checkPlan,
-  checkNote,
-  async (req, res) => {
-    try {
-      const { chatId, note } = req.body;
+router.post('/save_note', validateUser, checkPlan, checkNote, async (req, res) => {
+  try {
+    const { chatId, note } = req.body;
 
-      const result = await query(`UPDATE chats SET chat_note = ? WHERE chat_id = ? AND uid = ? RETURNING id`, [
-        note,
-        chatId,
-        req.decode.uid
-      ]);
+    const result = await query(
+      `UPDATE chats SET chat_note = ? WHERE chat_id = ? AND uid = ? RETURNING id`,
+      [note, chatId, req.decode.uid],
+    );
 
-      if (result.length === 0) {
-        return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
-      }
-
-      res.json({ success: true, msg: "Notes were updated" });
-    } catch (err) {
-      res.json({ success: false, msg: "something went wrong", err });
-      console.log(err);
+    if (result.length === 0) {
+      return res.status(403).json({ success: false, msg: 'Unauthorized or not found' });
     }
+
+    res.json({ success: true, msg: 'Notes were updated' });
+  } catch (err) {
+    res.json({ success: false, msg: 'something went wrong', err });
+    console.log(err);
   }
-);
+});
 
 // update tags
-router.post(
-  "/push_tag",
-  validateUser,
-  checkPlan,
-  checkTags,
-  async (req, res) => {
-    try {
-      const { tag, chatId } = req.body;
+router.post('/push_tag', validateUser, checkPlan, checkTags, async (req, res) => {
+  try {
+    const { tag, chatId } = req.body;
 
-      if (!tag) {
-        return res.json({ success: false, msg: "Please type a tag" });
-      }
-
-      const getChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [
-        chatId,
-        req.decode.uid
-      ]);
-
-      if (getChat.length < 1) {
-        return res.json({ success: false, msg: "Chat not found" });
-      }
-      const getTags = getChat[0]?.chat_tags
-        ? JSON.parse(getChat[0]?.chat_tags)
-        : [];
-      const addNew = [...getTags, tag];
-
-      const result = await query(`UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ? RETURNING id`, [
-        JSON.stringify(addNew),
-        chatId,
-        req.decode.uid
-      ]);
-
-      if (result.length === 0) {
-        return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
-      }
-
-      res.json({ success: true, msg: "Tag was added" });
-    } catch (err) {
-      res.json({ success: false, msg: "something went wrong", err });
-      console.log(err);
+    if (!tag) {
+      return res.json({ success: false, msg: 'Please type a tag' });
     }
+
+    const getChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [
+      chatId,
+      req.decode.uid,
+    ]);
+
+    if (getChat.length < 1) {
+      return res.json({ success: false, msg: 'Chat not found' });
+    }
+    const getTags = getChat[0]?.chat_tags ? JSON.parse(getChat[0]?.chat_tags) : [];
+    const addNew = [...getTags, tag];
+
+    const result = await query(
+      `UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ? RETURNING id`,
+      [JSON.stringify(addNew), chatId, req.decode.uid],
+    );
+
+    if (result.length === 0) {
+      return res.status(403).json({ success: false, msg: 'Unauthorized or not found' });
+    }
+
+    res.json({ success: true, msg: 'Tag was added' });
+  } catch (err) {
+    res.json({ success: false, msg: 'something went wrong', err });
+    console.log(err);
   }
-);
+});
 
 // del a tag
-router.post("/del_tag", validateUser, async (req, res) => {
+router.post('/del_tag', validateUser, async (req, res) => {
   try {
     const { tag, chatId } = req.body;
 
     const getAll = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [
       chatId,
-      req.decode.uid
+      req.decode.uid,
     ]);
     if (getAll.length < 1) {
-      return res.json({ success: false, msg: "Chat not found" });
+      return res.json({ success: false, msg: 'Chat not found' });
     }
 
-    const getAllTags = getAll[0]?.chat_tags
-      ? JSON.parse(getAll[0]?.chat_tags)
-      : [];
+    const getAllTags = getAll[0]?.chat_tags ? JSON.parse(getAll[0]?.chat_tags) : [];
 
     const newOne = getAllTags?.filter((i) => i !== tag);
 
     console.log({ newOne });
 
-    const result = await query(`UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ? RETURNING id`, [
-      JSON.stringify(newOne),
-      chatId,
-      req.decode.uid
-    ]);
+    const result = await query(
+      `UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ? RETURNING id`,
+      [JSON.stringify(newOne), chatId, req.decode.uid],
+    );
 
     if (result.length === 0) {
-      return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+      return res.status(403).json({ success: false, msg: 'Unauthorized or not found' });
     }
 
-    res.json({ success: true, msg: "Tag was deleted" });
+    res.json({ success: true, msg: 'Tag was deleted' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // check contact exist
-router.post("/check_contact", validateUser, async (req, res) => {
+router.post('/check_contact', validateUser, async (req, res) => {
   try {
     const { mobile } = req.body;
 
-    const findFirst = await query(
-      `SELECT * FROM contact WHERE mobile = ? AND uid = ? `,
-      [mobile, req.decode.uid]
-    );
-    const getAllPhonebook = await query(
-      `SELECT * FROM phonebook WHERE uid = ?`,
-      [req.decode.uid]
-    );
+    const findFirst = await query(`SELECT * FROM contact WHERE mobile = ? AND uid = ? `, [
+      mobile,
+      req.decode.uid,
+    ]);
+    const getAllPhonebook = await query(`SELECT * FROM phonebook WHERE uid = ?`, [req.decode.uid]);
 
     if (findFirst.length < 1) {
       return res.json({
         success: false,
-        msg: "Contact not found in phonebook",
+        msg: 'Contact not found in phonebook',
         phonebook: getAllPhonebook,
       });
     }
@@ -469,118 +437,89 @@ router.post("/check_contact", validateUser, async (req, res) => {
       contact: findFirst[0],
     });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // save the contact
-router.post(
-  "/save_contact",
-  validateUser,
-  checkPlan,
-  checkContactLimit,
-  async (req, res) => {
-    try {
-      const {
-        phoneBookName,
-        phoneBookId,
-        phoneNumber,
-        contactName,
-        var1,
-        var2,
-        var3,
-        var4,
-        var5,
-      } = req.body;
-
-      if (!phoneBookName || !phoneBookId || !phoneNumber || !contactName) {
-        return res.json({ success: false, msg: "incomplete input provided" });
-      }
-
-      const findExist = await query(
-        `SELECT * FROM contact WHERE mobile = ? AND uid = ?`,
-        [phoneNumber, req.decode.uid]
-      );
-      if (findExist.length > 0) {
-        return res.json({ success: false, msg: "Contact already existed" });
-      }
-
-      await query(
-        `INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1, var2, var3, var4, var5) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        [
-          req.decode.uid,
-          phoneBookId,
-          phoneBookName,
-          contactName,
-          phoneNumber,
-          var1 || "",
-          var2 || "",
-          var3 || "",
-          var4 || "",
-          var5 || "",
-        ]
-      );
-
-      res.json({ success: true, msg: "Contact was added" });
-    } catch (err) {
-      res.json({ success: false, msg: "something went wrong", err });
-      console.log(err);
-    }
-  }
-);
-
-// del contact
-router.post("/del_contact", validateUser, async (req, res) => {
+router.post('/save_contact', validateUser, checkPlan, checkContactLimit, async (req, res) => {
   try {
-    const { id } = req.body;
-    const result = await query(`DELETE FROM contact WHERE id = ? AND uid = ? RETURNING id`, [id, req.decode.uid]);
-    if (result.length === 0) {
-      return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+    const { phoneBookName, phoneBookId, phoneNumber, contactName, var1, var2, var3, var4, var5 } =
+      req.body;
+
+    if (!phoneBookName || !phoneBookId || !phoneNumber || !contactName) {
+      return res.json({ success: false, msg: 'incomplete input provided' });
     }
-    res.json({ success: true, msg: "Contact was deleted" });
+
+    const findExist = await query(`SELECT * FROM contact WHERE mobile = ? AND uid = ?`, [
+      phoneNumber,
+      req.decode.uid,
+    ]);
+    if (findExist.length > 0) {
+      return res.json({ success: false, msg: 'Contact already existed' });
+    }
+
+    await query(
+      `INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1, var2, var3, var4, var5) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      [
+        req.decode.uid,
+        phoneBookId,
+        phoneBookName,
+        contactName,
+        phoneNumber,
+        var1 || '',
+        var2 || '',
+        var3 || '',
+        var4 || '',
+        var5 || '',
+      ],
+    );
+
+    res.json({ success: true, msg: 'Contact was added' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
-router.post("/update_meta", validateUser, async (req, res) => {
+// del contact
+router.post('/del_contact', validateUser, async (req, res) => {
   try {
-    const {
-      waba_id,
-      business_account_id,
-      access_token,
-      business_phone_number_id,
-      app_id,
-    } = req.body;
+    const { id } = req.body;
+    const result = await query(`DELETE FROM contact WHERE id = ? AND uid = ? RETURNING id`, [
+      id,
+      req.decode.uid,
+    ]);
+    if (result.length === 0) {
+      return res.status(403).json({ success: false, msg: 'Unauthorized or not found' });
+    }
+    res.json({ success: true, msg: 'Contact was deleted' });
+  } catch (err) {
+    res.json({ success: false, msg: 'something went wrong', err });
+    console.log(err);
+  }
+});
 
-    if (
-      !waba_id ||
-      !business_account_id ||
-      !access_token ||
-      !business_phone_number_id ||
-      !app_id
-    ) {
-      return res.json({ success: false, msg: "Please fill all the fields" });
+router.post('/update_meta', validateUser, async (req, res) => {
+  try {
+    const { waba_id, business_account_id, access_token, business_phone_number_id, app_id } =
+      req.body;
+
+    if (!waba_id || !business_account_id || !access_token || !business_phone_number_id || !app_id) {
+      return res.json({ success: false, msg: 'Please fill all the fields' });
     }
 
-    const resp = await getBusinessPhoneNumber(
-      "v18.0",
-      business_phone_number_id,
-      access_token
-    );
+    const resp = await getBusinessPhoneNumber('v18.0', business_phone_number_id, access_token);
 
     if (resp?.error) {
       return res.json({
         success: false,
-        msg: resp?.error?.message || "Please check your details",
+        msg: resp?.error?.message || 'Please check your details',
       });
     }
 
-    const findOne = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const findOne = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
     if (findOne.length > 0) {
       await query(
         `UPDATE meta_api SET waba_id = ?, business_account_id = ?, access_token = ?, business_phone_number_id = ?, app_id = ? WHERE uid = ?`,
@@ -591,7 +530,7 @@ router.post("/update_meta", validateUser, async (req, res) => {
           business_phone_number_id,
           app_id,
           req.decode.uid,
-        ]
+        ],
       );
     } else {
       await query(
@@ -603,84 +542,84 @@ router.post("/update_meta", validateUser, async (req, res) => {
           access_token,
           business_phone_number_id,
           app_id,
-        ]
+        ],
       );
     }
 
     res.json({
       success: true,
-      msg: "Your meta settings were updated successfully!",
+      msg: 'Your meta settings were updated successfully!',
     });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // get meta keys
-router.get("/get_meta_keys", validateUser, async (req, res) => {
+router.get('/get_meta_keys', validateUser, async (req, res) => {
   try {
-    const data = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const data = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
     if (data.length < 1) {
       res.json({ success: true, data: {} });
     } else {
       res.json({ success: true, data: data[0] });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // add meta templet
-router.post("/add_meta_templet", validateUser, checkPlan, async (req, res) => {
+router.post('/add_meta_templet', validateUser, checkPlan, async (req, res) => {
   try {
     console.log(JSON.stringify(req.body));
 
     if (env.MOCK_META_DELIVERY) {
-      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      const mockFilePath = path.join(
+        __dirname,
+        '../conversations',
+        `mock_meta_templates_${req.decode.uid}.json`,
+      );
       let mockTemplates = [];
       if (fs.existsSync(mockFilePath)) {
-        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
       }
       const newTemplate = {
         name: req.body.name,
-        language: req.body.language || "en_US",
-        category: req.body.category || "UTILITY",
-        status: "APPROVED",
-        components: req.body.components || []
+        language: req.body.language || 'en_US',
+        category: req.body.category || 'UTILITY',
+        status: 'APPROVED',
+        components: req.body.components || [],
       };
-      const idx = mockTemplates.findIndex(t => t.name === newTemplate.name);
+      const idx = mockTemplates.findIndex((t) => t.name === newTemplate.name);
       if (idx >= 0) {
         mockTemplates[idx] = newTemplate;
       } else {
         mockTemplates.push(newTemplate);
       }
-      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
       return res.json({
-        msg: "Templet was added and waiting for the review",
+        msg: 'Templet was added and waiting for the review',
         success: true,
       });
     }
 
-    const getAPIKEYS = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const getAPIKEYS = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
 
     if (getAPIKEYS.length < 1) {
       return res.json({
         success: false,
-        msg: "Please fill your meta API keys",
+        msg: 'Please fill your meta API keys',
       });
     }
 
     const resp = await createMetaTemplet(
-      "v18.0",
+      'v18.0',
       getAPIKEYS[0]?.waba_id,
       getAPIKEYS[0]?.access_token,
-      req.body
+      req.body,
     );
 
     if (resp.error) {
@@ -688,179 +627,177 @@ router.post("/add_meta_templet", validateUser, checkPlan, async (req, res) => {
     } else {
       console.log(resp);
       res.json({
-        msg: "Templet was added and waiting for the review",
+        msg: 'Templet was added and waiting for the review',
         success: true,
       });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // get user meta templet
-router.get("/get_my_meta_templets", validateUser, async (req, res) => {
+router.get('/get_my_meta_templets', validateUser, async (req, res) => {
   try {
     if (env.MOCK_META_DELIVERY) {
-      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      const mockFilePath = path.join(
+        __dirname,
+        '../conversations',
+        `mock_meta_templates_${req.decode.uid}.json`,
+      );
       let mockTemplates = [];
       if (fs.existsSync(mockFilePath)) {
-        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
       } else {
         mockTemplates = [
           {
-            name: "order_update",
-            language: "en_US",
-            category: "UTILITY",
-            status: "APPROVED",
-            components: [
-              { type: "BODY", text: "Hello {{1}}, your order {{2}} has been shipped." }
-            ]
-          }
+            name: 'order_update',
+            language: 'en_US',
+            category: 'UTILITY',
+            status: 'APPROVED',
+            components: [{ type: 'BODY', text: 'Hello {{1}}, your order {{2}} has been shipped.' }],
+          },
         ];
-        fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+        fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
       }
       return res.json({ success: true, data: mockTemplates });
     }
 
-    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
     if (getMETA.length < 1) {
       return res.json({
         success: false,
-        msg: "Please check your meta API keys",
+        msg: 'Please check your meta API keys',
       });
     }
 
-    const resp = await getAllTempletsMeta(
-      "v18.0",
-      getMETA[0]?.waba_id,
-      getMETA[0]?.access_token
-    );
+    const resp = await getAllTempletsMeta('v18.0', getMETA[0]?.waba_id, getMETA[0]?.access_token);
 
     if (resp?.error) {
       res.json({
         success: false,
-        msg: resp?.error?.message || "Please check your API",
+        msg: resp?.error?.message || 'Please check your API',
       });
     } else {
       res.json({ success: true, data: resp?.data || [] });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // del meta templet
-router.post("/del_meta_templet", validateUser, async (req, res) => {
+router.post('/del_meta_templet', validateUser, async (req, res) => {
   try {
     const { name } = req.body;
 
     if (env.MOCK_META_DELIVERY) {
-      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      const mockFilePath = path.join(
+        __dirname,
+        '../conversations',
+        `mock_meta_templates_${req.decode.uid}.json`,
+      );
       let mockTemplates = [];
       if (fs.existsSync(mockFilePath)) {
-        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
       }
-      mockTemplates = mockTemplates.filter(t => t.name !== name);
-      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
+      mockTemplates = mockTemplates.filter((t) => t.name !== name);
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
       return res.json({
         success: true,
         data: mockTemplates,
-        msg: "Templet was deleted",
+        msg: 'Templet was deleted',
       });
     }
 
-    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
     if (getMETA.length < 1) {
       return res.json({
         success: false,
-        msg: "Please check your meta API keys",
+        msg: 'Please check your meta API keys',
       });
     }
 
-    const resp = await delMetaTemplet(
-      "v18.0",
-      getMETA[0]?.waba_id,
-      getMETA[0]?.access_token,
-      name
-    );
+    const resp = await delMetaTemplet('v18.0', getMETA[0]?.waba_id, getMETA[0]?.access_token, name);
 
     if (resp.error) {
       return res.json({
         success: false,
-        msg: resp?.error?.error_user_title || "Please check your API",
+        msg: resp?.error?.error_user_title || 'Please check your API',
       });
     } else {
       res.json({
         success: true,
         data: resp?.data || [],
-        msg: "Templet was deleted",
+        msg: 'Templet was deleted',
       });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // update meta templet
-router.post("/update_meta_templet", validateUser, async (req, res) => {
+router.post('/update_meta_templet', validateUser, async (req, res) => {
   try {
     const { name, language, category, components } = req.body;
 
     if (env.MOCK_META_DELIVERY) {
-      const mockFilePath = path.join(__dirname, "../conversations", `mock_meta_templates_${req.decode.uid}.json`);
+      const mockFilePath = path.join(
+        __dirname,
+        '../conversations',
+        `mock_meta_templates_${req.decode.uid}.json`,
+      );
       let mockTemplates = [];
       if (fs.existsSync(mockFilePath)) {
-        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, "utf8"));
+        mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
       }
-      const idx = mockTemplates.findIndex(t => t.name === name);
+      const idx = mockTemplates.findIndex((t) => t.name === name);
       if (idx < 0) {
-        return res.json({ success: false, msg: "Template not found" });
+        return res.json({ success: false, msg: 'Template not found' });
       }
       mockTemplates[idx] = {
         ...mockTemplates[idx],
         language: language || mockTemplates[idx].language,
         category: category || mockTemplates[idx].category,
-        components: components || mockTemplates[idx].components
+        components: components || mockTemplates[idx].components,
       };
-      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), "utf8");
-      return res.json({ success: true, msg: "Template was updated successfully" });
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
+      return res.json({ success: true, msg: 'Template was updated successfully' });
     }
 
-    res.json({ success: false, msg: "Direct template updates are not supported by the Meta API. Please delete and recreate the template." });
+    res.json({
+      success: false,
+      msg: 'Direct template updates are not supported by the Meta API. Please delete and recreate the template.',
+    });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // return meta media url
-router.post("/return_media_url_meta", validateUser, async (req, res) => {
+router.post('/return_media_url_meta', validateUser, async (req, res) => {
   try {
     if (!req.body?.templet_name) {
       return res.json({
         success: false,
-        msg: "Please give a templet name first ",
+        msg: 'Please give a templet name first ',
       });
     }
 
     if (!req.files || Object.keys(req.files).length === 0) {
-      return res.json({ success: false, msg: "No files were uploaded" });
+      return res.json({ success: false, msg: 'No files were uploaded' });
     }
 
-    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
     if (getMETA.length < 1) {
       return res.json({
         success: false,
-        msg: "Please check your meta API keys",
+        msg: 'Please check your meta API keys',
       });
     }
 
@@ -883,45 +820,45 @@ router.post("/return_media_url_meta", validateUser, async (req, res) => {
 
     setTimeout(async () => {
       const { fileSizeInBytes, mimeType } = await getFileInfo(
-        `${__dirname}/../client/public/media/${filename}`
+        `${__dirname}/../client/public/media/${filename}`,
       );
 
       const getSession = await getSessionUploadMediaMeta(
-        "v18.0",
+        'v18.0',
         getMETA[0]?.app_id,
         getMETA[0]?.access_token,
         fileSizeInBytes,
-        mimeType
+        mimeType,
       );
 
       const uploadFile = await uploadFileMeta(
         getSession?.id,
         `${__dirname}/../client/public/media/${filename}`,
-        "v18.0",
-        getMETA[0]?.access_token
+        'v18.0',
+        getMETA[0]?.access_token,
       );
 
       if (!uploadFile?.success) {
-        return res.json({ success: false, msg: "Please check your meta API" });
+        return res.json({ success: false, msg: 'Please check your meta API' });
       }
 
       const url = `${env.FRONTEND_URL}/media/${filename}`;
 
       await query(
         `INSERT INTO meta_templet_media (uid, templet_name, meta_hash, file_name) VALUES (?,?,?,?)`,
-        [req.decode.uid, req.body?.templet_name, uploadFile?.data?.h, filename]
+        [req.decode.uid, req.body?.templet_name, uploadFile?.data?.h, filename],
       );
 
       res.json({ success: true, url, hash: uploadFile?.data?.h });
     }, 1000);
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // get plan detail
-router.post("/get_plan_details", validateUser, async (req, res) => {
+router.post('/get_plan_details', validateUser, async (req, res) => {
   try {
     const { id } = req.body;
 
@@ -932,42 +869,36 @@ router.post("/get_plan_details", validateUser, async (req, res) => {
       res.json({ success: true, data: data[0] });
     }
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // get payment gateway
-router.get("/get_payment_details", validateUser, async (req, res) => {
+router.get('/get_payment_details', validateUser, async (req, res) => {
   try {
     const resp = await query(`SELECT * FROM web_private`, []);
     let data = resp[0];
-    const [userData] = await query(`SELECT * FROM user WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const [userData] = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
 
-    data.pay_stripe_key = "";
-    data.pay_mercadopago_key = "";
+    data.pay_stripe_key = '';
+    data.pay_mercadopago_key = '';
     res.json({ data, userData, success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong", err });
+    res.json({ success: false, msg: 'something went wrong', err });
     console.log(err);
   }
 });
 
 // creating stripe pay session
-router.post("/create_stripe_session", validateUser, async (req, res) => {
+router.post('/create_stripe_session', validateUser, async (req, res) => {
   try {
     const getWeb = await query(`SELECT * FROM web_private`, []);
 
-    if (
-      getWeb.length < 1 ||
-      !getWeb[0]?.pay_stripe_key ||
-      !getWeb[0]?.pay_stripe_id
-    ) {
+    if (getWeb.length < 1 || !getWeb[0]?.pay_stripe_key || !getWeb[0]?.pay_stripe_id) {
       return res.json({
         success: false,
-        msg: "Opss.. payment keys found not found",
+        msg: 'Opss.. payment keys found not found',
       });
     }
 
@@ -980,16 +911,18 @@ router.post("/create_stripe_session", validateUser, async (req, res) => {
     const plan = await query(`SELECT * FROM plan WHERE id = ?`, [planId]);
 
     if (plan.length < 1) {
-      return res.json({ msg: "No plan found with the id" });
+      return res.json({ msg: 'No plan found with the id' });
     }
 
     const randomSt = randomstring.generate();
     const orderID = `STRIPE_${randomSt}`;
 
-    await query(
-      `INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`,
-      [req.decode.uid, "STRIPE", plan[0]?.price, orderID]
-    );
+    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
+      req.decode.uid,
+      'STRIPE',
+      plan[0]?.price,
+      orderID,
+    ]);
 
     const web = await query(`SELECT * FROM web_public`, []);
 
@@ -1008,18 +941,15 @@ router.post("/create_stripe_session", validateUser, async (req, res) => {
     ];
 
     const session = await stripeClient.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: ['card'],
       line_items: productStripe,
-      mode: "payment",
+      mode: 'payment',
       success_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
       cancel_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
       locale: env.STRIPE_LANG,
     });
 
-    await query(`UPDATE orders SET s_token = ? WHERE data = ?`, [
-      session?.id,
-      orderID,
-    ]);
+    await query(`UPDATE orders SET s_token = ? WHERE data = ?`, [session?.id, orderID]);
 
     res.json({ success: true, session: session });
   } catch (err) {
@@ -1028,11 +958,11 @@ router.post("/create_stripe_session", validateUser, async (req, res) => {
   }
 });
 
-router.post("/pay_with_rz", validateUser, async (req, res) => {
+router.post('/pay_with_rz', validateUser, async (req, res) => {
   try {
     const { rz_payment_id, plan, amount } = req.body;
     if (!rz_payment_id || !plan || !amount) {
-      return res.json({ msg: "please send required fields" });
+      return res.json({ msg: 'please send required fields' });
     }
 
     // getting plan
@@ -1040,7 +970,7 @@ router.post("/pay_with_rz", validateUser, async (req, res) => {
 
     if (getPlan.length < 1) {
       return res.json({
-        msg: "Invalid plan found",
+        msg: 'Invalid plan found',
       });
     }
 
@@ -1057,15 +987,9 @@ router.post("/pay_with_rz", validateUser, async (req, res) => {
       });
     }
 
-    const finalamt =
-      (parseInt(amount) / parseInt(webPublic.exchange_rate)) * 80;
+    const finalamt = (parseInt(amount) / parseInt(webPublic.exchange_rate)) * 80;
 
-    const resp = await rzCapturePayment(
-      rz_payment_id,
-      Math.round(finalamt) * 100,
-      rzId,
-      rzKeys
-    );
+    const resp = await rzCapturePayment(rz_payment_id, Math.round(finalamt) * 100, rzId, rzKeys);
 
     if (!resp) {
       res.json({ success: false, msg: resp.description });
@@ -1074,14 +998,16 @@ router.post("/pay_with_rz", validateUser, async (req, res) => {
 
     await updateUserPlan(getPlan[0], req.decode.uid);
 
-    await query(
-      `INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`,
-      [req.decode.uid, "RAZORPAY", plan?.price, JSON.stringify(resp)]
-    );
+    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
+      req.decode.uid,
+      'RAZORPAY',
+      plan?.price,
+      JSON.stringify(resp),
+    ]);
 
     res.json({
       success: true,
-      msg: "Thank for your payment you are good to go now.",
+      msg: 'Thank for your payment you are good to go now.',
     });
   } catch (err) {
     res.json({ msg: err.toString(), err });
@@ -1090,12 +1016,16 @@ router.post("/pay_with_rz", validateUser, async (req, res) => {
 });
 
 // pay with paypal
-router.post("/pay_with_paypal", validateUser, async (req, res) => {
+router.post('/pay_with_paypal', validateUser, async (req, res) => {
   try {
     const { orderID, plan } = req.body;
 
     if (!plan || !orderID) {
-      return res.json({ msg: "order id and plan required" });
+      return res.json({ msg: 'order id and plan required' });
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(orderID)) {
+      return res.json({ msg: 'Invalid order ID format' });
     }
 
     // getting plan
@@ -1103,7 +1033,7 @@ router.post("/pay_with_paypal", validateUser, async (req, res) => {
 
     if (getPlan.length < 1) {
       return res.json({
-        msg: "Invalid plan found",
+        msg: 'Invalid plan found',
       });
     }
 
@@ -1115,59 +1045,52 @@ router.post("/pay_with_paypal", validateUser, async (req, res) => {
 
     if (!paypalClientId || !paypalClientSecret) {
       return res.json({
-        msg: "Please provide paypal ID and keys from the Admin",
+        msg: 'Please provide paypal ID and keys from the Admin',
       });
     }
 
-    let response = await fetch(
-      "https://api.sandbox.paypal.com/v1/oauth2/token",
-      {
-        method: "POST",
-        body: "grant_type=client_credentials",
-        headers: {
-          Authorization:
-            "Basic " +
-            Buffer.from(
-              `${paypalClientId}:${paypalClientSecret}`,
-              "binary"
-            ).toString("base64"),
-        },
-      }
-    );
+    let response = await fetch('https://api.sandbox.paypal.com/v1/oauth2/token', {
+      method: 'POST',
+      body: 'grant_type=client_credentials',
+      headers: {
+        Authorization:
+          'Basic ' +
+          Buffer.from(`${paypalClientId}:${paypalClientSecret}`, 'binary').toString('base64'),
+      },
+    });
 
     let data = await response.json();
 
-    let resp_order = await fetch(
-      `https://api.sandbox.paypal.com/v1/checkout/orders/${orderID}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + data.access_token,
-        },
-      }
-    );
+    let resp_order = await fetch(`https://api.sandbox.paypal.com/v1/checkout/orders/${orderID}`, {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + data.access_token,
+      },
+    });
 
     let order_details = await resp_order.json();
 
-    if (order_details.status === "COMPLETED") {
+    if (order_details.status === 'COMPLETED') {
       await updateUserPlan(getPlan[0], req.decode.uid);
 
-      await query(
-        `INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`,
-        [req.decode.uid, "PAYPAL", plan?.price, JSON.stringify(order_details)]
-      );
+      await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
+        req.decode.uid,
+        'PAYPAL',
+        plan?.price,
+        JSON.stringify(order_details),
+      ]);
 
       res.json({
         success: true,
-        msg: "Thank for your payment you are good to go now.",
+        msg: 'Thank for your payment you are good to go now.',
       });
     } else {
-      res.json({ success: false, msg: "error_description" });
+      res.json({ success: false, msg: 'error_description' });
       return;
     }
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
@@ -1181,7 +1104,7 @@ function checlStripePayment(orderId) {
 
       console.log({ status: getPay?.payment_status });
 
-      if (getPay?.payment_status === "paid") {
+      if (getPay?.payment_status === 'paid') {
         resolve({ success: true, data: getPay });
       } else {
         resolve({ success: false });
@@ -1232,32 +1155,30 @@ function returnHtmlRes(msg) {
   return html;
 }
 
-router.get("/stripe_payment", async (req, res) => {
+router.get('/stripe_payment', async (req, res) => {
   try {
     const { order, plan } = req.query;
 
     if (!order || !plan) {
-      return res.send("INVALID REQUEST");
+      return res.send('INVALID REQUEST');
     }
 
-    const getOrder = await query(`SELECT * FROM orders WHERE data = ?`, [
-      order || "",
-    ]);
+    const getOrder = await query(`SELECT * FROM orders WHERE data = ?`, [order || '']);
     const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan]);
 
     if (getOrder.length < 1) {
-      return res.send("Invalid payment found");
+      return res.send('Invalid payment found');
     }
 
     if (getPlan.length < 1) {
-      return res.send("Invalid plan found");
+      return res.send('Invalid plan found');
     }
 
     const checkPayment = await checlStripePayment(getOrder[0]?.s_token);
     console.log({ checkPayment: checkPayment });
 
     if (checkPayment.success) {
-      res.send(returnHtmlRes("Payment Success! Redirecting..."));
+      res.send(returnHtmlRes('Payment Success! Redirecting...'));
 
       await query(`UPDATE orders SET data = ? WHERE data = ?`, [
         JSON.stringify(checkPayment?.data),
@@ -1267,31 +1188,35 @@ router.get("/stripe_payment", async (req, res) => {
       await updateUserPlan(getPlan[0], getOrder[0]?.uid);
     } else {
       res.send(
-        "Payment Failed! If the balance was deducted please contact to the HamWiz support. Redirecting..."
+        'Payment Failed! If the balance was deducted please contact to the HamWiz support. Redirecting...',
       );
     }
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // pay with paystack
-router.post("/pay_with_paystack", validateUser, async (req, res) => {
+router.post('/pay_with_paystack', validateUser, async (req, res) => {
   try {
     const { planData, trans_id, reference } = req.body;
 
     if (!planData || !trans_id) {
       return res.json({
-        msg: "Order id and plan required",
+        msg: 'Order id and plan required',
       });
+    }
+
+    if (!reference || !/^[a-zA-Z0-9_-]+$/.test(reference)) {
+      return res.json({ msg: 'Invalid reference format' });
     }
 
     // getting plan
     const plan = await query(`SELECT * FROM plan WHERE id = ?`, [planData.id]);
 
     if (plan.length < 1) {
-      return res.json({ msg: "Sorry this plan was not found" });
+      return res.json({ msg: 'Sorry this plan was not found' });
     }
 
     // gettings paystack keys
@@ -1300,52 +1225,50 @@ router.post("/pay_with_paystack", validateUser, async (req, res) => {
     const paystackId = getWebPrivate[0]?.pay_paystack_id;
 
     if (!paystackSecretKey || !paystackId) {
-      return res.json({ msg: "Paystack credentials not found" });
+      return res.json({ msg: 'Paystack credentials not found' });
     }
 
-    var response = await fetch(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${paystackSecretKey}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    var response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: {
+        Authorization: `Bearer ${paystackSecretKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     const resp = await response.json();
 
-    if (resp.data?.status !== "success") {
+    if (resp.data?.status !== 'success') {
       res.json({ success: false, msg: `${resp.message} - Ref:-${reference}` });
       return;
     }
 
-    await query(
-      `INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`,
-      [req.decode.uid, "PAYSTACK", plan[0]?.price, reference]
-    );
+    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
+      req.decode.uid,
+      'PAYSTACK',
+      plan[0]?.price,
+      reference,
+    ]);
 
     await updateUserPlan(plan[0], req.decode.uid);
 
     res.json({
       success: true,
-      msg: "Payment success! Redirecting...",
+      msg: 'Payment success! Redirecting...',
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // update profile
-router.post("/update_profile", validateUser, async (req, res) => {
+router.post('/update_profile', validateUser, async (req, res) => {
   try {
-    const { newPassword, name, mobile_with_country_code, email, timezone } =
-      req.body;
+    const { newPassword, name, mobile_with_country_code, email, timezone } = req.body;
 
     if (!name || !mobile_with_country_code || !email || !timezone) {
       return res.json({
-        msg: "Name, Mobile, Email, Timezone are required fields",
+        msg: 'Name, Mobile, Email, Timezone are required fields',
       });
     }
 
@@ -1353,49 +1276,49 @@ router.post("/update_profile", validateUser, async (req, res) => {
       const hash = await bcrypt.hash(newPassword, 10);
       await query(
         `UPDATE user SET name = ?, email = ?, password = ?, mobile_with_country_code = ?, timezone = ? WHERE uid = ?`,
-        [name, email, hash, mobile_with_country_code, timezone, req.decode.uid]
+        [name, email, hash, mobile_with_country_code, timezone, req.decode.uid],
       );
     } else {
       await query(
         `UPDATE user SET name = ?, email = ?, mobile_with_country_code = ?, timezone = ? WHERE uid = ?`,
-        [name, email, mobile_with_country_code, timezone, req.decode.uid]
+        [name, email, mobile_with_country_code, timezone, req.decode.uid],
       );
     }
 
     invalidatePermissionCache(req.decode.uid);
-    await logActivity(req, "Users", "update_profile", email, { name, timezone });
+    await logActivity(req, 'Users', 'update_profile', email, { name, timezone });
 
-    res.json({ success: true, msg: "Profile was updated" });
+    res.json({ success: true, msg: 'Profile was updated' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // get dashboard
-router.get("/get_dashboard", validateUser, async (req, res) => {
+router.get('/get_dashboard', validateUser, async (req, res) => {
   try {
-    const getOpenChat = await query(
-      `SELECT * FROM chats WHERE uid = ? AND chat_status = ?`,
-      [req.decode.uid, "open"]
-    );
-    const getOpenPending = await query(
-      `SELECT * FROM chats WHERE uid = ? AND chat_status = ?`,
-      [req.decode.uid, "pending"]
-    );
-    const getOpenResolved = await query(
-      `SELECT * FROM chats WHERE uid = ? AND chat_status = ?`,
-      [req.decode.uid, "solved"]
-    );
+    const getOpenChat = await query(`SELECT * FROM chats WHERE uid = ? AND chat_status = ?`, [
+      req.decode.uid,
+      'open',
+    ]);
+    const getOpenPending = await query(`SELECT * FROM chats WHERE uid = ? AND chat_status = ?`, [
+      req.decode.uid,
+      'pending',
+    ]);
+    const getOpenResolved = await query(`SELECT * FROM chats WHERE uid = ? AND chat_status = ?`, [
+      req.decode.uid,
+      'solved',
+    ]);
 
-    const getActiveChatbots = await query(
-      `SELECT * FROM chatbot WHERE active = ? AND uid = ?`,
-      [1, req.decode.uid]
-    );
-    const getDActiveChatbots = await query(
-      `SELECT * FROM chatbot WHERE active = ? AND uid = ?`,
-      [0, req.decode.uid]
-    );
+    const getActiveChatbots = await query(`SELECT * FROM chatbot WHERE active = ? AND uid = ?`, [
+      1,
+      req.decode.uid,
+    ]);
+    const getDActiveChatbots = await query(`SELECT * FROM chatbot WHERE active = ? AND uid = ?`, [
+      0,
+      req.decode.uid,
+    ]);
 
     const opened = getUserOrderssByMonth(getOpenChat);
     const pending = getUserOrderssByMonth(getOpenPending);
@@ -1404,25 +1327,12 @@ router.get("/get_dashboard", validateUser, async (req, res) => {
     const dActiveBot = getUserOrderssByMonth(getDActiveChatbots);
 
     // get total chats
-    const totalChats = await query(`SELECT * FROM chats WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
-    const totalChatbots = await query(`SELECT * FROM chatbot WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
-    const totalContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
-    const totalFlows = await query(`SELECT * FROM flow WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
-    const totalBroadcast = await query(
-      `SELECT * FROM broadcast WHERE uid = ?`,
-      [req.decode.uid]
-    );
-    const totalTemplets = await query(`SELECT * FROM templets WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const totalChats = await query(`SELECT * FROM chats WHERE uid = ?`, [req.decode.uid]);
+    const totalChatbots = await query(`SELECT * FROM chatbot WHERE uid = ?`, [req.decode.uid]);
+    const totalContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [req.decode.uid]);
+    const totalFlows = await query(`SELECT * FROM flow WHERE uid = ?`, [req.decode.uid]);
+    const totalBroadcast = await query(`SELECT * FROM broadcast WHERE uid = ?`, [req.decode.uid]);
+    const totalTemplets = await query(`SELECT * FROM templets WHERE uid = ?`, [req.decode.uid]);
 
     res.json({
       success: true,
@@ -1440,37 +1350,37 @@ router.get("/get_dashboard", validateUser, async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // enroll free plan
-router.post("/start_free_trial", validateUser, async (req, res) => {
+router.post('/start_free_trial', validateUser, async (req, res) => {
   try {
     const { planId } = req.body;
 
-    const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
     if (getUser[0]?.trial > 0) {
       return res.json({
         success: false,
-        msg: "You have already taken Trial once. You can not enroll for trial again.",
+        msg: 'You have already taken Trial once. You can not enroll for trial again.',
       });
     }
 
     const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [planId]);
     if (getPlan.length < 1) {
-      return res.json({ msg: "Invalid plan found" });
+      return res.json({ msg: 'Invalid plan found' });
     }
 
     if (getPlan[0]?.price > 0) {
-      return res.json({ msg: "This plan is not a trial plan." });
+      return res.json({ msg: 'This plan is not a trial plan.' });
     }
-    await query(
-      `INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`,
-      [req.decode.uid, "OFFLINE", 0, JSON.stringify({ plan: getPlan[0] })]
-    );
+    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
+      req.decode.uid,
+      'OFFLINE',
+      0,
+      JSON.stringify({ plan: getPlan[0] }),
+    ]);
 
     await updateUserPlan(getPlan[0], getUser[0]?.uid);
 
@@ -1478,30 +1388,28 @@ router.post("/start_free_trial", validateUser, async (req, res) => {
 
     res.json({
       success: true,
-      msg: "Your trial plan has been activated. You are redirecting to the panel...",
+      msg: 'Your trial plan has been activated. You are redirecting to the panel...',
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // send recover
-router.post("/send_resovery", async (req, res) => {
+router.post('/send_resovery', async (req, res) => {
   try {
     const { email } = req.body;
 
     if (!isValidEmail(email)) {
-      return res.json({ msg: "Please enter a valid email" });
+      return res.json({ msg: 'Please enter a valid email' });
     }
 
-    const checkEmailValid = await query(`SELECT * FROM user WHERE email = ?`, [
-      email,
-    ]);
+    const checkEmailValid = await query(`SELECT * FROM user WHERE email = ?`, [email]);
     if (checkEmailValid.length < 1) {
       return res.json({
         success: true,
-        msg: "We have sent a recovery link if this email is associated with user account.",
+        msg: 'We have sent a recovery link if this email is associated with user account.',
       });
     }
 
@@ -1514,10 +1422,10 @@ router.post("/send_resovery", async (req, res) => {
         old_email: email,
         email: email,
         time: moment(new Date()),
-        role: "user",
+        role: 'user',
       },
       env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: '1h' },
     );
 
     const recpveryUrl = `${env.FRONTEND_URL}/recovery-user/${jsontoken}`;
@@ -1526,15 +1434,10 @@ router.post("/send_resovery", async (req, res) => {
 
     // getting smtp
     const smtp = await query(`SELECT * FROM smtp`, []);
-    if (
-      !smtp[0]?.email ||
-      !smtp[0]?.host ||
-      !smtp[0]?.port ||
-      !smtp[0]?.password
-    ) {
+    if (!smtp[0]?.email || !smtp[0]?.host || !smtp[0]?.port || !smtp[0]?.password) {
       return res.json({
         success: false,
-        msg: "SMTP connections not found! Unable to send recovery link",
+        msg: 'SMTP connections not found! Unable to send recovery link',
       });
     }
 
@@ -1546,30 +1449,30 @@ router.post("/send_resovery", async (req, res) => {
       getHtml,
       `${appName} - Password Recovery`,
       smtp[0]?.email,
-      email
+      email,
     );
 
     res.json({
       success: true,
-      msg: "We have sent your a password recovery link. Please check your email",
+      msg: 'We have sent your a password recovery link. Please check your email',
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // modify recpvery passwrod
-router.get("/modify_password", validateUser, async (req, res) => {
+router.get('/modify_password', validateUser, async (req, res) => {
   try {
     const { pass } = req.query;
 
     if (!pass) {
-      return res.json({ success: false, msg: "Please provide a password" });
+      return res.json({ success: false, msg: 'Please provide a password' });
     }
 
-    if (moment(new Date()).diff(moment(req.decode.time), "hours") > 1) {
-      return res.json({ success: false, msg: "Token expired" });
+    if (moment(new Date()).diff(moment(req.decode.time), 'hours') > 1) {
+      return res.json({ success: false, msg: 'Token expired' });
     }
 
     const hashpassword = await bcrypt.hash(pass, 10);
@@ -1581,89 +1484,80 @@ router.get("/modify_password", validateUser, async (req, res) => {
 
     res.json({
       success: true,
-      msg: "Your password has been changed. You may login now! Redirecting...",
+      msg: 'Your password has been changed. You may login now! Redirecting...',
       data: result,
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // generate api keys
-router.get("/generate_api_keys", validateUser, async (req, res) => {
+router.get('/generate_api_keys', validateUser, async (req, res) => {
   try {
-    const token = sign(
-      { uid: req.decode.uid, role: "user" },
-      env.JWT_SECRET,
-      {}
-    );
+    const token = sign({ uid: req.decode.uid, role: 'user' }, env.JWT_SECRET, {});
 
     // saving keys to user
-    await query(`UPDATE user SET api_key = ? WHERE uid = ?`, [
-      token,
-      req.decode.uid,
-    ]);
+    await query(`UPDATE user SET api_key = ? WHERE uid = ?`, [token, req.decode.uid]);
 
-    res.json({ success: true, token, msg: "New keys has been generated" });
+    res.json({ success: true, token, msg: 'New keys has been generated' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
-router.get("/fetch_profile", validateUser, async (req, res) => {
+router.get('/fetch_profile', validateUser, async (req, res) => {
   try {
     // const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid])
 
-    const metaKeys = await query("SELECT * FROM meta_api WHERE uid = ?", [
-      req.decode?.uid,
-    ]);
+    const metaKeys = await query('SELECT * FROM meta_api WHERE uid = ?', [req.decode?.uid]);
 
     if (!metaKeys[0]?.access_token || !metaKeys[0]?.business_phone_number_id) {
       return res.json({
         success: false,
-        msg: "Please fill the meta token and mobile id",
+        msg: 'Please fill the meta token and mobile id',
       });
     }
     const fetchProfile = await fetchProfileFun(
       metaKeys[0]?.business_phone_number_id,
-      metaKeys[0]?.access_token
+      metaKeys[0]?.access_token,
     );
 
     res.json(fetchProfile);
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // adding task for agent
-router.post("/add_task_for_agent", validateUser, async (req, res) => {
+router.post('/add_task_for_agent', validateUser, async (req, res) => {
   try {
     const { title, des, agent_uid } = req.body;
     if (!title || !des) {
-      return res.json({ msg: "Please give title and description" });
+      return res.json({ msg: 'Please give title and description' });
     }
 
     if (!agent_uid) {
-      return res.json({ msg: "Please select an agent" });
+      return res.json({ msg: 'Please select an agent' });
     }
 
     await query(
       `INSERT INTO agent_task (owner_uid, uid, title, description, status) VALUES (?,?,?,?,?)`,
-      [req.decode.uid, agent_uid, title, des, "PENDING"]
+      [req.decode.uid, agent_uid, title, des, 'PENDING'],
     );
 
-    res.json({ success: true, msg: "Task was added" });
+    res.json({ success: true, msg: 'Task was added' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // get my agent tasks
-router.get("/get_my_agent_tasks", validateUser, async (req, res) => {
+router.get('/get_my_agent_tasks', validateUser, async (req, res) => {
   try {
     const data = await query(
       `
@@ -1672,63 +1566,61 @@ router.get("/get_my_agent_tasks", validateUser, async (req, res) => {
             JOIN agents ON agents.uid = agent_task.uid
             WHERE agent_task.owner_uid = ?
         `,
-      [req.decode.uid]
+      [req.decode.uid],
     );
 
     res.json({ data, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // delete task for agent
-router.post("/del_task_for_agent", validateUser, async (req, res) => {
+router.post('/del_task_for_agent', validateUser, async (req, res) => {
   try {
     const { id } = req.body;
-    await query(`DELETE FROM agent_task WHERE id = ? AND owner_uid = ?`, [
-      id,
-      req.decode.uid,
-    ]);
+    await query(`DELETE FROM agent_task WHERE id = ? AND owner_uid = ?`, [id, req.decode.uid]);
 
-    res.json({ msg: "Task was deleted", success: true });
+    res.json({ msg: 'Task was deleted', success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // add widget
-router.post("/add_widget", validateUser, async (req, res) => {
+router.post('/add_widget', validateUser, async (req, res) => {
   try {
-    const { title, whatsapp_number, place, selectedIcon, logoType, size } =
-      req.body;
+    const { title, whatsapp_number, place, selectedIcon, logoType, size } = req.body;
 
     if (!title || !whatsapp_number || !place) {
-      return res.json({ msg: "Please fill the details" });
+      return res.json({ msg: 'Please fill the details' });
     }
 
     const allowedPlaces = [
-      "BOTTOM_RIGHT",
-      "BOTTOM_LEFT",
-      "TOP_RIGHT",
-      "TOP_LEFT",
-      "BOTTOM_CENTER",
-      "TOP_CENTER",
-      "ALL_CENTER",
+      'BOTTOM_RIGHT',
+      'BOTTOM_LEFT',
+      'TOP_RIGHT',
+      'TOP_LEFT',
+      'BOTTOM_CENTER',
+      'TOP_CENTER',
+      'ALL_CENTER',
     ];
-    const finalPlace = allowedPlaces.includes(place) ? place : "BOTTOM_RIGHT";
+    const finalPlace = allowedPlaces.includes(place) ? place : 'BOTTOM_RIGHT';
 
     const parsedSize = parseInt(size, 10);
     const finalSize = isNaN(parsedSize) || parsedSize <= 0 ? 60 : parsedSize;
 
-    const sanitizedNumber = String(whatsapp_number).replace(/[^+\d]/g, "").slice(0, 100);
+    const sanitizedNumber = String(whatsapp_number)
+      .replace(/[^+\d]/g, '')
+      .slice(0, 100);
 
     let filename;
 
-    if (logoType === "UPLOAD") {
+    if (logoType === 'UPLOAD') {
       if (!req.files || Object.keys(req.files).length === 0) {
-        return res.json({ success: false, msg: "Please upload a logo" });
+        return res.json({ success: false, msg: 'Please upload a logo' });
       }
 
       const randomString = randomstring.generate();
@@ -1750,60 +1642,53 @@ router.post("/add_widget", validateUser, async (req, res) => {
 
     await query(
       `INSERT INTO chat_widget (unique_id, uid, title, whatsapp_number, logo, place, size) VALUES (?,?,?,?,?,?,?)`,
-      [
-        unique_id,
-        req.decode.uid,
-        title,
-        sanitizedNumber,
-        filename,
-        finalPlace,
-        finalSize,
-      ]
+      [unique_id, req.decode.uid, title, sanitizedNumber, filename, finalPlace, finalSize],
     );
 
     res.json({
-      msg: "Widget was added",
+      msg: 'Widget was added',
       success: true,
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // get my widget
-router.get("/get_my_widget", validateUser, async (req, res) => {
+router.get('/get_my_widget', validateUser, async (req, res) => {
   try {
-    const data = await query(`SELECT * FROM chat_widget WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const data = await query(`SELECT * FROM chat_widget WHERE uid = ?`, [req.decode.uid]);
 
     res.json({ data, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // del widget
-router.post("/del_widget", validateUser, async (req, res) => {
+router.post('/del_widget', validateUser, async (req, res) => {
   try {
     const { id } = req.body;
 
-    const result = await query(`DELETE FROM chat_widget WHERE id = ? AND uid = ? RETURNING id`, [id, req.decode.uid]);
+    const result = await query(`DELETE FROM chat_widget WHERE id = ? AND uid = ? RETURNING id`, [
+      id,
+      req.decode.uid,
+    ]);
 
     if (result.length === 0) {
-      return res.status(403).json({ success: false, msg: "Unauthorized or not found" });
+      return res.status(403).json({ success: false, msg: 'Unauthorized or not found' });
     }
 
-    res.json({ msg: "Widget was deleted", success: true });
+    res.json({ msg: 'Widget was deleted', success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
-router.get("/widget", async (req, res) => {
+router.get('/widget', async (req, res) => {
   try {
     const { id } = req.query;
 
@@ -1811,42 +1696,36 @@ router.get("/widget", async (req, res) => {
       return res.send(``);
     }
 
-    const getWidget = await query(
-      `SELECT * FROM chat_widget WHERE unique_id = ?`,
-      [id]
-    );
+    const getWidget = await query(`SELECT * FROM chat_widget WHERE unique_id = ?`, [id]);
 
     if (getWidget.length < 1) {
       return res.send(``);
     }
 
-    const url = generateWhatsAppURL(
-      getWidget[0]?.whatsapp_number,
-      getWidget[0]?.title
-    );
+    const url = generateWhatsAppURL(getWidget[0]?.whatsapp_number, getWidget[0]?.title);
 
     res.send(
       returnWidget(
         `${env.FRONTEND_URL}/media/${getWidget[0]?.logo}`,
         getWidget[0]?.size,
         url,
-        getWidget[0]?.place
-      )
+        getWidget[0]?.place,
+      ),
     );
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // update agent profile
-router.post("/update_agent_profile", validateUser, async (req, res) => {
+router.post('/update_agent_profile', validateUser, async (req, res) => {
   try {
     const { email, name, mobile, newPas, uid, permissions } = req.body;
 
     if (!email || !name || !mobile) {
       return res.json({
-        msg: "You can not remove any detail of agent",
+        msg: 'You can not remove any detail of agent',
       });
     }
 
@@ -1856,372 +1735,539 @@ router.post("/update_agent_profile", validateUser, async (req, res) => {
       const hasPas = await bcrypt.hash(newPas, 10);
       await query(
         `UPDATE agents SET email = ?, name = ?, mobile = ?, password = ?, permissions = ? WHERE uid = ? AND owner_uid = ?`,
-        [email, name, mobile, hasPas, permissionsJson, uid, req.decode.uid]
+        [email, name, mobile, hasPas, permissionsJson, uid, req.decode.uid],
       );
     } else {
       await query(
         `UPDATE agents SET email = ?, name = ?, mobile = ?, permissions = ? WHERE uid = ? AND owner_uid = ?`,
-        [email, name, mobile, permissionsJson, uid, req.decode.uid]
+        [email, name, mobile, permissionsJson, uid, req.decode.uid],
       );
     }
 
     invalidatePermissionCache(uid);
-    await logActivity(req, "Users", "update_agent_profile", email, { agent_uid: uid });
+    await logActivity(req, 'Users', 'update_agent_profile', email, { agent_uid: uid });
 
-    res.json({ msg: "Agent profile was updated", success: true });
+    res.json({ msg: 'Agent profile was updated', success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // auto login agent
-router.post("/auto_agent_login", validateUser, async (req, res) => {
+router.post('/auto_agent_login', validateUser, async (req, res) => {
   try {
     const { uid } = req.body;
-    const agentFind = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [uid, req.decode.uid]);
+    const agentFind = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [
+      uid,
+      req.decode.uid,
+    ]);
     if (agentFind.length < 1) {
-      return res.json({ success: false, msg: "Agent not found or unauthorized" });
+      return res.json({ success: false, msg: 'Agent not found or unauthorized' });
     }
 
-    const permissions = JSON.parse(agentFind[0].permissions || "[]");
+    const permissions = JSON.parse(agentFind[0].permissions || '[]');
     const token = sign(
       {
         uid: agentFind[0].uid,
-        role: "agent",
+        role: 'agent',
         email: agentFind[0].email,
         owner_uid: agentFind[0]?.owner_uid,
         permissions,
       },
       env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRY }
+      { expiresIn: env.JWT_EXPIRY },
     );
 
     res.json({ token, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "something went wrong", err });
+    res.json({ msg: 'something went wrong', err });
   }
 });
 
 // seed demo crm data
-router.post("/seed_demo_data", validateUser, async (req, res) => {
+router.post('/seed_demo_data', validateUser, async (req, res) => {
   try {
-    const pbName = "Demo Leads Phonebook";
+    const pbName = 'Demo Leads Phonebook';
     // Insert phonebook
     let pbId;
-    const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [req.decode.uid, pbName]);
+    const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [
+      req.decode.uid,
+      pbName,
+    ]);
     if (existingPb.length > 0) {
       pbId = existingPb[0].id;
     } else {
-      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [req.decode.uid, pbName]);
+      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [
+        req.decode.uid,
+        pbName,
+      ]);
       if (insertPb && insertPb.length > 0) {
         pbId = insertPb[0].id;
       } else {
-        const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [req.decode.uid, pbName]);
+        const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [
+          req.decode.uid,
+          pbName,
+        ]);
         pbId = getPb[0]?.id;
       }
     }
 
     if (!pbId) {
-      return res.json({ success: false, msg: "Failed to initialize demo phonebook" });
+      return res.json({ success: false, msg: 'Failed to initialize demo phonebook' });
     }
 
     // 10 Contacts
     const contacts = [
-      { name: "Aarav Mehta", mobile: "+919999900001", var1: "VIP", var2: "Retail", var3: "Mumbai", var4: "Interested", var5: "Ref-01" },
-      { name: "Diya Sharma", mobile: "+919999900002", var1: "Regular", var2: "Wholesale", var3: "Delhi", var4: "FollowUp", var5: "Ref-02" },
-      { name: "Kabir Singh", mobile: "demo-chat-insta-3", var1: "New", var2: "Retail", var3: "Bangalore", var4: "Interested", var5: "Ref-03" },
-      { name: "Ananya Goel", mobile: "+919999900004", var1: "VIP", var2: "Enterprise", var3: "Hyderabad", var4: "Active", var5: "Ref-04" },
-      { name: "Vivaan Shah", mobile: "+919999900005", var1: "Inactive", var2: "Retail", var3: "Pune", var4: "Cold", var5: "Ref-05" },
-      { name: "Ira Patel", mobile: "+919999900006", var1: "Regular", var2: "Retail", var3: "Ahmedabad", var4: "Interested", var5: "Ref-06" },
-      { name: "Reyansh Gupta", mobile: "+919999900007", var1: "VIP", var2: "Enterprise", var3: "Chennai", var4: "Negotiation", var5: "Ref-07" },
-      { name: "Myra Sen", mobile: "+919999900008", var1: "New", var2: "Retail", var3: "Kolkata", var4: "FollowUp", var5: "Ref-08" },
-      { name: "Arjun Verma", mobile: "+919999900009", var1: "VIP", var2: "Wholesale", var3: "Jaipur", var4: "Interested", var5: "Ref-09" },
-      { name: "Sai Reddy", mobile: "+919999900010", var1: "Regular", var2: "Retail", var3: "Kochi", var4: "Warm", var5: "Ref-10" }
+      {
+        name: 'Aarav Mehta',
+        mobile: '+919999900001',
+        var1: 'VIP',
+        var2: 'Retail',
+        var3: 'Mumbai',
+        var4: 'Interested',
+        var5: 'Ref-01',
+      },
+      {
+        name: 'Diya Sharma',
+        mobile: '+919999900002',
+        var1: 'Regular',
+        var2: 'Wholesale',
+        var3: 'Delhi',
+        var4: 'FollowUp',
+        var5: 'Ref-02',
+      },
+      {
+        name: 'Kabir Singh',
+        mobile: 'demo-chat-insta-3',
+        var1: 'New',
+        var2: 'Retail',
+        var3: 'Bangalore',
+        var4: 'Interested',
+        var5: 'Ref-03',
+      },
+      {
+        name: 'Ananya Goel',
+        mobile: '+919999900004',
+        var1: 'VIP',
+        var2: 'Enterprise',
+        var3: 'Hyderabad',
+        var4: 'Active',
+        var5: 'Ref-04',
+      },
+      {
+        name: 'Vivaan Shah',
+        mobile: '+919999900005',
+        var1: 'Inactive',
+        var2: 'Retail',
+        var3: 'Pune',
+        var4: 'Cold',
+        var5: 'Ref-05',
+      },
+      {
+        name: 'Ira Patel',
+        mobile: '+919999900006',
+        var1: 'Regular',
+        var2: 'Retail',
+        var3: 'Ahmedabad',
+        var4: 'Interested',
+        var5: 'Ref-06',
+      },
+      {
+        name: 'Reyansh Gupta',
+        mobile: '+919999900007',
+        var1: 'VIP',
+        var2: 'Enterprise',
+        var3: 'Chennai',
+        var4: 'Negotiation',
+        var5: 'Ref-07',
+      },
+      {
+        name: 'Myra Sen',
+        mobile: '+919999900008',
+        var1: 'New',
+        var2: 'Retail',
+        var3: 'Kolkata',
+        var4: 'FollowUp',
+        var5: 'Ref-08',
+      },
+      {
+        name: 'Arjun Verma',
+        mobile: '+919999900009',
+        var1: 'VIP',
+        var2: 'Wholesale',
+        var3: 'Jaipur',
+        var4: 'Interested',
+        var5: 'Ref-09',
+      },
+      {
+        name: 'Sai Reddy',
+        mobile: '+919999900010',
+        var1: 'Regular',
+        var2: 'Retail',
+        var3: 'Kochi',
+        var4: 'Warm',
+        var5: 'Ref-10',
+      },
     ];
 
     for (const c of contacts) {
-      const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [req.decode.uid, c.mobile]);
+      const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [
+        req.decode.uid,
+        c.mobile,
+      ]);
       if (checkContact.length === 0) {
-        await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1, var2, var3, var4, var5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-          req.decode.uid,
-          pbId,
-          pbName,
-          c.name,
-          c.mobile,
-          c.var1,
-          c.var2,
-          c.var3,
-          c.var4,
-          c.var5
-        ]);
+        await query(
+          `INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1, var2, var3, var4, var5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [req.decode.uid, pbId, pbName, c.name, c.mobile, c.var1, c.var2, c.var3, c.var4, c.var5],
+        );
       }
     }
 
     // 1 Campaign
-    const broadcastId = "bc_demo_" + randomstring.generate(6);
-    const existingBc = await query(`SELECT * FROM broadcast WHERE uid = ? AND title = ?`, [req.decode.uid, "Demo Launch Campaign"]);
+    const broadcastId = 'bc_demo_' + randomstring.generate(6);
+    const existingBc = await query(`SELECT * FROM broadcast WHERE uid = ? AND title = ?`, [
+      req.decode.uid,
+      'Demo Launch Campaign',
+    ]);
     if (existingBc.length === 0) {
-      await query(`INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
-        broadcastId,
-        req.decode.uid,
-        "Demo Launch Campaign",
-        JSON.stringify({ name: "demo_welcome_template", language: "en_US", category: "UTILITY" }),
-        JSON.stringify({ id: pbId, name: pbName }),
-        "COMPLETED",
-        new Date(),
-        "Asia/Kolkata"
-      ]);
+      await query(
+        `INSERT INTO broadcast (broadcast_id, uid, title, templet, phonebook, status, schedule, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          broadcastId,
+          req.decode.uid,
+          'Demo Launch Campaign',
+          JSON.stringify({ name: 'demo_welcome_template', language: 'en_US', category: 'UTILITY' }),
+          JSON.stringify({ id: pbId, name: pbName }),
+          'COMPLETED',
+          new Date(),
+          'Asia/Kolkata',
+        ],
+      );
 
       // Seed 10 logs for campaign analytics
-      const deliveryStatuses = ["read", "delivered", "read", "failed", "read", "delivered", "sent", "read", "read", "delivered"];
-      const errors = [null, null, null, "Meta rate limit reached", null, null, null, null, null, null];
+      const deliveryStatuses = [
+        'read',
+        'delivered',
+        'read',
+        'failed',
+        'read',
+        'delivered',
+        'sent',
+        'read',
+        'read',
+        'delivered',
+      ];
+      const errors = [
+        null,
+        null,
+        null,
+        'Meta rate limit reached',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ];
       for (let i = 0; i < contacts.length; i++) {
-        await query(`INSERT INTO broadcast_log (uid, broadcast_id, templet_name, sender_mobile, send_to, delivery_status, example, contact, meta_msg_id, delivery_time, err) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-          req.decode.uid,
-          broadcastId,
-          "demo_welcome_template",
-          "+12025550184",
-          contacts[i].mobile,
-          deliveryStatuses[i],
-          JSON.stringify([contacts[i].name]),
-          JSON.stringify(contacts[i]),
-          "wamid." + randomstring.generate(16),
-          Date.now() - (i * 3600 * 1000),
-          errors[i]
-        ]);
+        await query(
+          `INSERT INTO broadcast_log (uid, broadcast_id, templet_name, sender_mobile, send_to, delivery_status, example, contact, meta_msg_id, delivery_time, err) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            req.decode.uid,
+            broadcastId,
+            'demo_welcome_template',
+            '+12025550184',
+            contacts[i].mobile,
+            deliveryStatuses[i],
+            JSON.stringify([contacts[i].name]),
+            JSON.stringify(contacts[i]),
+            'wamid.' + randomstring.generate(16),
+            Date.now() - i * 3600 * 1000,
+            errors[i],
+          ],
+        );
       }
     }
 
     // Seed templates
-    const existingTemp1 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [req.decode.uid, "demo_welcome_template"]);
+    const existingTemp1 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [
+      req.decode.uid,
+      'demo_welcome_template',
+    ]);
     if (existingTemp1.length === 0) {
       await query(`INSERT INTO templets (uid, content, type, title) VALUES (?, ?, ?, ?)`, [
         req.decode.uid,
-        JSON.stringify("Hello {{1}}, welcome to our CRM service!"),
-        "text",
-        "demo_welcome_template"
+        JSON.stringify('Hello {{1}}, welcome to our CRM service!'),
+        'text',
+        'demo_welcome_template',
       ]);
     }
-    const existingTemp2 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [req.decode.uid, "order_update"]);
+    const existingTemp2 = await query(`SELECT * FROM templets WHERE uid = ? AND title = ?`, [
+      req.decode.uid,
+      'order_update',
+    ]);
     if (existingTemp2.length === 0) {
       await query(`INSERT INTO templets (uid, content, type, title) VALUES (?, ?, ?, ?)`, [
         req.decode.uid,
-        JSON.stringify("Hello {{1}}, your order {{2}} has been shipped."),
-        "text",
-        "order_update"
+        JSON.stringify('Hello {{1}}, your order {{2}} has been shipped.'),
+        'text',
+        'order_update',
       ]);
     }
 
     // 1 Flow
     const flowId = `flow_demo_welcome_${req.decode.uid.slice(0, 10)}`;
-    const flowTitle = "Demo Welcome Visual Flow";
-    const existingFlow = await query(`SELECT * FROM flow WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+    const flowTitle = 'Demo Welcome Visual Flow';
+    const existingFlow = await query(`SELECT * FROM flow WHERE uid = ? AND flow_id = ?`, [
+      req.decode.uid,
+      flowId,
+    ]);
     if (existingFlow.length === 0) {
       await query(`INSERT INTO flow (uid, flow_id, title) VALUES (?, ?, ?)`, [
         req.decode.uid,
         flowId,
-        flowTitle
+        flowTitle,
       ]);
     }
     const nodes = [
-      { id: "1", type: "START", data: { label: "Start Trigger" } },
-      { id: "2", type: "MESSAGE", data: { label: "Send Welcome Text" } }
+      { id: '1', type: 'START', data: { label: 'Start Trigger' } },
+      { id: '2', type: 'MESSAGE', data: { label: 'Send Welcome Text' } },
     ];
-    const edges = [
-      { id: "e1-2", source: "1", target: "2" }
-    ];
+    const edges = [{ id: 'e1-2', source: '1', target: '2' }];
     const nodepath = path.join(__dirname, `../flow-json/nodes/${req.decode.uid}/${flowId}.json`);
     const edgepath = path.join(__dirname, `../flow-json/edges/${req.decode.uid}/${flowId}.json`);
     await writeJsonToFile(nodepath, nodes);
     await writeJsonToFile(edgepath, edges);
 
     // 1 Chatbot
-    const existingBot = await query(`SELECT * FROM chatbot WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+    const existingBot = await query(`SELECT * FROM chatbot WHERE uid = ? AND flow_id = ?`, [
+      req.decode.uid,
+      flowId,
+    ]);
     let botId;
     if (existingBot.length > 0) {
       botId = existingBot[0].id;
     } else {
-      const insertBot = await query(`INSERT INTO chatbot (uid, title, for_all, chats, flow, flow_id, active, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`, [
-        req.decode.uid,
-        "Demo Welcome Autopilot",
-        1,
-        "[]",
-        JSON.stringify({ id: flowId, flow_id: flowId, title: flowTitle }),
-        flowId,
-        1,
-        JSON.stringify({ title: "Meta", code: "META", data: {} })
-      ]);
+      const insertBot = await query(
+        `INSERT INTO chatbot (uid, title, for_all, chats, flow, flow_id, active, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+        [
+          req.decode.uid,
+          'Demo Welcome Autopilot',
+          1,
+          '[]',
+          JSON.stringify({ id: flowId, flow_id: flowId, title: flowTitle }),
+          flowId,
+          1,
+          JSON.stringify({ title: 'Meta', code: 'META', data: {} }),
+        ],
+      );
       if (insertBot && insertBot.length > 0) {
         botId = insertBot[0].id;
       } else {
-        const getBot = await query(`SELECT id FROM chatbot WHERE uid = ? AND flow_id = ?`, [req.decode.uid, flowId]);
+        const getBot = await query(`SELECT id FROM chatbot WHERE uid = ? AND flow_id = ?`, [
+          req.decode.uid,
+          flowId,
+        ]);
         botId = getBot[0]?.id;
       }
     }
 
     // Seed chatbot logs for diagnostics
-    const incomingMessages = ["hi", "hello", "need help", "get price", "operator"];
+    const incomingMessages = ['hi', 'hello', 'need help', 'get price', 'operator'];
     const matchedStatuses = [1, 1, 1, 0, 1];
-    const logStatuses = ["replied", "replied", "replied", "unmatched", "escalated"];
+    const logStatuses = ['replied', 'replied', 'replied', 'unmatched', 'escalated'];
     const details = [
       { reply_count: 1 },
       { reply_count: 1 },
       { reply_count: 2 },
-      { reason: "No matching text intent block" },
-      { reason: "Assigned to human agent" }
+      { reason: 'No matching text intent block' },
+      { reason: 'Assigned to human agent' },
     ];
     for (let i = 0; i < incomingMessages.length; i++) {
-      await query(`INSERT INTO chatbot_log (uid, chatbot_id, chatbot_title, flow_id, sender_number, sender_name, incoming_message, origin, matched, status, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-        req.decode.uid,
-        botId || 999,
-        "Demo Welcome Autopilot",
-        flowId,
-        contacts[i].mobile,
-        contacts[i].name,
-        incomingMessages[i],
-        "META",
-        matchedStatuses[i],
-        logStatuses[i],
-        JSON.stringify(details[i])
-      ]);
+      await query(
+        `INSERT INTO chatbot_log (uid, chatbot_id, chatbot_title, flow_id, sender_number, sender_name, incoming_message, origin, matched, status, detail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          req.decode.uid,
+          botId || 999,
+          'Demo Welcome Autopilot',
+          flowId,
+          contacts[i].mobile,
+          contacts[i].name,
+          incomingMessages[i],
+          'META',
+          matchedStatuses[i],
+          logStatuses[i],
+          JSON.stringify(details[i]),
+        ],
+      );
     }
 
     // 1 Agent
     const agentEmail = `demo_agent_${req.decode.uid.slice(0, 6)}@example.com`;
     const agentUid = `agent_${randomstring.generate(8)}`;
-    const existingAgent = await query(`SELECT * FROM agents WHERE owner_uid = ? AND email = ?`, [req.decode.uid, agentEmail]);
+    const existingAgent = await query(`SELECT * FROM agents WHERE owner_uid = ? AND email = ?`, [
+      req.decode.uid,
+      agentEmail,
+    ]);
     let actualAgentUid;
     if (existingAgent.length > 0) {
       actualAgentUid = existingAgent[0].uid;
     } else {
-      const demoAgentPassword = process.env.DEMO_AGENT_PASSWORD || "CHANGE_ME";
+      const demoAgentPassword = process.env.DEMO_AGENT_PASSWORD || 'CHANGE_ME';
       const hasPass = await bcrypt.hash(demoAgentPassword, 10);
-      await query(`INSERT INTO agents (owner_uid, uid, email, password, role, name, comments, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [
-        req.decode.uid,
-        agentUid,
-        agentEmail,
-        hasPass,
-        "agent",
-        "Demo Agent",
-        "Demo workspace agent account",
-        1
-      ]);
+      await query(
+        `INSERT INTO agents (owner_uid, uid, email, password, role, name, comments, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          req.decode.uid,
+          agentUid,
+          agentEmail,
+          hasPass,
+          'agent',
+          'Demo Agent',
+          'Demo workspace agent account',
+          1,
+        ],
+      );
       actualAgentUid = agentUid;
     }
 
     // 1 Task
-    const existingTask = await query(`SELECT * FROM agent_task WHERE owner_uid = ? AND uid = ?`, [req.decode.uid, actualAgentUid]);
+    const existingTask = await query(`SELECT * FROM agent_task WHERE owner_uid = ? AND uid = ?`, [
+      req.decode.uid,
+      actualAgentUid,
+    ]);
     if (existingTask.length === 0) {
-      await query(`INSERT INTO agent_task (owner_uid, uid, title, description, status) VALUES (?, ?, ?, ?, ?)`, [
-        req.decode.uid,
-        actualAgentUid,
-        "Follow up with Aarav Mehta",
-        "Aarav is marked as VIP Retail client. Contact him to discuss custom integration discount pricing options.",
-        "PENDING"
-      ]);
+      await query(
+        `INSERT INTO agent_task (owner_uid, uid, title, description, status) VALUES (?, ?, ?, ?, ?)`,
+        [
+          req.decode.uid,
+          actualAgentUid,
+          'Follow up with Aarav Mehta',
+          'Aarav is marked as VIP Retail client. Contact him to discuss custom integration discount pricing options.',
+          'PENDING',
+        ],
+      );
     }
 
     // 3 Conversations
     const sampleChats = [
       {
-        chatId: "demo-chat-wa-1",
-        senderName: "Aarav Mehta",
-        senderMobile: "+919999900001",
-        origin: "META",
-        tag: "lead",
-        note: "Interested in Enterprise pricing plan.",
+        chatId: 'demo-chat-wa-1',
+        senderName: 'Aarav Mehta',
+        senderMobile: '+919999900001',
+        origin: 'META',
+        tag: 'lead',
+        note: 'Interested in Enterprise pricing plan.',
         messages: [
           {
-            type: "text",
-            metaChatId: "msg-wa-1",
-            msgContext: { type: "text", text: { body: "Hello! I am trying to connect my business phone." } },
+            type: 'text',
+            metaChatId: 'msg-wa-1',
+            msgContext: {
+              type: 'text',
+              text: { body: 'Hello! I am trying to connect my business phone.' },
+            },
             timestamp: Math.floor(Date.now() / 1000) - 3600,
-            senderName: "Aarav Mehta",
-            senderMobile: "+919999900001",
-            status: "received",
+            senderName: 'Aarav Mehta',
+            senderMobile: '+919999900001',
+            status: 'received',
             star: false,
-            route: "INCOMING",
-            context: "",
-            origin: "META"
-          }
-        ]
+            route: 'INCOMING',
+            context: '',
+            origin: 'META',
+          },
+        ],
       },
       {
-        chatId: "demo-chat-qr-2",
-        senderName: "Diya Sharma",
-        senderMobile: "+919999900002",
-        origin: "QR",
-        tag: "support",
-        note: "Struggling with setting up templates.",
+        chatId: 'demo-chat-qr-2',
+        senderName: 'Diya Sharma',
+        senderMobile: '+919999900002',
+        origin: 'QR',
+        tag: 'support',
+        note: 'Struggling with setting up templates.',
         messages: [
           {
-            type: "text",
-            metaChatId: "msg-qr-2",
-            msgContext: { type: "text", text: { body: "Hi, can you verify why my campaign status says PAUSED?" } },
+            type: 'text',
+            metaChatId: 'msg-qr-2',
+            msgContext: {
+              type: 'text',
+              text: { body: 'Hi, can you verify why my campaign status says PAUSED?' },
+            },
             timestamp: Math.floor(Date.now() / 1000) - 1800,
-            senderName: "Diya Sharma",
-            senderMobile: "+919999900002",
-            status: "received",
+            senderName: 'Diya Sharma',
+            senderMobile: '+919999900002',
+            status: 'received',
             star: false,
-            route: "INCOMING",
-            context: "",
-            origin: "QR"
-          }
-        ]
+            route: 'INCOMING',
+            context: '',
+            origin: 'QR',
+          },
+        ],
       },
       {
-        chatId: "demo-chat-insta-3",
-        senderName: "Kabir Singh",
-        senderMobile: "demo-chat-insta-3",
-        origin: "instagram",
-        tag: "general",
-        note: "Asking about European delivery options.",
+        chatId: 'demo-chat-insta-3',
+        senderName: 'Kabir Singh',
+        senderMobile: 'demo-chat-insta-3',
+        origin: 'instagram',
+        tag: 'general',
+        note: 'Asking about European delivery options.',
         messages: [
           {
-            type: "text",
-            metaChatId: "msg-insta-3",
-            msgContext: { type: "text", text: { body: "Hey! Do you offer bulk discounts on custom orders?" } },
+            type: 'text',
+            metaChatId: 'msg-insta-3',
+            msgContext: {
+              type: 'text',
+              text: { body: 'Hey! Do you offer bulk discounts on custom orders?' },
+            },
             timestamp: Math.floor(Date.now() / 1000) - 600,
-            senderName: "Kabir Singh",
-            senderMobile: "demo-chat-insta-3",
-            status: "received",
+            senderName: 'Kabir Singh',
+            senderMobile: 'demo-chat-insta-3',
+            status: 'received',
             star: false,
-            route: "INCOMING",
-            context: "",
-            origin: "instagram"
-          }
-        ]
-      }
+            route: 'INCOMING',
+            context: '',
+            origin: 'instagram',
+          },
+        ],
+      },
     ];
 
     for (const sc of sampleChats) {
-      const checkChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [sc.chatId, req.decode.uid]);
+      const checkChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [
+        sc.chatId,
+        req.decode.uid,
+      ]);
       if (checkChat.length === 0) {
-        await query(`INSERT INTO chats (chat_id, uid, last_message_came, sender_name, sender_mobile, last_message, is_opened, chat_status, chat_note, chat_tags, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-          sc.chatId,
-          req.decode.uid,
-          sc.messages[0].timestamp,
-          sc.senderName,
-          sc.senderMobile,
-          JSON.stringify(sc.messages[0]),
-          0,
-          "open",
-          sc.note,
-          JSON.stringify([sc.tag]),
-          sc.origin
-        ]);
+        await query(
+          `INSERT INTO chats (chat_id, uid, last_message_came, sender_name, sender_mobile, last_message, is_opened, chat_status, chat_note, chat_tags, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            sc.chatId,
+            req.decode.uid,
+            sc.messages[0].timestamp,
+            sc.senderName,
+            sc.senderMobile,
+            JSON.stringify(sc.messages[0]),
+            0,
+            'open',
+            sc.note,
+            JSON.stringify([sc.tag]),
+            sc.origin,
+          ],
+        );
       }
 
-      const convPath = path.join(__dirname, `../conversations/inbox/${req.decode.uid}/${sc.chatId}.json`);
+      const convPath = path.join(
+        __dirname,
+        `../conversations/inbox/${req.decode.uid}/${sc.chatId}.json`,
+      );
       await writeJsonToFile(convPath, sc.messages);
     }
 
-    res.json({ success: true, msg: "Demo CRM workspace successfully seeded!" });
+    res.json({ success: true, msg: 'Demo CRM workspace successfully seeded!' });
   } catch (err) {
     console.log(err);
-    res.json({ success: false, msg: "something went wrong", error: err.message });
+    res.json({ success: false, msg: 'something went wrong', error: err.message });
   }
 });
 

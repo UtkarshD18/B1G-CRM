@@ -41,7 +41,16 @@ const app = express();
 // Production Hardening Middleware
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Don't break React frontend or WebSockets
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://*'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https://*'],
+        connectSrc: ["'self'", 'ws:', 'wss:', 'https://*'],
+      },
+    },
   }),
 );
 app.use(compression());
@@ -252,7 +261,14 @@ app.all('/api/*', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
-app.get('*', (req, res) => {
+const clientLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.get('*', clientLimiter, (req, res) => {
   if (fs.existsSync(indexPath)) {
     return res.sendFile(indexPath);
   }

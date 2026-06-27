@@ -122,7 +122,8 @@ function evaluateCondition(leftVal, operator, rightVal, caseSensitive = false) {
     case 'Regex Match':
       try {
         const flags = caseSensitive ? '' : 'i';
-        const regex = new RegExp(rawRight, flags);
+        const escapedRight = String(rawRight).replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+        const regex = new RegExp(escapedRight, flags);
         return regex.test(rawLeft);
       } catch {
         return false;
@@ -946,6 +947,10 @@ async function executeFlowStep(
             }
 
             try {
+              const { isSafeUrl } = require('../utils/ssrfFilter');
+              if (!(await isSafeUrl(url))) {
+                throw new Error('Blocked potential SSRF attack vector');
+              }
               const res = await fetch(url, fetchOptions);
               const text = await res.text();
               let json = {};
@@ -1420,11 +1425,13 @@ async function executeFlowStep(
                   }
                 }
 
+                const xss = require('xss');
+                const cleanHtmlBody = xss(htmlBody);
                 const info = await transporter.sendMail({
                   from: emailFrom || smtpEmail || 'no-reply@crm.com',
                   to,
                   subject,
-                  html: htmlBody,
+                  html: cleanHtmlBody,
                 });
 
                 if (!context.emailResponse) context.emailResponse = {};
@@ -1531,6 +1538,15 @@ async function executeFlowStep(
             const webhookUrl = replacePlaceholders(nodeData.webhookUrl || '', context);
             if (webhookUrl) {
               try {
+                const { isSafeUrl } = require('../utils/ssrfFilter');
+                if (!(await isSafeUrl(webhookUrl))) {
+                  console.error('Blocked potential SSRF on Webhook Node');
+                  context.variables[node_id] = {
+                    status: 'failed',
+                    error: 'Blocked potential SSRF',
+                  };
+                  break;
+                }
                 await fetch(webhookUrl, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },

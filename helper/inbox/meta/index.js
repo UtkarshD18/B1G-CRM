@@ -119,6 +119,9 @@ function getCurrentTimestampInTimeZone(timezone) {
 
 async function downloadAndSaveMedia(token, mediaId) {
   try {
+    if (!mediaId || !/^\d+$/.test(mediaId)) {
+      throw new Error('Invalid media ID format');
+    }
     const { data: mediaData } = await axios.get(`https://graph.facebook.com/v19.0/${mediaId}/`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -689,11 +692,16 @@ function convertNumberToRandomString(number) {
     9: 'j',
   };
 
-  const numStr = number.toString();
+  const numStr = String(number || '');
+  if (numStr.length > 50) {
+    return '';
+  }
   let result = '';
   for (let i = 0; i < numStr.length; i++) {
     const digit = numStr[i];
-    result += mapping[digit];
+    if (mapping[digit] !== undefined) {
+      result += mapping[digit];
+    }
   }
   return result;
 }

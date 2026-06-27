@@ -1,6 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../database/config');
+const rateLimit = require('express-rate-limit');
+
+const healthLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.use(healthLimiter);
 // Assuming WhatsApp and other channels check config or instance
 // No Redis per rules.
 
@@ -29,9 +39,9 @@ router.get('/ready', async (req, res) => {
     status: isReady ? 'READY' : 'NOT_READY',
     components: {
       database: dbStatus,
-      queue: dbStatus // Using PG as queue
+      queue: dbStatus, // Using PG as queue
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -54,9 +64,9 @@ router.get('/health', async (req, res) => {
     components: {
       database: dbState,
       scheduler: 'UNKNOWN', // Without Redis, workers are managed manually
-      websocket: 'UP'
+      websocket: 'UP',
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 

@@ -202,6 +202,9 @@ router.post('/webhook/:uid', async (req, res) => {
     // If actual integration and credentials are real
     if (!env.MOCK_META_DELIVERY && api.access_token && !api.access_token.startsWith('mock_')) {
       try {
+        if (!senderId || !/^\d+$/.test(senderId)) {
+          throw new Error('Invalid senderId format');
+        }
         const fetch = require('node-fetch');
         const profileRes = await fetch(
           `https://graph.facebook.com/v19.0/${senderId}?fields=name,profile_pic&access_token=${api.access_token}`,

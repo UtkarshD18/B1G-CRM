@@ -1505,6 +1505,10 @@ async function getBusinessPhoneNumber(apiVersion, businessPhoneNumberId, bearerT
   };
 
   try {
+    const { isSafeUrl } = require('../utils/ssrfFilter');
+    if (!(await isSafeUrl(url))) {
+      throw new Error('Blocked potential SSRF attack vector');
+    }
     const response = await fetch(url, options);
     const data = await response.json();
     return data;
@@ -2159,6 +2163,10 @@ async function makeRequest({ method, url, body = null, headers = [] }) {
     });
 
     // Perform the request
+    const { isSafeUrl } = require('../utils/ssrfFilter');
+    if (!(await isSafeUrl(url))) {
+      return { success: false, msg: 'Blocked potential SSRF attack vector' };
+    }
     const response = await fetch(url, config);
 
     // Clear the timeout
