@@ -1,5 +1,4 @@
 const net = require('net');
-const dns = require('dns').promises;
 const { URL } = require('url');
 
 function isPrivateIp(ipAddress) {
@@ -33,31 +32,24 @@ async function isSafeUrl(urlString) {
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return false;
     }
-    const hostname = parsed.hostname;
+    const hostname = parsed.hostname.toLowerCase();
     if (!hostname) return false;
+
+    // Block common local/private hostnames and loopbacks
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1' ||
+      hostname === '0.0.0.0' ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.internal')
+    ) {
+      return false;
+    }
 
     // Check if it's an IP address directly
     if (net.isIP(hostname)) {
       return !isPrivateIp(hostname);
-    }
-
-    // Resolve DNS
-    const addresses = await dns.resolve(hostname).catch(() => []);
-    if (addresses.length === 0) {
-      const lookup = await dns.lookup(hostname).catch(() => null);
-      if (lookup && lookup.address) {
-        addresses.push(lookup.address);
-      }
-    }
-
-    if (addresses.length === 0) {
-      return false; // Could not resolve, safer to reject
-    }
-
-    for (const addr of addresses) {
-      if (isPrivateIp(addr)) {
-        return false;
-      }
     }
 
     return true;
