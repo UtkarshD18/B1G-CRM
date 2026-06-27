@@ -57,6 +57,9 @@ dist/
 # Local test scripts (may contain API keys)
 scratch/
 
+# Generated E2E reports (may capture runtime tokens from console logs)
+reports/
+
 # AI generated reports
 *_AUDIT.md
 *_REPORT.md
