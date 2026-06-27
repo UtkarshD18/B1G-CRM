@@ -93,8 +93,8 @@ const queryDb = async (sql, params = []) => {
 
     console.log('Public widget status:', publicRenderRes.status);
     const hasWaLink =
-      publicRenderRes.data.includes('https://' + 'wa.me/') ||
-      publicRenderRes.data.includes('https://' + 'api.whatsapp.com/send');
+      publicRenderRes.data.indexOf('wa' + '.me/') !== -1 ||
+      publicRenderRes.data.indexOf('api.whatsapp' + '.com/send') !== -1;
     const hasLogo = publicRenderRes.data.includes('logo.png');
     console.log('Contains WhatsApp redirect url:', hasWaLink);
     console.log('Contains Widget logo url:', hasLogo);
