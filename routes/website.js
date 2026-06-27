@@ -501,6 +501,9 @@ router.get('/widget/history', async (req, res) => {
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
     const filePath = validatePath(rootInboxDir, `${uid}/${chatId}.json`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
 
     if (!fs.existsSync(filePath)) {
       return res.json({ success: true, data: [] });
@@ -625,10 +628,16 @@ router.post('/widget/message', async (req, res) => {
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
     const dir = validatePath(rootInboxDir, uid);
+    if (!dir) {
+      return;
+    }
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
     const filePath = validatePath(rootInboxDir, `${uid}/${chatId}.json`);
+    if (!filePath) {
+      return;
+    }
     let convo = [];
     if (fs.existsSync(filePath)) {
       convo = JSON.parse(fs.readFileSync(filePath, 'utf8'));

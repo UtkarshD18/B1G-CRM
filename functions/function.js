@@ -731,7 +731,10 @@ function getCurrentTimestampInTimeZone(timezone) {
 }
 
 function addObjectToFile(object, filePath) {
-  const parentDir = path.dirname(filePath);
+  const { validatePath } = require('../utils/pathSafe');
+  const cleanPath = validatePath(process.cwd(), filePath);
+  if (!cleanPath) return;
+  const parentDir = path.dirname(cleanPath);
 
   // Check if the parent directory exists
   if (!fs.existsSync(parentDir)) {
@@ -739,16 +742,16 @@ function addObjectToFile(object, filePath) {
     fs.mkdirSync(parentDir, { recursive: true });
   }
 
-  if (fs.existsSync(filePath)) {
-    const existingData = JSON.parse(fs.readFileSync(filePath));
+  if (fs.existsSync(cleanPath)) {
+    const existingData = JSON.parse(fs.readFileSync(cleanPath));
     if (Array.isArray(existingData)) {
       existingData.push(object);
-      fs.writeFileSync(filePath, JSON.stringify(existingData, null, 2));
+      fs.writeFileSync(cleanPath, JSON.stringify(existingData, null, 2));
     } else {
       console.error('File does not contain an array.');
     }
   } else {
-    fs.writeFileSync(filePath, JSON.stringify([object], null, 2));
+    fs.writeFileSync(cleanPath, JSON.stringify([object], null, 2));
   }
 }
 
@@ -813,9 +816,16 @@ function getFileExtension(fileName) {
 }
 
 function writeJsonToFile(filepath, jsonData, callback) {
+  const { validatePath } = require('../utils/pathSafe');
+  const cleanPath = validatePath(process.cwd(), filepath);
+  if (!cleanPath) {
+    const err = new Error('Invalid filepath');
+    if (callback) callback(err);
+    return Promise.reject(err);
+  }
   return new Promise((resolve, reject) => {
     // Ensure directory structure exists
-    const directory = path.dirname(filepath);
+    const directory = path.dirname(cleanPath);
     fs.mkdir(directory, { recursive: true }, function (err) {
       if (err) {
         if (callback) {
@@ -829,7 +839,7 @@ function writeJsonToFile(filepath, jsonData, callback) {
       const jsonString = JSON.stringify(jsonData, null, 2); // 2 spaces indentation for readability
 
       // Write JSON data to file, with 'w' flag to overwrite existing file
-      fs.writeFile(filepath, jsonString, { flag: 'w' }, function (err) {
+      fs.writeFile(cleanPath, jsonString, { flag: 'w' }, function (err) {
         if (err) {
           if (callback) {
             callback(err);
@@ -837,7 +847,7 @@ function writeJsonToFile(filepath, jsonData, callback) {
           reject(err);
           return;
         }
-        const message = `JSON data has been written to '${filepath}'.`;
+        const message = `JSON data has been written to '${cleanPath}'.`;
         if (callback) {
           callback(null, message);
         }
@@ -848,51 +858,60 @@ function writeJsonToFile(filepath, jsonData, callback) {
 }
 
 function deleteFileIfExists(filePath) {
+  const { validatePath } = require('../utils/pathSafe');
+  const cleanPath = validatePath(process.cwd(), filePath);
+  if (!cleanPath) return;
   // Check if the file exists
-  fs.access(filePath, fs.constants.F_OK, (err) => {
+  fs.access(cleanPath, fs.constants.F_OK, (err) => {
     if (err) {
       // File does not exist, do nothing
-      console.error(`File ${filePath} does not exist.`);
+      console.error(`File ${cleanPath} does not exist.`);
       return;
     }
 
     // File exists, delete it
-    fs.unlink(filePath, (err) => {
+    fs.unlink(cleanPath, (err) => {
       if (err) {
-        console.error(`Error deleting file ${filePath}:`, err);
+        console.error(`Error deleting file ${cleanPath}:`, err);
         return;
       }
-      console.log(`File ${filePath} has been deleted.`);
+      console.log(`File ${cleanPath} has been deleted.`);
     });
   });
 }
 
 function readJsonFromFile(filePath) {
+  const { validatePath } = require('../utils/pathSafe');
+  const cleanPath = validatePath(process.cwd(), filePath);
+  if (!cleanPath) return [];
   try {
     // Read the file synchronously
-    const jsonData = fs.readFileSync(filePath, 'utf8');
+    const jsonData = fs.readFileSync(cleanPath, 'utf8');
     // Parse JSON data
     const parsedData = JSON.parse(jsonData);
     // If parsed data is an array, return it, otherwise return an empty array
     return Array.isArray(parsedData) ? parsedData : [];
   } catch (err) {
     // If any error occurs (e.g., file not found or invalid JSON), return an empty array
-    console.error(`Error reading JSON file ${filePath}:`, err);
+    console.error(`Error reading JSON file ${cleanPath}:`, err);
     return [];
   }
 }
 
 function readJSONFile(filePath, length) {
+  const { validatePath } = require('../utils/pathSafe');
+  const cleanPath = validatePath(process.cwd(), filePath);
+  if (!cleanPath) return [];
   try {
     console.log('HEY');
     // Check if the file exists
-    if (!fs.existsSync(filePath)) {
-      console.error('File not found:', filePath);
+    if (!fs.existsSync(cleanPath)) {
+      console.error('File not found:', cleanPath);
       return []; // Return empty array if file does not exist
     }
 
     // Read the file content
-    let fileContent = fs.readFileSync(filePath, 'utf8');
+    let fileContent = fs.readFileSync(cleanPath, 'utf8');
 
     // }\n]  }\n]
 
@@ -903,7 +922,7 @@ function readJSONFile(filePath, length) {
       console.log('Correction done!');
 
       // Write the corrected JSON back to the file
-      fs.writeFileSync(filePath, fileContent, 'utf8');
+      fs.writeFileSync(cleanPath, fileContent, 'utf8');
       console.log('Corrected JSON has been written to the file');
     }
 
@@ -915,7 +934,7 @@ function readJSONFile(filePath, length) {
       console.log('Correction done!');
 
       // Write the corrected JSON back to the file
-      fs.writeFileSync(filePath, fileContent, 'utf8');
+      fs.writeFileSync(cleanPath, fileContent, 'utf8');
       console.log('Corrected JSON has been written to the file');
     }
 
@@ -2211,6 +2230,9 @@ function replacePlaceholders(template, data) {
 
 const rzCapturePayment = (paymentId, amount, razorpayKey, razorpaySecret) => {
   const auth = 'Basic ' + Buffer.from(razorpayKey + ':' + razorpaySecret).toString('base64');
+  if (!paymentId || !/^[a-zA-Z0-9_-]+$/.test(paymentId)) {
+    return Promise.reject(new Error('Invalid payment ID format'));
+  }
 
   return new Promise((resolve, reject) => {
     fetch(`https://api.razorpay.com/v1/payments/${paymentId}/capture`, {

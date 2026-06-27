@@ -1618,6 +1618,9 @@ router.post('/suggest-response', validateUserOrAgent, async (req, res) => {
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
     const conversationPath = validatePath(rootInboxDir, `${req.decode.uid}/${chatId}.json`);
+    if (!conversationPath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
     let lastIncomingMsg = 'hello';
     if (fs.existsSync(conversationPath)) {
       try {

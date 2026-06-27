@@ -47,6 +47,9 @@ router.get('/get-one-translation', async (req, res) => {
     }
     const { validatePath } = require('../utils/pathSafe');
     const filePath = validatePath(path.join(cirDir, 'languages'), `${code}.json`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
 
     fs.readFile(filePath, 'utf8', (err, lang) => {
       if (err) {
@@ -92,6 +95,9 @@ router.post('/update-one-translation', adminValidator, async (req, res) => {
 
     const { validatePath } = require('../utils/pathSafe');
     const filePath = validatePath(path.join(cirDir, 'languages'), `${code}.json`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
 
     fs.writeFile(filePath, JSON.stringify(updatedJson), 'utf8', (err) => {
       if (err) {
@@ -238,6 +244,10 @@ router.post('/add-new-translation', adminValidator, async (req, res) => {
       const sourceFilePath = path.join(sourceFolderPath, randomFile);
       const { validatePath } = require('../utils/pathSafe');
       const destinationFilePath = validatePath(sourceFolderPath, `${newCode}.json`);
+      if (!destinationFilePath) {
+        res.json({ success: false, msg: 'Invalid destination path' });
+        return;
+      }
 
       // Check if the destination file already exists
       if (fs.existsSync(destinationFilePath)) {
@@ -292,6 +302,9 @@ router.post('/del-one-translation', adminValidator, async (req, res) => {
     const folderPath = path.join(cirDir, 'languages');
     const { validatePath } = require('../utils/pathSafe');
     const filePath = validatePath(folderPath, `${code}.json`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
 
     // Read the list of files in the "languages" folder
     fs.readdir(folderPath, (err, files) => {

@@ -150,6 +150,9 @@ router.post('/get_convo', validateUserOrAgent, async (req, res) => {
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
     const filePath = validatePath(rootInboxDir, `${req.decode.uid}/${chatId}.json`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
     const data = readJSONFile(filePath, 100);
     res.json({ data, success: true });
   } catch (err) {
@@ -194,6 +197,9 @@ router.post(
       const { orderedChatIds } = req.body;
       if (!Array.isArray(orderedChatIds)) {
         return res.json({ success: false, msg: 'orderedChatIds must be an array' });
+      }
+      if (orderedChatIds.length > 1000) {
+        return res.json({ success: false, msg: 'orderedChatIds exceeds maximum allowed limit' });
       }
 
       await withTransaction(async (txQuery) => {
@@ -654,6 +660,9 @@ router.post('/del_chat', validateUserOrAgent, async (req, res) => {
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
     const filePath = validatePath(rootInboxDir, `${req.decode.uid}/${chatId}`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
 
     deleteFileIfExists(filePath);
 
@@ -714,7 +723,7 @@ router.post('/delete_message', validateUserOrAgent, async (req, res) => {
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
     const filePath = validatePath(rootInboxDir, `${req.decode.uid}/${chatId}.json`);
-    if (fs.existsSync(filePath)) {
+    if (filePath && fs.existsSync(filePath)) {
       let fileData = [];
       try {
         const fileContent = fs.readFileSync(filePath, 'utf8');

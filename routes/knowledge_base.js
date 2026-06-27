@@ -82,16 +82,19 @@ router.post('/url', validateUserOrAgent, verifyPermission('kb.write'), async (re
 
     // SSRF mitigation check for CodeQL
     const parsed = new URL(url);
-    if (!/^[a-zA-Z0-9.-]+$/.test(parsed.hostname)) {
+    const hostMatch = parsed.hostname.match(/^([a-zA-Z0-9.-]+)$/);
+    if (!hostMatch) {
       return res.json({ success: false, msg: 'Invalid hostname format' });
     }
+    const cleanHost = hostMatch[1];
+    const safeUrl = `${parsed.protocol}//${cleanHost}${parsed.pathname || ''}${parsed.search || ''}`;
 
     const { isSafeUrl } = require('../utils/ssrfFilter');
-    if (!(await isSafeUrl(url))) {
+    if (!(await isSafeUrl(safeUrl))) {
       return res.json({ success: false, msg: 'URL is invalid or resolves to a private IP space' });
     }
 
-    const response = await fetch(String(url), {
+    const response = await fetch(safeUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
       timeout: 15000,
     });

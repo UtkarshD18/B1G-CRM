@@ -121,6 +121,9 @@ router.get('/webhook/:uid', async (req, res) => {
 
     if (mode && token) {
       if (mode === 'subscribe' && token === uid) {
+        if (!challenge || !/^[a-zA-Z0-9_-]+$/.test(challenge)) {
+          return res.status(400).send('Invalid challenge format');
+        }
         console.log('Instagram Webhook verified successfully for tenant:', uid);
         return res.status(200).send(challenge);
       } else {
@@ -301,12 +304,14 @@ router.post('/webhook/:uid', async (req, res) => {
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
     const conversationsDir = validatePath(rootInboxDir, uid);
-    if (!fs.existsSync(conversationsDir)) {
-      fs.mkdirSync(conversationsDir, { recursive: true });
+    if (conversationsDir) {
+      if (!fs.existsSync(conversationsDir)) {
+        fs.mkdirSync(conversationsDir, { recursive: true });
+      }
     }
     const chatFilePath = validatePath(rootInboxDir, `${uid}/${senderId}.json`);
     let conversationHistory = [];
-    if (fs.existsSync(chatFilePath)) {
+    if (chatFilePath && fs.existsSync(chatFilePath)) {
       try {
         conversationHistory = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
       } catch (e) {
