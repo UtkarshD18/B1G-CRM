@@ -73,11 +73,11 @@ function AdminSiteSettings() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #d8f0ea, #b8e6d8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>⚙️</div>
           <div>
-            <h2 style={{ margin: 0 }}>Site Settings</h2>
-            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Configure your website appearance and behavior</p>
+            <span className="eyebrow">site-settings</span>
+            <h5 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Application Configuration</h5>
+            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Customize your application settings and appearance</p>
           </div>
         </div>
-        <button className="mini-button" onClick={load} style={{ border: '1px solid #1ea085', color: '#1ea085', borderRadius: '10px', padding: '10px 20px' }}>🔄 Refresh</button>
       </div>
 
       {status && <p className="status-line">{status}</p>}
@@ -93,60 +93,95 @@ function AdminSiteSettings() {
             )}
           </div>
           <div style={{ display: 'grid', gap: '6px' }}>
-            <strong>Site Logo Image</strong>
-            <span style={{ color: '#607481', fontSize: '0.82rem' }}>Select a file to upload and replace the current logo.</span>
+            <strong>logo</strong>
+            <span style={{ color: '#607481', fontSize: '0.82rem' }}>Click to upload logo</span>
+            <span style={{ color: '#a0aec0', fontSize: '0.75rem' }}>PNG, JPEG, JPG — max 200KB</span>
             <input type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} style={{ fontSize: '0.85rem' }} />
           </div>
         </div>
 
         <div className="form-grid">
           <label>
-            App Name
+            WhatsCRM
             <input value={data.app_name || ''} onChange={e => setData({ ...data, app_name: e.target.value })} required />
-          </label>
-          <label>
-            Currency Code
-            <input value={data.currency_code || ''} onChange={e => setData({ ...data, currency_code: e.target.value })} />
-          </label>
-          <label>
-            Currency Symbol
-            <input value={data.currency_symbol || ''} onChange={e => setData({ ...data, currency_symbol: e.target.value })} />
-          </label>
-          <label>
-            Exchange Rate
-            <input type="number" min="0" step="any" value={data.exchange_rate || 1} onChange={e => setData({ ...data, exchange_rate: e.target.value })} />
-          </label>
-          <label>
-            Meta Description
-            <input value={data.meta_description || ''} onChange={e => setData({ ...data, meta_description: e.target.value })} />
-          </label>
-          <label>
-            Home Page Tutorial URL
-            <input value={data.home_page_tutorial || ''} onChange={e => setData({ ...data, home_page_tutorial: e.target.value })} />
-          </label>
-          <label>
-            Chatbot Tutorial URL
-            <input value={data.chatbot_screen_tutorial || ''} onChange={e => setData({ ...data, chatbot_screen_tutorial: e.target.value })} />
-          </label>
-          <label>
-            Broadcast Tutorial URL
-            <input value={data.broadcast_screen_tutorial || ''} onChange={e => setData({ ...data, broadcast_screen_tutorial: e.target.value })} />
           </label>
         </div>
 
-        <label style={{ marginTop: '16px', display: 'block' }}>
-          Custom Home HTML/Content
-          <textarea rows={5} value={data.custom_home || ''} onChange={e => setData({ ...data, custom_home: e.target.value })} />
-        </label>
-        <label style={{ marginTop: '16px', display: 'block' }}>
-          Login Header/Footer Content
-          <textarea rows={3} value={data.login_header_footer || ''} onChange={e => setData({ ...data, login_header_footer: e.target.value })} />
-        </label>
-        <label className="checkbox-row" style={{ marginTop: '16px' }}>
-          <input type="checkbox" checked={Number(data.is_custom_home) > 0} onChange={e => setData({ ...data, is_custom_home: e.target.checked ? 1 : 0 })} />
-          <span>Use Custom Home Page</span>
-        </label>
-        <button className="primary-button" type="submit" style={{ borderRadius: '12px', marginTop: '20px' }}>Save Site Settings</button>
+        {/* Home Page Settings */}
+        <div style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+          <h6 style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 600 }}>Home Page Settings</h6>
+          <label className="checkbox-row" style={{ marginBottom: '12px' }}>
+            <input type="checkbox" checked={Number(data.is_custom_home) > 0} onChange={e => setData({ ...data, is_custom_home: e.target.checked ? 1 : 0 })} />
+            <div>
+              <strong>Custom Home Page</strong>
+              <p style={{ margin: 0, color: '#607481', fontSize: '0.82rem' }}>Redirect users to a custom URL for the home page</p>
+            </div>
+          </label>
+          <label>
+            Custom Home URL
+            <input type="text" placeholder="https://example.com" value={data.custom_home || ''} onChange={e => setData({ ...data, custom_home: e.target.value })} />
+          </label>
+        </div>
+
+        {/* Header & Footer on Login Page */}
+        <div style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+          <h6 style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 600 }}>Header & Footer on Login Page</h6>
+          <label className="checkbox-row">
+            <input type="checkbox" checked={data.login_header_footer === '1' || data.login_header_footer === 1} onChange={e => setData({ ...data, login_header_footer: e.target.checked ? '1' : '0' })} />
+            <div>
+              <strong>Show header and footer on the login page</strong>
+            </div>
+          </label>
+        </div>
+
+        {/* Currency Settings */}
+        <div style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+          <h6 style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 600 }}>Currency Settings</h6>
+          <div className="form-grid">
+            <label>
+              Currency Code
+              <input placeholder="USD" value={data.currency_code || ''} onChange={e => setData({ ...data, currency_code: e.target.value })} />
+            </label>
+            <label>
+              Currency Symbol
+              <input placeholder="$" value={data.currency_symbol || ''} onChange={e => setData({ ...data, currency_symbol: e.target.value })} />
+            </label>
+            <label>
+              Exchange Rate
+              <input type="number" step="any" placeholder="1.0" value={data.exchange_rate || 1} onChange={e => setData({ ...data, exchange_rate: e.target.value })} />
+            </label>
+          </div>
+        </div>
+
+        {/* SEO Settings */}
+        <div style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+          <h6 style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 600 }}>SEO Settings</h6>
+          <label style={{ display: 'block' }}>
+            Meta Description
+            <textarea rows={3} placeholder="Enter a description for search engines..." value={data.meta_description || ''} onChange={e => setData({ ...data, meta_description: e.target.value })} />
+          </label>
+        </div>
+
+        {/* Tutorial Videos */}
+        <div style={{ marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginBottom: '20px' }}>
+          <h6 style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: 600 }}>Tutorial Videos</h6>
+          <div className="form-grid">
+            <label>
+              Home Page Tutorial
+              <input placeholder="YouTube video URL" value={data.home_page_tutorial || ''} onChange={e => setData({ ...data, home_page_tutorial: e.target.value })} />
+            </label>
+            <label>
+              Chatbot Tutorial
+              <input placeholder="YouTube video URL" value={data.chatbot_screen_tutorial || ''} onChange={e => setData({ ...data, chatbot_screen_tutorial: e.target.value })} />
+            </label>
+            <label>
+              Broadcast Tutorial
+              <input placeholder="YouTube video URL" value={data.broadcast_screen_tutorial || ''} onChange={e => setData({ ...data, broadcast_screen_tutorial: e.target.value })} />
+            </label>
+          </div>
+        </div>
+
+        <button className="primary-button" type="submit" style={{ borderRadius: '12px' }}>Save Changes</button>
       </form>
     </div>
   )

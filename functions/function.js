@@ -1762,7 +1762,7 @@ function validateEmail(email) {
   return re.test(String(email).toLowerCase());
 }
 
-function sendEmail(host, port, email, pass, html, subject, from, to) {
+function sendEmail(host, port, email, pass, html, subject, from, to, username = "") {
   return new Promise(async (resolve) => {
     try {
       let transporter = nodemailer.createTransport({
@@ -1770,7 +1770,7 @@ function sendEmail(host, port, email, pass, html, subject, from, to) {
         port: port,
         secure: port === "465" ? true : false, // true for 465, false for other ports
         auth: {
-          user: email, // generated ethereal user
+          user: username || email, // generated ethereal user or custom username
           pass: pass, // generated ethereal password
         },
       });

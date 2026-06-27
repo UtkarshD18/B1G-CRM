@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 import { formatDateTime, formatMoney } from '../../shared/format'
@@ -23,29 +23,42 @@ function AdminOrdersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterMode, setFilterMode] = useState('all')
 
-  useEffect(() => {
-    let active = true
-
-    async function loadOrders() {
-      try {
-        const result = await apiRequest('/api/admin/get_orders', { token: tokens.admin })
-        if (!active) {
-          return
-        }
-        setOrders(Array.isArray(result?.data) ? result.data : [])
-        setStatus('')
-      } catch (error) {
-        if (active) {
-          setStatus(error.message || 'Unable to load orders')
-        }
-      }
-    }
-
-    loadOrders()
-    return () => {
-      active = false
+  const loadOrders = useCallback(async () => {
+    setStatus('Loading orders...')
+    try {
+      const result = await apiRequest('/api/admin/get_orders', { token: tokens.admin })
+      setOrders(Array.isArray(result?.data) ? result.data : [])
+      setStatus('')
+    } catch (error) {
+      setStatus(error.message || 'Unable to load orders')
     }
   }, [tokens.admin])
+
+  useEffect(() => {
+    loadOrders()
+  }, [loadOrders])
+
+  async function deleteOrder(id) {
+    if (!window.confirm('Are you sure you want to permanently delete this order? This action cannot be undone.')) {
+      return
+    }
+    setStatus('Deleting order...')
+    try {
+      const result = await apiRequest('/api/admin/del_order', {
+        method: 'POST',
+        token: tokens.admin,
+        body: { id }
+      })
+      if (!result?.success) {
+        setStatus(result?.msg || 'Unable to delete order')
+        return
+      }
+      setStatus('Order deleted.')
+      loadOrders()
+    } catch (error) {
+      setStatus(error.message || 'Unable to delete order')
+    }
+  }
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -80,6 +93,11 @@ function AdminOrdersPage() {
           <span className="eyebrow">billing &amp; payments</span>
           <h2>Recent Transactions</h2>
           <p>All subscription payments and order records across tenant accounts.</p>
+        </div>
+        <div className="action-row">
+          <button className="secondary-button" type="button" onClick={loadOrders} aria-label="Refresh">
+            🔄 Refresh
+          </button>
         </div>
       </div>
 
@@ -131,17 +149,19 @@ function AdminOrdersPage() {
           <table>
             <thead>
               <tr>
-                <th>Customer</th>
-                <th>Email</th>
+                <th>Payment Method</th>
                 <th>Amount</th>
-                <th>Gateway</th>
+                <th>Status</th>
+                <th>Name</th>
+                <th>Email</th>
                 <th>Date</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '36px 0' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px 0' }}>
                     <span className="muted-copy">
                       {searchTerm || filterMode !== 'all' ? 'No orders matched current filters.' : 'No transactions recorded yet.'}
                     </span>
@@ -152,9 +172,6 @@ function AdminOrdersPage() {
                   const style = getPaymentStyle(order.payment_mode)
                   return (
                     <tr key={order.id}>
-                      <td><strong>{order.name || order.uid || 'Unknown'}</strong></td>
-                      <td className="muted-copy">{order.email || '—'}</td>
-                      <td><strong>{formatMoney(Number(order.amount || 0))}</strong></td>
                       <td>
                         <span
                           className="status-chip"
@@ -163,7 +180,29 @@ function AdminOrdersPage() {
                           {order.payment_mode || 'Unknown'}
                         </span>
                       </td>
+                      <td><strong>{formatMoney(Number(order.amount || 0))}</strong></td>
+                      <td>
+                        <span
+                          className="status-chip"
+                          style={{ backgroundColor: '#d1fae5', color: '#065f46', fontSize: '11px', fontWeight: 600 }}
+                        >
+                          Paid
+                        </span>
+                      </td>
+                      <td><strong>{order.name || order.uid || 'Unknown'}</strong></td>
+                      <td className="muted-copy">{order.email || '—'}</td>
                       <td className="muted-copy">{formatDateTime(order.orderCreatedAt)}</td>
+                      <td>
+                        <button
+                          className="mini-button subtle-danger"
+                          type="button"
+                          onClick={() => deleteOrder(order.id)}
+                          aria-label="Delete Order"
+                          title="Delete Order"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </td>
                     </tr>
                   )
                 })
@@ -177,3 +216,4 @@ function AdminOrdersPage() {
 }
 
 export default AdminOrdersPage
+

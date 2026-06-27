@@ -627,11 +627,16 @@ function UserContactsPage() {
               <thead>
                 <tr>
                   <th />
-                  <th>Name</th>
-                  <th>Mobile</th>
-                  <th>Phonebook</th>
-                  <th>Variables</th>
-                  <th>Actions</th>
+                  <th>NAME</th>
+                  <th>PHONEBOOK</th>
+                  <th>MOBILE NUMBER</th>
+                  <th>VARIABLE 1</th>
+                  <th>VARIABLE 2</th>
+                  <th>VARIABLE 3</th>
+                  <th>VARIABLE 4</th>
+                  <th>VARIABLE 5</th>
+                  <th>DATE</th>
+                  <th>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
@@ -645,13 +650,14 @@ function UserContactsPage() {
                       />
                     </td>
                     <td>{contact.name || 'N/A'}</td>
+                    <td>{contact.phonebook_name || contact.phonebook_id || 'N/A'}</td>
                     <td>{contact.mobile}</td>
-                    <td>{contact.phonebook_name || contact.phonebook_id}</td>
-                    <td>
-                      {[contact.var1, contact.var2, contact.var3, contact.var4, contact.var5]
-                        .filter(Boolean)
-                        .join(', ') || 'None'}
-                    </td>
+                    <td>{contact.var1 || ''}</td>
+                    <td>{contact.var2 || ''}</td>
+                    <td>{contact.var3 || ''}</td>
+                    <td>{contact.var4 || ''}</td>
+                    <td>{contact.var5 || ''}</td>
+                    <td>{contact.createdat || contact.createdAt ? new Date(contact.createdat || contact.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</td>
                     <td>
                       <button
                         className="mini-button dark-text"

@@ -94,18 +94,25 @@ function UserTaskPage() {
 
   return (
     <div className="page-stack">
-      <div className="page-header">
-        <div>
-          <span className="eyebrow">agent task</span>
-          <h2>Task queue assigned to tenant agents</h2>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #d8f0ea, #b8e6d8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>📋</div>
+          <div>
+            <h2 style={{ margin: 0 }}>Agent Task</h2>
+            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Add, Manage or view Tasks set for the agent</p>
+          </div>
         </div>
+        <button className="mini-button" style={{ border: '1px solid #1ea085', color: '#1ea085', borderRadius: '10px', padding: '10px 20px' }} onClick={loadTaskPageData}>🔄 Refresh</button>
       </div>
       {status ? <p className="status-line">{status}</p> : null}
       <div className="two-column-grid">
-        <form className="panel form-panel" onSubmit={createTask}>
-          <div className="panel-header">
-            <h2>Create task</h2>
+        <form className="panel form-panel" onSubmit={createTask} style={{ padding: '24px', borderRadius: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <span style={{ color: '#1ea085' }}>➕</span>
+            <strong>Add Task</strong>
           </div>
+          <p style={{ color: '#607481', fontSize: '0.875rem', margin: '0 0 16px' }}>Assign a new task to an agent</p>
+
           <label>
             Title
             <input
@@ -144,7 +151,7 @@ function UserTaskPage() {
 
         <div className="panel table-panel">
           <div className="panel-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
-            <h2>Current tasks ({filteredTasks.length})</h2>
+            <h2>Task List <span style={{ fontSize: '0.8rem', color: '#1ea085', fontWeight: 600 }}>{filteredTasks.length}</span></h2>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
@@ -172,41 +179,66 @@ function UserTaskPage() {
               )}
             </div>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Agent</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTasks.map((task) => (
-                  <tr key={task.id}>
-                    <td><strong>{task.title}</strong></td>
-                    <td className="muted-copy">{task.agent_email}</td>
-                    <td>
-                      <span className="status-chip" style={{
-                        backgroundColor: task.status === 'completed' ? '#d1fae5' : '#fef9c3',
-                        color: task.status === 'completed' ? '#065f46' : '#854d0e',
-                        fontSize: '11px'
-                      }}>
-                        {task.status || 'pending'}
-                      </span>
-                    </td>
-                    <td className="muted-copy" style={{ whiteSpace: 'nowrap' }}>{formatDateTime(task.createdAt)}</td>
-                    <td>
-                      <button className="mini-button subtle-danger" type="button" onClick={() => deleteTask(task.id, task.title)}>
-                        Delete
-                      </button>
-                    </td>
+            <div style={{ overflowX: 'auto' }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Agent Comment</th>
+                    <th>Added On</th>
+                    <th>View Page</th>
+                    <th>Delete</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredTasks.map((task) => (
+                    <tr key={task.id}>
+                      <td className="muted-copy" style={{ whiteSpace: 'nowrap' }}>{task.agent_email || '—'}</td>
+                      <td><strong>{task.title}</strong></td>
+                      <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#607481' }} title={task.des || task.description || ''}>
+                        {task.des || task.description || '—'}
+                      </td>
+                      <td>
+                        <span className="status-chip" style={{
+                          backgroundColor: task.status === 'completed' || task.status === 'COMPLETED' ? '#d1fae5' : '#fef9c3',
+                          color: task.status === 'completed' || task.status === 'COMPLETED' ? '#065f46' : '#854d0e',
+                          fontSize: '11px', fontWeight: 600, textTransform: 'uppercase'
+                        }}>
+                          {task.status || 'PENDING'}
+                        </span>
+                      </td>
+                      <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#607481' }} title={task.agent_comment || ''}>
+                        {task.agent_comment || '—'}
+                      </td>
+                      <td className="muted-copy" style={{ whiteSpace: 'nowrap' }}>{formatDateTime(task.createdAt || task.created_at)}</td>
+                      <td>
+                        <button
+                          className="mini-button"
+                          type="button"
+                          title="View task detail"
+                          onClick={() => {
+                            const msg = `Task: ${task.title}\nAgent: ${task.agent_email || '—'}\nStatus: ${task.status || 'PENDING'}\nDescription: ${task.des || task.description || '—'}\nComment: ${task.agent_comment || '—'}`
+                            window.alert(msg)
+                          }}
+                        >
+                          📄 View
+                        </button>
+                      </td>
+                      <td>
+                        <button className="mini-button subtle-danger" type="button" onClick={() => deleteTask(task.id, task.title)}>
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
+
         </div>
       </div>
     </div>

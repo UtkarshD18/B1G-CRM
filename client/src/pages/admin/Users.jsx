@@ -259,17 +259,19 @@ function AdminUsersPage() {
         <table>
           <thead>
             <tr>
+              <th>Auto Login</th>
               <th>Name</th>
-              <th>Email</th>
+              <th>Mobile Number</th>
+              <th>Timezone</th>
               <th>Plan</th>
-              <th>Expiry</th>
-              <th />
+              <th>Plan Expires</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ textAlign: 'center', padding: '36px 0' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '36px 0' }}>
                   <span className="muted-copy">
                     {searchTerm ? 'No users matched your search.' : 'No users registered yet.'}
                   </span>
@@ -277,20 +279,74 @@ function AdminUsersPage() {
               </tr>
             ) : filteredUsers.map((user) => (
               <tr key={user.uid}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{summarizePlan(user.plan)}</td>
-                <td>{formatDateTime(user.plan_expire)}</td>
+                <td>
+                  <button
+                    className="mini-button"
+                    type="button"
+                    onClick={() => handleAutoLogin(user.uid)}
+                    aria-label="Login as this user"
+                    title="Login as this user"
+                    style={{ fontSize: '16px', padding: '6px 10px' }}
+                  >
+                    🔑
+                  </button>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: '#e2e8f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      color: '#4a5568'
+                    }}>
+                      {String(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{user.name || '—'}</div>
+                      <div className="muted-copy" style={{ fontSize: '12px' }}>{user.email}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{user.mobile_with_country_code || '—'}</td>
+                <td>{user.timezone || '—'}</td>
+                <td>
+                  <span className="status-chip" style={{
+                    backgroundColor: user.plan ? '#d1fae5' : '#f3f4f6',
+                    color: user.plan ? '#065f46' : '#374151',
+                    fontSize: '11px',
+                    fontWeight: 600
+                  }}>
+                    {summarizePlan(user.plan)}
+                  </span>
+                </td>
+                <td style={{ color: user.plan_expire ? '#059669' : 'inherit', fontWeight: user.plan_expire ? 600 : 'normal' }}>
+                  {formatDateTime(user.plan_expire)}
+                </td>
                 <td>
                   <div className="action-row">
-                    <button className="mini-button" type="button" onClick={() => editUser(user)}>
-                      Edit
+                    <button
+                      className="mini-button"
+                      type="button"
+                      onClick={() => editUser(user)}
+                      aria-label="Edit User"
+                      title="Edit User"
+                    >
+                      ✏️ Edit
                     </button>
-                    <button className="mini-button" type="button" onClick={() => handleAutoLogin(user.uid)}>
-                      Auto login
-                    </button>
-                    <button className="mini-button subtle-danger" type="button" onClick={() => deleteUser(user.id, user.name)}>
-                      Delete
+                    <button
+                      className="mini-button subtle-danger"
+                      type="button"
+                      onClick={() => deleteUser(user.id, user.name)}
+                      aria-label="Delete User"
+                      title="Delete User"
+                    >
+                      🗑️ Delete
                     </button>
                   </div>
                 </td>

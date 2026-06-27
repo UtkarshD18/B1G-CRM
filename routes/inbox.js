@@ -31,6 +31,41 @@ router.post("/webhook/:uid", async (req, res) => {
 
     res.sendStatus(200);
 
+    // Log incoming webhook event for the Webhook Logs page
+    try {
+      // Detect event type from headers (Shopify, Meta, etc.)
+      const shopifyTopic = req.headers['x-shopify-topic'] || '';
+      const metaEventType = body?.object || '';
+      const eventType = shopifyTopic || metaEventType || 'unknown';
+
+      // Detect webhook name from headers
+      const shopifyDomain = req.headers['x-shopify-shop-domain'] || '';
+      const webhookName = shopifyDomain
+        ? `Shopify webhook`
+        : metaEventType
+        ? `Meta webhook`
+        : 'Webhook';
+
+      // Generate a short key from uid (first 6 chars)
+      const keyId = String(userUID).replace(/-/g, '').substring(0, 6);
+
+      await query(
+        `INSERT INTO incoming_webhook_events (uid, key_id, name, http_method, event_type, status, payload)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userUID,
+          keyId,
+          webhookName,
+          req.method || 'POST',
+          eventType,
+          'RECEIVED',
+          JSON.stringify(body).substring(0, 4000),
+        ]
+      );
+    } catch (logErr) {
+      console.log('[Webhook log error]', logErr.message);
+    }
+
     const getDays = await getUserPlayDays(userUID);
     if (getDays < 1) {
       return;
@@ -88,6 +123,7 @@ router.post("/webhook/:uid", async (req, res) => {
     res.json({ err, success: false, msg: "Something went wrong" });
   }
 });
+
 
 // getting chat lists
 router.get("/get_chats", validateUser, async (req, res) => {

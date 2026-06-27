@@ -769,7 +769,7 @@ router.get("/get_smtp", adminValidator, async (req, res) => {
 // update smtp
 router.post("/update_smtp", adminValidator, async (req, res) => {
   try {
-    const { email, port, password, host } = req.body;
+    const { email, port, password, host, username } = req.body;
 
     if (!email || !port || !password || !host) {
       return res.json({ msg: "Please fill all the fields" });
@@ -778,13 +778,13 @@ router.post("/update_smtp", adminValidator, async (req, res) => {
     const getOne = await query(`SELECT * FROM smtp`, []);
     if (getOne.length < 1) {
       await query(
-        `INSERT INTO smtp (email, host, port, password) VALUES (?,?,?,?)`,
-        [email, host, port, password]
+        `INSERT INTO smtp (email, host, port, password, username) VALUES (?,?,?,?,?)`,
+        [email, host, port, password, username || '']
       );
     } else {
       await query(
-        `UPDATE smtp SET email = ?, host = ?, port = ?, password = ?`,
-        [email, host, port, password]
+        `UPDATE smtp SET email = ?, host = ?, port = ?, password = ?, username = ?`,
+        [email, host, port, password, username || '']
       );
     }
 
@@ -798,7 +798,7 @@ router.post("/update_smtp", adminValidator, async (req, res) => {
 // send test email
 router.post("/send_test_email", adminValidator, async (req, res) => {
   try {
-    const { email, port, password, host, to } = req.body;
+    const { email, port, password, host, username, to } = req.body;
 
     if (!email || !port || !password || !host) {
       return res.json({ msg: "Please fill all the fields" });
@@ -811,8 +811,9 @@ router.post("/send_test_email", adminValidator, async (req, res) => {
       password,
       `<h1>This is a test SMTP email!</h1>`,
       "SMTP Testing",
-      "Testing Sender",
-      to
+      email,
+      to,
+      username || ''
     );
 
     if (checkEmail.success) {
@@ -950,7 +951,8 @@ router.post("/send_resovery", async (req, res) => {
       getHtml,
       `${appName} - Password Recovery`,
       smtp[0]?.email,
-      email
+      email,
+      smtp[0]?.username || ''
     );
 
     res.json({
@@ -1213,4 +1215,20 @@ router.post("/update_deployment_settings", adminValidator, async (req, res) => {
   }
 });
 
+// delete order
+router.post("/del_order", adminValidator, async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) {
+      return res.json({ success: false, msg: "Order ID is required" });
+    }
+    await query(`DELETE FROM orders WHERE id = ?`, [id]);
+    res.json({ success: true, msg: "Order was deleted" });
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false, msg: "something went wrong" });
+  }
+});
+
 module.exports = router;
+

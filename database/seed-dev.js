@@ -24,13 +24,20 @@ async function seedDevCredentials({ logger = console } = {}) {
   const client = await pool.connect();
 
   try {
+    // Clean up conflicting dev credentials to prevent UID/email unique key violations
+    await client.query(`DELETE FROM admin WHERE email = $1 OR uid = $2`, [DEV_ACCOUNTS.admin.email, 'local-admin-uid']);
+    await client.query(`DELETE FROM "user" WHERE email = $1 OR uid = $2 OR email = $3`, [DEV_ACCOUNTS.user.email, 'local-user-uid', 'user-old@example.com']);
+    await client.query(`DELETE FROM agents WHERE email = $1 OR uid = $2`, [DEV_ACCOUNTS.agent.email, 'local-agent-uid']);
+
     // Admin
     const adminHash = await bcrypt.hash(DEV_ACCOUNTS.admin.password, SALT_ROUNDS);
     await client.query(
       `INSERT INTO admin (uid, email, password, role)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (email) DO UPDATE
-       SET password = EXCLUDED.password`,
+       SET password = EXCLUDED.password,
+           uid = EXCLUDED.uid,
+           role = EXCLUDED.role`,
       ['local-admin-uid', DEV_ACCOUNTS.admin.email, adminHash, 'admin']
     );
 
@@ -40,7 +47,13 @@ async function seedDevCredentials({ logger = console } = {}) {
       `INSERT INTO "user" (uid, name, email, password, role, timezone, plan, plan_expire)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (email) DO UPDATE
-       SET password = EXCLUDED.password`,
+       SET password = EXCLUDED.password,
+           uid = EXCLUDED.uid,
+           name = EXCLUDED.name,
+           role = EXCLUDED.role,
+           timezone = EXCLUDED.timezone,
+           plan = EXCLUDED.plan,
+           plan_expire = EXCLUDED.plan_expire`,
       [
         'local-user-uid',
         'Local User',
@@ -59,7 +72,14 @@ async function seedDevCredentials({ logger = console } = {}) {
       `INSERT INTO agents (owner_uid, uid, email, password, role, name, mobile, comments, is_active)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        ON CONFLICT (email) DO UPDATE
-       SET password = EXCLUDED.password`,
+       SET password = EXCLUDED.password,
+           owner_uid = EXCLUDED.owner_uid,
+           uid = EXCLUDED.uid,
+           role = EXCLUDED.role,
+           name = EXCLUDED.name,
+           mobile = EXCLUDED.mobile,
+           comments = EXCLUDED.comments,
+           is_active = EXCLUDED.is_active`,
       [
         'local-user-uid',
         'local-agent-uid',

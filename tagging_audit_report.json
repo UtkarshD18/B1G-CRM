@@ -1,20 +1,17 @@
 {
   "tagging": {
     "push": {
-      "tag": "TestTag-1782344628641",
+      "tag": "TestTag-1782467517655",
       "successResponse": true,
       "persistedInDb": true,
       "allTags": [
-        "support",
-        "TestTag-1782344628641"
+        "TestTag-1782467517655"
       ]
     },
     "delete": {
       "successResponse": true,
       "persistedInDb": true,
-      "allTags": [
-        "support"
-      ]
+      "allTags": []
     }
   }
 }

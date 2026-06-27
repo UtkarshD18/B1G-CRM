@@ -21,11 +21,11 @@ const gateways = [
 ]
 
 const gatewayLabels = {
-  Offline: { id: 'Bank Details / Title', key: 'Instructions / Description' },
-  Stripe: { id: 'Publishable Key', key: 'Secret Key' },
-  PayPal: { id: 'Client ID', key: 'Client Secret' },
-  Razorpay: { id: 'Key ID', key: 'Key Secret' },
-  Paystack: { id: 'Public Key', key: 'Secret Key' },
+  Offline: { id: 'Title', key: 'Description' },
+  Stripe: { id: 'Key ID', key: 'Secret Key' },
+  PayPal: { id: 'Key ID', key: 'Secret Key' },
+  Razorpay: { id: 'Key ID', key: 'Secret Key' },
+  Paystack: { id: 'Key ID', key: 'Secret Key' },
   MercadoPago: { id: 'Public Key', key: 'Access Token' },
 }
 
@@ -58,11 +58,11 @@ function AdminPaymentGateways() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #d8f0ea, #b8e6d8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>💳</div>
           <div>
-            <h2 style={{ margin: 0 }}>Payment Gateways</h2>
-            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Configure payment gateways for your website</p>
+            <span className="eyebrow">payment-gateways</span>
+            <h5 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Payment Gateways</h5>
+            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Configure payment gateway settings for your application</p>
           </div>
         </div>
-        <button className="mini-button" onClick={load} style={{ border: '1px solid #1ea085', color: '#1ea085', borderRadius: '10px', padding: '10px 20px' }}>🔄 Refresh</button>
       </div>
 
       {status && <p className="status-line">{status}</p>}
@@ -79,7 +79,7 @@ function AdminPaymentGateways() {
                 <label className="checkbox-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input type="checkbox" checked={Number(data[gw.flag]) > 0} onChange={e => setData({ ...data, [gw.flag]: e.target.checked ? 1 : 0 })} />
                   <span style={{ fontWeight: 600, color: Number(data[gw.flag]) > 0 ? '#1ea085' : '#607481' }}>
-                    {Number(data[gw.flag]) > 0 ? 'Active' : 'Inactive'}
+                    Enabled
                   </span>
                 </label>
               </div>
@@ -90,13 +90,17 @@ function AdminPaymentGateways() {
                 </label>
                 <label style={{ display: 'grid', gap: '6px', fontWeight: 600, color: '#365261' }}>
                   {gatewayLabels[gw.name]?.key || `${gw.name} Secret Key`}
-                  <input type={gw.name === 'Offline' ? 'text' : 'password'} value={data[`${gw.prefix}_key`] || ''} onChange={e => setData({ ...data, [`${gw.prefix}_key`]: e.target.value })} style={{ borderRadius: '12px', padding: '12px 14px', border: '1px solid #c5d0d6' }} />
+                  {gw.name === 'Offline' ? (
+                    <textarea rows={4} value={data[`${gw.prefix}_key`] || ''} onChange={e => setData({ ...data, [`${gw.prefix}_key`]: e.target.value })} style={{ borderRadius: '12px', padding: '12px 14px', border: '1px solid #c5d0d6' }} />
+                  ) : (
+                    <input type="password" value={data[`${gw.prefix}_key`] || ''} onChange={e => setData({ ...data, [`${gw.prefix}_key`]: e.target.value })} style={{ borderRadius: '12px', padding: '12px 14px', border: '1px solid #c5d0d6' }} />
+                  )}
                 </label>
               </div>
             </div>
           ))}
         </div>
-        <button className="primary-button" type="submit" style={{ marginTop: '20px', borderRadius: '12px', width: '100%' }}>Save Payment Gateways</button>
+        <button className="primary-button" type="submit" style={{ marginTop: '20px', borderRadius: '12px', width: '100%' }}>Save Settings</button>
       </form>
     </div>
   )

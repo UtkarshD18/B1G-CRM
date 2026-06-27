@@ -100,9 +100,18 @@ router.post("/add_agent", validateUser, checkPlan, async (req, res) => {
 // get all agents
 router.get("/get_my_agents", validateUser, async (req, res) => {
   try {
-    const data = await query(`SELECT * FROM agents WHERE owner_uid = ?`, [
-      req.decode.uid,
-    ]);
+    const data = await query(
+      `SELECT a.*, COALESCE(ac.chat_count, 0) AS chat_count
+       FROM agents a
+       LEFT JOIN (
+         SELECT uid, COUNT(*) AS chat_count
+         FROM agent_chats
+         WHERE owner_uid = ?
+         GROUP BY uid
+       ) ac ON ac.uid = a.uid
+       WHERE a.owner_uid = ?`,
+      [req.decode.uid, req.decode.uid]
+    );
 
     res.json({ data, success: true });
   } catch (err) {

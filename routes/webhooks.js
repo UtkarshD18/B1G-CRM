@@ -194,4 +194,23 @@ router.get("/logs", validateUser, async (req, res) => {
   }
 });
 
+// Incoming webhook events — mirrors the reference CRM's webhook-logs page
+router.get("/incoming-events", validateUser, async (req, res) => {
+  try {
+    const data = await query(
+      `SELECT id, key_id, name, http_method, event_type, status, createdat
+       FROM incoming_webhook_events
+       WHERE uid = ?
+       ORDER BY createdat DESC
+       LIMIT 200`,
+      [req.decode.uid]
+    );
+
+    res.json({ success: true, data });
+  } catch (err) {
+    console.log(err);
+    res.json({ success: false, msg: "something went wrong" });
+  }
+});
+
 module.exports = router;

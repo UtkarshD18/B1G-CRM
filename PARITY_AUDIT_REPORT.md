@@ -87,3 +87,12 @@ For transition to production environments, outstanding tasks should follow this 
 2. **Horizontal WebSockets Adapters**: Transition from local in-memory socket rooms to Redis-based Socket.IO adapters to prepare the realtime inbox layer for multi-instance clusters.
 3. **Filesystem Backup Policy**: Since visual flow nodes, edge coordinates, and inbox histories are serialised to disk volumes (`/app/flow-json/` and `/app/conversations/`), establish volume-mount snapshots or scheduled container backups.
 4. **Deploying Pro Channels**: Sequentially implement Instagram DMs and Telegram session routing following core CRM validation checks.
+
+## 6. Admin Portal Verification Updates
+- **Admin Settings Tabs (Theme, Translation, Update Web)**: Verified functionally intact. The UI properly toggles between the subtabs without Vite compilation errors. The Translation tab renders the language list from the backend correctly. The Update Web tab correctly displays the dropzone uploader for deploying web zips.
+
+## 7. User Portal Verification Updates
+- **Dashboard, Contacts, Campaigns, Automation Flow, Chatbots**: Verified visually intact using Puppeteer runtime rendering. The layout, data empty states, and visual consistency match the expected Reference CRM standard without console errors or component crashes.
+
+## 8. Agent Portal Verification Updates
+- **Agent Dashboard, Agent Inbox**: Verified visually intact using Puppeteer runtime rendering. The portal renders cleanly and connects without rendering errors.

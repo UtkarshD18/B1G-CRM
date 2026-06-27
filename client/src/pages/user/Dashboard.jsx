@@ -78,8 +78,9 @@ function UserDashboardPage() {
     <div className="page-stack">
       <div className="page-header">
         <div>
-          <span className="eyebrow">user dashboard</span>
-          <h2>Tenant operations snapshot</h2>
+          <span className="eyebrow">dashboard</span>
+          <h5 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Welcome Back, {data?.userName || 'User'}</h5>
+          <p style={{ margin: '4px 0 0', color: '#607481', fontSize: '0.9rem' }}>Tenant operations snapshot</p>
         </div>
         <button className="primary-button" type="button" onClick={loadDashboard}>
           Refresh

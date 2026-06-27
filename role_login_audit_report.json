@@ -133,12 +133,12 @@
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_task",
+        "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
+        "url": "http://localhost:3010/api/agent/get_my_task",
         "status": 200,
         "method": "GET"
       },

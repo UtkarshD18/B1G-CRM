@@ -4,7 +4,7 @@ import { useAuth } from '../../shared/auth'
 
 function AdminSmtpPage() {
   const { tokens } = useAuth()
-  const [data, setData] = useState({ email: '', host: '', port: 587, password: '' })
+  const [data, setData] = useState({ email: '', host: '', port: 587, password: '', username: '' })
   const [testTo, setTestTo] = useState('')
   const [status, setStatus] = useState('')
   const [testing, setTesting] = useState(false)
@@ -12,7 +12,7 @@ function AdminSmtpPage() {
   const load = useCallback(async () => {
     try {
       const result = await apiRequest('/api/admin/get_smtp', { token: tokens.admin })
-      setData({ email: '', host: '', port: 587, password: '', ...(result?.data || {}) })
+      setData({ email: '', host: '', port: 587, password: '', username: '', ...(result?.data || {}) })
     } catch (e) { setStatus(e.message) }
   }, [tokens.admin])
 
@@ -52,8 +52,9 @@ function AdminSmtpPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #d8f0ea, #b8e6d8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>📧</div>
           <div>
-            <h2 style={{ margin: 0 }}>SMTP Settings</h2>
-            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Configure email sending via SMTP</p>
+            <span className="eyebrow">smtp</span>
+            <h5 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>SMTP Configuration</h5>
+            <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>Configure your email server settings for notifications</p>
           </div>
         </div>
         <button className="mini-button" onClick={load} style={{ border: '1px solid #1ea085', color: '#1ea085', borderRadius: '10px', padding: '10px 20px' }}>🔄 Refresh</button>
@@ -64,18 +65,19 @@ function AdminSmtpPage() {
       <div className="two-column-grid">
         <form className="panel form-panel" onSubmit={save} style={{ padding: '28px', borderRadius: '16px' }}>
           <div className="panel-header">
-            <h2>SMTP Credentials</h2>
+            <h2>SMTP Server Settings</h2>
           </div>
-          <label>SMTP Email<input type="email" value={data.email || ''} onChange={e => setData({ ...data, email: e.target.value })} placeholder="noreply@yourdomain.com" /></label>
-          <label>SMTP Host<input value={data.host || ''} onChange={e => setData({ ...data, host: e.target.value })} placeholder="smtp.gmail.com" /></label>
-          <label>SMTP Port<input type="number" value={data.port || ''} onChange={e => setData({ ...data, port: e.target.value })} placeholder="587" /></label>
-          <label>SMTP Password<input type="password" value={data.password || ''} onChange={e => setData({ ...data, password: e.target.value })} placeholder="App password" /></label>
-          <button className="primary-button" type="submit" style={{ borderRadius: '12px' }}>Save SMTP Settings</button>
+          <label>Email Address<input type="email" value={data.email || ''} onChange={e => setData({ ...data, email: e.target.value })} placeholder="Email Address" required /></label>
+          <label>Username<input value={data.username || ''} onChange={e => setData({ ...data, username: e.target.value })} placeholder="Username" /></label>
+          <label>SMTP Host<input value={data.host || ''} onChange={e => setData({ ...data, host: e.target.value })} placeholder="SMTP Host" required /></label>
+          <label>SMTP Port<input type="number" value={data.port || ''} onChange={e => setData({ ...data, port: e.target.value })} placeholder="SMTP Port" required /></label>
+          <label>Password<input type="password" value={data.password || ''} onChange={e => setData({ ...data, password: e.target.value })} placeholder="Password" required /></label>
+          <button className="primary-button" type="submit" style={{ borderRadius: '12px' }}>Save</button>
         </form>
 
         <div className="panel form-panel" style={{ padding: '28px', borderRadius: '16px' }}>
           <div className="panel-header">
-            <h2>Send Test Email</h2>
+            <h2>Test Email</h2>
           </div>
           <p className="muted-copy">Use this to verify your SMTP credentials by sending a test email. Make sure you have saved the credentials first.</p>
           <form onSubmit={sendTestEmail}>
@@ -95,7 +97,7 @@ function AdminSmtpPage() {
               disabled={testing}
               style={{ borderRadius: '12px', background: testing ? '#94a3b8' : undefined }}
             >
-              {testing ? 'Sending...' : '📤 Send Test Email'}
+              {testing ? 'Sending...' : 'Test Email'}
             </button>
           </form>
 
@@ -115,3 +117,4 @@ function AdminSmtpPage() {
 }
 
 export default AdminSmtpPage
+

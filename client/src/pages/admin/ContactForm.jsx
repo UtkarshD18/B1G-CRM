@@ -36,7 +36,7 @@ function AdminContactFormPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #d8f0ea, #b8e6d8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>📋</div>
           <div>
-            <h2 style={{ margin: 0 }}>Contact Form</h2>
+            <h2 style={{ margin: 0 }}>Contact Leads</h2>
             <p style={{ margin: 0, color: '#607481', fontSize: '0.9rem' }}>View and manage contact form submissions</p>
           </div>
         </div>
@@ -49,20 +49,22 @@ function AdminContactFormPage() {
         <table>
           <thead>
             <tr>
-              <th>Name</th>
               <th>Email</th>
+              <th>Name</th>
               <th>Mobile</th>
-              <th>Date</th>
+              <th>Message</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {leads.map(lead => (
               <tr key={lead.id}>
-                <td><strong>{lead.name || '—'}</strong></td>
                 <td className="muted-copy">{lead.email || '—'}</td>
+                <td><strong>{lead.name || '—'}</strong></td>
                 <td>{lead.mobile || '—'}</td>
-                <td className="muted-copy">{formatDateTime(lead.createdat || lead.created_at)}</td>
+                <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#607481' }} title={lead.content || lead.message || lead.msg || ''}>
+                  {lead.content || lead.message || lead.msg || '—'}
+                </td>
                 <td>
                   <div className="action-row">
                     <button className="mini-button" onClick={() => setViewItem(lead)} style={{ padding: '6px 10px', fontSize: '0.78rem' }}>👁️ View</button>
@@ -90,7 +92,7 @@ function AdminContactFormPage() {
               <div><span className="muted-copy">Name:</span> <strong>{viewItem.name}</strong></div>
               <div><span className="muted-copy">Email:</span> <strong>{viewItem.email}</strong></div>
               <div><span className="muted-copy">Mobile:</span> <strong>{viewItem.mobile || '—'}</strong></div>
-              <div><span className="muted-copy">Message:</span><p style={{ margin: '4px 0 0', lineHeight: 1.5 }}>{viewItem.message || viewItem.msg || '—'}</p></div>
+              <div><span className="muted-copy">Message:</span><p style={{ margin: '4px 0 0', lineHeight: 1.5 }}>{viewItem.content || viewItem.message || viewItem.msg || '—'}</p></div>
               <div><span className="muted-copy">Date:</span> {formatDateTime(viewItem.createdat || viewItem.created_at)}</div>
             </div>
           </div>

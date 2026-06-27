@@ -1476,6 +1476,8 @@ router.get("/get_dashboard", validateUser, async (req, res) => {
       req.decode.uid,
     ]);
 
+    const userDetail = await query(`SELECT * FROM "user" WHERE uid = ?`, [req.decode.uid]);
+
     res.json({
       success: true,
       opened,
@@ -1489,6 +1491,7 @@ router.get("/get_dashboard", validateUser, async (req, res) => {
       totalFlows: totalFlows?.length,
       totalBroadcast: totalBroadcast?.length,
       totalTemplets: totalTemplets?.length,
+      userName: userDetail[0]?.name || userDetail[0]?.company_name || 'User',
     });
   } catch (err) {
     console.log(err);
@@ -1598,7 +1601,8 @@ router.post("/send_resovery", async (req, res) => {
       getHtml,
       `${appName} - Password Recovery`,
       smtp[0]?.email,
-      email
+      email,
+      smtp[0]?.username || ''
     );
 
     res.json({

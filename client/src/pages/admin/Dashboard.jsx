@@ -96,7 +96,7 @@ function AdminDashboardPage() {
           <p>Tenant growth, revenue trends, and platform health at a glance.</p>
         </div>
         <div className="action-row">
-          <Link className="mini-button" to="/admin/users">Manage Users</Link>
+          <Link className="mini-button" to="/admin/manage-users">Manage Users</Link>
           <Link className="mini-button" to="/admin/orders">View Orders</Link>
         </div>
       </div>
@@ -173,7 +173,7 @@ function AdminDashboardPage() {
       <div className="panel">
         <div className="panel-header">
           <h2>Recent signups</h2>
-          <Link className="mini-button" to="/admin/users">View all</Link>
+          <Link className="mini-button" to="/admin/manage-users">View all</Link>
         </div>
         {recentSignups.length === 0 ? (
           <p className="empty-state">No users registered yet.</p>

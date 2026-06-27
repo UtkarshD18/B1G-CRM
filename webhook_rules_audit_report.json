@@ -1,13 +1,13 @@
 {
   "crud": {
     "create": {
-      "name": "Audit Webhook Rule 1782344654210",
+      "name": "Audit Webhook Rule 1782568091828",
       "successResponse": true,
       "persistedInDb": true,
       "row": {
-        "id": 74,
+        "id": 78,
         "uid": "local-user-uid",
-        "name": "Audit Webhook Rule 1782344654210",
+        "name": "Audit Webhook Rule 1782568091828",
         "source": "external",
         "event_type": "message",
         "match_field": "body.text",
@@ -16,8 +16,8 @@
         "action_type": "send_webhook",
         "action_payload": "{\"url\":\"https://example.com/webhook\",\"method\":\"POST\"}",
         "active": 1,
-        "createdat": "2026-06-24T23:44:14.213Z",
-        "updatedat": "2026-06-24T23:44:14.213Z"
+        "createdat": "2026-06-27T13:48:11.831Z",
+        "updatedat": "2026-06-27T13:48:11.831Z"
       }
     },
     "read": {
@@ -28,9 +28,9 @@
     "update": {
       "successResponse": true,
       "updatedRow": {
-        "id": 74,
+        "id": 78,
         "uid": "local-user-uid",
-        "name": "Audit Webhook Rule 1782344654210 Updated",
+        "name": "Audit Webhook Rule 1782568091828 Updated",
         "source": "external",
         "event_type": "message",
         "match_field": "body.text",
@@ -39,8 +39,8 @@
         "action_type": "tag_chat",
         "action_payload": "{\"tag\":\"customer\"}",
         "active": 0,
-        "createdat": "2026-06-24T23:44:14.213Z",
-        "updatedat": "2026-06-24T23:44:14.248Z"
+        "createdat": "2026-06-27T13:48:11.831Z",
+        "updatedat": "2026-06-27T13:48:11.868Z"
       },
       "activeValInDb": 0
     },
