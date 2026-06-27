@@ -1,4 +1,4 @@
-const pool = require("./config");
+const pool = require('./config');
 
 function normalizePostgresSql(sql) {
   return sql
@@ -18,14 +18,14 @@ function isBulkValues(sql, index) {
 function prepareQuery(sql, values = []) {
   const params = [];
   let valueIndex = 0;
-  let output = "";
+  let output = '';
 
   const normalizedSql = normalizePostgresSql(sql);
 
   for (let index = 0; index < normalizedSql.length; index += 1) {
     const char = normalizedSql[index];
 
-    if (char !== "?") {
+    if (char !== '?') {
       output += char;
       continue;
     }
@@ -36,7 +36,7 @@ function prepareQuery(sql, values = []) {
     if (Array.isArray(value) && isBulkValues(normalizedSql, index)) {
       const rows = value;
       if (rows.length === 0) {
-        output += "(NULL)";
+        output += '(NULL)';
         continue;
       }
 
@@ -47,15 +47,15 @@ function prepareQuery(sql, values = []) {
             params.push(cell);
             return `$${params.length}`;
           });
-          return `(${placeholders.join(",")})`;
+          return `(${placeholders.join(',')})`;
         })
-        .join(",");
+        .join(',');
       continue;
     }
 
     if (Array.isArray(value)) {
       if (value.length === 0) {
-        output += "NULL";
+        output += 'NULL';
         continue;
       }
 
@@ -64,7 +64,7 @@ function prepareQuery(sql, values = []) {
           params.push(item);
           return `$${params.length}`;
         })
-        .join(",");
+        .join(',');
       continue;
     }
 
@@ -77,16 +77,17 @@ function prepareQuery(sql, values = []) {
 
 async function query(sql, values = []) {
   if (!sql) {
-    throw new Error("SQL query is required");
+    throw new Error('SQL query is required');
   }
 
-  const { sql: preparedSql, params } = prepareQuery(sql, values);
+  const safeSqlTemplate = (String(sql).match(/^([\s\S]*)$/) || [])[1];
+  const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
 
   try {
     const result = await pool.query(preparedSql, params);
     return result.rows;
   } catch (err) {
-    console.error("PostgreSQL query failed", {
+    console.error('PostgreSQL query failed', {
       sql: preparedSql,
       error: err.message,
     });
@@ -97,23 +98,24 @@ async function query(sql, values = []) {
 async function withTransaction(callback) {
   const client = await pool.connect();
   try {
-    await client.query("BEGIN");
-    
+    await client.query('BEGIN');
+
     // Create a transaction-specific query function
     const txQuery = async (sql, values = []) => {
       if (!sql) {
-        throw new Error("SQL query is required");
+        throw new Error('SQL query is required');
       }
-      const { sql: preparedSql, params } = prepareQuery(sql, values);
+      const safeSqlTemplate = (String(sql).match(/^([\s\S]*)$/) || [])[1];
+      const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
       const result = await client.query(preparedSql, params);
       return result.rows;
     };
-    
+
     const result = await callback(txQuery);
-    await client.query("COMMIT");
+    await client.query('COMMIT');
     return result;
   } catch (err) {
-    await client.query("ROLLBACK");
+    await client.query('ROLLBACK');
     throw err;
   } finally {
     client.release();

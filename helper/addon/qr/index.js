@@ -143,9 +143,16 @@ const createSession = async (uniqueId, title = 'Session') => {
           createSession(uniqueId, title);
         } else {
           sessions.delete(uniqueId);
-          try {
-            fs.rmSync(sessionPath, { recursive: true, force: true });
-          } catch {}
+          const { validatePath } = require('../../../utils/pathSafe');
+          const safeSessionPath = validatePath(
+            path.join(__dirname, '../../../sessions'),
+            `auth-${uniqueId}`,
+          );
+          if (safeSessionPath) {
+            try {
+              fs.rmSync(safeSessionPath, { recursive: true, force: true });
+            } catch {}
+          }
           await query('UPDATE instance SET status = ? WHERE uniqueId = ?', ['INACTIVE', uniqueId]);
         }
       }
@@ -174,10 +181,16 @@ const deleteSession = async (uniqueId) => {
     sessions.delete(uniqueId);
   }
 
-  const sessionPath = path.join(__dirname, '../../../sessions', `auth-${uniqueId}`);
-  try {
-    fs.rmSync(sessionPath, { recursive: true, force: true });
-  } catch {}
+  const { validatePath } = require('../../../utils/pathSafe');
+  const safeSessionPath = validatePath(
+    path.join(__dirname, '../../../sessions'),
+    `auth-${uniqueId}`,
+  );
+  if (safeSessionPath) {
+    try {
+      fs.rmSync(safeSessionPath, { recursive: true, force: true });
+    } catch {}
+  }
 };
 
 const getChatList = () => [];

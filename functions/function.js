@@ -792,7 +792,7 @@ function saveJsonToFile(jsonData, dir) {
 }
 
 function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^\S+@\S+\.\S+$/;
   return emailRegex.test(email);
 }
 
@@ -872,7 +872,7 @@ function deleteFileIfExists(filePath) {
     // File exists, delete it
     fs.unlink(cleanPath, (err) => {
       if (err) {
-        console.error(`Error deleting file ${cleanPath}:`, err);
+        console.error('Error deleting file:', cleanPath, err);
         return;
       }
       console.log(`File ${cleanPath} has been deleted.`);
@@ -893,7 +893,7 @@ function readJsonFromFile(filePath) {
     return Array.isArray(parsedData) ? parsedData : [];
   } catch (err) {
     // If any error occurs (e.g., file not found or invalid JSON), return an empty array
-    console.error(`Error reading JSON file ${cleanPath}:`, err);
+    console.error('Error reading JSON file:', cleanPath, err);
     return [];
   }
 }
@@ -1831,7 +1831,7 @@ async function updateUserPlan(plan, uid) {
 }
 
 function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const re = /^\S+@\S+\.\S+$/;
   return re.test(String(email).toLowerCase());
 }
 
