@@ -792,8 +792,12 @@ function saveJsonToFile(jsonData, dir) {
 }
 
 function isValidEmail(email) {
-  const emailRegex = /^\S+@\S+\.\S+$/;
-  return emailRegex.test(email);
+  if (!email || typeof email !== 'string') return false;
+  const parts = email.split('@');
+  if (parts.length !== 2) return false;
+  const [local, domain] = parts;
+  if (!local || !domain) return false;
+  return domain.includes('.') && !email.includes(' ');
 }
 
 function areMobileNumbersFilled(array) {
@@ -1835,8 +1839,12 @@ async function updateUserPlan(plan, uid) {
 }
 
 function validateEmail(email) {
-  const re = /^\S+@\S+\.\S+$/;
-  return re.test(String(email).toLowerCase());
+  const emailStr = String(email || '').toLowerCase();
+  const parts = emailStr.split('@');
+  if (parts.length !== 2) return false;
+  const [local, domain] = parts;
+  if (!local || !domain) return false;
+  return domain.includes('.') && !emailStr.includes(' ');
 }
 
 function sendEmail(host, port, email, pass, html, subject, from, to) {

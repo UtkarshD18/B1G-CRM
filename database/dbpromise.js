@@ -84,7 +84,9 @@ async function query(sql, values = []) {
   const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
   const cleanPreparedSql = preparedSql
     .split('')
-    .filter((c) => /[a-zA-Z0-9\s\?\*\,\.\=\_\-\'\(\)\"\`\:\%\+]/.test(c))
+    .filter((c) =>
+      /[a-zA-Z0-9\s\?\*\,\.\=\_\-\'\(\)\"\`\:\%\+\$\<\>\!\;\&\|\/\\\[\]\{\}\#\^\@\~\r\n]/.test(c),
+    )
     .join('');
 
   try {
@@ -113,7 +115,11 @@ async function withTransaction(callback) {
       const { sql: preparedSql, params } = prepareQuery(safeSqlTemplate, values);
       const cleanPreparedSql = preparedSql
         .split('')
-        .filter((c) => /[a-zA-Z0-9\s\?\*\,\.\=\_\-\'\(\)\"\`\:\%\+]/.test(c))
+        .filter((c) =>
+          /[a-zA-Z0-9\s\?\*\,\.\=\_\-\'\(\)\"\`\:\%\+\$\<\>\!\;\&\|\/\\\[\]\{\}\#\^\@\~\r\n]/.test(
+            c,
+          ),
+        )
         .join('');
       const result = await client.query(cleanPreparedSql, params);
       return result.rows;
