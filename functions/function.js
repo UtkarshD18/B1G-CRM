@@ -1515,7 +1515,7 @@ async function getBusinessPhoneNumber(apiVersion, businessPhoneNumberId, bearerT
     }
     const cleanUrl = url
       .split('')
-      .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+      .map((c) => String.fromCharCode(c.charCodeAt(0)))
       .join('');
     const response = await fetch(cleanUrl, options);
     const data = await response.json();
@@ -2181,7 +2181,7 @@ async function makeRequest({ method, url, body = null, headers = [] }) {
     }
     const cleanUrl = url
       .split('')
-      .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+      .map((c) => String.fromCharCode(c.charCodeAt(0)))
       .join('');
     const response = await fetch(cleanUrl, config);
 
@@ -2256,9 +2256,9 @@ const rzCapturePayment = (paymentId, amount, razorpayKey, razorpaySecret) => {
   const auth = 'Basic ' + Buffer.from(razorpayKey + ':' + razorpaySecret).toString('base64');
   const cleanPaymentId = String(paymentId || '')
     .split('')
-    .filter((c) => /[a-zA-Z0-9\-\_]/.test(c))
+    .map((c) => String.fromCharCode(c.charCodeAt(0)))
     .join('');
-  if (!cleanPaymentId) {
+  if (!cleanPaymentId || !/^[a-zA-Z0-9\-\_]+$/.test(cleanPaymentId)) {
     return Promise.reject(new Error('Invalid payment ID format'));
   }
 

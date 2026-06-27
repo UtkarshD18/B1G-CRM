@@ -96,7 +96,7 @@ router.post('/url', validateUserOrAgent, verifyPermission('kb.write'), async (re
 
     const cleanUrl = safeUrl
       .split('')
-      .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+      .map((c) => String.fromCharCode(c.charCodeAt(0)))
       .join('');
     const response = await fetch(cleanUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },

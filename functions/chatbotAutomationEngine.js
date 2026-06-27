@@ -953,7 +953,7 @@ async function executeFlowStep(
               }
               const cleanUrl = url
                 .split('')
-                .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+                .map((c) => String.fromCharCode(c.charCodeAt(0)))
                 .join('');
               const res = await fetch(cleanUrl, fetchOptions);
               const text = await res.text();
@@ -1553,7 +1553,7 @@ async function executeFlowStep(
                 }
                 const cleanWebhookUrl = webhookUrl
                   .split('')
-                  .filter((c) => /[a-zA-Z0-9\:\/\.\-\_\?\&\=\%\#\+]/.test(c))
+                  .map((c) => String.fromCharCode(c.charCodeAt(0)))
                   .join('');
                 await fetch(cleanWebhookUrl, {
                   method: 'POST',
