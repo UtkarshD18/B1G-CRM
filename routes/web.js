@@ -1,5 +1,5 @@
-const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
+const router = require('express').Router();
+const { query } = require('../database/dbpromise.js');
 const {
   validateEmail,
   getFileExtension,
@@ -7,45 +7,50 @@ const {
   downloadAndExtractFile,
   executeQueries,
   isValidEmail,
-} = require("../functions/function.js");
-const adminValidator = require("../middlewares/admin.js");
-const fs = require("fs");
-const randomstring = require("randomstring");
-const path = require("path");
-const { appVersion, addON } = require("../env.js");
-const bcrypt = require("bcrypt");
-const { getConnectionsByUid } = require("../socket.js");
-const { checkQr } = require("../helper/addon/qr/index.js");
+} = require('../functions/function.js');
+const adminValidator = require('../middlewares/admin.js');
+const fs = require('fs');
+const randomstring = require('randomstring');
+const path = require('path');
+const { appVersion, addON } = require('../env.js');
+const bcrypt = require('bcrypt');
+const { getConnectionsByUid } = require('../socket.js');
+const { checkQr } = require('../helper/addon/qr/index.js');
 
-router.get("/", adminValidator, async (req, res) => {
+router.get('/', adminValidator, async (req, res) => {
   try {
     const data = getConnectionsByUid(req.decode.uid);
     res.json(data);
   } catch (err) {
-    res.json({ err, msg: "server error" });
+    res.json({ err, msg: 'server error' });
     console.log(err);
   }
 });
 
-router.get("/return_module", async (req, res) => {
+router.get('/return_module', async (req, res) => {
   try {
     const qrCheck = checkQr();
-    const finalAddon = qrCheck ? [...addON, "QR"] : addON;
+    const finalAddon = qrCheck ? [...addON, 'QR'] : addON;
     res.json({ success: true, data: finalAddon || [] });
   } catch (err) {
-    res.json({ err, msg: "server error" });
+    res.json({ err, msg: 'server error' });
     console.log(err);
   }
 });
 
-router.get("/get-one-translation", async (req, res) => {
+router.get('/get-one-translation', async (req, res) => {
   try {
     const cirDir = process.cwd();
     const code = req.query.code;
+    if (!/^[a-zA-Z0-9_-]+$/.test(code)) {
+      return res.status(400).json({ success: false, msg: 'Invalid language code format' });
+    }
+    const { validatePath } = require('../utils/pathSafe');
+    const filePath = validatePath(path.join(cirDir, 'languages'), `${code}.json`);
 
-    fs.readFile(`${cirDir}/languages/${code}.json`, "utf8", (err, lang) => {
+    fs.readFile(filePath, 'utf8', (err, lang) => {
       if (err) {
-        console.log("File read failed:", err);
+        console.log('File read failed:', err);
         res.json({ notfound: true });
         return;
       }
@@ -56,12 +61,12 @@ router.get("/get-one-translation", async (req, res) => {
       });
     });
   } catch (err) {
-    res.json({ err, msg: "server error" });
+    res.json({ err, msg: 'server error' });
     console.log(err);
   }
 });
 
-router.get("/get-all-translation-name", async (req, res) => {
+router.get('/get-all-translation-name', async (req, res) => {
   try {
     const cirDir = `${__dirname}/../languages/`;
     fs.readdir(`${cirDir}`, (err, files) => {
@@ -69,68 +74,74 @@ router.get("/get-all-translation-name", async (req, res) => {
     });
   } catch (err) {
     res.json({
-      msg: "Server error",
+      msg: 'Server error',
       err: err,
     });
     console.log(err);
   }
 });
 
-router.post("/update-one-translation", adminValidator, async (req, res) => {
+router.post('/update-one-translation', adminValidator, async (req, res) => {
   try {
     const cirDir = process.cwd();
     const code = req.body.code;
     const updatedJson = req.body.updatedjson;
+    if (!/^[a-zA-Z0-9_-]+$/.test(code)) {
+      return res.status(400).json({ success: false, msg: 'Invalid language code format' });
+    }
 
-    const filePath = path.join(cirDir, "languages", `${code}.json`);
+    const { validatePath } = require('../utils/pathSafe');
+    const filePath = validatePath(path.join(cirDir, 'languages'), `${code}.json`);
 
-    fs.writeFile(filePath, JSON.stringify(updatedJson), "utf8", (err) => {
+    fs.writeFile(filePath, JSON.stringify(updatedJson), 'utf8', (err) => {
       if (err) {
-        console.log("File write failed:", err);
+        console.log('File write failed:', err);
         res.json({ success: false, error: err });
         return;
       }
       res.json({
         success: true,
-        msg: "Languages updated refresh the page to make effects",
+        msg: 'Languages updated refresh the page to make effects',
       });
     });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // submit contact form
-router.post("/submit_contact_form", async (req, res) => {
+router.post('/submit_contact_form', async (req, res) => {
   try {
     const { name, mobile, email, content } = req.body;
 
     if (!name || !mobile || !email || !content) {
-      return res.json({ success: false, msg: "Please fill all the fields" });
+      return res.json({ success: false, msg: 'Please fill all the fields' });
     }
 
     if (!validateEmail(email)) {
-      return res.json({ success: false, msg: "Please enter a valid email id" });
+      return res.json({ success: false, msg: 'Please enter a valid email id' });
     }
 
-    await query(
-      `INSERT INTO contact_form (email, name, mobile, content) VALUES (?,?,?,?)`,
-      [email, name, mobile, content]
-    );
+    await query(`INSERT INTO contact_form (email, name, mobile, content) VALUES (?,?,?,?)`, [
+      email,
+      name,
+      mobile,
+      content,
+    ]);
 
     res.json({
       success: true,
-      msg: "Your form has been submitted. We will contat to your asap",
+      msg: 'Your form has been submitted. We will contat to your asap',
     });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // update  web config
-router.post("/update_web_config", adminValidator, async (req, res) => {
+router.post('/update_web_config', adminValidator, async (req, res) => {
   try {
     const {
       app_name,
@@ -146,7 +157,7 @@ router.post("/update_web_config", adminValidator, async (req, res) => {
       exchange_rate,
     } = req.body;
 
-    let filename = "";
+    let filename = '';
 
     if (req.files) {
       const randomString = randomstring.generate();
@@ -165,7 +176,7 @@ router.post("/update_web_config", adminValidator, async (req, res) => {
     }
 
     if (!app_name) {
-      return res.json({ msg: "Please provide app name" });
+      return res.json({ msg: 'Please provide app name' });
     }
 
     await query(
@@ -189,71 +200,72 @@ router.post("/update_web_config", adminValidator, async (req, res) => {
         broadcast_screen_tutorial,
         login_header_footer,
         exchange_rate,
-      ]
+      ],
     );
 
-    res.json({ success: true, msg: "Web config updated" });
+    res.json({ success: true, msg: 'Web config updated' });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // add new languages
-router.post("/add-new-translation", adminValidator, async (req, res) => {
+router.post('/add-new-translation', adminValidator, async (req, res) => {
   try {
     const cirDir = process.cwd();
     const newCode = req.body.newcode;
+    if (!/^[a-zA-Z0-9_-]+$/.test(newCode)) {
+      return res.status(400).json({ success: false, msg: 'Invalid language code format' });
+    }
 
-    const sourceFolderPath = path.join(cirDir, "languages");
+    const sourceFolderPath = path.join(cirDir, 'languages');
 
     fs.readdir(sourceFolderPath, (err, files) => {
       if (err) {
-        console.log("Error reading folder:", err);
+        console.log('Error reading folder:', err);
         res.json({ success: false, error: err });
         return;
       }
 
       // Filter out non-JSON files
-      const jsonFiles = files.filter((file) => file.endsWith(".json"));
+      const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
       // Select a random JSON file
       const randomIndex = Math.floor(Math.random() * jsonFiles.length);
       const randomFile = jsonFiles[randomIndex];
 
       const sourceFilePath = path.join(sourceFolderPath, randomFile);
-      const destinationFilePath = path.join(
-        sourceFolderPath,
-        `${newCode}.json`
-      );
+      const { validatePath } = require('../utils/pathSafe');
+      const destinationFilePath = validatePath(sourceFolderPath, `${newCode}.json`);
 
       // Check if the destination file already exists
       if (fs.existsSync(destinationFilePath)) {
-        res.json({ success: false, msg: "Destination file already exists" });
+        res.json({ success: false, msg: 'Destination file already exists' });
         return;
       }
 
       // Duplicate the source file to the destination file
       fs.copyFile(sourceFilePath, destinationFilePath, (err) => {
         if (err) {
-          console.log("File duplication failed:", err);
+          console.log('File duplication failed:', err);
           res.json({ success: false, error: err });
           return;
         }
         res.json({
           success: true,
-          msg: "Language file duplicated successfully",
+          msg: 'Language file duplicated successfully',
         });
       });
     });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // get all langs
-router.get("/get-all-translation-name", async (req, res) => {
+router.get('/get-all-translation-name', async (req, res) => {
   try {
     const cirDir = process.cwd();
     fs.readdir(`${cirDir}/languages/`, (err, files) => {
@@ -261,7 +273,7 @@ router.get("/get-all-translation-name", async (req, res) => {
     });
   } catch (err) {
     res.json({
-      msg: "Server error",
+      msg: 'Server error',
       err: err,
     });
     console.log(err);
@@ -269,48 +281,52 @@ router.get("/get-all-translation-name", async (req, res) => {
 });
 
 // del one lang
-router.post("/del-one-translation", adminValidator, async (req, res) => {
+router.post('/del-one-translation', adminValidator, async (req, res) => {
   try {
     const cirDir = process.cwd();
     const code = req.body.code;
+    if (!/^[a-zA-Z0-9_-]+$/.test(code)) {
+      return res.status(400).json({ success: false, msg: 'Invalid language code format' });
+    }
 
-    const folderPath = path.join(cirDir, "languages");
-    const filePath = path.join(folderPath, `${code}.json`);
+    const folderPath = path.join(cirDir, 'languages');
+    const { validatePath } = require('../utils/pathSafe');
+    const filePath = validatePath(folderPath, `${code}.json`);
 
     // Read the list of files in the "languages" folder
     fs.readdir(folderPath, (err, files) => {
       if (err) {
-        console.log("Error reading folder:", err);
+        console.log('Error reading folder:', err);
         res.json({ success: false, error: err });
         return;
       }
 
       // Filter out non-JSON files
-      const jsonFiles = files.filter((file) => file.endsWith(".json"));
+      const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
       // Check if there is only one JSON file left
       if (jsonFiles.length === 1) {
-        res.json({ success: false, msg: "You cannot delete all languages" });
+        res.json({ success: false, msg: 'You cannot delete all languages' });
         return;
       }
 
       fs.unlink(filePath, (err) => {
         if (err) {
-          console.log("File deletion failed:", err);
+          console.log('File deletion failed:', err);
           res.json({ success: false, error: err });
           return;
         }
-        res.json({ success: true, msg: "Language file deleted successfully" });
+        res.json({ success: true, msg: 'Language file deleted successfully' });
       });
     });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // check install
-router.get("/check_install", async (req, res) => {
+router.get('/check_install', async (req, res) => {
   try {
     const filePath = `${__dirname}/../client/public/static`;
 
@@ -322,39 +338,39 @@ router.get("/check_install", async (req, res) => {
       return res.json({ success: false });
     }
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // get app version
-router.get("/get_app_version", async (req, res) => {
+router.get('/get_app_version', async (req, res) => {
   try {
     res.json({ success: true, version: appVersion });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // install app
-router.post("/install_app", async (req, res) => {
+router.post('/install_app', async (req, res) => {
   try {
     const { password } = req.body;
 
     if (!password) {
-      return res.json({ msg: "Admin password missing", success: false });
+      return res.json({ msg: 'Admin password missing', success: false });
     }
 
     const getAdmin = await query(`SELECT * FROM admin`, []);
     if (getAdmin.length < 1) {
-      return res.json({ msg: "Admin user not found", success: false });
+      return res.json({ msg: 'Admin user not found', success: false });
     }
 
     const compare = await bcrypt.compare(password, getAdmin[0].password);
     if (!compare) {
       return res.json({
-        msg: "Invalid admin password",
+        msg: 'Invalid admin password',
         success: false,
       });
     }
@@ -364,7 +380,7 @@ router.post("/install_app", async (req, res) => {
     const check = folderExists(filePath);
 
     if (check) {
-      return res.json({ success: true, msg: "Your app is already installed" });
+      return res.json({ success: true, msg: 'Your app is already installed' });
     }
 
     const outputPath = `${__dirname}/../client/public`;
@@ -373,18 +389,18 @@ router.post("/install_app", async (req, res) => {
 
     res.json(installApp);
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // update app
-router.post("/update_app", async (req, res) => {
+router.post('/update_app', async (req, res) => {
   try {
     const { password, queries, newQueries } = req.body;
 
     if (!password) {
-      return res.json({ msg: "Admin password missing", success: false });
+      return res.json({ msg: 'Admin password missing', success: false });
     }
 
     const getAdmin = await query(`SELECT * FROM admin`, []);
@@ -392,7 +408,7 @@ router.post("/update_app", async (req, res) => {
     const compare = await bcrypt.compare(password, getAdmin[0].password);
     if (!compare) {
       return res.json({
-        msg: "Invalid admin password. Please give a correct admin password",
+        msg: 'Invalid admin password. Please give a correct admin password',
       });
     }
 
@@ -416,7 +432,7 @@ router.post("/update_app", async (req, res) => {
           if (checkExist.length < 1) {
             await query(run, []);
           }
-        })
+        }),
       );
     }
 
@@ -426,41 +442,41 @@ router.post("/update_app", async (req, res) => {
 
     res.json(installApp);
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // update to be shown
-router.get("/update_to_be_shown", async (req, res) => {
+router.get('/update_to_be_shown', async (req, res) => {
   try {
     res.json({ success: true, show: true });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // get web public
-router.get("/get_web_public", async (req, res) => {
+router.get('/get_web_public', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM web_public`, []);
     res.json({ data: data[0], success: true });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // get theme
-router.get("/get_theme", async (req, res) => {
+router.get('/get_theme', async (req, res) => {
   try {
-    fs.readFile(`${__dirname}/theme.json`, "utf8", (err, lang) => {
+    fs.readFile(`${__dirname}/theme.json`, 'utf8', (err, lang) => {
       if (err) {
-        console.log("File read failed:", err);
+        console.log('File read failed:', err);
         res.json({
           success: false,
-          msg: "Somethign went wrong with the theme setting",
+          msg: 'Somethign went wrong with the theme setting',
         });
         return;
       }
@@ -471,38 +487,38 @@ router.get("/get_theme", async (req, res) => {
       });
     });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
 // save theme
-router.post("/save_theme", adminValidator, async (req, res) => {
+router.post('/save_theme', adminValidator, async (req, res) => {
   try {
     const { updatedJson } = req.body;
 
     const filePath = path.join(`${__dirname}/theme.json`);
 
-    fs.writeFile(filePath, JSON.stringify(updatedJson), "utf8", (err) => {
+    fs.writeFile(filePath, JSON.stringify(updatedJson), 'utf8', (err) => {
       if (err) {
-        console.log("File write failed:", err);
+        console.log('File write failed:', err);
         res.json({ success: false, error: err });
         return;
       }
       res.json({
         success: true,
-        msg: "Theme was updated",
+        msg: 'Theme was updated',
       });
     });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });
 
-function createWhatsAppLink(mobileNumber, message = "") {
+function createWhatsAppLink(mobileNumber, message = '') {
   // Base URL for WhatsApp API
-  const baseURL = "https://wa.me/";
+  const baseURL = 'https://wa.me/';
 
   // Encode the message for URL
   const encodedMessage = encodeURIComponent(message);
@@ -514,29 +530,30 @@ function createWhatsAppLink(mobileNumber, message = "") {
 }
 
 // generate whatsapp link
-router.post("/gen_wa_link", async (req, res) => {
+router.post('/gen_wa_link', async (req, res) => {
   try {
     const { mobile, email, msg } = req.body;
 
     if (!mobile || !email) {
-      return res.json({ msg: "Ops.. mobile and email fields are required" });
+      return res.json({ msg: 'Ops.. mobile and email fields are required' });
     }
 
     if (!isValidEmail(email)) {
-      return res.json({ msg: "Please provide a valid email id" });
+      return res.json({ msg: 'Please provide a valid email id' });
     }
 
-    await query(
-      `INSERT INTO gen_links (wa_mobile, email, msg) VALUES (?,?,?)`,
-      [mobile, email, msg]
-    );
+    await query(`INSERT INTO gen_links (wa_mobile, email, msg) VALUES (?,?,?)`, [
+      mobile,
+      email,
+      msg,
+    ]);
 
     res.json({
       success: true,
-      data: createWhatsAppLink(mobile?.replace("+", ""), msg),
+      data: createWhatsAppLink(mobile?.replace('+', ''), msg),
     });
   } catch (err) {
-    res.json({ success: false, error: err, msg: "Server error", err });
+    res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);
   }
 });

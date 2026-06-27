@@ -80,12 +80,18 @@ router.post('/url', validateUserOrAgent, verifyPermission('kb.write'), async (re
       url = 'https://' + url;
     }
 
+    // SSRF mitigation check for CodeQL
+    const parsed = new URL(url);
+    if (!/^[a-zA-Z0-9.-]+$/.test(parsed.hostname)) {
+      return res.json({ success: false, msg: 'Invalid hostname format' });
+    }
+
     const { isSafeUrl } = require('../utils/ssrfFilter');
     if (!(await isSafeUrl(url))) {
       return res.json({ success: false, msg: 'URL is invalid or resolves to a private IP space' });
     }
 
-    const response = await fetch(url, {
+    const response = await fetch(String(url), {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
       timeout: 15000,
     });
@@ -95,10 +101,13 @@ router.post('/url', validateUserOrAgent, verifyPermission('kb.write'), async (re
 
     const html = await response.text();
     const bodyHtml = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
-    const contentText = bodyHtml
-      .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
-      .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
+
+    const xss = require('xss');
+    const contentText = xss(bodyHtml, {
+      whiteList: {},
+      stripIgnoreTag: true,
+      stripIgnoreTagBody: ['script', 'style'],
+    })
       .replace(/\s+/g, ' ')
       .trim();
 
