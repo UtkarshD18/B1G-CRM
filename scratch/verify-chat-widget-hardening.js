@@ -6,7 +6,7 @@ const queryDb = async (sql, params = []) => {
     host: '127.0.0.1',
     port: 5432,
     user: 'b1gcrm',
-    password: 'b1gcrm123',
+    password: process.env.PGPASSWORD || '',
     database: 'b1gcrm'
   });
   await client.connect();
