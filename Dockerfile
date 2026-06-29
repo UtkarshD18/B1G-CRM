@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20-bookworm-slim AS server-deps
+FROM node:26-bookworm-slim AS server-deps
 WORKDIR /app
 RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
@@ -8,7 +8,7 @@ RUN apt-get update \
 COPY package*.json ./
 RUN npm ci --omit=dev --legacy-peer-deps --ignore-scripts
 
-FROM node:20-bookworm-slim AS client-build
+FROM node:26-bookworm-slim AS client-build
 WORKDIR /app
 COPY client/package*.json ./client/
 RUN cd client && npm ci --legacy-peer-deps
@@ -17,7 +17,7 @@ ARG VITE_API_URL=/api
 ENV VITE_API_URL=${VITE_API_URL}
 RUN cd client && npm run build
 
-FROM node:20-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3010
