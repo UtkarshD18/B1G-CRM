@@ -44,7 +44,7 @@
     "mammoth": "^1.12.0",
     "mime-types": "^2.1.35",
     "moment": "^2.29.4",
-    "moment-timezone": "^0.5.45",
+    "moment-timezone": "^0.6.2",
     "node-cleanup": "^2.1.2",
     "node-fetch": "^2.6.9",
     "nodemailer": "^9.0.1",
