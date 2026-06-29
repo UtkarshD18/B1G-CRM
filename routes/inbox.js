@@ -1,8 +1,8 @@
-const router = require("express").Router();
-const { query, withTransaction } = require("../database/dbpromise.js");
-const randomstring = require("randomstring");
-const fs = require("fs");
-const bcrypt = require("bcrypt");
+const router = require('express').Router();
+const { query, withTransaction } = require('../database/dbpromise.js');
+const randomstring = require('randomstring');
+const fs = require('fs');
+const bcrypt = require('bcrypt');
 const {
   isValidEmail,
   getFileExtension,
@@ -16,17 +16,43 @@ const {
   updateMetaTempletInMsg,
   getUserPlayDays,
   deleteFileIfExists,
-} = require("../functions/function.js");
-const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
-const { getIOInstance } = require("../socket.js");
-const { checkPlan } = require("../middlewares/plan.js");
-const { processMessage } = require("../helper/inbox/inbox.js");
+} = require('../functions/function.js');
+const { validateUserOrAgent, verifyPermission } = require('../middlewares/auth.js');
+const { getIOInstance } = require('../socket.js');
+const { checkPlan } = require('../middlewares/plan.js');
+const { processMessage } = require('../helper/inbox/inbox.js');
+const { v7: uuidv7 } = require('uuid');
 
 // handle post webhook
-router.post("/webhook/:uid", async (req, res) => {
+router.post('/webhook/:uid', async (req, res) => {
   try {
     const body = req.body;
     const userUID = req.params.uid;
+
+    const [conn] = await query(
+      `SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'whatsapp_cloud'`,
+      [userUID],
+    );
+    if (conn) {
+      const correlation_id = uuidv7();
+      const [queueRow] = await query(
+        `INSERT INTO channel_incoming_queue (uid, channel_type, payload, correlation_id) VALUES (?, 'whatsapp_cloud', ?, ?) RETURNING id`,
+        [userUID, JSON.stringify(body), correlation_id],
+      );
+
+      console.log(
+        JSON.stringify({
+          event: 'inbound_webhook_enqueue',
+          correlation_id,
+          queue_id: queueRow.id,
+          worker: 'API',
+          channel: 'whatsapp_cloud',
+          message: 'Enqueued incoming webhook',
+        }),
+      );
+
+      return res.sendStatus(200);
+    }
 
     res.sendStatus(200);
 
@@ -42,23 +68,22 @@ router.post("/webhook/:uid", async (req, res) => {
       const { status, id } = statuses[0];
       const errorData = JSON.stringify(body);
 
-      if (status === "failed") {
-        await query(
-          `UPDATE broadcast_log SET delivery_status = ?, err = ? WHERE meta_msg_id = ?`,
-          [status, errorData, id]
-        );
+      if (status === 'failed') {
+        await query(`UPDATE broadcast_log SET delivery_status = ?, err = ? WHERE meta_msg_id = ?`, [
+          status,
+          errorData,
+          id,
+        ]);
       } else if (id) {
-        await query(
-          `UPDATE broadcast_log SET delivery_status = ? WHERE meta_msg_id = ?`,
-          [status, id]
-        );
+        await query(`UPDATE broadcast_log SET delivery_status = ? WHERE meta_msg_id = ?`, [
+          status,
+          id,
+        ]);
       }
     }
 
     if (body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id) {
-      let getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-        userUID,
-      ]);
+      let getMyMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [userUID]);
       if (getMyMetaApi?.length === 0) {
         const globalMeta = await query(`SELECT meta_phone_number_id FROM web_private`, []);
         if (globalMeta.length > 0 && globalMeta[0].meta_phone_number_id) {
@@ -66,8 +91,7 @@ router.post("/webhook/:uid", async (req, res) => {
         }
       }
       if (getMyMetaApi?.length > 0) {
-        const checkNumber =
-          body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id;
+        const checkNumber = body?.entry[0]?.changes[0]?.value?.metadata?.phone_number_id;
         const myNumberId = getMyMetaApi[0]?.business_phone_number_id;
 
         if (checkNumber !== myNumberId) {
@@ -80,16 +104,16 @@ router.post("/webhook/:uid", async (req, res) => {
     await processMessage({
       body,
       uid: userUID,
-      origin: "meta",
+      origin: 'meta',
     });
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
 // getting chat lists
-router.get("/get_chats", validateUserOrAgent, async (req, res) => {
+router.get('/get_chats', validateUserOrAgent, async (req, res) => {
   try {
     let data = [];
     data = await query(
@@ -98,11 +122,9 @@ router.get("/get_chats", validateUserOrAgent, async (req, res) => {
        LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
        WHERE c.uid = ?
        ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
-      [req.decode.uid]
+      [req.decode.uid],
     );
-    const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
+    const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [req.decode.uid]);
 
     if (data.length > 0 && getContacts.length > 0) {
       data = mergeArrays(getContacts, data);
@@ -113,79 +135,93 @@ router.get("/get_chats", validateUserOrAgent, async (req, res) => {
     res.json({ data, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
 // get chat conversatio
-router.post("/get_convo", validateUserOrAgent, async (req, res) => {
+router.post('/get_convo', validateUserOrAgent, async (req, res) => {
   try {
     const { chatId } = req.body;
     if (!chatId) {
-      return res.json({ success: false, msg: "chatId is required" });
+      return res.json({ success: false, msg: 'chatId is required' });
     }
 
-    const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
+    const { validatePath } = require('../utils/pathSafe');
+    const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
+    const filePath = validatePath(rootInboxDir, `${req.decode.uid}/${chatId}.json`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
     const data = readJSONFile(filePath, 100);
     res.json({ data, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
 // change tenant chat ticket status
-router.post("/change_chat_ticket_status", validateUserOrAgent, async (req, res) => {
+router.post('/change_chat_ticket_status', validateUserOrAgent, async (req, res) => {
   try {
     const { status, chatId } = req.body;
-    const allowedStatuses = ["open", "pending", "solved"];
+    const allowedStatuses = ['open', 'pending', 'solved'];
 
     if (!chatId || !allowedStatuses.includes(status)) {
-      return res.json({ success: false, msg: "Invalid chat status request" });
+      return res.json({ success: false, msg: 'Invalid chat status request' });
     }
 
     const result = await query(
       `UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ? RETURNING chat_id`,
-      [status, chatId, req.decode.uid]
+      [status, chatId, req.decode.uid],
     );
 
     if (result.length < 1) {
-      return res.json({ success: false, msg: "Chat was not found" });
+      return res.json({ success: false, msg: 'Chat was not found' });
     }
 
-    res.json({ success: true, msg: "Chat status updated" });
+    res.json({ success: true, msg: 'Chat status updated' });
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
 // update custom kanban order for chats
-router.post("/update_kanban_order", validateUserOrAgent, verifyPermission("kanban_access"), async (req, res) => {
-  try {
-    const { orderedChatIds } = req.body;
-    if (!Array.isArray(orderedChatIds)) {
-      return res.json({ success: false, msg: "orderedChatIds must be an array" });
-    }
-
-    await withTransaction(async (txQuery) => {
-      for (let i = 0; i < orderedChatIds.length; i++) {
-        await txQuery(
-          `UPDATE chats SET kanban_order = ? WHERE chat_id = ? AND uid = ?`,
-          [i, orderedChatIds[i], req.decode.uid]
-        );
+router.post(
+  '/update_kanban_order',
+  validateUserOrAgent,
+  verifyPermission('kanban_access'),
+  async (req, res) => {
+    try {
+      const { orderedChatIds } = req.body;
+      if (!Array.isArray(orderedChatIds)) {
+        return res.json({ success: false, msg: 'orderedChatIds must be an array' });
       }
-    });
+      if (orderedChatIds.length > 1000) {
+        return res.json({ success: false, msg: 'orderedChatIds exceeds maximum allowed limit' });
+      }
 
-    res.json({ success: true, msg: "Kanban order updated" });
-  } catch (err) {
-    console.error(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
+      await withTransaction(async (txQuery) => {
+        for (let i = 0; i < orderedChatIds.length; i++) {
+          await txQuery(`UPDATE chats SET kanban_order = ? WHERE chat_id = ? AND uid = ?`, [
+            i,
+            orderedChatIds[i],
+            req.decode.uid,
+          ]);
+        }
+      });
+
+      res.json({ success: true, msg: 'Kanban order updated' });
+    } catch (err) {
+      console.error(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
+    }
+  },
+);
 
 // adding webhook
-router.get("/webhook/:uid", async (req, res) => {
+router.get('/webhook/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
 
@@ -197,29 +233,32 @@ router.get("/webhook/:uid", async (req, res) => {
 
     const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-    let verify_token = "";
+    let verify_token = '';
 
     if (getUser.length < 1) {
-      verify_token = "NULL";
+      verify_token = 'NULL';
       res.json({
         success: false,
-        msg: "Token not verified",
+        msg: 'Token not verified',
         webhook: uid,
-        token: "NOT FOUND",
+        token: 'NOT FOUND',
       });
     } else {
       verify_token = uid;
 
-      let mode = req.query["hub.mode"];
-      let token = req.query["hub.verify_token"];
-      let challenge = req.query["hub.challenge"];
+      let mode = req.query['hub.mode'];
+      let token = req.query['hub.verify_token'];
+      let challenge = req.query['hub.challenge'];
 
       // Check if a token and mode were sent
       if (mode && token) {
         // Check the mode and token sent are correct
-        if (mode === "subscribe" && token === verify_token) {
+        if (mode === 'subscribe' && token === verify_token) {
+          if (!challenge || !/^[a-zA-Z0-9_-]+$/.test(challenge)) {
+            return res.status(400).send('Invalid challenge format');
+          }
           // Respond with 200 OK and challenge token from the request
-          console.log("WEBHOOK_VERIFIED");
+          console.log('WEBHOOK_VERIFIED');
           res.status(200).send(challenge);
         } else {
           // Responds with '403 Forbidden' if verify tokens do not match
@@ -228,19 +267,19 @@ router.get("/webhook/:uid", async (req, res) => {
       } else {
         res.json({
           success: false,
-          msg: "Token not verified",
+          msg: 'Token not verified',
           webhook: uid,
-          token: "FOUND",
+          token: 'FOUND',
         });
       }
     }
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
-router.get("/", validateUserOrAgent, async (req, res) => {
+router.get('/', validateUserOrAgent, async (req, res) => {
   try {
     const uid = req.decode.uid;
     const { msg } = req.query;
@@ -252,387 +291,388 @@ router.get("/", validateUserOrAgent, async (req, res) => {
 
     console.log(sock[0]?.socket_id);
 
-    io.to(sock[0]?.socket_id).emit("update_conversations", "msg");
+    io.to(sock[0]?.socket_id).emit('update_conversations', 'msg');
 
     res.json(msg);
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
 // sending templets
-router.post("/send_templet", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
-  try {
-    const { content, toName, toNumber, chatId, msgType } = req.body;
+router.post(
+  '/send_templet',
+  validateUserOrAgent,
+  verifyPermission('inbox_access'),
+  checkPlan,
+  async (req, res) => {
+    try {
+      const { content, toName, toNumber, chatId, msgType } = req.body;
 
-    if (!content || !toName || !toName || !msgType) {
-      return res.json({ success: false, msg: "Invalid request" });
+      if (!content || !toName || !toName || !msgType) {
+        return res.json({ success: false, msg: 'Invalid request' });
+      }
+
+      const msgObj = content;
+
+      const savObj = {
+        type: msgType,
+        metaChatId: '',
+        msgContext: content,
+        reaction: '',
+        timestamp: '',
+        senderName: toName,
+        senderMobile: toNumber,
+        status: 'sent',
+        star: false,
+        route: 'OUTGOING',
+      };
+
+      const resp = await sendMetaMsg(req.decode.uid, msgObj, toNumber, savObj, chatId);
+      res.json(resp);
+    } catch (err) {
+      console.log(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
     }
-
-    const msgObj = content;
-
-    const savObj = {
-      type: msgType,
-      metaChatId: "",
-      msgContext: content,
-      reaction: "",
-      timestamp: "",
-      senderName: toName,
-      senderMobile: toNumber,
-      status: "sent",
-      star: false,
-      route: "OUTGOING",
-    };
-
-    const resp = await sendMetaMsg(
-      req.decode.uid,
-      msgObj,
-      toNumber,
-      savObj,
-      chatId
-    );
-    res.json(resp);
-  } catch (err) {
-    console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
+  },
+);
 
 // send image
-router.post("/send_image", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
-  try {
-    const { url, toNumber, toName, chatId, caption } = req.body;
+router.post(
+  '/send_image',
+  validateUserOrAgent,
+  verifyPermission('inbox_access'),
+  checkPlan,
+  async (req, res) => {
+    try {
+      const { url, toNumber, toName, chatId, caption } = req.body;
 
-    if (!url || !toNumber || !toName || !chatId) {
-      return res.json({ success: false, msg: "Not enough input provided" });
-    }
+      if (!url || !toNumber || !toName || !chatId) {
+        return res.json({ success: false, msg: 'Not enough input provided' });
+      }
 
-    const msgObj = {
-      type: "image",
-      image: {
-        link: url,
-        caption: caption || "",
-      },
-    };
-
-    const savObj = {
-      type: "image",
-      metaChatId: "",
-      msgContext: {
-        type: "image",
+      const msgObj = {
+        type: 'image',
         image: {
           link: url,
-          caption: caption || "",
+          caption: caption || '',
         },
-      },
-      reaction: "",
-      timestamp: "",
-      senderName: toName,
-      senderMobile: toNumber,
-      status: "sent",
-      star: false,
-      route: "OUTGOING",
-    };
+      };
 
-    const resp = await sendMetaMsg(
-      req.decode.uid,
-      msgObj,
-      toNumber,
-      savObj,
-      chatId
-    );
-    res.json(resp);
-  } catch (err) {
-    console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
+      const savObj = {
+        type: 'image',
+        metaChatId: '',
+        msgContext: {
+          type: 'image',
+          image: {
+            link: url,
+            caption: caption || '',
+          },
+        },
+        reaction: '',
+        timestamp: '',
+        senderName: toName,
+        senderMobile: toNumber,
+        status: 'sent',
+        star: false,
+        route: 'OUTGOING',
+      };
+
+      const resp = await sendMetaMsg(req.decode.uid, msgObj, toNumber, savObj, chatId);
+      res.json(resp);
+    } catch (err) {
+      console.log(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
+    }
+  },
+);
 
 // send video
-router.post("/send_video", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
-  try {
-    const { url, toNumber, toName, chatId, caption } = req.body;
+router.post(
+  '/send_video',
+  validateUserOrAgent,
+  verifyPermission('inbox_access'),
+  checkPlan,
+  async (req, res) => {
+    try {
+      const { url, toNumber, toName, chatId, caption } = req.body;
 
-    if (!url || !toNumber || !toName || !chatId) {
-      return res.json({ success: false, msg: "Not enough input provided" });
-    }
+      if (!url || !toNumber || !toName || !chatId) {
+        return res.json({ success: false, msg: 'Not enough input provided' });
+      }
 
-    const msgObj = {
-      type: "video",
-      video: {
-        link: url,
-        caption: caption || "",
-      },
-    };
-
-    const savObj = {
-      type: "video",
-      metaChatId: "",
-      msgContext: {
-        type: "video",
+      const msgObj = {
+        type: 'video',
         video: {
           link: url,
-          caption: caption || "",
+          caption: caption || '',
         },
-      },
-      reaction: "",
-      timestamp: "",
-      senderName: toName,
-      senderMobile: toNumber,
-      status: "sent",
-      star: false,
-      route: "OUTGOING",
-    };
+      };
 
-    const resp = await sendMetaMsg(
-      req.decode.uid,
-      msgObj,
-      toNumber,
-      savObj,
-      chatId
-    );
-    res.json(resp);
-  } catch (err) {
-    console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
+      const savObj = {
+        type: 'video',
+        metaChatId: '',
+        msgContext: {
+          type: 'video',
+          video: {
+            link: url,
+            caption: caption || '',
+          },
+        },
+        reaction: '',
+        timestamp: '',
+        senderName: toName,
+        senderMobile: toNumber,
+        status: 'sent',
+        star: false,
+        route: 'OUTGOING',
+      };
+
+      const resp = await sendMetaMsg(req.decode.uid, msgObj, toNumber, savObj, chatId);
+      res.json(resp);
+    } catch (err) {
+      console.log(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
+    }
+  },
+);
 
 // send document
-router.post("/send_doc", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
-  try {
-    const { url, toNumber, toName, chatId, caption } = req.body;
+router.post(
+  '/send_doc',
+  validateUserOrAgent,
+  verifyPermission('inbox_access'),
+  checkPlan,
+  async (req, res) => {
+    try {
+      const { url, toNumber, toName, chatId, caption } = req.body;
 
-    if (!url || !toNumber || !toName || !chatId) {
-      return res.json({ success: false, msg: "Not enough input provided" });
-    }
+      if (!url || !toNumber || !toName || !chatId) {
+        return res.json({ success: false, msg: 'Not enough input provided' });
+      }
 
-    const msgObj = {
-      type: "document",
-      document: {
-        link: url,
-        caption: caption || "",
-      },
-    };
-
-    const savObj = {
-      type: "document",
-      metaChatId: "",
-      msgContext: {
-        type: "document",
+      const msgObj = {
+        type: 'document',
         document: {
           link: url,
-          caption: caption || "",
+          caption: caption || '',
         },
-      },
-      reaction: "",
-      timestamp: "",
-      senderName: toName,
-      senderMobile: toNumber,
-      status: "sent",
-      star: false,
-      route: "OUTGOING",
-    };
+      };
 
-    const resp = await sendMetaMsg(
-      req.decode.uid,
-      msgObj,
-      toNumber,
-      savObj,
-      chatId
-    );
-    res.json(resp);
-  } catch (err) {
-    console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
+      const savObj = {
+        type: 'document',
+        metaChatId: '',
+        msgContext: {
+          type: 'document',
+          document: {
+            link: url,
+            caption: caption || '',
+          },
+        },
+        reaction: '',
+        timestamp: '',
+        senderName: toName,
+        senderMobile: toNumber,
+        status: 'sent',
+        star: false,
+        route: 'OUTGOING',
+      };
+
+      const resp = await sendMetaMsg(req.decode.uid, msgObj, toNumber, savObj, chatId);
+      res.json(resp);
+    } catch (err) {
+      console.log(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
+    }
+  },
+);
 
 // send audio
-router.post("/send_audio", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
-  try {
-    const { url, toNumber, toName, chatId } = req.body;
+router.post(
+  '/send_audio',
+  validateUserOrAgent,
+  verifyPermission('inbox_access'),
+  checkPlan,
+  async (req, res) => {
+    try {
+      const { url, toNumber, toName, chatId } = req.body;
 
-    if (!url || !toNumber || !toName || !chatId) {
-      return res.json({ success: false, msg: "Not enough input provided" });
-    }
+      if (!url || !toNumber || !toName || !chatId) {
+        return res.json({ success: false, msg: 'Not enough input provided' });
+      }
 
-    const msgObj = {
-      type: "audio",
-      audio: {
-        link: url,
-      },
-    };
-
-    const savObj = {
-      type: "audio",
-      metaChatId: "",
-      msgContext: {
-        type: "audio",
+      const msgObj = {
+        type: 'audio',
         audio: {
           link: url,
         },
-      },
-      reaction: "",
-      timestamp: "",
-      senderName: toName,
-      senderMobile: toNumber,
-      status: "sent",
-      star: false,
-      route: "OUTGOING",
-    };
+      };
 
-    const resp = await sendMetaMsg(
-      req.decode.uid,
-      msgObj,
-      toNumber,
-      savObj,
-      chatId
-    );
-    res.json(resp);
-  } catch (err) {
-    console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
+      const savObj = {
+        type: 'audio',
+        metaChatId: '',
+        msgContext: {
+          type: 'audio',
+          audio: {
+            link: url,
+          },
+        },
+        reaction: '',
+        timestamp: '',
+        senderName: toName,
+        senderMobile: toNumber,
+        status: 'sent',
+        star: false,
+        route: 'OUTGOING',
+      };
+
+      const resp = await sendMetaMsg(req.decode.uid, msgObj, toNumber, savObj, chatId);
+      res.json(resp);
+    } catch (err) {
+      console.log(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
+    }
+  },
+);
 
 // send text message
-router.post("/send_text", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
-  try {
-    const { text, toNumber, toName, chatId } = req.body;
+router.post(
+  '/send_text',
+  validateUserOrAgent,
+  verifyPermission('inbox_access'),
+  checkPlan,
+  async (req, res) => {
+    try {
+      const { text, toNumber, toName, chatId } = req.body;
 
-    if (!text || !toNumber || !toName || !chatId) {
-      return res.json({ success: false, msg: "Not enough input provided" });
-    }
+      if (!text || !toNumber || !toName || !chatId) {
+        return res.json({ success: false, msg: 'Not enough input provided' });
+      }
 
-    const msgObj = {
-      type: "text",
-      text: {
-        preview_url: true,
-        body: text,
-      },
-    };
-
-    const savObj = {
-      type: "text",
-      metaChatId: "",
-      msgContext: {
-        type: "text",
+      const msgObj = {
+        type: 'text',
         text: {
           preview_url: true,
           body: text,
         },
-      },
-      reaction: "",
-      timestamp: "",
-      senderName: toName,
-      senderMobile: toNumber,
-      status: "sent",
-      star: false,
-      route: "OUTGOING",
-    };
-
-    const resp = await sendMetaMsg(
-      req.decode.uid,
-      msgObj,
-      toNumber,
-      savObj,
-      chatId
-    );
-    res.json(resp);
-  } catch (err) {
-    console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
-
-// send meta templet
-router.post("/send_meta_templet", validateUserOrAgent, verifyPermission("inbox_access"), checkPlan, async (req, res) => {
-  try {
-    const { template, toNumber, toName, chatId, example } = req.body;
-
-    if (!template) {
-      return res.json({ success: false, msg: "Please type input" });
-    }
-
-    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      req.decode.uid,
-    ]);
-    if (getMETA.length < 1) {
-      return res.json({
-        success: false,
-        msg: "Please check your meta API keys [1]",
-      });
-    }
-
-    const resp = await sendMetatemplet(
-      toNumber,
-      getMETA[0]?.business_phone_number_id,
-      getMETA[0]?.access_token,
-      template,
-      example
-    );
-
-    if (resp.error) {
-      console.log(resp);
-      return res.json({
-        success: false,
-        msg: resp?.error?.error_user_title || "Please check your API",
-      });
-    } else {
-      const savObj = {
-        type: "text",
-        metaChatId: "",
-        msgContext: {
-          type: "text",
-          text: {
-            preview_url: true,
-            body: `{{TEMPLET_MESSAGE}} | ${template?.name}`,
-          },
-        },
-        reaction: "",
-        timestamp: "",
-        senderName: toName,
-        senderMobile: toNumber,
-        status: "sent",
-        star: false,
-        route: "OUTGOING",
       };
 
-      await updateMetaTempletInMsg(
-        req.decode.uid,
-        savObj,
-        chatId,
-        resp?.messages[0]?.id
-      );
-      res.json({ success: true, msg: "The templet message was sent" });
+      const savObj = {
+        type: 'text',
+        metaChatId: '',
+        msgContext: {
+          type: 'text',
+          text: {
+            preview_url: true,
+            body: text,
+          },
+        },
+        reaction: '',
+        timestamp: '',
+        senderName: toName,
+        senderMobile: toNumber,
+        status: 'sent',
+        star: false,
+        route: 'OUTGOING',
+      };
+
+      const resp = await sendMetaMsg(req.decode.uid, msgObj, toNumber, savObj, chatId);
+      res.json(resp);
+    } catch (err) {
+      console.log(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
     }
-  } catch (err) {
-    console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
-  }
-});
+  },
+);
+
+// send meta templet
+router.post(
+  '/send_meta_templet',
+  validateUserOrAgent,
+  verifyPermission('inbox_access'),
+  checkPlan,
+  async (req, res) => {
+    try {
+      const { template, toNumber, toName, chatId, example } = req.body;
+
+      if (!template) {
+        return res.json({ success: false, msg: 'Please type input' });
+      }
+
+      const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+      if (getMETA.length < 1) {
+        return res.json({
+          success: false,
+          msg: 'Please check your meta API keys [1]',
+        });
+      }
+
+      const resp = await sendMetatemplet(
+        toNumber,
+        getMETA[0]?.business_phone_number_id,
+        getMETA[0]?.access_token,
+        template,
+        example,
+      );
+
+      if (resp.error) {
+        console.log(resp);
+        return res.json({
+          success: false,
+          msg: resp?.error?.error_user_title || 'Please check your API',
+        });
+      } else {
+        const savObj = {
+          type: 'text',
+          metaChatId: '',
+          msgContext: {
+            type: 'text',
+            text: {
+              preview_url: true,
+              body: `{{TEMPLET_MESSAGE}} | ${template?.name}`,
+            },
+          },
+          reaction: '',
+          timestamp: '',
+          senderName: toName,
+          senderMobile: toNumber,
+          status: 'sent',
+          star: false,
+          route: 'OUTGOING',
+        };
+
+        await updateMetaTempletInMsg(req.decode.uid, savObj, chatId, resp?.messages[0]?.id);
+        res.json({ success: true, msg: 'The templet message was sent' });
+      }
+    } catch (err) {
+      console.log(err);
+      res.json({ err, success: false, msg: 'Something went wrong' });
+    }
+  },
+);
 
 // del chat
-router.post("/del_chat", validateUserOrAgent, async (req, res) => {
-  if (req.decode.role === "agent") {
-    return res.json({ success: false, msg: "Agents cannot delete chats" });
+router.post('/del_chat', validateUserOrAgent, async (req, res) => {
+  if (req.decode.role === 'agent') {
+    return res.json({ success: false, msg: 'Agents cannot delete chats' });
   }
   try {
     const { chatId } = req.body;
-    await query(`DELETE FROM chats WHERE chat_id = ? AND uid = ?`, [
-      chatId,
-      req.decode.uid,
-    ]);
-    const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}`;
+    await query(`DELETE FROM chats WHERE chat_id = ? AND uid = ?`, [chatId, req.decode.uid]);
+    const { validatePath } = require('../utils/pathSafe');
+    const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
+    const filePath = validatePath(rootInboxDir, `${req.decode.uid}/${chatId}`);
+    if (!filePath) {
+      return res.status(400).json({ success: false, msg: 'Invalid parameters' });
+    }
 
     deleteFileIfExists(filePath);
 
-    res.json({ success: true, msg: "Conversation has been deleted" });
+    res.json({ success: true, msg: 'Conversation has been deleted' });
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
@@ -643,9 +683,7 @@ function groupChatsByNumberArrayFormat(chats) {
     const number = chat.number;
 
     // Check if the group for this number already exists
-    const existingGroup = groupedChats.find(
-      (group) => group.instance === number
-    );
+    const existingGroup = groupedChats.find((group) => group.instance === number);
 
     if (existingGroup) {
       // Add chat to the existing group
@@ -663,33 +701,35 @@ function groupChatsByNumberArrayFormat(chats) {
 }
 
 // merge chat
-router.post("/merge_chats", validateUserOrAgent, async (req, res) => {
-  if (req.decode.role === "agent") {
-    return res.json({ success: false, msg: "Agents cannot merge chats" });
+router.post('/merge_chats', validateUserOrAgent, async (req, res) => {
+  if (req.decode.role === 'agent') {
+    return res.json({ success: false, msg: 'Agents cannot merge chats' });
   }
   try {
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
 // delete a single message from conversation
-router.post("/delete_message", validateUserOrAgent, async (req, res) => {
-  if (req.decode.role === "agent") {
-    return res.json({ success: false, msg: "Agents cannot delete messages" });
+router.post('/delete_message', validateUserOrAgent, async (req, res) => {
+  if (req.decode.role === 'agent') {
+    return res.json({ success: false, msg: 'Agents cannot delete messages' });
   }
   try {
     const { chatId, messageId } = req.body;
     if (!chatId || !messageId) {
-      return res.json({ success: false, msg: "chatId and messageId are required" });
+      return res.json({ success: false, msg: 'chatId and messageId are required' });
     }
 
-    const filePath = `${__dirname}/../conversations/inbox/${req.decode.uid}/${chatId}.json`;
-    if (fs.existsSync(filePath)) {
+    const { validatePath } = require('../utils/pathSafe');
+    const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
+    const filePath = validatePath(rootInboxDir, `${req.decode.uid}/${chatId}.json`);
+    if (filePath && fs.existsSync(filePath)) {
       let fileData = [];
       try {
-        const fileContent = fs.readFileSync(filePath, "utf8");
+        const fileContent = fs.readFileSync(filePath, 'utf8');
         fileData = JSON.parse(fileContent);
       } catch (err) {
         fileData = [];
@@ -698,17 +738,17 @@ router.post("/delete_message", validateUserOrAgent, async (req, res) => {
       if (Array.isArray(fileData)) {
         // filter out the message matching either metaChatId or timestamp
         const updatedData = fileData.filter(
-          (msg) => String(msg.metaChatId || msg.timestamp) !== String(messageId)
+          (msg) => String(msg.metaChatId || msg.timestamp) !== String(messageId),
         );
 
-        fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2), "utf8");
+        fs.writeFileSync(filePath, JSON.stringify(updatedData, null, 2), 'utf8');
       }
     }
 
-    res.json({ success: true, msg: "Message deleted" });
+    res.json({ success: true, msg: 'Message deleted' });
   } catch (err) {
     console.error(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 

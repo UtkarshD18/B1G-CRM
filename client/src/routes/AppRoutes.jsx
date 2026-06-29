@@ -28,6 +28,7 @@ import UserContactsPage from '../pages/user/Contacts'
 import UserCampaignsPage from '../pages/user/Campaigns'
 import UserAutomationFlowsPage from '../pages/user/AutomationFlows'
 import UserChatBotPage from '../pages/user/ChatBot'
+import UserChatbotAutomationPage from '../pages/chatbot-automation/ChatbotAutomationPage'
 import UserIntegrationsPage from '../pages/user/Integrations'
 import UserAgentPage from '../pages/user/AgentLogin'
 import UserTaskPage from '../pages/user/AgentTask'
@@ -84,10 +85,15 @@ export const USER_REFERENCE_ROUTES = [
   { path: 'automation-flows', component: 'flows' },
   { path: 'chatbot', component: 'chatbot' },
   { path: 'wa-chatbot', component: 'chatbot' },
+  { path: 'chatbot-automation', component: 'chatbotAutomation' },
   { path: 'integrations', component: 'integrations' },
   { path: 'add-whatsapp-qr', component: 'integrations' },
   { path: 'link-meta-whatsapp', component: 'integrations' },
   { path: 'link-instagram', component: 'integrations' },
+  { path: 'link-messenger', component: 'integrations' },
+  { path: 'link-email', component: 'integrations' },
+  { path: 'link-sms', component: 'integrations' },
+  { path: 'link-webchat', component: 'integrations' },
   { path: 'agent-login', component: 'agents' },
   { path: 'agent-task', component: 'tasks' },
   { path: 'chat-widget', component: 'widget' },
@@ -140,6 +146,7 @@ const userRouteComponents = {
   campaigns: UserCampaignsPage,
   flows: UserAutomationFlowsPage,
   chatbot: UserChatBotPage,
+  chatbotAutomation: UserChatbotAutomationPage,
   integrations: UserIntegrationsPage,
   agents: UserAgentPage,
   tasks: UserTaskPage,

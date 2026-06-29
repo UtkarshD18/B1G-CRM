@@ -123,11 +123,14 @@ router.get("/get_all", validateUserOrAgent, verifyPermission("settings_access"),
 
       if (!check && instance.status === "CONNECTED") {
         // If no session and status was CONNECTED, update status to "INACTIVE"
-        await query(`UPDATE instance SET status = ? WHERE uniqueId = ?`, [
+        const result = await query(`UPDATE instance SET status = ? WHERE uniqueId = ? AND uid = ? RETURNING id`, [
           "INACTIVE",
           instId,
+          req.decode.uid
         ]);
-        instance.status = "INACTIVE"; // Update status in response as well
+        if (result.length > 0) {
+          instance.status = "INACTIVE"; // Update status in response as well
+        }
       }
     }
 

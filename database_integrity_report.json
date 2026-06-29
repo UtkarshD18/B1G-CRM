@@ -20,6 +20,65 @@
   ],
   "campaignLogOrphans": [],
   "webhookLogOrphans": [],
-  "chatbotLogOrphans": [],
-  "tenantOrphans": {}
+  "chatbotLogOrphans": [
+    {
+      "id": 129,
+      "chatbot_id": 84
+    },
+    {
+      "id": 130,
+      "chatbot_id": 85
+    },
+    {
+      "id": 131,
+      "chatbot_id": 86
+    },
+    {
+      "id": 132,
+      "chatbot_id": 87
+    },
+    {
+      "id": 133,
+      "chatbot_id": 88
+    },
+    {
+      "id": 134,
+      "chatbot_id": 88
+    },
+    {
+      "id": 135,
+      "chatbot_id": 89
+    },
+    {
+      "id": 136,
+      "chatbot_id": 89
+    },
+    {
+      "id": 137,
+      "chatbot_id": 90
+    },
+    {
+      "id": 138,
+      "chatbot_id": 91
+    },
+    {
+      "id": 139,
+      "chatbot_id": 92
+    },
+    {
+      "id": 140,
+      "chatbot_id": 92
+    },
+    {
+      "id": 143,
+      "chatbot_id": 999
+    },
+    {
+      "id": 144,
+      "chatbot_id": 123
+    }
+  ],
+  "tenantOrphans": {
+    "chatbot_log": 1
+  }
 }

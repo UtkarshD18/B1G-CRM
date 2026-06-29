@@ -1,16 +1,8 @@
 {
-  "auth": true,
-  "insertTestRow": true,
-  "apiResponse": {
-    "success": true,
-    "count": 1,
-    "foundTestLog": true,
-    "matchDetails": {
-      "rule_name": "Test Rule E2E",
-      "target_url": "https://httpbin.org/post",
-      "response_status": 200
-    }
-  },
-  "cleanup": true,
-  "pass": true
+  "auth": false,
+  "insertTestRow": false,
+  "apiResponse": null,
+  "cleanup": false,
+  "pass": false,
+  "error": "Failed to login, token not returned"
 }

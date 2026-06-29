@@ -4,6 +4,7 @@ const { query } = require("../../database/dbpromise");
 const fetch = require("node-fetch");
 const mime = require("mime-types");
 const env = require("../../env");
+const { v7: uuidv7 } = require("uuid");
 
 function mergeArraysWithPhonebook(chatArray, phonebookArray) {
   // Iterate through the chat array and enrich with phonebook data
@@ -171,13 +172,77 @@ async function sendMetaMsg({ uid, to, msgObj }) {
     if (env.MOCK_META_DELIVERY) {
       return { success: true, id: "mock-msg-id-" + Math.random().toString(36).substring(2, 15) };
     }
-    const [api] = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
-    if (!api || !api?.access_token || !api?.business_phone_number_id) {
-      return { success: false, msg: "Please add your meta API keys" };
-    }
+    
+    // Check if this is a Phase 4 adapter connection first
+    const [conn] = await query(
+      `SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'whatsapp'`,
+      [uid]
+    );
 
     function formatNumber(number) {
       return number?.replace("+", "");
+    }
+
+    if (conn) {
+      // Phase 4 Outbox logic
+      const correlation_id = uuidv7();
+      const channelType = 'whatsapp';
+      const toNumber = formatNumber(to);
+
+      const normalizedOutgoing = {
+        channel: channelType,
+        recipientId: toNumber,
+        messageType: msgObj.type || "text",
+        text: msgObj.text?.body || msgObj.body || "",
+        attachments: []
+      };
+
+      if (msgObj.type === "image") {
+        normalizedOutgoing.attachments.push({
+          type: "image",
+          url: msgObj.image?.link || msgObj.image?.url,
+          caption: msgObj.image?.caption || ""
+        });
+      } else if (msgObj.type === "video") {
+        normalizedOutgoing.attachments.push({
+          type: "video",
+          url: msgObj.video?.link || msgObj.video?.url,
+          caption: msgObj.video?.caption || ""
+        });
+      } else if (msgObj.type === "audio") {
+        normalizedOutgoing.attachments.push({
+          type: "audio",
+          url: msgObj.audio?.link || msgObj.audio?.url
+        });
+      } else if (msgObj.type === "document" || msgObj.type === "file") {
+        const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
+        normalizedOutgoing.attachments.push({
+          type: "document",
+          url: docUrl,
+          caption: msgObj.document?.caption || ""
+        });
+      }
+
+      // Enqueue to worker
+      await query(
+        `INSERT INTO channel_outgoing_queue (uid, channel_type, payload, state, correlation_id) 
+         VALUES (?, ?, ?, 'pending', ?) RETURNING id`,
+        [uid, channelType, JSON.stringify(normalizedOutgoing), correlation_id]
+      );
+
+      return { 
+        success: true, 
+        id: correlation_id, 
+        correlation_id: correlation_id, 
+        provider_message_id: null, 
+        queued: true 
+      };
+    }
+
+    // Legacy fallback logic
+    const [api] = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (!api || !api?.access_token || !api?.business_phone_number_id) {
+      return { success: false, msg: "Please add your meta API keys" };
     }
 
     const waToken = api?.access_token;
@@ -206,7 +271,7 @@ async function sendMetaMsg({ uid, to, msgObj }) {
       return { success: false, msg: data?.error?.message };
     }
 
-    if (data?.messages[0]?.id) {
+    if (data?.messages && data.messages[0]?.id) {
       const metaMsgId = data?.messages[0]?.id;
       return { success: true, id: metaMsgId };
     } else {

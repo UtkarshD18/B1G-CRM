@@ -163,4 +163,128 @@ async function processMessage({
   }
 }
 
+const eventBus = require("../../utils/channels/eventBus");
+const path = require("path");
+
+eventBus.on("incoming_message", async (normalizedMsg) => {
+  try {
+    const { uid, channel, senderId, senderName, messageType, text, attachments, timestamp } = normalizedMsg;
+
+    // 1. Ensure phonebook/contact exists
+    const pbName = `${channel.toUpperCase()} Contact`;
+    let pbId;
+    const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+    if (existingPb.length > 0) {
+      pbId = existingPb[0].id;
+    } else {
+      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [uid, pbName]);
+      pbId = insertPb[0]?.id;
+    }
+
+    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [uid, senderId]);
+    if (checkContact.length === 0) {
+      await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`, [
+        uid,
+        pbId,
+        pbName,
+        senderName || "Unknown Contact",
+        senderId,
+        `Auto-created via ${channel}`
+      ]);
+    }
+
+    // 2. Build conversation message object
+    const newMessage = {
+      type: messageType,
+      metaChatId: normalizedMsg.metadata?.message_id || "msg-" + Date.now(),
+      msgContext: {
+        type: messageType,
+        [messageType]: messageType === "text" ? { body: text } : { link: attachments?.[0]?.url, caption: attachments?.[0]?.caption || "" }
+      },
+      reaction: "",
+      timestamp: Math.round(timestamp / 1000),
+      senderName: senderName || "Contact",
+      senderMobile: senderId,
+      status: "received",
+      star: false,
+      route: "INCOMING",
+      origin: channel
+    };
+
+    // 3. Save to conversation history file
+    const conversationsDir = path.resolve(__dirname, `../../conversations/inbox/${uid}`);
+    if (!fs.existsSync(conversationsDir)) {
+      fs.mkdirSync(conversationsDir, { recursive: true });
+    }
+    const chatFilePath = path.join(conversationsDir, `${senderId}.json`);
+    let conversationHistory = [];
+    if (fs.existsSync(chatFilePath)) {
+      try {
+        conversationHistory = JSON.parse(fs.readFileSync(chatFilePath, "utf8"));
+      } catch (e) {
+        console.error("JSON parse error for chat file:", e);
+      }
+    }
+    conversationHistory.push(newMessage);
+    fs.writeFileSync(chatFilePath, JSON.stringify(conversationHistory, null, 2));
+
+    // 4. Update or insert into chats table
+    const [existingChat] = await query(
+      "SELECT * FROM chats WHERE chat_id = ? AND uid = ?",
+      [senderId, uid]
+    );
+
+    const userTimezone = Math.round(Date.now() / 1000);
+
+    if (existingChat) {
+      await query(
+        `UPDATE chats 
+         SET last_message_came = ?, last_message = ?, is_opened = 0, sender_name = ?, last_incoming_time = ?, sla_expires_at = ?
+         WHERE chat_id = ? AND uid = ?`,
+        [userTimezone, JSON.stringify(newMessage), senderName, Date.now(), new Date(Date.now() + 300 * 1000), senderId, uid]
+      );
+    } else {
+      await query(
+        `INSERT INTO chats (chat_id, uid, last_message_came, sender_name, sender_mobile, last_message, is_opened, origin, last_incoming_time, sla_expires_at) 
+         VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+        [senderId, uid, userTimezone, senderName, senderId, JSON.stringify(newMessage), channel, Date.now(), new Date(Date.now() + 300 * 1000)]
+      );
+    }
+
+    // 5. Socket updates
+    const socketConnections = getConnectionsByUid(uid) || [];
+    socketConnections.forEach(async (socket) => {
+      const chatListData = await updateChatListSocket({ connectionInfo: socket });
+      sendToSocketId(socket?.id, chatListData, "update_chat_list");
+
+      const openedChat = socket?.data?.selectedChat || null;
+      if (openedChat?.chat_id === senderId || openedChat?.sender_mobile === senderId) {
+        sendToSocketId(
+          socket?.id,
+          { conversation: { newMessage, latestMessages: conversationHistory.slice(-10) } },
+          "update_conversation"
+        );
+      }
+    });
+
+    sendRingToUid(uid);
+
+    // 6. Trigger chatbot and webhook rules
+    metaChatbotInit({
+      latestConversation: { newMessage, latestMessages: conversationHistory.slice(-10) },
+      uid,
+      origin: channel
+    });
+
+    processWebhookRules({
+      latestConversation: { newMessage, latestMessages: conversationHistory.slice(-10) },
+      uid,
+      origin: channel
+    });
+
+  } catch (err) {
+    console.error("Error processing incoming Event Bus message:", err.message);
+  }
+});
+
 module.exports = { processMessage, updateChatListSocket };

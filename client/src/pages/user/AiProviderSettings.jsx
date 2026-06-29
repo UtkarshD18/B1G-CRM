@@ -7,6 +7,7 @@ const PROVIDER_OPTIONS = [
   { key: 'gemini', label: 'Google Gemini', defaultModel: 'gemini-1.5-flash' },
   { key: 'claude', label: 'Anthropic Claude', defaultModel: 'claude-3-5-sonnet-20240620' },
   { key: 'openrouter', label: 'OpenRouter', defaultModel: 'meta-llama/llama-3-8b-instruct:free' },
+  { key: 'deepseek', label: 'DeepSeek', defaultModel: 'deepseek-chat' },
   { key: 'ollama', label: 'Ollama (Local LLM)', defaultModel: 'llama3' },
   { key: 'custom', label: 'Custom Endpoint', defaultModel: 'custom-model' }
 ]

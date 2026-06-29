@@ -4,6 +4,7 @@ const {
   addObjectToFile,
 } = require("../../../functions/function");
 const fetch = require("node-fetch");
+const { v7: uuidv7 } = require("uuid");
 
 function findTargetNodes(nodes, edges, incomingWord) {
   const matchingEdges = edges.filter(
@@ -168,6 +169,97 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
         return resolve({ success: true, id: mockMsgId });
       }
 
+      // Check if this is a Phase 4 adapter connection first
+      const [conn] = await query(
+        `SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'whatsapp'`,
+        [uid]
+      );
+
+      if (conn) {
+        // Phase 4 Outbox logic
+        const correlation_id = uuidv7();
+        const channelType = 'whatsapp';
+
+        const normalizedOutgoing = {
+          channel: channelType,
+          recipientId: toNumber,
+          messageType: msgObj.type || "text",
+          text: msgObj.text?.body || msgObj.body || "",
+          attachments: []
+        };
+
+        if (msgObj.type === "image") {
+          normalizedOutgoing.attachments.push({
+            type: "image",
+            url: msgObj.image?.link || msgObj.image?.url,
+            caption: msgObj.image?.caption || ""
+          });
+        } else if (msgObj.type === "video") {
+          normalizedOutgoing.attachments.push({
+            type: "video",
+            url: msgObj.video?.link || msgObj.video?.url,
+            caption: msgObj.video?.caption || ""
+          });
+        } else if (msgObj.type === "audio") {
+          normalizedOutgoing.attachments.push({
+            type: "audio",
+            url: msgObj.audio?.link || msgObj.audio?.url
+          });
+        } else if (msgObj.type === "document" || msgObj.type === "file") {
+          const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
+          normalizedOutgoing.attachments.push({
+            type: "document",
+            url: docUrl,
+            caption: msgObj.document?.caption || ""
+          });
+        } else if (msgObj.type === "template") {
+          // Template message mapping
+          normalizedOutgoing.messageType = "template";
+          normalizedOutgoing.template = msgObj.template;
+        } else if (msgObj.type === "interactive") {
+          normalizedOutgoing.messageType = "interactive";
+          normalizedOutgoing.interactive = msgObj.interactive;
+        }
+
+        // Enqueue to worker
+        await query(
+          `INSERT INTO channel_outgoing_queue (uid, channel_type, payload, state, correlation_id) 
+           VALUES (?, ?, ?, 'pending', ?) RETURNING id`,
+          [uid, channelType, JSON.stringify(normalizedOutgoing), correlation_id]
+        );
+
+        const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
+        const userTimezone = getCurrentTimestampInTimeZone(
+          getUser[0]?.timezone || Date.now() / 1000
+        );
+
+        const finalSaveMsg = {
+          ...savObj,
+          metaChatId: correlation_id, // Use correlation_id temporarily
+          timestamp: userTimezone,
+          status: "queued"
+        };
+
+        if (chatId) {
+          const chatPath = `${__dirname}/../../../conversations/inbox/${uid}/${chatId}.json`;
+          addObjectToFile(finalSaveMsg, chatPath);
+
+          await query(
+            `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
+            [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+          );
+        }
+
+        return resolve({ 
+          success: true, 
+          id: correlation_id, 
+          correlation_id: correlation_id, 
+          provider_message_id: null, 
+          queued: true 
+        });
+      }
+
+      // Legacy fallback logic
       let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
         uid,
       ]);
@@ -222,7 +314,7 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
         return resolve({ success: false, msg: data?.error?.message });
       }
 
-      if (data?.messages[0]?.id) {
+      if (data?.messages && data.messages[0]?.id) {
         const userTimezone = getCurrentTimestampInTimeZone(
           getUser[0]?.timezone || Date.now() / 1000
         );
@@ -246,7 +338,7 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
         ]);
       }
 
-      resolve({ success: true });
+      resolve({ success: true, id: data?.messages?.[0]?.id });
     } catch (err) {
       resolve({ success: false, msg: err.toString(), err });
       console.log(err);

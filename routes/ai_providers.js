@@ -24,7 +24,7 @@ router.post("/save", validateUserOrAgent, verifyPermission("settings_access"), a
       return res.json({ success: false, msg: "Provider name is required" });
     }
 
-    const validProviders = ["openai", "gemini", "claude", "openrouter", "ollama", "custom"];
+    const validProviders = ["openai", "gemini", "claude", "openrouter", "ollama", "custom", "deepseek"];
     if (!validProviders.includes(provider)) {
       return res.json({ success: false, msg: "Invalid AI provider name" });
     }

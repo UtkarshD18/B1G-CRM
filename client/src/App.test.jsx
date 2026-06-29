@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { act } from 'react'
-import App from './App.jsx'
-import { ADMIN_REFERENCE_ROUTES, USER_REFERENCE_ROUTES } from './routes/AppRoutes.jsx'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act } from 'react';
+import App from './App.jsx';
+import { ADMIN_REFERENCE_ROUTES, USER_REFERENCE_ROUTES } from './routes/AppRoutes.jsx';
 
-const mockSocketHandlers = {}
+const mockSocketHandlers = {};
 const mockSocketEmit = jest.fn((event, payload) => {
   if (event === 'get_chat' || event === 'get_chat_filter') {
     setTimeout(() => {
@@ -17,8 +17,8 @@ const mockSocketEmit = jest.fn((event, payload) => {
           last_message_came: 1760000000,
           origin: 'meta',
         },
-      ])
-    }, 0)
+      ]);
+    }, 0);
   }
 
   if (event === 'on_open_chat') {
@@ -42,32 +42,32 @@ const mockSocketEmit = jest.fn((event, payload) => {
         labelsAdded: [{ id: 1, title: 'VIP' }],
         agentData: [{ uid: 'agent-1', name: 'Sales Agent', email: 'agent@example.com' }],
         chatAssignAgent: {},
-      })
-    }, 0)
+      });
+    }, 0);
   }
-})
+});
 
 jest.mock('socket.io-client', () => ({
   io: jest.fn(() => ({
     on: jest.fn((event, handler) => {
-      mockSocketHandlers[event] = handler
+      mockSocketHandlers[event] = handler;
       if (event === 'connect') {
-        setTimeout(handler, 0)
+        setTimeout(handler, 0);
       }
     }),
     emit: mockSocketEmit,
     disconnect: jest.fn(),
   })),
-}))
+}));
 
 function jsonResponse(body) {
   return {
     json: async () => body,
-  }
+  };
 }
 
 function createToken(uid, role) {
-  return `header.${window.btoa(JSON.stringify({ uid, role }))}.signature`
+  return `header.${window.btoa(JSON.stringify({ uid, role }))}.signature`;
 }
 
 function setAuthToken(role) {
@@ -78,12 +78,103 @@ function setAuthToken(role) {
       user: role === 'user' ? createToken('user-1', 'user') : '',
       agent: role === 'agent' ? createToken('agent-1', 'agent') : '',
     }),
-  )
+  );
 }
 
 function mockApiResponses() {
   global.fetch = jest.fn(async (input, init = {}) => {
-    const url = String(input)
+    const url = String(input);
+
+    if (url.includes('/api/channels/metadata')) {
+      return jsonResponse({
+        success: true,
+        data: [
+          {
+            channel_type: 'whatsapp_cloud',
+            name: 'Meta WhatsApp Cloud API',
+            providerVersion: '1.0.0',
+            apiVersion: 'Meta v23.0',
+            description: "Connect WhatsApp using Meta's Cloud API",
+            helpUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api',
+            capabilities: {
+              text: true,
+              image: true,
+              audio: true,
+              video: true,
+              document: true,
+              typingIndicator: false,
+              readReceipts: true,
+            },
+            healthCheckIntervalMs: 300000,
+            credentialFields: [
+              {
+                key: 'phone_number_id',
+                label: 'Phone Number ID',
+                type: 'text',
+                required: true,
+                helpText: 'From your Meta App settings',
+              },
+              {
+                key: 'business_account_id',
+                label: 'Business Account ID',
+                type: 'text',
+                required: true,
+                helpText: 'From your Meta Business Account',
+              },
+              {
+                key: 'access_token',
+                label: 'Access Token',
+                type: 'password',
+                required: true,
+                secret: true,
+                helpText: 'Permanent Page Access Token',
+              },
+              {
+                key: 'verify_token',
+                label: 'Webhook Verify Token',
+                type: 'text',
+                required: true,
+                helpText: 'Used to verify your webhook subscription',
+              },
+            ],
+            settingFields: [
+              {
+                key: 'mode',
+                label: 'Operation Mode',
+                type: 'select',
+                options: ['mock', 'sandbox', 'production'],
+                default: 'mock',
+              },
+            ],
+          },
+        ],
+      });
+    }
+
+    if (url.includes('/api/channels/whatsapp_cloud/connection')) {
+      return jsonResponse({
+        success: true,
+        data: {
+          connection: {
+            connection_status: 'CONNECTED',
+            mode: 'mock',
+            last_verified_at: '2026-06-26T13:00:00.000Z',
+            api_version: 'Meta v23.0',
+          },
+          settings: {
+            mode: 'mock',
+          },
+          has_credentials: true,
+        },
+      });
+    }
+
+    if (url.includes('/api/channels/whatsapp_cloud/save')) {
+      return jsonResponse({
+        success: true,
+        msg: 'Configurations saved successfully.',
+      });
+    }
 
     if (url.endsWith('/api/user/get_me')) {
       return jsonResponse({
@@ -97,7 +188,7 @@ function mockApiResponses() {
           plan_expire: '2027-01-01T00:00:00.000Z',
           trial: 0,
         },
-      })
+      });
     }
 
     if (url.includes('/api/user/get_payment_details')) {
@@ -118,7 +209,7 @@ function mockApiResponses() {
           plan_expire: '2027-01-01T00:00:00.000Z',
           trial: 0,
         },
-      })
+      });
     }
 
     if (url.includes('/api/admin/get_plans')) {
@@ -142,7 +233,7 @@ function mockApiResponses() {
             short_description: 'Production plan',
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/user/get_my_meta_templets')) {
@@ -176,14 +267,14 @@ function mockApiResponses() {
             ],
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/user/add_meta_templet')) {
       return jsonResponse({
         success: true,
         msg: 'Template submitted for Meta review.',
-      })
+      });
     }
 
     if (url.includes('/api/user/get_meta_keys')) {
@@ -196,14 +287,14 @@ function mockApiResponses() {
           app_id: 'app-123',
           access_token: 'mock-meta-access-token',
         },
-      })
+      });
     }
 
     if (url.includes('/api/user/update_meta')) {
       return jsonResponse({
         success: true,
         msg: 'Your meta settings were updated successfully!',
-      })
+      });
     }
 
     if (url.includes('/api/qr/get_all')) {
@@ -216,7 +307,7 @@ function mockApiResponses() {
             status: 'CONNECTED',
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/chatbot/get_logs')) {
@@ -236,7 +327,7 @@ function mockApiResponses() {
             created_at: '2026-06-11T08:00:00.000Z',
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/chatbot/get_chatbot')) {
@@ -254,42 +345,45 @@ function mockApiResponses() {
             origin: JSON.stringify({ title: 'Meta', code: 'META', data: {} }),
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/chatbot/add_chatbot')) {
       return jsonResponse({
         success: true,
         msg: 'Chatbot was added',
-      })
+      });
     }
 
-    if (url.includes('/api/chatbot/change_bot_status') || url.includes('/api/chatbot/del_chatbot')) {
+    if (
+      url.includes('/api/chatbot/change_bot_status') ||
+      url.includes('/api/chatbot/del_chatbot')
+    ) {
       return jsonResponse({
         success: true,
         msg: 'Chatbot was updated',
-      })
+      });
     }
 
     if (url.includes('/api/webhooks/rules/delete')) {
       return jsonResponse({
         success: true,
         msg: 'Webhook rule deleted',
-      })
+      });
     }
 
     if (url.includes('/api/webhooks/rules/update')) {
       return jsonResponse({
         success: true,
         msg: 'Webhook rule updated',
-      })
+      });
     }
 
     if (url.includes('/api/webhooks/rules') && init?.method === 'POST') {
       return jsonResponse({
         success: true,
         msg: 'Webhook rule created',
-      })
+      });
     }
 
     if (url.includes('/api/webhooks/rules')) {
@@ -309,7 +403,7 @@ function mockApiResponses() {
             active: 1,
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/chat_flow/get_mine')) {
@@ -322,7 +416,7 @@ function mockApiResponses() {
             title: 'Sales intake',
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/chat_flow/get_by_flow_id')) {
@@ -330,7 +424,7 @@ function mockApiResponses() {
         success: true,
         nodes: [],
         edges: [],
-      })
+      });
     }
 
     if (url.includes('/api/chat_flow/get_activity')) {
@@ -338,14 +432,14 @@ function mockApiResponses() {
         success: true,
         prevent: [],
         ai: [],
-      })
+      });
     }
 
     if (url.includes('/api/chat_flow/add_new')) {
       return jsonResponse({
         success: true,
         msg: 'Flow was saved',
-      })
+      });
     }
 
     if (url.includes('/api/broadcast/dashboard_summary')) {
@@ -377,7 +471,7 @@ function mockApiResponses() {
             { label: 'winback_offer', value: 1 },
           ],
         },
-      })
+      });
     }
 
     if (url.includes('/api/broadcast/get_broadcast_logs')) {
@@ -405,14 +499,14 @@ function mockApiResponses() {
             err: 'Invalid recipient',
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/broadcast/add_new')) {
       return jsonResponse({
         success: true,
         msg: 'Your broadcast has been added',
-      })
+      });
     }
 
     if (url.includes('/api/broadcast/get_broadcast')) {
@@ -436,7 +530,7 @@ function mockApiResponses() {
             schedule: '2025-01-01T00:00:00.000Z',
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/phonebook/get_by_uid')) {
@@ -449,14 +543,14 @@ function mockApiResponses() {
             contact_count: 2,
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/user/return_media_url')) {
       return jsonResponse({
         success: true,
         url: 'http://localhost:3010/media/test-image.png',
-      })
+      });
     }
 
     if (url.includes('/api/user/get_my_widget')) {
@@ -473,14 +567,14 @@ function mockApiResponses() {
             size: 64,
           },
         ],
-      })
+      });
     }
 
     if (url.includes('/api/user/add_widget')) {
       return jsonResponse({
         success: true,
         msg: 'Widget was added',
-      })
+      });
     }
 
     if (url.includes('/api/inbox/get_chats')) {
@@ -504,98 +598,104 @@ function mockApiResponses() {
             last_message_came: 1760000100,
           },
         ],
-      })
+      });
     }
 
-    return jsonResponse({ success: true, data: [] })
-  })
+    return jsonResponse({ success: true, data: [] });
+  });
 }
 
 async function renderAtRoute(route, { role } = {}) {
-  window.history.pushState({}, '', route)
-  window.localStorage.clear()
+  window.history.pushState({}, '', route);
+  window.localStorage.clear();
   if (role) {
-    setAuthToken(role)
+    setAuthToken(role);
   }
 
   await act(async () => {
-    render(<App />)
-  })
+    render(<App />);
+  });
 }
 
 describe('App routing shell', () => {
   beforeEach(() => {
     Object.keys(mockSocketHandlers).forEach((key) => {
-      delete mockSocketHandlers[key]
-    })
-    mockSocketEmit.mockClear()
-    mockApiResponses()
-  })
+      delete mockSocketHandlers[key];
+    });
+    mockSocketEmit.mockClear();
+    mockApiResponses();
+  });
 
   test('renders the public marketing site at the root path', async () => {
-    await renderAtRoute('/')
+    await renderAtRoute('/');
 
-    expect(await screen.findByText('Public site, tenant workspace, staff portal, and admin controls in one product.')).toBeInTheDocument()
-    expect(window.location.pathname).toBe('/')
-  })
+    expect(
+      await screen.findByText(
+        'Public site, tenant workspace, staff portal, and admin controls in one product.',
+      ),
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/');
+  });
 
   test('renders the admin sign in page', async () => {
-    await renderAtRoute('/admin/login')
+    await renderAtRoute('/admin/login');
 
-    expect(await screen.findByText('Admin Sign In')).toBeInTheDocument()
-  })
+    expect(await screen.findByText('Admin Sign In')).toBeInTheDocument();
+  });
 
   test('renders the user sign in page', async () => {
-    await renderAtRoute('/user/login')
+    await renderAtRoute('/user/login');
 
-    expect(await screen.findByText('User Sign In')).toBeInTheDocument()
-  })
+    expect(await screen.findByText('User Sign In')).toBeInTheDocument();
+  });
 
   test('renders the agent sign in page', async () => {
-    await renderAtRoute('/agent/login')
+    await renderAtRoute('/agent/login');
 
-    expect(await screen.findByText('Agent Sign In')).toBeInTheDocument()
-  })
+    expect(await screen.findByText('Agent Sign In')).toBeInTheDocument();
+  });
 
   test('protects user SaaS pages without a user token', async () => {
-    await renderAtRoute('/user/billing')
+    await renderAtRoute('/user/billing');
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe('/user/login')
-    })
-    expect(await screen.findByText('User Sign In')).toBeInTheDocument()
-  })
+      expect(window.location.pathname).toBe('/user/login');
+    });
+    expect(await screen.findByText('User Sign In')).toBeInTheDocument();
+  });
 
   test('renders the billing page with mocked plan and gateway data', async () => {
-    await renderAtRoute('/user/billing', { role: 'user' })
+    await renderAtRoute('/user/billing', { role: 'user' });
 
-    expect(await screen.findByText('Plans, trial, and checkout')).toBeInTheDocument()
-    expect(await screen.findByText('Payment gateways')).toBeInTheDocument()
-    expect(await screen.findByText('Premium')).toBeInTheDocument()
-  })
+    expect(await screen.findByText('Plans, trial, and checkout')).toBeInTheDocument();
+    expect(await screen.findByText('Payment gateways')).toBeInTheDocument();
+    expect(await screen.findByText('Premium')).toBeInTheDocument();
+  });
 
   test('renders the API and webhook dashboard with mocked tenant data', async () => {
-    await renderAtRoute('/user/api-dashboard', { role: 'user' })
+    await renderAtRoute('/user/api-dashboard', { role: 'user' });
 
-    expect(await screen.findByText('REST API, template API, and webhook setup')).toBeInTheDocument()
-    expect(await screen.findByText('Webhook endpoint')).toBeInTheDocument()
-    expect(await screen.findByText(/\/api\/v1\/send-message/)).toBeInTheDocument()
-    expect(await screen.findByText('Webhook automation rules')).toBeInTheDocument()
-    expect(await screen.findByText('Route pricing leads')).toBeInTheDocument()
+    expect(
+      await screen.findByText('REST API, template API, and webhook setup'),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('Webhook endpoint')).toBeInTheDocument();
+    expect(await screen.findByText(/\/api\/v1\/send-message/)).toBeInTheDocument();
+    expect(await screen.findByText('Webhook automation rules')).toBeInTheDocument();
+    expect(await screen.findByText('Route pricing leads')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Rule name'), {
       target: { value: 'VIP checkout route' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Match value'), {
       target: { value: 'checkout' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Action payload JSON'), {
       target: { value: JSON.stringify({ status: 'pending' }) },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Action type'), {
       target: { value: 'set_status' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Create rule' }))
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create rule' }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -604,72 +704,80 @@ describe('App routing shell', () => {
           method: 'POST',
           body: expect.stringContaining('"name":"VIP checkout route"'),
         }),
-      )
-    })
+      );
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/webhooks/rules'),
       expect.objectContaining({
         body: expect.stringContaining('"action_type":"set_status"'),
       }),
-    )
-  })
+    );
+  });
 
   test('renders focused Meta WhatsApp linking and saves verified credentials', async () => {
-    await renderAtRoute('/user/link-meta-whatsapp', { role: 'user' })
+    await renderAtRoute('/user/link-meta-whatsapp', { role: 'user' });
 
-    expect(await screen.findByText('Link Meta WhatsApp')).toBeInTheDocument()
-    expect(await screen.findByDisplayValue('waba-123')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('phone-123')).toBeInTheDocument()
-    expect(screen.getByText('Connected workflows')).toBeInTheDocument()
+    expect(await screen.findByText('Meta WhatsApp Cloud API Setup')).toBeInTheDocument();
+    expect(await screen.findByLabelText(/Phone Number ID/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Business Account ID/)).toBeInTheDocument();
+    expect(screen.getByText('Verification & Health')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Business phone number ID'), {
+    fireEvent.change(screen.getByLabelText(/Phone Number ID/), {
       target: { value: 'phone-999' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Save and verify Meta' }))
+    });
+    fireEvent.change(screen.getByLabelText(/Business Account ID/), {
+      target: { value: 'business-999' },
+    });
+    fireEvent.change(screen.getByLabelText(/Access Token/), {
+      target: { value: 'access-999' },
+    });
+    fireEvent.change(screen.getByLabelText(/Webhook Verify Token/), {
+      target: { value: 'verify-999' },
+    });
+    fireEvent.submit(screen.getByRole('button', { name: 'Save Configurations' }).closest('form'));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/user/update_meta'),
+        expect.stringContaining('/api/channels/whatsapp_cloud/save'),
         expect.objectContaining({
           method: 'POST',
-          body: expect.stringContaining('"business_phone_number_id":"phone-999"'),
+          body: expect.stringContaining('"phone_number_id":"phone-999"'),
         }),
-      )
-    })
-    expect(await screen.findByText('Meta credentials verified and saved.')).toBeInTheDocument()
-  })
+      );
+    });
+  });
 
   test('renders the Meta template builder from the audited reference slug', async () => {
-    await renderAtRoute('/user/create-meta-template', { role: 'user' })
+    await renderAtRoute('/user/create-meta-template', { role: 'user' });
 
-    expect(await screen.findByText('Create Meta Template')).toBeInTheDocument()
-    expect(await screen.findByText('Template request')).toBeInTheDocument()
-    expect(await screen.findByText('Header type')).toBeInTheDocument()
-    expect(await screen.findByText('Variable examples')).toBeInTheDocument()
-    expect(screen.getByLabelText('Body {{1}} example')).toHaveValue('Customer')
-    expect(screen.getByText('Template buttons')).toBeInTheDocument()
-    expect(await screen.findByText('order_update')).toBeInTheDocument()
-    expect(await screen.findByText('Submit to Meta')).toBeInTheDocument()
+    expect(await screen.findByText('Create Meta Template')).toBeInTheDocument();
+    expect(await screen.findByText('Template request')).toBeInTheDocument();
+    expect(await screen.findByText('Header type')).toBeInTheDocument();
+    expect(await screen.findByText('Variable examples')).toBeInTheDocument();
+    expect(screen.getByLabelText('Body {{1}} example')).toHaveValue('Customer');
+    expect(screen.getByText('Template buttons')).toBeInTheDocument();
+    expect(await screen.findByText('order_update')).toBeInTheDocument();
+    expect(await screen.findByText('Submit to Meta')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Template name'), {
       target: { value: 'shipping_update' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Body {{1}} example'), {
       target: { value: 'Jordan' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Button 1 type'), {
       target: { value: 'URL' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Button 1 text'), {
       target: { value: 'Track shipment' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Button 1 URL'), {
       target: { value: 'https://example.com/track/{{1}}' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Button 1 URL {{1}} example'), {
       target: { value: 'https://example.com/track/JORDAN' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Submit to Meta' }))
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit to Meta' }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -678,84 +786,86 @@ describe('App routing shell', () => {
           method: 'POST',
           body: expect.stringContaining('"body_text":[["Jordan"]]'),
         }),
-      )
-    })
+      );
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/user/add_meta_templet'),
       expect.objectContaining({
-        body: expect.stringContaining('"type":"URL","text":"Track shipment","url":"https://example.com/track/{{1}}","example":["https://example.com/track/JORDAN"]'),
+        body: expect.stringContaining(
+          '"type":"URL","text":"Track shipment","url":"https://example.com/track/{{1}}","example":["https://example.com/track/JORDAN"]',
+        ),
       }),
-    )
-  })
+    );
+  });
 
   test('renders the WhatsApp-style inbox and opens a socket conversation', async () => {
-    await renderAtRoute('/user/inbox', { role: 'user' })
+    await renderAtRoute('/user/inbox', { role: 'user' });
 
-    expect(await screen.findByText('Omnichannel operator inbox')).toBeInTheDocument()
-    const chatRow = await screen.findByText('Jordan Buyer')
-    fireEvent.click(chatRow)
+    expect(await screen.findByText('Omnichannel operator inbox')).toBeInTheDocument();
+    const chatRow = await screen.findByText('Jordan Buyer');
+    fireEvent.click(chatRow);
 
-    expect(await screen.findByText('Hello from customer')).toBeInTheDocument()
-    expect(await screen.findByText('Conversation context')).toBeInTheDocument()
-    expect(await screen.findByPlaceholderText(/Type a WhatsApp reply/)).toBeInTheDocument()
-  })
+    expect(await screen.findByText('Hello from customer')).toBeInTheDocument();
+    expect(await screen.findByText('Conversation context')).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/Type a WhatsApp reply/)).toBeInTheDocument();
+  });
 
   test('uploads and emits an inbox media reply through the socket composer', async () => {
-    const OriginalXMLHttpRequest = window.XMLHttpRequest
-    const xhrSend = jest.fn()
-    let uploadRequest = null
+    const OriginalXMLHttpRequest = window.XMLHttpRequest;
+    const xhrSend = jest.fn();
+    let uploadRequest = null;
 
     class MockXMLHttpRequest {
       constructor() {
-        this.upload = {}
-        this.headers = {}
-        this.status = 200
+        this.upload = {};
+        this.headers = {};
+        this.status = 200;
         this.responseText = JSON.stringify({
           success: true,
           url: 'http://localhost:3010/media/test-image.png',
-        })
+        });
       }
 
       open(method, url) {
-        uploadRequest = { method, url }
+        uploadRequest = { method, url };
       }
 
       setRequestHeader(name, value) {
-        this.headers[name] = value
+        this.headers[name] = value;
       }
 
       send(formData) {
-        xhrSend(formData)
-        this.upload.onprogress?.({ lengthComputable: true, loaded: 1, total: 1 })
-        setTimeout(() => this.onload?.(), 0)
+        xhrSend(formData);
+        this.upload.onprogress?.({ lengthComputable: true, loaded: 1, total: 1 });
+        setTimeout(() => this.onload?.(), 0);
       }
     }
 
-    window.XMLHttpRequest = MockXMLHttpRequest
+    window.XMLHttpRequest = MockXMLHttpRequest;
 
     try {
-      await renderAtRoute('/user/inbox', { role: 'user' })
+      await renderAtRoute('/user/inbox', { role: 'user' });
 
-      const chatRow = await screen.findByText('Jordan Buyer')
-      fireEvent.click(chatRow)
-      expect(await screen.findByText('Hello from customer')).toBeInTheDocument()
+      const chatRow = await screen.findByText('Jordan Buyer');
+      fireEvent.click(chatRow);
+      expect(await screen.findByText('Hello from customer')).toBeInTheDocument();
 
-      const file = new File(['image-bytes'], 'quote.png', { type: 'image/png' })
+      const file = new File(['image-bytes'], 'quote.png', { type: 'image/png' });
       fireEvent.change(screen.getByLabelText('Media file'), {
         target: { files: [file] },
-      })
+      });
       fireEvent.change(screen.getByLabelText('Media caption'), {
         target: { value: 'Updated product quote' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: 'Send media' }))
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Send media' }));
 
       await waitFor(() => {
         expect(uploadRequest).toEqual({
           method: 'POST',
           url: '/api/user/return_media_url',
-        })
-        expect(xhrSend).toHaveBeenCalledWith(expect.any(FormData))
-      })
+        });
+        expect(xhrSend).toHaveBeenCalledWith(expect.any(FormData));
+      });
 
       await waitFor(() => {
         expect(mockSocketEmit).toHaveBeenCalledWith(
@@ -775,49 +885,53 @@ describe('App routing shell', () => {
               }),
             }),
           }),
-        )
-      })
+        );
+      });
     } finally {
-      window.XMLHttpRequest = OriginalXMLHttpRequest
+      window.XMLHttpRequest = OriginalXMLHttpRequest;
     }
-  })
+  });
 
   test('renders the Kanban pipeline from the audited reference slug', async () => {
-    await renderAtRoute('/user/kanban', { role: 'user' })
+    await renderAtRoute('/user/kanban', { role: 'user' });
 
-    expect(await screen.findByText('Chat Kanban')).toBeInTheDocument()
-    expect(await screen.findByText('Jordan Buyer')).toBeInTheDocument()
-    expect((await screen.findAllByText('Pending')).length).toBeGreaterThan(0)
-    expect(window.location.pathname).toBe('/user/kanban')
-  })
+    expect(await screen.findByText('Chat Kanban')).toBeInTheDocument();
+    expect(await screen.findByText('Jordan Buyer')).toBeInTheDocument();
+    expect((await screen.findAllByText('Pending')).length).toBeGreaterThan(0);
+    expect(window.location.pathname).toBe('/user/kanban');
+  });
 
   test('renders chatbot targeting and creates an all-chat Meta bot', async () => {
-    await renderAtRoute('/user/chatbot', { role: 'user' })
+    await renderAtRoute('/user/chatbot', { role: 'user' });
 
-    expect(await screen.findByText('Chatbot automation over saved flows')).toBeInTheDocument()
-    expect(await screen.findByText('Total bots')).toBeInTheDocument()
-    expect((await screen.findAllByText('Lead qualification bot')).length).toBeGreaterThanOrEqual(2)
-    expect(await screen.findByText('All incoming chats')).toBeInTheDocument()
-    expect(await screen.findByText('Recent chatbot diagnostics')).toBeInTheDocument()
-    expect(await screen.findByText('pricing')).toBeInTheDocument()
-    expect(await screen.findByText('2 replies')).toBeInTheDocument()
+    expect(await screen.findByText('Chatbot automation over saved flows')).toBeInTheDocument();
+    expect(await screen.findByText('Total bots')).toBeInTheDocument();
+    expect((await screen.findAllByText('Lead qualification bot')).length).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByText('All incoming chats')).toBeInTheDocument();
+    expect(await screen.findByText('Recent chatbot diagnostics')).toBeInTheDocument();
+    expect(await screen.findByText('pricing')).toBeInTheDocument();
+    expect(await screen.findByText('2 replies')).toBeInTheDocument();
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/chatbot/get_logs?limit=25'),
         expect.any(Object),
-      )
-    })
+      );
+    });
 
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'Support intake bot' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Flow'), {
       target: { value: 'flow-sales' },
-    })
-    fireEvent.click(screen.getByLabelText('Run on every incoming chat'))
+    });
+    fireEvent.click(screen.getByLabelText('Run on every incoming chat'));
 
-    expect(await screen.findByText('This bot will run for every new incoming conversation on the selected origin.')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Create chatbot' }))
+    expect(
+      await screen.findByText(
+        'This bot will run for every new incoming conversation on the selected origin.',
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Create chatbot' }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -826,71 +940,71 @@ describe('App routing shell', () => {
           method: 'POST',
           body: expect.stringContaining('"title":"Support intake bot"'),
         }),
-      )
-    })
+      );
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/chatbot/add_chatbot'),
       expect.objectContaining({
         body: expect.stringContaining('"for_all":true'),
       }),
-    )
+    );
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/chatbot/add_chatbot'),
       expect.objectContaining({
         body: expect.stringContaining('"chats":[]'),
       }),
-    )
+    );
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/chatbot/add_chatbot'),
       expect.objectContaining({
         body: expect.stringContaining('"flow_id":"flow-sales"'),
       }),
-    )
-    expect(await screen.findByText('Chatbot was added')).toBeInTheDocument()
-  })
+    );
+    expect(await screen.findByText('Chatbot was added')).toBeInTheDocument();
+  });
 
   test('generates and saves a bot-ready automation flow', async () => {
-    await renderAtRoute('/user/automation-flows', { role: 'user' })
+    await renderAtRoute('/user/automation-flows', { role: 'user' });
 
-    expect(await screen.findByText('Bot-ready flow template')).toBeInTheDocument()
-    expect(await screen.findByText('Bot triggers')).toBeInTheDocument()
+    expect(await screen.findByText('Bot-ready flow template')).toBeInTheDocument();
+    expect(await screen.findByText('Bot triggers')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Trigger phrase'), {
       target: { value: 'pricing' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Reply message'), {
       target: { value: 'Here is the pricing menu.' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Fallback reply'), {
       target: { value: 'A team member will respond shortly.' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Generate bot-ready flow' }))
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Generate bot-ready flow' }));
 
-    expect(await screen.findByText('Bot-ready flow draft generated.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Nodes JSON').value).toContain('Here is the pricing menu.')
-    expect(screen.getByLabelText('Edges JSON').value).toContain('"sourceHandle": "pricing"')
-    expect(await screen.findByText('Visual flow canvas')).toBeInTheDocument()
+    expect(await screen.findByText('Bot-ready flow draft generated.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Nodes JSON').value).toContain('Here is the pricing menu.');
+    expect(screen.getByLabelText('Edges JSON').value).toContain('"sourceHandle": "pricing"');
+    expect(await screen.findByText('Visual flow canvas')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Text reply' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Text reply' }));
 
-    expect(await screen.findByText('Text reply node added.')).toBeInTheDocument()
+    expect(await screen.findByText('Text reply node added.')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Message body'), {
       target: { value: 'Visual editor reply' },
-    })
-    expect(screen.getByLabelText('Nodes JSON').value).toContain('Visual editor reply')
+    });
+    expect(screen.getByLabelText('Nodes JSON').value).toContain('Visual editor reply');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Quick replies' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Quick replies' }));
 
-    expect(await screen.findByText('Quick replies node added.')).toBeInTheDocument()
+    expect(await screen.findByText('Quick replies node added.')).toBeInTheDocument();
     fireEvent.change(screen.getByDisplayValue('Pricing, Book demo'), {
       target: { value: 'Sales, Support' },
-    })
-    expect(screen.getByLabelText('Nodes JSON').value).toContain('"title": "Sales"')
+    });
+    expect(screen.getByLabelText('Nodes JSON').value).toContain('"title": "Sales"');
 
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'Pricing auto reply' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Save flow' }))
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save flow' }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -899,56 +1013,56 @@ describe('App routing shell', () => {
           method: 'POST',
           body: expect.stringContaining('"title":"Pricing auto reply"'),
         }),
-      )
-    })
+      );
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/chat_flow/add_new'),
       expect.objectContaining({
         body: expect.stringContaining('"sourceHandle":"pricing"'),
       }),
-    )
-    expect(await screen.findByText('Flow saved.')).toBeInTheDocument()
-  })
+    );
+    expect(await screen.findByText('Flow saved.')).toBeInTheDocument();
+  });
 
   test('renders the campaign dashboard and loads delivery analytics', async () => {
-    await renderAtRoute('/user/campaign-dashboard', { role: 'user' })
+    await renderAtRoute('/user/campaign-dashboard', { role: 'user' });
 
-    expect(await screen.findByText('Campaign Dashboard')).toBeInTheDocument()
-    expect(screen.queryByText('Create broadcast')).not.toBeInTheDocument()
+    expect(await screen.findByText('Campaign Dashboard')).toBeInTheDocument();
+    expect(screen.queryByText('Create broadcast')).not.toBeInTheDocument();
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/broadcast/dashboard_summary'),
         expect.any(Object),
-      )
-    })
+      );
+    });
     fireEvent.change(screen.getByLabelText('From date'), {
       target: { value: '2026-06-01' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('To date'), {
       target: { value: '2026-06-07' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }))
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filters' }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/broadcast/dashboard_summary?from=2026-06-01&to=2026-06-07'),
         expect.any(Object),
-      )
-    })
+      );
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/broadcast/get_broadcast?from=2026-06-01&to=2026-06-07'),
       expect.any(Object),
-    )
-    expect(await screen.findByText('Aggregate delivery')).toBeInTheDocument()
-    expect(await screen.findByText('Delivery trend')).toBeInTheDocument()
-    expect(await screen.findByText('Template usage')).toBeInTheDocument()
-    expect(await screen.findByText('Jun 07')).toBeInTheDocument()
-    expect((await screen.findAllByText('winback_offer')).length).toBeGreaterThanOrEqual(2)
-    expect(await screen.findByText('Seasonal promo')).toBeInTheDocument()
-    expect((await screen.findAllByText('order_update')).length).toBeGreaterThanOrEqual(2)
-    expect(await screen.findByText('Customers')).toBeInTheDocument()
+    );
+    expect(await screen.findByText('Aggregate delivery')).toBeInTheDocument();
+    expect(await screen.findByText('Delivery trend')).toBeInTheDocument();
+    expect(await screen.findByText('Template usage')).toBeInTheDocument();
+    expect(await screen.findByText('Jun 07')).toBeInTheDocument();
+    expect((await screen.findAllByText('winback_offer')).length).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByText('Seasonal promo')).toBeInTheDocument();
+    expect((await screen.findAllByText('order_update')).length).toBeGreaterThanOrEqual(2);
+    expect(await screen.findByText('Customers')).toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Inspect' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Inspect' })[0]);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -957,41 +1071,41 @@ describe('App routing shell', () => {
           method: 'POST',
           body: expect.stringContaining('"id":"broadcast-1"'),
         }),
-      )
-    })
-    expect(await screen.findByText('Recipients')).toBeInTheDocument()
-    expect(await screen.findByText('+15550001111')).toBeInTheDocument()
-    expect(await screen.findByText('Invalid recipient')).toBeInTheDocument()
-  })
+      );
+    });
+    expect(await screen.findByText('Recipients')).toBeInTheDocument();
+    expect(await screen.findByText('+15550001111')).toBeInTheDocument();
+    expect(await screen.findByText('Invalid recipient')).toBeInTheDocument();
+  });
 
   test('renders the send campaign composer and submits mapped variables', async () => {
-    await renderAtRoute('/user/send-campaign', { role: 'user' })
+    await renderAtRoute('/user/send-campaign', { role: 'user' });
 
-    expect(await screen.findByRole('heading', { name: 'Send campaign' })).toBeInTheDocument()
-    expect(await screen.findByText('Approved templates')).toBeInTheDocument()
-    expect(await screen.findByText('Selected audience')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Send campaign' })).toBeInTheDocument();
+    expect(await screen.findByText('Approved templates')).toBeInTheDocument();
+    expect(await screen.findByText('Selected audience')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Campaign title'), {
       target: { value: 'January delivery update' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Approved Meta template'), {
       target: { value: 'order_update' },
-    })
+    });
 
-    expect(await screen.findByText('Hello {{1}}, your order {{2}} is ready.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Variable 1 contact field')).toHaveValue('{{name}}')
-    expect(screen.getByLabelText('Variable 2 contact field')).toHaveValue('{{var1}}')
+    expect(await screen.findByText('Hello {{1}}, your order {{2}} is ready.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Variable 1 contact field')).toHaveValue('{{name}}');
+    expect(screen.getByLabelText('Variable 2 contact field')).toHaveValue('{{var1}}');
 
     fireEvent.change(screen.getByLabelText('Variable 2 contact field'), {
       target: { value: '{{mobile}}' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Phonebook'), {
       target: { value: '1' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Schedule'), {
       target: { value: '2027-01-02T10:00' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Create campaign' }))
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create campaign' }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -1000,41 +1114,41 @@ describe('App routing shell', () => {
           method: 'POST',
           body: expect.stringContaining('"title":"January delivery update"'),
         }),
-      )
-    })
+      );
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/broadcast/add_new'),
       expect.objectContaining({
         body: expect.stringContaining('"name":"order_update"'),
       }),
-    )
+    );
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/broadcast/add_new'),
       expect.objectContaining({
         body: expect.stringContaining('"example":["{{name}}","{{mobile}}"]'),
       }),
-    )
-    expect(await screen.findByText('Campaign created.')).toBeInTheDocument()
-  })
+    );
+    expect(await screen.findByText('Campaign created.')).toBeInTheDocument();
+  });
 
   test('renders chat widget embed code and posts backend-compatible placement values', async () => {
-    await renderAtRoute('/user/chat-widget', { role: 'user' })
+    await renderAtRoute('/user/chat-widget', { role: 'user' });
 
-    expect(await screen.findByText('Click-to-Chat launcher workspace')).toBeInTheDocument()
-    expect(await screen.findByText('Storefront support')).toBeInTheDocument()
-    expect(screen.getAllByText(/widget-test-1/).length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText(/<iframe src=/)).toHaveTextContent('bottom:0;right:0;')
+    expect(await screen.findByText('Click-to-Chat launcher workspace')).toBeInTheDocument();
+    expect(await screen.findByText('Storefront support')).toBeInTheDocument();
+    expect(screen.getAllByText(/widget-test-1/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/<iframe src=/)).toHaveTextContent('bottom:0;right:0;');
 
     fireEvent.change(screen.getByLabelText('Title'), {
       target: { value: 'Sales desk' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('WhatsApp number'), {
       target: { value: '+15550004444' },
-    })
+    });
     fireEvent.change(screen.getByLabelText('Placement'), {
       target: { value: 'BOTTOM_LEFT' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Create widget' }))
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create widget' }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -1043,28 +1157,28 @@ describe('App routing shell', () => {
           method: 'POST',
           body: expect.stringContaining('"place":"BOTTOM_LEFT"'),
         }),
-      )
-    })
+      );
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/user/add_widget'),
       expect.objectContaining({
         body: expect.stringContaining('"selectedIcon":"whatsapp-widget.svg"'),
       }),
-    )
-  })
+    );
+  });
 
   test('renders a registered planned reference route instead of dropping to the public site', async () => {
-    await renderAtRoute('/user/whatsapp-forms', { role: 'user' })
+    await renderAtRoute('/user/whatsapp-forms', { role: 'user' });
 
-    expect(await screen.findByText('WhatsApp Forms')).toBeInTheDocument()
-    expect(await screen.findByText('Implementation readiness')).toBeInTheDocument()
-    expect(window.location.pathname).toBe('/user/whatsapp-forms')
-  })
-})
+    expect(await screen.findByText('WhatsApp Forms')).toBeInTheDocument();
+    expect(await screen.findByText('Implementation readiness')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/user/whatsapp-forms');
+  });
+});
 
 describe('Reference route inventory', () => {
   test('covers all audited admin slugs from the reference SaaS app', () => {
-    const adminPaths = ADMIN_REFERENCE_ROUTES.map((route) => route.path)
+    const adminPaths = ADMIN_REFERENCE_ROUTES.map((route) => route.path);
 
     expect(adminPaths).toEqual(
       expect.arrayContaining([
@@ -1092,11 +1206,11 @@ describe('Reference route inventory', () => {
         'send-web-push',
         'embed-config',
       ]),
-    )
-  })
+    );
+  });
 
   test('covers all audited user slugs from the reference SaaS app', () => {
-    const userPaths = USER_REFERENCE_ROUTES.map((route) => route.path)
+    const userPaths = USER_REFERENCE_ROUTES.map((route) => route.path);
 
     expect(userPaths).toEqual(
       expect.arrayContaining([
@@ -1129,6 +1243,6 @@ describe('Reference route inventory', () => {
         'agent-task',
         'chat-widget',
       ]),
-    )
-  })
-})
+    );
+  });
+});

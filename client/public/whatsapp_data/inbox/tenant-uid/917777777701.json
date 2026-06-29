@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "id": "019f02bd-70bc-763d-9a5b-0897eca6b9fb",
+      "text": {
+        "body": "Hello from SAT"
+      },
+      "type": "text",
+      "from": "917777777701",
+      "timestamp": 1782457397,
+      "status": "read",
+      "direction": "inbound"
+    }
+  ]
+}

@@ -185,17 +185,38 @@ async function adminValidator(req, res, next) {
   }
 }
 
+const { hasPermission } = require("../utils/permissionResolver");
+
+const legacyMap = {
+  'contacts_access': 'contacts.read',
+  'inbox_access': 'inbox.read',
+  'kanban_access': 'inbox.read',
+  'chatbot_access': 'automation.read',
+  'settings_access': 'settings.users',
+  'campaigns_access': 'inbox.read',
+  'flows_access': 'automation.read',
+  'leads_access': 'contacts.read',
+  'website_access': 'settings.users'
+};
+
 function verifyPermission(permission) {
-  return (req, res, next) => {
-    if (req.decode && req.decode.role === "user") {
+  return async (req, res, next) => {
+    if (!req.decode) {
+      return res.status(401).json({
+        success: false,
+        msg: "Unauthorized. Token missing.",
+        code: "UNAUTHORIZED"
+      });
+    }
+
+    const userId = req.decode.agentUid || req.decode.uid;
+    const mappedPermission = legacyMap[permission] || permission;
+    const permitted = await hasPermission(userId, mappedPermission);
+
+    if (permitted) {
       return next();
     }
-    if (req.decode && req.decode.role === "agent") {
-      const perms = req.decode.permissions || [];
-      if (perms.includes(permission)) {
-        return next();
-      }
-    }
+
     return res.status(403).json({
       success: false,
       msg: `Permission denied. Required: ${permission}`,

@@ -163,6 +163,8 @@ Keep your response concise, under 3 sentences.`;
         url = custom_endpoint || "http://localhost:11434/v1/chat/completions";
       } else if (provider === "custom") {
         url = custom_endpoint;
+      } else if (provider === "deepseek") {
+        url = custom_endpoint || "https://api.deepseek.com/v1/chat/completions";
       }
 
       const payload = {

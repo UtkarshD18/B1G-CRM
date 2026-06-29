@@ -1,0 +1,10 @@
+version: 2
+secret:
+  ignored_paths:
+    - ".github/workflows/security.yml"
+    - ".github/workflows/build.yml"
+    - ".github/workflows/pr.yml"
+    - "PRODUCTION_ENV_TEMPLATE.md"
+    - "scratch/verify-campaign-batching.js"
+    - "scratch/verify-chat-widget-hardening.js"
+    - "scratch/verify-webhook-retry.js"

@@ -1,20 +1,14 @@
-const fs = require("fs");
-const { query } = require("../../../database/dbpromise");
-const axios = require("axios");
-const randomstring = require("randomstring");
-const path = require("path");
-const moment = require("moment");
-const env = require("../../../env");
+const fs = require('fs');
+const { query } = require('../../../database/dbpromise');
+const axios = require('axios');
+const randomstring = require('randomstring');
+const path = require('path');
+const moment = require('moment');
+const env = require('../../../env');
 
-async function updateChatInMysql({
-  chatId,
-  uid,
-  senderName,
-  senderMobile,
-  actualMsg,
-}) {
+async function updateChatInMysql({ chatId, uid, senderName, senderMobile, actualMsg }) {
   // Allowed message types
-  const allowedMessageTypes = ["text", "image", "document", "video", "audio"];
+  const allowedMessageTypes = ['text', 'image', 'document', 'video', 'audio'];
 
   // Fetch user details
   const [user] = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
@@ -23,48 +17,57 @@ async function updateChatInMysql({
   }
 
   // Ensure contact exists to maintain consistency
-  if (senderMobile && senderMobile !== "NA") {
-    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [uid, senderMobile]);
+  if (senderMobile && senderMobile !== 'NA') {
+    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [
+      uid,
+      senderMobile,
+    ]);
     if (checkContact.length === 0) {
-      const pbName = "Meta Webhook Ingest";
+      const pbName = 'Meta Webhook Ingest';
       let pbId;
-      const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+      const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [
+        uid,
+        pbName,
+      ]);
       if (existingPb.length > 0) {
         pbId = existingPb[0].id;
       } else {
-        const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [uid, pbName]);
+        const insertPb = await query(
+          `INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`,
+          [uid, pbName],
+        );
         if (insertPb && insertPb.length > 0) {
           pbId = insertPb[0].id;
         } else {
-          const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+          const getPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [
+            uid,
+            pbName,
+          ]);
           pbId = getPb[0]?.id;
         }
       }
-      await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`, [
-        uid,
-        pbId,
-        pbName,
-        senderName || "Meta Contact",
-        senderMobile,
-        "Auto Created via Meta Ingest"
-      ]);
+      await query(
+        `INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          uid,
+          pbId,
+          pbName,
+          senderName || 'Meta Contact',
+          senderMobile,
+          'Auto Created via Meta Ingest',
+        ],
+      );
     }
   }
 
-  const userTimezone = getCurrentTimestampInTimeZone(
-    user?.timezone || Date.now() / 1000
-  );
+  const userTimezone = getCurrentTimestampInTimeZone(user?.timezone || Date.now() / 1000);
 
   // Check if chat already exists
-  const [chat] = await query(
-    `SELECT * FROM chats WHERE chat_id = ? AND uid = ?`,
-    [chatId, uid]
-  );
+  const [chat] = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [chatId, uid]);
 
   // Condition to update last_message_came
   const shouldUpdateTimestamp =
-    allowedMessageTypes.includes(actualMsg?.type) &&
-    actualMsg?.route === "INCOMING";
+    allowedMessageTypes.includes(actualMsg?.type) && actualMsg?.route === 'INCOMING';
 
   if (chat) {
     // If chat exists, update it
@@ -72,21 +75,19 @@ async function updateChatInMysql({
     const queryValues = [];
 
     if (shouldUpdateTimestamp) {
-      queryFields.push("last_message_came = ?");
+      queryFields.push('last_message_came = ?');
       queryValues.push(userTimezone);
     }
 
-    queryFields.push("last_message = ?");
-    queryFields.push("is_opened = ?");
+    queryFields.push('last_message = ?');
+    queryFields.push('is_opened = ?');
     queryValues.push(JSON.stringify(actualMsg), 0);
 
     queryValues.push(chatId, uid); // Where clause values
 
     await query(
-      `UPDATE chats SET ${queryFields.join(
-        ", "
-      )} WHERE chat_id = ? AND uid = ?`,
-      queryValues
+      `UPDATE chats SET ${queryFields.join(', ')} WHERE chat_id = ? AND uid = ?`,
+      queryValues,
     );
   } else {
     // If chat does not exist, insert it
@@ -96,11 +97,11 @@ async function updateChatInMysql({
         chatId,
         uid,
         shouldUpdateTimestamp ? userTimezone : null, // Insert timestamp only if allowed
-        senderName || "NA",
-        senderMobile || "NA",
+        senderName || 'NA',
+        senderMobile || 'NA',
         JSON.stringify(actualMsg),
         0,
-      ]
+      ],
     );
   }
 }
@@ -111,50 +112,43 @@ function formatMessage(type, content) {
 
 function getCurrentTimestampInTimeZone(timezone) {
   const currentTimeInZone = moment.tz(timezone);
-  const currentTimestampInSeconds = Math.round(
-    currentTimeInZone.valueOf() / 1000
-  );
+  const currentTimestampInSeconds = Math.round(currentTimeInZone.valueOf() / 1000);
 
   return currentTimestampInSeconds;
 }
 
 async function downloadAndSaveMedia(token, mediaId) {
   try {
-    const { data: mediaData } = await axios.get(
-      `https://graph.facebook.com/v19.0/${mediaId}/`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (!mediaData.url) throw new Error("Media URL not found.");
+    if (!mediaId || !/^\d+$/.test(mediaId)) {
+      throw new Error('Invalid media ID format');
+    }
+    const { data: mediaData } = await axios.get(`https://graph.facebook.com/v19.0/${mediaId}/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!mediaData.url) throw new Error('Media URL not found.');
 
     const response = await axios.get(mediaData.url, {
       headers: { Authorization: `Bearer ${token}` },
-      responseType: "arraybuffer",
+      responseType: 'arraybuffer',
     });
 
-    const ext = response.headers["content-type"]?.split("/")[1];
-    if (!ext) throw new Error("Unable to determine file extension.");
+    const ext = response.headers['content-type']?.split('/')[1];
+    if (!ext) throw new Error('Unable to determine file extension.');
 
     const fileName = `${randomstring.generate()}.${ext}`;
-    const savePath = path.resolve(
-      __dirname,
-      "../../../client/public/meta-media",
-      fileName
-    );
+    const savePath = path.resolve(__dirname, '../../../client/public/meta-media', fileName);
     fs.writeFileSync(savePath, response.data);
 
     return fileName;
   } catch (err) {
-    console.error("Error downloading media:", err.message);
+    console.error('Error downloading media:', err.message);
     return null;
   }
 }
 
 async function processMediaMsg(type, messages, uid) {
   try {
-    let getMeta = await query(
-      `SELECT * FROM meta_api WHERE uid = ?`,
-      [uid]
-    );
+    let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
     if (getMeta.length === 0) {
       const globalMeta = await query(`SELECT meta_access_token FROM web_private`, []);
       if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
@@ -172,8 +166,7 @@ async function processMediaMsg(type, messages, uid) {
     const content = {
       link: `${env.FRONTEND_URL}/meta-media/${fileName}`,
     };
-    if (messages[0]?.[type]?.caption)
-      content.caption = messages[0][type].caption;
+    if (messages[0]?.[type]?.caption) content.caption = messages[0][type].caption;
 
     return formatMessage(type, content);
   } catch (err) {
@@ -203,10 +196,20 @@ async function processMetaMsg({
 
     // Ensure the conversation path exists
     if (!conversationPathNew) {
-      throw new Error("Conversation path is undefined.");
+      throw new Error('Conversation path is undefined.');
     }
 
-    const directoryPath = path.dirname(conversationPathNew);
+    const { validatePath } = require('../../../utils/pathSafe');
+    const rootInboxDir = path.resolve(__dirname, '../../../conversations/inbox');
+    const cleanConvoPath = validatePath(
+      rootInboxDir,
+      path.relative(rootInboxDir, conversationPathNew),
+    );
+    if (!cleanConvoPath) {
+      return null;
+    }
+
+    const directoryPath = path.dirname(cleanConvoPath);
 
     // Create directory if it doesn't exist
     if (!fs.existsSync(directoryPath)) {
@@ -215,16 +218,16 @@ async function processMetaMsg({
 
     // Initialize the conversation file if it doesn't exist
     let conversationPath = [];
-    if (fs.existsSync(conversationPathNew)) {
-      const fileContent = fs.readFileSync(conversationPathNew, "utf-8");
+    if (fs.existsSync(cleanConvoPath)) {
+      const fileContent = fs.readFileSync(cleanConvoPath, 'utf-8');
       conversationPath = JSON.parse(fileContent);
     } else {
-      fs.writeFileSync(conversationPathNew, JSON.stringify([], null, 2));
+      fs.writeFileSync(cleanConvoPath, JSON.stringify([], null, 2));
     }
 
     // Determine message type and context
     let msgContext = null;
-    let statusType = ""; // Default status type
+    let statusType = ''; // Default status type
     let newMessage = null; // Initialize newMessage
 
     if (message) {
@@ -233,51 +236,50 @@ async function processMetaMsg({
       const button = message?.button?.text;
 
       switch (msgType) {
-        case "text":
-          msgContext = formatMessage("text", {
+        case 'text':
+          msgContext = formatMessage('text', {
             preview_url: true,
             body: message.text.body,
           });
           break;
-        case "image":
-        case "video":
-        case "document":
-        case "audio":
+        case 'image':
+        case 'video':
+        case 'document':
+        case 'audio':
           msgContext = await processMediaMsg(msgType, messages, uid);
           break;
-        case "sticker":
-          msgContext = formatMessage("sticker", { body: "Sticker received" });
+        case 'sticker':
+          msgContext = formatMessage('sticker', { body: 'Sticker received' });
           break;
-        case "reaction":
-          msgContext = formatMessage("reaction", {
+        case 'reaction':
+          msgContext = formatMessage('reaction', {
             emoji: message.reaction?.emoji,
             message_id: message.reaction?.message_id,
           });
 
           // Update the reaction on the referenced message
           const targetMessageIndex = conversationPath.findIndex(
-            (msg) => msg.metaChatId === message.reaction?.message_id
+            (msg) => msg.metaChatId === message.reaction?.message_id,
           );
           if (targetMessageIndex !== -1) {
-            conversationPath[targetMessageIndex].reaction =
-              message.reaction?.emoji || "";
+            conversationPath[targetMessageIndex].reaction = message.reaction?.emoji || '';
           }
           break;
-        case "contacts":
-          msgContext = formatMessage("contact", {
+        case 'contacts':
+          msgContext = formatMessage('contact', {
             contacts: message.contacts,
           });
           break;
-        case "location":
-          msgContext = formatMessage("location", {
+        case 'location':
+          msgContext = formatMessage('location', {
             latitude: message.location?.latitude,
             longitude: message.location?.longitude,
             name: message.location?.name,
             address: message.location?.address,
           });
           break;
-        case "order":
-          msgContext = formatMessage("order", {
+        case 'order':
+          msgContext = formatMessage('order', {
             catalog_id: message.order?.catalog_id,
             product_items: message.order?.product_items,
             text: message.order?.text,
@@ -286,17 +288,17 @@ async function processMetaMsg({
         default:
           // Handle interactive messages like button replies or list replies
           if (button) {
-            msgContext = formatMessage("text", {
+            msgContext = formatMessage('text', {
               preview_url: true,
               body: button,
             });
           } else if (interactive?.button_reply) {
             const referencedMessageId = interactive.button_reply.id;
             const referencedMessage = conversationPath.find(
-              (msg) => msg.metaChatId === referencedMessageId
+              (msg) => msg.metaChatId === referencedMessageId,
             );
 
-            msgContext = formatMessage("text", {
+            msgContext = formatMessage('text', {
               preview_url: true,
               body: interactive.button_reply.title,
             });
@@ -307,10 +309,10 @@ async function processMetaMsg({
           } else if (interactive?.list_reply) {
             const referencedMessageId = interactive.list_reply.id;
             const referencedMessage = conversationPath.find(
-              (msg) => msg.metaChatId === referencedMessageId
+              (msg) => msg.metaChatId === referencedMessageId,
             );
 
-            msgContext = formatMessage("text", {
+            msgContext = formatMessage('text', {
               preview_url: true,
               body: interactive.list_reply.title,
             });
@@ -318,6 +320,15 @@ async function processMetaMsg({
             if (referencedMessage) {
               msgContext.context = referencedMessage;
             }
+          } else if (interactive?.nfm_reply) {
+            msgContext = formatMessage('interactive', {
+              type: 'nfm_reply',
+              nfm_reply: {
+                response_json: interactive.nfm_reply.response_json,
+                body: interactive.nfm_reply.body || 'Form Submission',
+                name: interactive.nfm_reply.name || 'flow',
+              },
+            });
           } else {
             console.warn(`Unsupported message type: ${msgType}`);
             return null;
@@ -329,20 +340,20 @@ async function processMetaMsg({
     if (statuses.length) {
       const status = statuses[0]; // Assuming the latest status
       switch (status.status) {
-        case "sent":
-          statusType = "sent";
+        case 'sent':
+          statusType = 'sent';
           break;
-        case "delivered":
-          statusType = "delivered";
+        case 'delivered':
+          statusType = 'delivered';
           break;
-        case "read":
-          statusType = "read";
+        case 'read':
+          statusType = 'read';
           break;
-        case "failed":
-          statusType = "failed";
+        case 'failed':
+          statusType = 'failed';
           break;
-        case "deleted":
-          statusType = "deleted";
+        case 'deleted':
+          statusType = 'deleted';
           break;
         default:
           console.warn(`Unsupported status type: ${status.status}`);
@@ -350,14 +361,11 @@ async function processMetaMsg({
 
       // Update the status in the conversation file if metaChatId matches
       const metaChatId = status.id;
-      const messageIndex = conversationPath.findIndex(
-        (msg) => msg.metaChatId === metaChatId
-      );
+      const messageIndex = conversationPath.findIndex((msg) => msg.metaChatId === metaChatId);
       if (messageIndex !== -1) {
         if (
-          statusType === "read" ||
-          (statusType === "delivered" &&
-            conversationPath[messageIndex].status !== "read")
+          statusType === 'read' ||
+          (statusType === 'delivered' && conversationPath[messageIndex].status !== 'read')
         ) {
           conversationPath[messageIndex].status = statusType;
         }
@@ -368,25 +376,23 @@ async function processMetaMsg({
     if (message?.context) {
       const referencedMessageId = message.context.id;
       const referencedMessage = conversationPath.find(
-        (msg) => msg.metaChatId === referencedMessageId
+        (msg) => msg.metaChatId === referencedMessageId,
       );
 
       newMessage = {
         type: msgContext.type,
         metaChatId: message.id,
         msgContext,
-        reaction: "",
-        timestamp: getCurrentTimestampInTimeZone(
-          userFromMysql?.timezone || Date.now() / 1000
-        ),
-        senderName: value?.contacts?.[0]?.profile?.name || "NA",
-        senderMobile: value?.contacts?.[0]?.wa_id || "NA",
+        reaction: '',
+        timestamp: getCurrentTimestampInTimeZone(userFromMysql?.timezone || Date.now() / 1000),
+        senderName: value?.contacts?.[0]?.profile?.name || 'NA',
+        senderMobile: value?.contacts?.[0]?.wa_id || 'NA',
         status: statusType,
         star: false,
-        route: "INCOMING",
+        route: 'INCOMING',
         // Use the referenced message if available; otherwise, use the raw message.context
         context: referencedMessage || message.context,
-        origin: "meta",
+        origin: 'meta',
       };
 
       conversationPath.push(newMessage);
@@ -396,27 +402,22 @@ async function processMetaMsg({
         type: msgContext.type,
         metaChatId: message.id,
         msgContext,
-        reaction: "",
-        timestamp: getCurrentTimestampInTimeZone(
-          userFromMysql?.timezone || Date.now() / 1000
-        ),
-        senderName: value?.contacts?.[0]?.profile?.name || "NA",
-        senderMobile: value?.contacts?.[0]?.wa_id || "NA",
+        reaction: '',
+        timestamp: getCurrentTimestampInTimeZone(userFromMysql?.timezone || Date.now() / 1000),
+        senderName: value?.contacts?.[0]?.profile?.name || 'NA',
+        senderMobile: value?.contacts?.[0]?.wa_id || 'NA',
         status: statusType,
         star: false,
-        route: "INCOMING",
-        context: "",
-        origin: "meta",
+        route: 'INCOMING',
+        context: '',
+        origin: 'meta',
       };
 
       conversationPath.push(newMessage);
     }
 
     // Write the updated conversation array back to the file
-    fs.writeFileSync(
-      conversationPathNew,
-      JSON.stringify(conversationPath, null, 2)
-    );
+    fs.writeFileSync(cleanConvoPath, JSON.stringify(conversationPath, null, 2));
 
     // Get the latest 10 messages
     const latestMessages = conversationPath.slice(-10);
@@ -424,7 +425,7 @@ async function processMetaMsg({
     // Return the new message and the latest 10 messages
     return { newMessage, latestMessages, statuses };
   } catch (err) {
-    console.error("Error normalizing meta object:", err.message);
+    console.error('Error normalizing meta object:', err.message);
     return null;
   }
 }
@@ -679,23 +680,28 @@ async function processMetaMsg({
 
 function convertNumberToRandomString(number) {
   const mapping = {
-    0: "i",
-    1: "j",
-    2: "I",
-    3: "u",
-    4: "I",
-    5: "U",
-    6: "S",
-    7: "D",
-    8: "B",
-    9: "j",
+    0: 'i',
+    1: 'j',
+    2: 'I',
+    3: 'u',
+    4: 'I',
+    5: 'U',
+    6: 'S',
+    7: 'D',
+    8: 'B',
+    9: 'j',
   };
 
-  const numStr = number.toString();
-  let result = "";
+  const numStr = String(number || '');
+  if (numStr.length > 50) {
+    return '';
+  }
+  let result = '';
   for (let i = 0; i < numStr.length; i++) {
     const digit = numStr[i];
-    result += mapping[digit];
+    if (mapping[digit] !== undefined) {
+      result += mapping[digit];
+    }
   }
   return result;
 }
@@ -704,7 +710,7 @@ function getChatId(body) {
   try {
     let chatId = convertNumberToRandomString(
       body?.entry[0]?.changes[0]?.value?.statuses?.[0]?.recipient_id ||
-        body?.entry[0]?.changes[0]?.value?.contacts?.[0]?.wa_id
+        body?.entry[0]?.changes[0]?.value?.contacts?.[0]?.wa_id,
     );
     return chatId;
   } catch (error) {
@@ -715,7 +721,12 @@ function getChatId(body) {
 async function processMetaMessage({ body, uid, origin, userData }) {
   try {
     const chatId = getChatId(body);
-    const conversationPath = `${__dirname}/../../../conversations/inbox/${uid}/${chatId}.json`;
+    const { validatePath } = require('../../../utils/pathSafe');
+    const rootInboxDir = path.resolve(__dirname, '../../../conversations/inbox');
+    const conversationPath = validatePath(rootInboxDir, `${uid}/${chatId}.json`);
+    if (!conversationPath) {
+      return null;
+    }
 
     const data = await processMetaMsg({
       body,
