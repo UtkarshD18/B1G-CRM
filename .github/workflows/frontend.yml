@@ -34,7 +34,7 @@ jobs:
       working-directory: ./client
       run: npm test
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: frontend-build-${{ matrix.node-version }}
         path: client/dist/
