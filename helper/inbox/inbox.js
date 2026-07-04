@@ -1,15 +1,11 @@
-const { query } = require("../../database/dbpromise");
-const {
-  getConnectionsByUid,
-  sendToUid,
-  sendRingToUid,
-  sendToSocketId,
-} = require("../../socket");
-const { mergeArraysWithPhonebook } = require("../socket/function");
-const { processMetaMessage } = require("./meta");
-const { metaChatbotInit } = require("../chatbot/meta");
-const { processMessageQr } = require("../addon/qr/processThings");
-const { processWebhookRules } = require("../webhooks/engine");
+const { query } = require('../../database/dbpromise');
+const fs = require('fs');
+const { getConnectionsByUid, sendToUid, sendRingToUid, sendToSocketId } = require('../../socket');
+const { mergeArraysWithPhonebook } = require('../socket/function');
+const { processMetaMessage } = require('./meta');
+const { metaChatbotInit } = require('../chatbot/meta');
+const { processMessageQr } = require('../addon/qr/processThings');
+const { processWebhookRules } = require('../webhooks/engine');
 
 async function updateChatListSocket({ connectionInfo }) {
   try {
@@ -18,10 +14,7 @@ async function updateChatListSocket({ connectionInfo }) {
     let chats = [];
 
     if (agent) {
-      const assignedChats = await query(
-        `SELECT chat_id FROM agent_chats WHERE uid = ?`,
-        [uid]
-      );
+      const assignedChats = await query(`SELECT chat_id FROM agent_chats WHERE uid = ?`, [uid]);
       if (assignedChats.length) {
         const chatIds = assignedChats.map(({ chat_id }) => chat_id);
         chats = await query(
@@ -29,11 +22,7 @@ async function updateChatListSocket({ connectionInfo }) {
            WHERE chat_id IN (?) AND uid = ? 
            ORDER BY last_message_came DESC 
            LIMIT ?`,
-          [
-            chatIds,
-            agent ? connectionInfo?.decodedValue?.owner_uid : uid,
-            limit,
-          ]
+          [chatIds, agent ? connectionInfo?.decodedValue?.owner_uid : uid, limit],
         );
       }
     } else {
@@ -42,7 +31,7 @@ async function updateChatListSocket({ connectionInfo }) {
          WHERE uid = ? 
          ORDER BY last_message_came DESC 
          LIMIT ?`,
-        [uid, limit]
+        [uid, limit],
       );
     }
 
@@ -57,14 +46,7 @@ async function updateChatListSocket({ connectionInfo }) {
   }
 }
 
-async function processMessage({
-  body,
-  uid,
-  origin,
-  getSession,
-  sessionId,
-  qrType,
-}) {
+async function processMessage({ body, uid, origin, getSession, sessionId, qrType }) {
   try {
     // getting user data
     const [userData] = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
@@ -75,7 +57,7 @@ async function processMessage({
     // console.dir({ body }, { depth: null });
 
     switch (origin) {
-      case "meta":
+      case 'meta':
         const metaMsg = await processMetaMessage({
           body,
           uid,
@@ -84,8 +66,8 @@ async function processMessage({
         });
         latestConversation = metaMsg;
         break;
-      case "qr":
-        console.log("QR MESSAGE");
+      case 'qr':
+        console.log('QR MESSAGE');
         const qrMsg = await processMessageQr({
           getSession,
           message: body,
@@ -95,7 +77,7 @@ async function processMessage({
           userData,
         });
         latestConversation = qrMsg;
-        console.log("QR MESSAGE");
+        console.log('QR MESSAGE');
         break;
       default:
         break;
@@ -109,8 +91,8 @@ async function processMessage({
         connectionInfo: socket,
       });
 
-      sendToSocketId(socket?.id, updateChatSocketData, "update_chat_list");
-      console.log("Chat update sent to socket");
+      sendToSocketId(socket?.id, updateChatSocketData, 'update_chat_list');
+      console.log('Chat update sent to socket');
     });
 
     // console.log({ latestConversation: latestConversation });
@@ -127,17 +109,11 @@ async function processMessage({
       // });
 
       if (
-        opendedChat?.sender_mobile ===
-          latestConversation?.newMessage?.senderMobile ||
-        opendedChat?.sender_mobile ===
-          latestConversation?.latestMessages?.[0]?.senderMobile
+        opendedChat?.sender_mobile === latestConversation?.newMessage?.senderMobile ||
+        opendedChat?.sender_mobile === latestConversation?.latestMessages?.[0]?.senderMobile
       ) {
         const socketId = socket?.id;
-        sendToSocketId(
-          socketId,
-          { conversation: latestConversation },
-          "update_conversation"
-        );
+        sendToSocketId(socketId, { conversation: latestConversation }, 'update_conversation');
       }
     });
     // console.dir({ latestConversation }, { depth: null });
@@ -152,7 +128,7 @@ async function processMessage({
           `UPDATE chats 
            SET last_reply_by = 'user', last_incoming_time = ?, sla_expires_at = ?, sla_violated = 0 
            WHERE sender_mobile = ? AND uid = ?`,
-          [Date.now(), slaExpires, senderMobile, uid]
+          [Date.now(), slaExpires, senderMobile, uid],
         );
       }
       metaChatbotInit({ latestConversation, uid, origin });
@@ -163,52 +139,93 @@ async function processMessage({
   }
 }
 
-const eventBus = require("../../utils/channels/eventBus");
-const path = require("path");
+const eventBus = require('../../utils/channels/eventBus');
+const path = require('path');
 
-eventBus.on("incoming_message", async (normalizedMsg) => {
+function convertNumberToRandomString(number) {
+  const mapping = {
+    0: 'i',
+    1: 'j',
+    2: 'I',
+    3: 'u',
+    4: 'I',
+    5: 'U',
+    6: 'S',
+    7: 'D',
+    8: 'B',
+    9: 'j',
+  };
+
+  const numStr = number.toString();
+  let result = '';
+  for (let i = 0; i < numStr.length; i++) {
+    const digit = numStr[i];
+    result += mapping[digit] || digit;
+  }
+  return result;
+}
+
+eventBus.on('incoming_message', async (normalizedMsg) => {
   try {
-    const { uid, channel, senderId, senderName, messageType, text, attachments, timestamp } = normalizedMsg;
+    const { uid, channel, senderId, senderName, messageType, text, attachments, timestamp } =
+      normalizedMsg;
 
     // 1. Ensure phonebook/contact exists
     const pbName = `${channel.toUpperCase()} Contact`;
     let pbId;
-    const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [uid, pbName]);
+    const existingPb = await query(`SELECT * FROM phonebook WHERE uid = ? AND name = ?`, [
+      uid,
+      pbName,
+    ]);
     if (existingPb.length > 0) {
       pbId = existingPb[0].id;
     } else {
-      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [uid, pbName]);
+      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [
+        uid,
+        pbName,
+      ]);
       pbId = insertPb[0]?.id;
     }
 
-    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [uid, senderId]);
+    const checkContact = await query(`SELECT * FROM contact WHERE uid = ? AND mobile = ?`, [
+      uid,
+      senderId,
+    ]);
     if (checkContact.length === 0) {
-      await query(`INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`, [
-        uid,
-        pbId,
-        pbName,
-        senderName || "Unknown Contact",
-        senderId,
-        `Auto-created via ${channel}`
-      ]);
+      await query(
+        `INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile, var1) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          uid,
+          pbId,
+          pbName,
+          senderName || 'Unknown Contact',
+          senderId,
+          `Auto-created via ${channel}`,
+        ],
+      );
     }
+
+    const chatId = convertNumberToRandomString(senderId);
 
     // 2. Build conversation message object
     const newMessage = {
       type: messageType,
-      metaChatId: normalizedMsg.metadata?.message_id || "msg-" + Date.now(),
+      metaChatId: normalizedMsg.metadata?.message_id || 'msg-' + Date.now(),
       msgContext: {
         type: messageType,
-        [messageType]: messageType === "text" ? { body: text } : { link: attachments?.[0]?.url, caption: attachments?.[0]?.caption || "" }
+        [messageType]:
+          messageType === 'text'
+            ? { body: text }
+            : { link: attachments?.[0]?.url, caption: attachments?.[0]?.caption || '' },
       },
-      reaction: "",
+      reaction: '',
       timestamp: Math.round(timestamp / 1000),
-      senderName: senderName || "Contact",
+      senderName: senderName || 'Contact',
       senderMobile: senderId,
-      status: "received",
+      status: 'received',
       star: false,
-      route: "INCOMING",
-      origin: channel
+      route: 'INCOMING',
+      origin: channel,
     };
 
     // 3. Save to conversation history file
@@ -216,23 +233,23 @@ eventBus.on("incoming_message", async (normalizedMsg) => {
     if (!fs.existsSync(conversationsDir)) {
       fs.mkdirSync(conversationsDir, { recursive: true });
     }
-    const chatFilePath = path.join(conversationsDir, `${senderId}.json`);
+    const chatFilePath = path.join(conversationsDir, `${chatId}.json`);
     let conversationHistory = [];
     if (fs.existsSync(chatFilePath)) {
       try {
-        conversationHistory = JSON.parse(fs.readFileSync(chatFilePath, "utf8"));
+        conversationHistory = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
       } catch (e) {
-        console.error("JSON parse error for chat file:", e);
+        console.error('JSON parse error for chat file:', e);
       }
     }
     conversationHistory.push(newMessage);
     fs.writeFileSync(chatFilePath, JSON.stringify(conversationHistory, null, 2));
 
     // 4. Update or insert into chats table
-    const [existingChat] = await query(
-      "SELECT * FROM chats WHERE chat_id = ? AND uid = ?",
-      [senderId, uid]
-    );
+    const [existingChat] = await query('SELECT * FROM chats WHERE chat_id = ? AND uid = ?', [
+      chatId,
+      uid,
+    ]);
 
     const userTimezone = Math.round(Date.now() / 1000);
 
@@ -241,13 +258,31 @@ eventBus.on("incoming_message", async (normalizedMsg) => {
         `UPDATE chats 
          SET last_message_came = ?, last_message = ?, is_opened = 0, sender_name = ?, last_incoming_time = ?, sla_expires_at = ?
          WHERE chat_id = ? AND uid = ?`,
-        [userTimezone, JSON.stringify(newMessage), senderName, Date.now(), new Date(Date.now() + 300 * 1000), senderId, uid]
+        [
+          userTimezone,
+          JSON.stringify(newMessage),
+          senderName,
+          Date.now(),
+          new Date(Date.now() + 300 * 1000),
+          chatId,
+          uid,
+        ],
       );
     } else {
       await query(
         `INSERT INTO chats (chat_id, uid, last_message_came, sender_name, sender_mobile, last_message, is_opened, origin, last_incoming_time, sla_expires_at) 
          VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
-        [senderId, uid, userTimezone, senderName, senderId, JSON.stringify(newMessage), channel, Date.now(), new Date(Date.now() + 300 * 1000)]
+        [
+          chatId,
+          uid,
+          userTimezone,
+          senderName,
+          senderId,
+          JSON.stringify(newMessage),
+          channel,
+          Date.now(),
+          new Date(Date.now() + 300 * 1000),
+        ],
       );
     }
 
@@ -255,14 +290,14 @@ eventBus.on("incoming_message", async (normalizedMsg) => {
     const socketConnections = getConnectionsByUid(uid) || [];
     socketConnections.forEach(async (socket) => {
       const chatListData = await updateChatListSocket({ connectionInfo: socket });
-      sendToSocketId(socket?.id, chatListData, "update_chat_list");
+      sendToSocketId(socket?.id, chatListData, 'update_chat_list');
 
       const openedChat = socket?.data?.selectedChat || null;
-      if (openedChat?.chat_id === senderId || openedChat?.sender_mobile === senderId) {
+      if (openedChat?.chat_id === chatId || openedChat?.sender_mobile === senderId) {
         sendToSocketId(
           socket?.id,
           { conversation: { newMessage, latestMessages: conversationHistory.slice(-10) } },
-          "update_conversation"
+          'update_conversation',
         );
       }
     });
@@ -273,17 +308,16 @@ eventBus.on("incoming_message", async (normalizedMsg) => {
     metaChatbotInit({
       latestConversation: { newMessage, latestMessages: conversationHistory.slice(-10) },
       uid,
-      origin: channel
+      origin: channel,
     });
 
     processWebhookRules({
       latestConversation: { newMessage, latestMessages: conversationHistory.slice(-10) },
       uid,
-      origin: channel
+      origin: channel,
     });
-
   } catch (err) {
-    console.error("Error processing incoming Event Bus message:", err.message);
+    console.error('Error processing incoming Event Bus message:', err.message);
   }
 });
 
