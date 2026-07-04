@@ -67,6 +67,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - app-logs:/app/logs
+      - app-contacts:/app/contacts
+      - app-conversations:/app/conversations
 
   health-worker:
     build:
@@ -86,6 +90,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - app-logs:/app/logs
 
   incoming-worker:
     build:
@@ -105,6 +111,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - app-logs:/app/logs
+      - app-contacts:/app/contacts
+      - app-conversations:/app/conversations
+      - app-media:/app/client/public/media
 
   scheduler-worker:
     build:
@@ -124,6 +135,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - app-logs:/app/logs
+      - app-contacts:/app/contacts
+      - app-conversations:/app/conversations
+      - app-flow-json:/app/flow-json
 
 volumes:
   postgres-data:
