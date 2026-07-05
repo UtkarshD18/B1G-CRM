@@ -1,15 +1,10 @@
-const { query } = require("../../../database/dbpromise");
-const {
-  getCurrentTimestampInTimeZone,
-  addObjectToFile,
-} = require("../../../functions/function");
-const fetch = require("node-fetch");
-const { v7: uuidv7 } = require("uuid");
+const { query } = require('../../../database/dbpromise');
+const { getCurrentTimestampInTimeZone, addObjectToFile } = require('../../../functions/function');
+const fetch = require('node-fetch');
+const { v7: uuidv7 } = require('uuid');
 
 function findTargetNodes(nodes, edges, incomingWord) {
-  const matchingEdges = edges.filter(
-    (edge) => edge.sourceHandle === incomingWord
-  );
+  const matchingEdges = edges.filter((edge) => edge.sourceHandle === incomingWord);
   const targetNodeIds = matchingEdges.map((edge) => edge.target);
   const targetNodes = nodes.filter((node) => targetNodeIds.includes(node.id));
   return targetNodes;
@@ -17,7 +12,7 @@ function findTargetNodes(nodes, edges, incomingWord) {
 
 function timeoutPromise(promise, ms) {
   const timeout = new Promise(
-    (resolve) => setTimeout(() => resolve(null), ms) // Instead of rejecting, resolve null
+    (resolve) => setTimeout(() => resolve(null), ms), // Instead of rejecting, resolve null
   );
   return Promise.race([promise, timeout]);
 }
@@ -47,27 +42,27 @@ function getReply(nodes, edges, incomingWord) {
     const findAiNodes = checkAssignAi(nodes);
     return findAiNodes;
   } else {
-    const getOther = findTargetNodes(nodes, edges, "{{OTHER_MSG}}");
+    const getOther = findTargetNodes(nodes, edges, '{{OTHER_MSG}}');
     return getOther;
   }
 }
 
 function convertNumberToRandomString(number) {
   const mapping = {
-    0: "i",
-    1: "j",
-    2: "I",
-    3: "u",
-    4: "I",
-    5: "U",
-    6: "S",
-    7: "D",
-    8: "B",
-    9: "j",
+    0: 'i',
+    1: 'j',
+    2: 'I',
+    3: 'u',
+    4: 'I',
+    5: 'U',
+    6: 'S',
+    7: 'D',
+    8: 'B',
+    9: 'j',
   };
 
   const numStr = number.toString();
-  let result = "";
+  let result = '';
   for (let i = 0; i < numStr.length; i++) {
     const digit = numStr[i];
     result += mapping[digit];
@@ -76,12 +71,12 @@ function convertNumberToRandomString(number) {
 }
 
 function setQrMsgObj(obj) {
-  if (!obj || typeof obj !== "object") return null;
+  if (!obj || typeof obj !== 'object') return null;
 
   switch (obj.type) {
-    case "text":
-      return { text: obj.text?.body || "" };
-    case "image":
+    case 'text':
+      return { text: obj.text?.body || '' };
+    case 'image':
       return {
         image: {
           url: obj?.image?.link,
@@ -90,7 +85,7 @@ function setQrMsgObj(obj) {
         jpegThumbnail: fetchImageAsBase64(obj?.image?.link),
       };
 
-    case "video":
+    case 'video':
       return {
         video: {
           url: obj?.video?.link,
@@ -98,7 +93,7 @@ function setQrMsgObj(obj) {
         caption: obj?.caption || null,
       };
 
-    case "audio":
+    case 'audio':
       const mp3FileName = extractFileName(obj?.audio?.link);
       const mp3FilePath = `${__dirname}/../../client/public/media/${mp3FileName}`;
 
@@ -107,10 +102,10 @@ function setQrMsgObj(obj) {
           url: mp3FilePath,
         },
         ptt: true,
-        mimetype: "audio/aac",
+        mimetype: 'audio/aac',
       };
 
-    case "document":
+    case 'document':
       return {
         document: {
           url: obj?.document?.link,
@@ -119,7 +114,7 @@ function setQrMsgObj(obj) {
         fileName: extractFileName(obj?.document?.link),
       };
 
-    case "location":
+    case 'location':
       return {
         location: {
           degreesLatitude: obj?.location?.latitude,
@@ -136,7 +131,7 @@ function setQrMsgObj(obj) {
 function getOriginData(chatbotFromMysq) {
   try {
     const origin = JSON.parse(chatbotFromMysq?.origin);
-    return { success: origin?.code === "META" ? false : true, data: origin };
+    return { success: origin?.code === 'META' ? false : true, data: origin };
   } catch (err) {
     return { success: false, data: {} };
   }
@@ -145,18 +140,18 @@ function getOriginData(chatbotFromMysq) {
 async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
   return new Promise(async (resolve) => {
     try {
-      const env = require("../../../env");
+      const env = require('../../../env');
       if (env.MOCK_META_DELIVERY) {
         const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
         const userTimezone = getCurrentTimestampInTimeZone(
-          getUser[0]?.timezone || Date.now() / 1000
+          getUser[0]?.timezone || Date.now() / 1000,
         );
         const mockMsgId = 'mock-msg-id-' + Math.random().toString(36).substring(2, 15);
         const finalSaveMsg = {
           ...savObj,
           metaChatId: mockMsgId,
           timestamp: userTimezone,
-          status: "sent",
+          status: 'sent',
         };
 
         const chatPath = `${__dirname}/../../../conversations/inbox/${uid}/${chatId}.json`;
@@ -164,60 +159,60 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
 
         await query(
           `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
-          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId]
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId],
         );
         return resolve({ success: true, id: mockMsgId });
       }
 
       // Check if this is a Phase 4 adapter connection first
       const [conn] = await query(
-        `SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'whatsapp'`,
-        [uid]
+        `SELECT * FROM channel_connections WHERE uid = ? AND channel_type IN ('whatsapp_cloud', 'whatsapp')`,
+        [uid],
       );
 
       if (conn) {
         // Phase 4 Outbox logic
         const correlation_id = uuidv7();
-        const channelType = 'whatsapp';
+        const channelType = conn.channel_type || 'whatsapp_cloud';
 
         const normalizedOutgoing = {
           channel: channelType,
           recipientId: toNumber,
-          messageType: msgObj.type || "text",
-          text: msgObj.text?.body || msgObj.body || "",
-          attachments: []
+          messageType: msgObj.type || 'text',
+          text: msgObj.text?.body || msgObj.body || '',
+          attachments: [],
         };
 
-        if (msgObj.type === "image") {
+        if (msgObj.type === 'image') {
           normalizedOutgoing.attachments.push({
-            type: "image",
+            type: 'image',
             url: msgObj.image?.link || msgObj.image?.url,
-            caption: msgObj.image?.caption || ""
+            caption: msgObj.image?.caption || '',
           });
-        } else if (msgObj.type === "video") {
+        } else if (msgObj.type === 'video') {
           normalizedOutgoing.attachments.push({
-            type: "video",
+            type: 'video',
             url: msgObj.video?.link || msgObj.video?.url,
-            caption: msgObj.video?.caption || ""
+            caption: msgObj.video?.caption || '',
           });
-        } else if (msgObj.type === "audio") {
+        } else if (msgObj.type === 'audio') {
           normalizedOutgoing.attachments.push({
-            type: "audio",
-            url: msgObj.audio?.link || msgObj.audio?.url
+            type: 'audio',
+            url: msgObj.audio?.link || msgObj.audio?.url,
           });
-        } else if (msgObj.type === "document" || msgObj.type === "file") {
+        } else if (msgObj.type === 'document' || msgObj.type === 'file') {
           const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
           normalizedOutgoing.attachments.push({
-            type: "document",
+            type: 'document',
             url: docUrl,
-            caption: msgObj.document?.caption || ""
+            caption: msgObj.document?.caption || '',
           });
-        } else if (msgObj.type === "template") {
+        } else if (msgObj.type === 'template') {
           // Template message mapping
-          normalizedOutgoing.messageType = "template";
+          normalizedOutgoing.messageType = 'template';
           normalizedOutgoing.template = msgObj.template;
-        } else if (msgObj.type === "interactive") {
-          normalizedOutgoing.messageType = "interactive";
+        } else if (msgObj.type === 'interactive') {
+          normalizedOutgoing.messageType = 'interactive';
           normalizedOutgoing.interactive = msgObj.interactive;
         }
 
@@ -225,19 +220,19 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
         await query(
           `INSERT INTO channel_outgoing_queue (uid, channel_type, payload, state, correlation_id) 
            VALUES (?, ?, ?, 'pending', ?) RETURNING id`,
-          [uid, channelType, JSON.stringify(normalizedOutgoing), correlation_id]
+          [uid, channelType, JSON.stringify(normalizedOutgoing), correlation_id],
         );
 
         const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
         const userTimezone = getCurrentTimestampInTimeZone(
-          getUser[0]?.timezone || Date.now() / 1000
+          getUser[0]?.timezone || Date.now() / 1000,
         );
 
         const finalSaveMsg = {
           ...savObj,
           metaChatId: correlation_id, // Use correlation_id temporarily
           timestamp: userTimezone,
-          status: "queued"
+          status: 'queued',
         };
 
         if (chatId) {
@@ -246,38 +241,41 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
 
           await query(
             `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
-            [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+            [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid],
           );
         }
 
-        return resolve({ 
-          success: true, 
-          id: correlation_id, 
-          correlation_id: correlation_id, 
-          provider_message_id: null, 
-          queued: true 
+        return resolve({
+          success: true,
+          id: correlation_id,
+          correlation_id: correlation_id,
+          provider_message_id: null,
+          queued: true,
         });
       }
 
       // Legacy fallback logic
-      let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-        uid,
-      ]);
+      let getMeta = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
       if (getMeta.length < 1) {
-        const globalMeta = await query(`SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`, []);
+        const globalMeta = await query(
+          `SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`,
+          [],
+        );
         if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
-          getMeta = [{
-            access_token: globalMeta[0].meta_access_token,
-            business_phone_number_id: globalMeta[0].meta_phone_number_id,
-            waba_id: globalMeta[0].meta_waba_id,
-            app_id: globalMeta[0].meta_app_id
-          }];
+          getMeta = [
+            {
+              access_token: globalMeta[0].meta_access_token,
+              business_phone_number_id: globalMeta[0].meta_phone_number_id,
+              waba_id: globalMeta[0].meta_waba_id,
+              app_id: globalMeta[0].meta_app_id,
+            },
+          ];
         }
       }
       const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
       if (getMeta.length < 1) {
-        return resolve({ success: false, msg: "Unable to to find API " });
+        return resolve({ success: false, msg: 'Unable to to find API ' });
       }
 
       const waToken = getMeta[0]?.access_token;
@@ -286,23 +284,23 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
       if (!waToken || !waNumId) {
         return resolve({
           success: false,
-          msg: "Please add your meta token and phone number ID",
+          msg: 'Please add your meta token and phone number ID',
         });
       }
 
       const url = `https://graph.facebook.com/v17.0/${waNumId}/messages`;
 
       const payload = {
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
         to: toNumber,
         ...msgObj,
       };
 
       const response = await fetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${waToken}`,
         },
         body: JSON.stringify(payload),
@@ -316,7 +314,7 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
 
       if (data?.messages && data.messages[0]?.id) {
         const userTimezone = getCurrentTimestampInTimeZone(
-          getUser[0]?.timezone || Date.now() / 1000
+          getUser[0]?.timezone || Date.now() / 1000,
         );
         const finalSaveMsg = {
           ...savObj,
@@ -329,13 +327,10 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
 
         await query(
           `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
-          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId]
+          [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId],
         );
 
-        await query(`UPDATE chats SET is_opened = ? WHERE chat_id = ?`, [
-          1,
-          chatId,
-        ]);
+        await query(`UPDATE chats SET is_opened = ? WHERE chat_id = ?`, [1, chatId]);
       }
 
       resolve({ success: true, id: data?.messages?.[0]?.id });
@@ -346,15 +341,7 @@ async function sendMetaMsgCloud({ uid, msgObj, toNumber, savObj, chatId }) {
   });
 }
 
-async function sendQrMsg({
-  uid,
-  msgObj,
-  toNumber,
-  savObj,
-  chatId,
-  chatbotFromMysq,
-  originData,
-}) {
+async function sendQrMsg({ uid, msgObj, toNumber, savObj, chatId, chatbotFromMysq, originData }) {
   try {
     const normalizeQrMsg = setQrMsgObj(msgObj);
     const sessionId = originData?.data?.code;
@@ -367,22 +354,15 @@ async function sendQrMsg({
     }
 
     // importing things
-    const {
-      getSession,
-      formatGroup,
-      formatPhone,
-    } = require("../../../helper/addon/qr");
+    const { getSession, formatGroup, formatPhone } = require('../../../helper/addon/qr');
 
-    const session = await timeoutPromise(getSession(sessionId || "a"), 60000);
+    const session = await timeoutPromise(getSession(sessionId || 'a'), 60000);
     if (!session) {
-      return { success: false, msg: "Session not found locally within 60 sec" };
+      return { success: false, msg: 'Session not found locally within 60 sec' };
     }
 
     const jid = formatPhone(toNumber);
-    const send = await timeoutPromise(
-      session?.sendMessage(jid, normalizeQrMsg),
-      60000
-    );
+    const send = await timeoutPromise(session?.sendMessage(jid, normalizeQrMsg), 60000);
     const msgId = send?.key?.id;
 
     if (!msgId) {
@@ -393,9 +373,7 @@ async function sendQrMsg({
     } else {
       const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
-      const userTimezone = getCurrentTimestampInTimeZone(
-        getUser[0]?.timezone || Date.now() / 1000
-      );
+      const userTimezone = getCurrentTimestampInTimeZone(getUser[0]?.timezone || Date.now() / 1000);
       const finalSaveMsg = {
         ...savObj,
         metaChatId: msgId,
@@ -411,13 +389,10 @@ async function sendQrMsg({
 
       await query(
         `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ?`,
-        [userTimezone, JSON.stringify(finalSaveMsg), 1, chatIdNew]
+        [userTimezone, JSON.stringify(finalSaveMsg), 1, chatIdNew],
       );
 
-      await query(`UPDATE chats SET is_opened = ? WHERE chat_id = ?`, [
-        1,
-        chatIdNew,
-      ]);
+      await query(`UPDATE chats SET is_opened = ? WHERE chat_id = ?`, [1, chatIdNew]);
     }
   } catch (err) {
     console.log(err);
@@ -435,41 +410,41 @@ async function sendInstagramMsgChatbot({
   originData,
 }) {
   try {
-    const env = require("../../../env");
+    const env = require('../../../env');
     const [api] = await query(`SELECT * FROM instagram_api WHERE uid = ?`, [uid]);
     if (!api || !api?.access_token || !api?.instagram_business_account_id) {
-      return { success: false, msg: "Instagram credentials not found" };
+      return { success: false, msg: 'Instagram credentials not found' };
     }
 
-    let msgId = "mock-insta-msg-id-" + Math.random().toString(36).substring(2, 15);
+    let msgId = 'mock-insta-msg-id-' + Math.random().toString(36).substring(2, 15);
     let success = true;
 
-    if (!env.MOCK_META_DELIVERY && !api.access_token.startsWith("mock_")) {
+    if (!env.MOCK_META_DELIVERY && !api.access_token.startsWith('mock_')) {
       try {
         const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${api.access_token}`;
         let instagramMessagePayload = {};
-        if (msgObj.type === "text") {
-          instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || "" };
-        } else if (msgObj.type === "image") {
+        if (msgObj.type === 'text') {
+          instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || '' };
+        } else if (msgObj.type === 'image') {
           instagramMessagePayload = {
             attachment: {
-              type: "image",
-              payload: { url: msgObj.image?.link || msgObj.image?.url }
-            }
+              type: 'image',
+              payload: { url: msgObj.image?.link || msgObj.image?.url },
+            },
           };
-        } else if (msgObj.type === "video") {
+        } else if (msgObj.type === 'video') {
           instagramMessagePayload = {
             attachment: {
-              type: "video",
-              payload: { url: msgObj.video?.link || msgObj.video?.url }
-            }
+              type: 'video',
+              payload: { url: msgObj.video?.link || msgObj.video?.url },
+            },
           };
-        } else if (msgObj.type === "document" || msgObj.type === "file") {
+        } else if (msgObj.type === 'document' || msgObj.type === 'file') {
           instagramMessagePayload = {
             attachment: {
-              type: "file",
-              payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link }
-            }
+              type: 'file',
+              payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link },
+            },
           };
         } else {
           instagramMessagePayload = { text: JSON.stringify(msgObj) };
@@ -477,13 +452,13 @@ async function sendInstagramMsgChatbot({
 
         const payload = {
           recipient: { id: toNumber },
-          message: instagramMessagePayload
+          message: instagramMessagePayload,
         };
 
         const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         });
 
         const data = await response.json();
@@ -501,14 +476,12 @@ async function sendInstagramMsgChatbot({
 
     if (success) {
       const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
-      const userTimezone = getCurrentTimestampInTimeZone(
-        getUser[0]?.timezone || Date.now() / 1000
-      );
+      const userTimezone = getCurrentTimestampInTimeZone(getUser[0]?.timezone || Date.now() / 1000);
       const finalSaveMsg = {
         ...savObj,
         metaChatId: msgId,
         timestamp: userTimezone,
-        origin: "instagram",
+        origin: 'instagram',
       };
 
       const chatPath = `${__dirname}/../../../conversations/inbox/${uid}/${chatId}.json`;
@@ -516,7 +489,7 @@ async function sendInstagramMsgChatbot({
 
       await query(
         `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ? WHERE chat_id = ? AND uid = ?`,
-        [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid]
+        [userTimezone, JSON.stringify(finalSaveMsg), 1, chatId, uid],
       );
     }
 
@@ -527,20 +500,13 @@ async function sendInstagramMsgChatbot({
   }
 }
 
-async function sendMetaMsg({
-  uid,
-  msgObj,
-  toNumber,
-  savObj,
-  chatId,
-  chatbotFromMysq,
-}) {
+async function sendMetaMsg({ uid, msgObj, toNumber, savObj, chatId, chatbotFromMysq }) {
   try {
     const originData = getOriginData(chatbotFromMysq);
     console.log({
       jsonData: JSON.stringify({ chatbotFromMysq, originData }),
     });
-    if (originData?.data?.code === "INSTAGRAM") {
+    if (originData?.data?.code === 'INSTAGRAM') {
       const sendInsta = await sendInstagramMsgChatbot({
         uid,
         msgObj,
@@ -552,7 +518,7 @@ async function sendMetaMsg({
       });
       return sendInsta;
     } else if (originData?.success) {
-      console.log("SEND QR MSG");
+      console.log('SEND QR MSG');
       const sendBaileysApi = await sendQrMsg({
         uid,
         msgObj,

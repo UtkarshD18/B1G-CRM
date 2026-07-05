@@ -1,17 +1,17 @@
-const fs = require("fs");
-const path = require("path");
-const { query } = require("../../database/dbpromise");
-const fetch = require("node-fetch");
-const mime = require("mime-types");
-const env = require("../../env");
-const { v7: uuidv7 } = require("uuid");
+const fs = require('fs');
+const path = require('path');
+const { query } = require('../../database/dbpromise');
+const fetch = require('node-fetch');
+const mime = require('mime-types');
+const env = require('../../env');
+const { v7: uuidv7 } = require('uuid');
 
 function mergeArraysWithPhonebook(chatArray, phonebookArray) {
   // Iterate through the chat array and enrich with phonebook data
   return chatArray.map((chat) => {
     // Find matching phonebook entry where sender_mobile matches mobile
     const phonebookEntry = phonebookArray.find(
-      (phonebook) => phonebook.mobile === chat.sender_mobile
+      (phonebook) => phonebook.mobile === chat.sender_mobile,
     );
 
     // Add phonebook data if a match is found
@@ -24,10 +24,10 @@ function mergeArraysWithPhonebook(chatArray, phonebookArray) {
 
 function extractFileName(url) {
   try {
-    const decodedUrl = decodeURIComponent(url.split("?")[0]); // Remove query params
-    return decodedUrl.substring(decodedUrl.lastIndexOf("/") + 1);
+    const decodedUrl = decodeURIComponent(url.split('?')[0]); // Remove query params
+    return decodedUrl.substring(decodedUrl.lastIndexOf('/') + 1);
   } catch (error) {
-    console.error("Error extracting file name:", error.message);
+    console.error('Error extracting file name:', error.message);
     return null;
   }
 }
@@ -35,30 +35,29 @@ function extractFileName(url) {
 async function fetchImageAsBase64(url) {
   try {
     const response = await fetch(url);
-    if (!response.ok)
-      throw new Error(`Failed to fetch image: ${response.status}`);
+    if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`);
 
     const buffer = await response.buffer();
     const base64Image = `data:${response.headers.get(
-      "content-type"
-    )};base64,${buffer.toString("base64")}`;
+      'content-type',
+    )};base64,${buffer.toString('base64')}`;
 
     return base64Image;
   } catch (error) {
-    console.error("Error fetching image:", error.message);
+    console.error('Error fetching image:', error.message);
     return null;
   }
 }
 
 function timeoutPromise(promise, ms) {
   const timeout = new Promise(
-    (resolve) => setTimeout(() => resolve(null), ms) // Instead of rejecting, resolve null
+    (resolve) => setTimeout(() => resolve(null), ms), // Instead of rejecting, resolve null
   );
   return Promise.race([promise, timeout]);
 }
 
 function getSessionIdFromChatIdQr(str) {
-  const index = str.indexOf("_");
+  const index = str.indexOf('_');
   if (index === -1) return null;
   return str.substring(index + 1);
 }
@@ -82,26 +81,21 @@ function extractFinalNumber(chatInfo) {
 function deleteMediaFromConversation(jsonFilePath, mediaFolderPath, type) {
   try {
     if (!fs.existsSync(jsonFilePath)) {
-      console.error("JSON file does not exist:", jsonFilePath);
+      console.error('JSON file does not exist:', jsonFilePath);
       return;
     }
 
     switch (type) {
-      case "media":
+      case 'media':
         // Handle "media" type: Remove media-related messages and their files
-        const conversationData = JSON.parse(
-          fs.readFileSync(jsonFilePath, "utf8")
-        );
+        const conversationData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
 
         const filteredConversation = conversationData.filter((msg) => {
-          if (["image", "video", "document", "audio"].includes(msg.type)) {
+          if (['image', 'video', 'document', 'audio'].includes(msg.type)) {
             // Collect file link to delete
             const mediaLink = msg.msgContext[msg.type]?.link;
             if (mediaLink) {
-              const filePath = path.join(
-                mediaFolderPath,
-                mediaLink.split("/").pop()
-              );
+              const filePath = path.join(mediaFolderPath, mediaLink.split('/').pop());
               // Delete the file
               if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
@@ -116,51 +110,45 @@ function deleteMediaFromConversation(jsonFilePath, mediaFolderPath, type) {
         });
 
         // Write updated conversation back to the JSON file
-        fs.writeFileSync(
-          jsonFilePath,
-          JSON.stringify(filteredConversation, null, 2),
-          "utf8"
-        );
-        console.log("Media messages removed, and JSON updated successfully.");
+        fs.writeFileSync(jsonFilePath, JSON.stringify(filteredConversation, null, 2), 'utf8');
+        console.log('Media messages removed, and JSON updated successfully.');
         break;
 
-      case "clear":
+      case 'clear':
         // Handle "clear" type: Clear the entire conversation JSON
-        fs.writeFileSync(jsonFilePath, JSON.stringify([], null, 2), "utf8");
-        console.log("Conversation JSON cleared successfully.");
+        fs.writeFileSync(jsonFilePath, JSON.stringify([], null, 2), 'utf8');
+        console.log('Conversation JSON cleared successfully.');
         break;
 
-      case "delete":
+      case 'delete':
         // Handle "delete" type: Delete the JSON file
         fs.unlinkSync(jsonFilePath);
-        console.log("Conversation JSON file deleted successfully.");
+        console.log('Conversation JSON file deleted successfully.');
         break;
 
       default:
-        console.error(
-          "Invalid type provided. Use 'media', 'clear', or 'delete'."
-        );
+        console.error("Invalid type provided. Use 'media', 'clear', or 'delete'.");
     }
   } catch (error) {
-    console.error("Error processing conversation JSON:", error.message);
+    console.error('Error processing conversation JSON:', error.message);
   }
 }
 
 function returnMsgObjAfterAddingKey(overrides = {}) {
   const defaultObj = {
-    type: "text",
-    metaChatId: "",
-    msgContext: { type: "text", text: { preview_url: true, body: "hey yo" } },
-    reaction: "",
-    timestamp: "",
-    senderName: "codeyon.com",
-    senderMobile: "918430088300",
-    status: "",
+    type: 'text',
+    metaChatId: '',
+    msgContext: { type: 'text', text: { preview_url: true, body: 'hey yo' } },
+    reaction: '',
+    timestamp: '',
+    senderName: 'codeyon.com',
+    senderMobile: '918430088300',
+    status: '',
     star: false,
-    route: "OUTGOING",
-    context: "",
-    origin: "meta",
-    err: "",
+    route: 'OUTGOING',
+    context: '',
+    origin: 'meta',
+    err: '',
   };
 
   // Merge overrides with the default object
@@ -170,56 +158,56 @@ function returnMsgObjAfterAddingKey(overrides = {}) {
 async function sendMetaMsg({ uid, to, msgObj }) {
   try {
     if (env.MOCK_META_DELIVERY) {
-      return { success: true, id: "mock-msg-id-" + Math.random().toString(36).substring(2, 15) };
+      return { success: true, id: 'mock-msg-id-' + Math.random().toString(36).substring(2, 15) };
     }
-    
+
     // Check if this is a Phase 4 adapter connection first
     const [conn] = await query(
-      `SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'whatsapp'`,
-      [uid]
+      `SELECT * FROM channel_connections WHERE uid = ? AND channel_type IN ('whatsapp_cloud', 'whatsapp')`,
+      [uid],
     );
 
     function formatNumber(number) {
-      return number?.replace("+", "");
+      return number?.replace('+', '');
     }
 
     if (conn) {
       // Phase 4 Outbox logic
       const correlation_id = uuidv7();
-      const channelType = 'whatsapp';
+      const channelType = conn.channel_type || 'whatsapp_cloud';
       const toNumber = formatNumber(to);
 
       const normalizedOutgoing = {
         channel: channelType,
         recipientId: toNumber,
-        messageType: msgObj.type || "text",
-        text: msgObj.text?.body || msgObj.body || "",
-        attachments: []
+        messageType: msgObj.type || 'text',
+        text: msgObj.text?.body || msgObj.body || '',
+        attachments: [],
       };
 
-      if (msgObj.type === "image") {
+      if (msgObj.type === 'image') {
         normalizedOutgoing.attachments.push({
-          type: "image",
+          type: 'image',
           url: msgObj.image?.link || msgObj.image?.url,
-          caption: msgObj.image?.caption || ""
+          caption: msgObj.image?.caption || '',
         });
-      } else if (msgObj.type === "video") {
+      } else if (msgObj.type === 'video') {
         normalizedOutgoing.attachments.push({
-          type: "video",
+          type: 'video',
           url: msgObj.video?.link || msgObj.video?.url,
-          caption: msgObj.video?.caption || ""
+          caption: msgObj.video?.caption || '',
         });
-      } else if (msgObj.type === "audio") {
+      } else if (msgObj.type === 'audio') {
         normalizedOutgoing.attachments.push({
-          type: "audio",
-          url: msgObj.audio?.link || msgObj.audio?.url
+          type: 'audio',
+          url: msgObj.audio?.link || msgObj.audio?.url,
         });
-      } else if (msgObj.type === "document" || msgObj.type === "file") {
+      } else if (msgObj.type === 'document' || msgObj.type === 'file') {
         const docUrl = msgObj.document?.link || msgObj.document?.url || msgObj.file?.link;
         normalizedOutgoing.attachments.push({
-          type: "document",
+          type: 'document',
           url: docUrl,
-          caption: msgObj.document?.caption || ""
+          caption: msgObj.document?.caption || '',
         });
       }
 
@@ -227,22 +215,22 @@ async function sendMetaMsg({ uid, to, msgObj }) {
       await query(
         `INSERT INTO channel_outgoing_queue (uid, channel_type, payload, state, correlation_id) 
          VALUES (?, ?, ?, 'pending', ?) RETURNING id`,
-        [uid, channelType, JSON.stringify(normalizedOutgoing), correlation_id]
+        [uid, channelType, JSON.stringify(normalizedOutgoing), correlation_id],
       );
 
-      return { 
-        success: true, 
-        id: correlation_id, 
-        correlation_id: correlation_id, 
-        provider_message_id: null, 
-        queued: true 
+      return {
+        success: true,
+        id: correlation_id,
+        correlation_id: correlation_id,
+        provider_message_id: null,
+        queued: true,
       };
     }
 
     // Legacy fallback logic
     const [api] = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
     if (!api || !api?.access_token || !api?.business_phone_number_id) {
-      return { success: false, msg: "Please add your meta API keys" };
+      return { success: false, msg: 'Please add your meta API keys' };
     }
 
     const waToken = api?.access_token;
@@ -251,16 +239,16 @@ async function sendMetaMsg({ uid, to, msgObj }) {
     const url = `https://graph.facebook.com/v17.0/${waNumId}/messages`;
 
     const payload = {
-      messaging_product: "whatsapp",
-      recipient_type: "individual",
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
       to: formatNumber(to),
       ...msgObj,
     };
 
     const response = await fetch(url, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${waToken}`,
       },
       body: JSON.stringify(payload),
@@ -283,12 +271,12 @@ async function sendMetaMsg({ uid, to, msgObj }) {
 }
 
 function setQrMsgObj(obj) {
-  if (!obj || typeof obj !== "object") return null;
+  if (!obj || typeof obj !== 'object') return null;
 
   switch (obj.type) {
-    case "text":
-      return { text: obj.text?.body || "" };
-    case "image":
+    case 'text':
+      return { text: obj.text?.body || '' };
+    case 'image':
       return {
         image: {
           url: obj?.image?.link,
@@ -297,7 +285,7 @@ function setQrMsgObj(obj) {
         jpegThumbnail: fetchImageAsBase64(obj?.image?.link),
       };
 
-    case "video":
+    case 'video':
       return {
         video: {
           url: obj?.video?.link,
@@ -305,7 +293,7 @@ function setQrMsgObj(obj) {
         caption: obj?.caption || null,
       };
 
-    case "audio":
+    case 'audio':
       const mp3FileName = extractFileName(obj?.audio?.link);
       const mp3FilePath = `${__dirname}/../../client/public/media/${mp3FileName}`;
 
@@ -314,10 +302,10 @@ function setQrMsgObj(obj) {
           url: mp3FilePath,
         },
         ptt: true,
-        mimetype: "audio/aac",
+        mimetype: 'audio/aac',
       };
 
-    case "document":
+    case 'document':
       return {
         document: {
           url: obj?.document?.link,
@@ -326,7 +314,7 @@ function setQrMsgObj(obj) {
         fileName: extractFileName(obj?.document?.link),
       };
 
-    case "location":
+    case 'location':
       return {
         location: {
           degreesLatitude: obj?.location?.latitude,
@@ -346,31 +334,27 @@ async function sendQrMsg({ uid, to, msgObj, chatInfo }) {
     if (!sessionMobileNumber) {
       return {
         success: false,
-        msg: "Session is not ready yet to send message please wait for few seconds and refresh the page to continue",
+        msg: 'Session is not ready yet to send message please wait for few seconds and refresh the page to continue',
       };
     }
 
     const qrObj = setQrMsgObj(msgObj);
 
     if (!qrObj) {
-      return { success: false, msg: "Invalid message type" };
+      return { success: false, msg: 'Invalid message type' };
     }
 
     // getting session
     const sessionId = getSessionIdFromChatIdQr(chatInfo?.chat_id);
 
-    const {
-      getSession,
-      formatGroup,
-      formatPhone,
-    } = require("../../helper/addon/qr");
+    const { getSession, formatGroup, formatPhone } = require('../../helper/addon/qr');
 
     console.log({ sessionId });
 
     // extracting session from local
-    const session = await timeoutPromise(getSession(sessionId || "a"), 60000);
+    const session = await timeoutPromise(getSession(sessionId || 'a'), 60000);
     if (!session) {
-      return { success: false, msg: "Session not found locally" };
+      return { success: false, msg: 'Session not found locally' };
     }
 
     const jid = chatInfo?.isGroup ? formatGroup(to) : formatPhone(to);
@@ -398,38 +382,41 @@ async function sendInstagramMsg({ uid, to, msgObj }) {
   try {
     const [api] = await query(`SELECT * FROM instagram_api WHERE uid = ?`, [uid]);
     if (!api || !api?.access_token || !api?.instagram_business_account_id) {
-      return { success: false, msg: "Please link your Instagram Business Account first." };
+      return { success: false, msg: 'Please link your Instagram Business Account first.' };
     }
 
-    if (env.MOCK_META_DELIVERY || api.access_token.startsWith("mock_")) {
-      return { success: true, id: "mock-insta-msg-id-" + Math.random().toString(36).substring(2, 15) };
+    if (env.MOCK_META_DELIVERY || api.access_token.startsWith('mock_')) {
+      return {
+        success: true,
+        id: 'mock-insta-msg-id-' + Math.random().toString(36).substring(2, 15),
+      };
     }
 
     const url = `https://graph.facebook.com/v19.0/me/messages?access_token=${api.access_token}`;
-    
+
     let instagramMessagePayload = {};
-    if (msgObj.type === "text") {
-      instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || "" };
-    } else if (msgObj.type === "image") {
+    if (msgObj.type === 'text') {
+      instagramMessagePayload = { text: msgObj.text?.body || msgObj.body || '' };
+    } else if (msgObj.type === 'image') {
       instagramMessagePayload = {
         attachment: {
-          type: "image",
-          payload: { url: msgObj.image?.link || msgObj.image?.url }
-        }
+          type: 'image',
+          payload: { url: msgObj.image?.link || msgObj.image?.url },
+        },
       };
-    } else if (msgObj.type === "video") {
+    } else if (msgObj.type === 'video') {
       instagramMessagePayload = {
         attachment: {
-          type: "video",
-          payload: { url: msgObj.video?.link || msgObj.video?.url }
-        }
+          type: 'video',
+          payload: { url: msgObj.video?.link || msgObj.video?.url },
+        },
       };
-    } else if (msgObj.type === "document" || msgObj.type === "file") {
+    } else if (msgObj.type === 'document' || msgObj.type === 'file') {
       instagramMessagePayload = {
         attachment: {
-          type: "file",
-          payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link }
-        }
+          type: 'file',
+          payload: { url: msgObj.document?.link || msgObj.document?.url || msgObj.file?.link },
+        },
       };
     } else {
       instagramMessagePayload = { text: JSON.stringify(msgObj) };
@@ -437,13 +424,13 @@ async function sendInstagramMsg({ uid, to, msgObj }) {
 
     const payload = {
       recipient: { id: to },
-      message: instagramMessagePayload
+      message: instagramMessagePayload,
     };
 
     const response = await fetch(url, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
     });

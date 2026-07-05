@@ -13,18 +13,19 @@ class ChannelAdapterRegistry {
   }
 
   getAllMetadata() {
-    return Array.from(this.adapters.values()).map(ac => ac.providerMetadata);
+    return Array.from(this.adapters.values()).map((ac) => ac.providerMetadata);
   }
 
   registerCoreAdapters() {
     // Statically register core adapters
-    this.register("whatsapp_cloud", require("./adapters/WhatsAppCloudAdapter"));
-    this.register("whatsapp_qr", require("./adapters/WhatsAppQRAdapter"));
-    this.register("instagram", require("./adapters/InstagramAdapter"));
-    this.register("messenger", require("./adapters/MessengerAdapter"));
-    this.register("email", require("./adapters/SMTPAdapter"));
-    this.register("sms", require("./adapters/TwilioAdapter"));
-    this.register("webchat", require("./adapters/WebChatAdapter"));
+    this.register('whatsapp_cloud', require('./adapters/WhatsAppCloudAdapter'));
+    this.register('whatsapp', require('./adapters/WhatsAppCloudAdapter')); // Alias for backward compat
+    this.register('whatsapp_qr', require('./adapters/WhatsAppQRAdapter'));
+    this.register('instagram', require('./adapters/InstagramAdapter'));
+    this.register('messenger', require('./adapters/MessengerAdapter'));
+    this.register('email', require('./adapters/SMTPAdapter'));
+    this.register('sms', require('./adapters/TwilioAdapter'));
+    this.register('webchat', require('./adapters/WebChatAdapter'));
   }
 }
 
