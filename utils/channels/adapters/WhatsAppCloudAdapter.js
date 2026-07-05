@@ -3,12 +3,12 @@ const BaseChannelAdapter = require('../BaseChannelAdapter');
 class WhatsAppCloudAdapter extends BaseChannelAdapter {
   static get providerMetadata() {
     return {
-      channel_type: "whatsapp_cloud",
-      name: "Meta WhatsApp Cloud API",
-      providerVersion: "1.0.0",
-      apiVersion: "Meta v23.0",
+      channel_type: 'whatsapp_cloud',
+      name: 'Meta WhatsApp Cloud API',
+      providerVersion: '1.0.0',
+      apiVersion: 'Meta v23.0',
       description: "Connect WhatsApp using Meta's Cloud API",
-      helpUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api",
+      helpUrl: 'https://developers.facebook.com/docs/whatsapp/cloud-api',
       capabilities: {
         text: true,
         image: true,
@@ -16,18 +16,49 @@ class WhatsAppCloudAdapter extends BaseChannelAdapter {
         video: true,
         document: true,
         typingIndicator: false,
-        readReceipts: true
+        readReceipts: true,
       },
       healthCheckIntervalMs: 300000, // 5 minutes
       credentialFields: [
-        { key: "phone_number_id", label: "Phone Number ID", type: "text", required: true, helpText: "From your Meta App settings" },
-        { key: "business_account_id", label: "Business Account ID", type: "text", required: true, helpText: "From your Meta Business Account" },
-        { key: "access_token", label: "Access Token", type: "password", required: true, secret: true, helpText: "Permanent Page Access Token" },
-        { key: "verify_token", label: "Webhook Verify Token", type: "text", required: true, helpText: "Used to verify your webhook subscription" }
+        {
+          key: 'phone_number_id',
+          label: 'Phone Number ID',
+          type: 'text',
+          required: true,
+          helpText: 'From your Meta App settings',
+        },
+        {
+          key: 'business_account_id',
+          label: 'Business Account ID',
+          type: 'text',
+          required: true,
+          helpText: 'From your Meta Business Account',
+        },
+        {
+          key: 'access_token',
+          label: 'Access Token',
+          type: 'password',
+          required: true,
+          secret: true,
+          helpText: 'Permanent Page Access Token',
+        },
+        {
+          key: 'verify_token',
+          label: 'Webhook Verify Token',
+          type: 'text',
+          required: true,
+          helpText: 'Used to verify your webhook subscription',
+        },
       ],
       settingFields: [
-        { key: "mode", label: "Operation Mode", type: "select", options: ["mock", "sandbox", "production"], default: "mock" }
-      ]
+        {
+          key: 'mode',
+          label: 'Operation Mode',
+          type: 'select',
+          options: ['mock', 'sandbox', 'production'],
+          default: 'mock',
+        },
+      ],
     };
   }
 
@@ -40,24 +71,24 @@ class WhatsAppCloudAdapter extends BaseChannelAdapter {
   }
 
   async verify() {
-    const mode = this.settings.mode || "mock";
-    if (mode === "mock") {
-      return { success: true, msg: "Mock connection verification successful!" };
+    const mode = this.settings.mode || 'mock';
+    if (mode === 'mock') {
+      return { success: true, msg: 'Mock connection verification successful!' };
     }
     // Sandbox or Production: verify tokens
     if (!this.config.access_token || !this.config.phone_number_id) {
-      return { success: false, msg: "Missing access token or phone number ID." };
+      return { success: false, msg: 'Missing access token or phone number ID.' };
     }
     try {
       const url = `https://graph.facebook.com/v19.0/${this.config.phone_number_id}`;
       const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${this.config.access_token}` }
+        headers: { Authorization: `Bearer ${this.config.access_token}` },
       });
       const data = await response.json();
       if (data.error) {
         return { success: false, msg: data.error.message };
       }
-      return { success: true, msg: "Meta credentials verified successfully!" };
+      return { success: true, msg: 'Meta credentials verified successfully!' };
     } catch (err) {
       return { success: false, msg: err.message };
     }
@@ -69,46 +100,49 @@ class WhatsAppCloudAdapter extends BaseChannelAdapter {
   }
 
   async send(normalizedOutgoing) {
-    const mode = this.settings.mode || "mock";
-    
+    const mode = this.settings.mode || 'mock';
+
     // Simulate or Call SDK
-    if (mode === "mock" || this.config.access_token?.startsWith("mock_")) {
-      console.log(`[MOCK SEND - WhatsApp Cloud] Sending to ${normalizedOutgoing.recipientId}:`, normalizedOutgoing.text);
+    if (mode === 'mock' || this.config.access_token?.startsWith('mock_')) {
+      console.log(
+        `[MOCK SEND - WhatsApp Cloud] Sending to ${normalizedOutgoing.recipientId}:`,
+        normalizedOutgoing.text,
+      );
       return {
         success: true,
-        provider_message_id: "mock-wa-cloud-" + Math.random().toString(36).substring(7),
-        timestamp: Date.now()
+        provider_message_id: 'mock-wa-cloud-' + Math.random().toString(36).substring(7),
+        timestamp: Date.now(),
       };
     }
 
     // Call Facebook Graph API
     const url = `https://graph.facebook.com/v19.0/${this.config.phone_number_id}/messages`;
     const payload = {
-      messaging_product: "whatsapp",
-      recipient_type: "individual",
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
       to: normalizedOutgoing.recipientId,
-      type: "text",
-      text: { body: normalizedOutgoing.text }
+      type: 'text',
+      text: { body: normalizedOutgoing.text },
     };
 
-    if (normalizedOutgoing.messageType !== "text") {
+    if (normalizedOutgoing.messageType !== 'text') {
       const att = normalizedOutgoing.attachments?.[0];
       if (att) {
         payload.type = normalizedOutgoing.messageType;
         payload[normalizedOutgoing.messageType] = {
           link: att.url,
-          caption: att.caption || ""
+          caption: att.caption || '',
         };
       }
     }
 
     const response = await fetch(url, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.config.access_token}`
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.config.access_token}`,
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
@@ -119,7 +153,7 @@ class WhatsAppCloudAdapter extends BaseChannelAdapter {
     return {
       success: true,
       provider_message_id: data.messages?.[0]?.id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -133,32 +167,77 @@ class WhatsAppCloudAdapter extends BaseChannelAdapter {
 
     if (!message) return null;
 
-    let type = "text";
-    let text = message?.text?.body || "";
+    let type = 'text';
+    let text = message?.text?.body || '';
     const attachments = [];
 
-    if (message.type && message.type !== "text") {
+    if (message.type && message.type !== 'text') {
       type = message.type;
       const mediaObj = message[message.type];
       if (mediaObj?.id) {
         attachments.push({
           type: message.type,
           url: `media_id:${mediaObj.id}`, // Resolved later
-          caption: mediaObj.caption || ""
+          caption: mediaObj.caption || '',
         });
       }
     }
 
     return {
-      channel: "whatsapp_cloud",
+      channel: 'whatsapp_cloud',
       senderId: message.from,
       senderName: contact?.profile?.name || message.from,
       messageType: type,
       text: text,
       attachments: attachments,
       timestamp: parseInt(message.timestamp) * 1000,
-      metadata: payload
+      metadata: payload,
     };
+  }
+  async afterReceive(payload, normalizedMsg) {
+    if (!normalizedMsg || !normalizedMsg.attachments || normalizedMsg.attachments.length === 0)
+      return;
+
+    for (let att of normalizedMsg.attachments) {
+      if (att.url && att.url.startsWith('media_id:')) {
+        const mediaId = att.url.split(':')[1];
+        try {
+          const fs = require('fs');
+          const path = require('path');
+
+          // 1. Get media URL
+          const metaUrl = `https://graph.facebook.com/v19.0/${mediaId}/`;
+          const response = await fetch(metaUrl, {
+            headers: { Authorization: `Bearer ${this.config.access_token}` },
+          });
+          const data = await response.json();
+
+          if (data.url) {
+            // 2. Download media binary
+            const mediaResponse = await fetch(data.url, {
+              headers: { Authorization: `Bearer ${this.config.access_token}` },
+            });
+            const buffer = await mediaResponse.arrayBuffer();
+
+            // 3. Save to local media directory
+            const ext = data.mime_type
+              ? require('mime-types').extension(data.mime_type) || 'bin'
+              : 'bin';
+            const filename = `meta_${mediaId}_${Date.now()}.${ext}`;
+            const mediaDir = path.join(__dirname, '../../../client/public/media');
+            if (!fs.existsSync(mediaDir)) {
+              fs.mkdirSync(mediaDir, { recursive: true });
+            }
+            fs.writeFileSync(path.join(mediaDir, filename), Buffer.from(buffer));
+
+            // 4. Update the URL to the local public path
+            att.url = `/media/${filename}`;
+          }
+        } catch (err) {
+          console.error('Error downloading media for media_id:', mediaId, err);
+        }
+      }
+    }
   }
 }
 

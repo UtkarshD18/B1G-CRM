@@ -601,7 +601,36 @@ router.post(
       }
 
       const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+      let credentials = null;
       if (getMETA.length < 1) {
+        const [conn] = await query(
+          "SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'whatsapp_cloud'",
+          [req.decode.uid],
+        );
+        if (conn) {
+          const [credRow] = await query(
+            "SELECT credentials FROM channel_credentials WHERE uid = ? AND channel_type = 'whatsapp_cloud'",
+            [req.decode.uid],
+          );
+          if (credRow?.credentials) {
+            const { decrypt } = require('../utils/channels/encryption');
+            try {
+              const decrypted = JSON.parse(decrypt(credRow.credentials));
+              credentials = {
+                business_phone_number_id:
+                  decrypted.phoneNumberId || decrypted.business_phone_number_id,
+                access_token: decrypted.accessToken || decrypted.access_token,
+              };
+            } catch (e) {
+              console.error('Failed to decrypt credentials', e);
+            }
+          }
+        }
+      } else {
+        credentials = getMETA[0];
+      }
+
+      if (!credentials || !credentials.access_token || !credentials.business_phone_number_id) {
         return res.json({
           success: false,
           msg: 'Please check your meta API keys [1]',
@@ -610,8 +639,8 @@ router.post(
 
       const resp = await sendMetatemplet(
         toNumber,
-        getMETA[0]?.business_phone_number_id,
-        getMETA[0]?.access_token,
+        credentials.business_phone_number_id,
+        credentials.access_token,
         template,
         example,
       );

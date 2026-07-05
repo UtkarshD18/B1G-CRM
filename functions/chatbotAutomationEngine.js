@@ -1103,7 +1103,43 @@ async function executeFlowStep(
 
                 finalContextTextInjected = finalChunksSelected.map((c) => c.text).join('\n\n');
 
-                systemPrompt = `${systemPrompt}\n\nIf relevant, use the following official Knowledge Base context retrieved from our company documentation:\n\n${finalContextTextInjected || 'No specific company docs found for this query.'}\n\nIf the answer is not in the context, answer using your general knowledge but keep it professional.`;
+                // Fetch order information if message mentions "order"
+                let orderContext = '';
+                const lowerMsg = (context.senderMessage || '').toLowerCase();
+                if (lowerMsg.includes('order')) {
+                  const cleanNumber = (context.senderMobile || '').replace(/\D/g, '');
+                  const shortNumber =
+                    cleanNumber.length > 10 ? cleanNumber.slice(-10) : cleanNumber;
+
+                  const orders = await query(
+                    `SELECT id, amount, payment_mode, data, createdat 
+                     FROM orders 
+                     WHERE uid = ? AND (data LIKE ? OR data LIKE ?) 
+                     ORDER BY createdat DESC 
+                     LIMIT 5`,
+                    [uid, `%${cleanNumber}%`, `%${shortNumber}%`],
+                  );
+
+                  if (orders.length > 0) {
+                    orderContext =
+                      "Customer's Recent Orders:\n" +
+                      orders
+                        .map((o) => {
+                          let details = o.data;
+                          try {
+                            const parsed = JSON.parse(o.data);
+                            details = JSON.stringify(parsed);
+                          } catch (e) {}
+                          return `- Order ID: ${o.id}, Amount: ${o.amount}, Date: ${o.createdat}, Payment Mode: ${o.payment_mode}, Details: ${details}`;
+                        })
+                        .join('\n');
+                  } else {
+                    orderContext =
+                      'No orders found for this customer phone number in the database.';
+                  }
+                }
+
+                systemPrompt = `${systemPrompt}\n\nIf relevant, use the following official Knowledge Base context retrieved from our company documentation:\n\n${finalContextTextInjected || 'No specific company docs found for this query.'}\n\n${orderContext ? `\nHere is the customer's order history from the site database:\n${orderContext}\n` : ''}\n\nIf the answer is not in the context, answer using your general knowledge but keep it professional.`;
               } catch (ragErr) {
                 console.error('RAG pipeline execution failed, proceeding with fallback', ragErr);
               }
