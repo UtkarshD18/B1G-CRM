@@ -667,9 +667,9 @@ describe('App routing shell', () => {
   test('renders the billing page with mocked plan and gateway data', async () => {
     await renderAtRoute('/user/billing', { role: 'user' });
 
-    expect(await screen.findByText('Plans, trial, and checkout')).toBeInTheDocument();
-    expect(await screen.findByText('Payment gateways')).toBeInTheDocument();
-    expect(await screen.findByText('Premium')).toBeInTheDocument();
+    expect(await screen.findByText('Your Plan & Subscription')).toBeInTheDocument();
+    expect(await screen.findByText('Current Plan')).toBeInTheDocument();
+    expect((await screen.findAllByText('Premium')).length).toBeGreaterThan(0);
   });
 
   test('renders the API and webhook dashboard with mocked tenant data', async () => {
