@@ -71,15 +71,14 @@ async function testAIProviderConnection(provider, model, apiKey, prompt, customE
       if (provider === 'deepseek') baseURL = 'https://api.deepseek.com/v1';
       if (provider === 'custom')
         baseURL =
-          customEndpoint || (model && typeof model === 'object' ? model.customBaseUrl : '') || '';
+          customEndpoint ||
+          (model && typeof model === 'object' ? model.customBaseUrl : '') ||
+          'https://api.openai.com/v1';
       if (provider === 'ollama') baseURL = customEndpoint || 'http://localhost:11434/v1';
 
       let url = `${baseURL}/chat/completions`;
-      if (
-        (provider === 'custom' || provider === 'deepseek' || provider === 'ollama') &&
-        customEndpoint
-      ) {
-        url = await getValidatedCustomUrl(customEndpoint);
+      if (provider === 'custom' || provider === 'ollama' || customEndpoint) {
+        url = await getValidatedCustomUrl(baseURL);
       }
 
       const res = await fetch(url, {
@@ -181,7 +180,7 @@ async function executeAIProvider(
     if (provider === 'groq') baseURL = 'https://api.groq.com/openai/v1';
     if (provider === 'mistral') baseURL = 'https://api.mistral.ai/v1';
     if (provider === 'deepseek') baseURL = 'https://api.deepseek.com/v1';
-    if (provider === 'custom') baseURL = customEndpoint || '';
+    if (provider === 'custom') baseURL = customEndpoint || 'https://api.openai.com/v1';
     if (provider === 'ollama') baseURL = customEndpoint || 'http://localhost:11434/v1';
     if (provider === 'custom' && model && typeof model === 'string' && model.startsWith('http')) {
       baseURL = model; // Assuming custom endpoint
@@ -189,11 +188,8 @@ async function executeAIProvider(
     }
 
     let url = `${baseURL}/chat/completions`;
-    if (
-      (provider === 'custom' || provider === 'deepseek' || provider === 'ollama') &&
-      customEndpoint
-    ) {
-      url = await getValidatedCustomUrl(customEndpoint);
+    if (provider === 'custom' || provider === 'ollama' || customEndpoint) {
+      url = await getValidatedCustomUrl(baseURL);
     }
 
     const payloadMessages = [];
