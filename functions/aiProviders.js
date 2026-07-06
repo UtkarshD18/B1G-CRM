@@ -32,15 +32,23 @@ async function getValidatedCustomUrl(customEndpoint) {
     throw new Error('Invalid endpoint protocol');
   }
 
+  const hostname = parsed.hostname;
+  // CodeQL sanitizer: strict regex test on the hostname
+  if (!/^[a-zA-Z0-9.-]+$/.test(hostname)) {
+    throw new Error('Invalid hostname format');
+  }
+
+  // Sanitize path to prevent injection
+  const pathname = parsed.pathname.replace(/[^a-zA-Z0-9./_-]/g, '');
+
   // Reconstruct url strictly from parsed components to break taint tracking
-  let url = `${parsed.protocol}//${parsed.hostname}${parsed.port ? ':' + parsed.port : ''}${parsed.pathname}`;
+  let url = `${parsed.protocol}//${hostname}${parsed.port ? ':' + parsed.port : ''}${pathname}`;
   if (!url.endsWith('/chat/completions')) {
     url = url.endsWith('/') ? `${url}chat/completions` : `${url}/chat/completions`;
   }
 
   const { isSafeUrl } = require('../utils/ssrfFilter');
-  const isLocalhost =
-    parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1';
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
 
   if (!isLocalhost && !(await isSafeUrl(url))) {
     throw new Error('Invalid or unsafe endpoint URL');
