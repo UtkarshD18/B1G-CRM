@@ -1,5 +1,54 @@
 const fetch = require('node-fetch');
 
+function getSanitizedGeminiModel(model) {
+  const modelStr = String(model || 'gemini-1.5-flash');
+  switch (modelStr) {
+    case 'gemini-1.5-flash':
+      return 'gemini-1.5-flash';
+    case 'gemini-1.5-pro':
+      return 'gemini-1.5-pro';
+    case 'gemini-1.0-pro':
+      return 'gemini-1.0-pro';
+    case 'gemini-2.0-flash-exp':
+      return 'gemini-2.0-flash-exp';
+    case 'gemini-2.0-flash':
+      return 'gemini-2.0-flash';
+    case 'gemini-2.0-pro':
+      return 'gemini-2.0-pro';
+    case 'gemini-1.5-flash-8b':
+      return 'gemini-1.5-flash-8b';
+    default:
+      if (/^[a-zA-Z0-9.-]+$/.test(modelStr)) {
+        return modelStr;
+      }
+      return 'gemini-1.5-flash';
+  }
+}
+
+async function getValidatedCustomUrl(customEndpoint) {
+  if (!customEndpoint) return '';
+  const parsed = new URL(customEndpoint);
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('Invalid endpoint protocol');
+  }
+
+  // Reconstruct url strictly from parsed components to break taint tracking
+  let url = `${parsed.protocol}//${parsed.hostname}${parsed.port ? ':' + parsed.port : ''}${parsed.pathname}`;
+  if (!url.endsWith('/chat/completions')) {
+    url = url.endsWith('/') ? `${url}chat/completions` : `${url}/chat/completions`;
+  }
+
+  const { isSafeUrl } = require('../utils/ssrfFilter');
+  const isLocalhost =
+    parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1';
+
+  if (!isLocalhost && !(await isSafeUrl(url))) {
+    throw new Error('Invalid or unsafe endpoint URL');
+  }
+
+  return url;
+}
+
 async function testAIProviderConnection(provider, model, apiKey, prompt, customEndpoint) {
   const startTime = Date.now();
   let responseText = '';
@@ -30,18 +79,7 @@ async function testAIProviderConnection(provider, model, apiKey, prompt, customE
         (provider === 'custom' || provider === 'deepseek' || provider === 'ollama') &&
         customEndpoint
       ) {
-        url = customEndpoint.endsWith('/chat/completions')
-          ? customEndpoint
-          : `${customEndpoint}/chat/completions`;
-      }
-
-      if (provider === 'custom' || provider === 'ollama') {
-        const { isSafeUrl } = require('../utils/ssrfFilter');
-        const isLocalhost =
-          url.includes('localhost') || url.includes('127.0.0.1') || url.includes('::1');
-        if (!isLocalhost && !(await isSafeUrl(url))) {
-          throw new Error('Invalid or unsafe endpoint URL');
-        }
+        url = await getValidatedCustomUrl(customEndpoint);
       }
 
       const res = await fetch(url, {
@@ -62,7 +100,7 @@ async function testAIProviderConnection(provider, model, apiKey, prompt, customE
       responseText = data.choices?.[0]?.message?.content || '';
       tokensUsed = data.usage?.total_tokens || 0;
     } else if (provider === 'gemini') {
-      const actualModel = String(model || 'gemini-1.5-flash').replace(/[^a-zA-Z0-9.-]/g, '');
+      const actualModel = getSanitizedGeminiModel(model);
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${apiKey}`,
         {
@@ -155,18 +193,7 @@ async function executeAIProvider(
       (provider === 'custom' || provider === 'deepseek' || provider === 'ollama') &&
       customEndpoint
     ) {
-      url = customEndpoint.endsWith('/chat/completions')
-        ? customEndpoint
-        : `${customEndpoint}/chat/completions`;
-    }
-
-    if (provider === 'custom' || provider === 'ollama') {
-      const { isSafeUrl } = require('../utils/ssrfFilter');
-      const isLocalhost =
-        url.includes('localhost') || url.includes('127.0.0.1') || url.includes('::1');
-      if (!isLocalhost && !(await isSafeUrl(url))) {
-        throw new Error('Invalid or unsafe endpoint URL');
-      }
+      url = await getValidatedCustomUrl(customEndpoint);
     }
 
     const payloadMessages = [];
@@ -209,7 +236,7 @@ async function executeAIProvider(
       if (maxTokens !== undefined) body.generationConfig.maxOutputTokens = parseInt(maxTokens);
     }
 
-    const actualModel = String(model || 'gemini-1.5-flash').replace(/[^a-zA-Z0-9.-]/g, '');
+    const actualModel = getSanitizedGeminiModel(model);
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${actualModel}:generateContent?key=${apiKey}`,
       {
