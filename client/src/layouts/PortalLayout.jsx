@@ -155,7 +155,7 @@ function PortalLayout({ role, title, navItems }) {
             <span className="topbar-home">🏠</span>
             <span className="topbar-separator">›</span>
             <span className="topbar-page">
-              {location.pathname.split('/').pop().replace(/-/g, '-')}
+              {location.pathname.split('/').pop().replace(/-/g, ' ')}
             </span>
           </div>
           <div className="topbar-actions">

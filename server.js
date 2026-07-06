@@ -76,7 +76,7 @@ app.get('/metrics', async (req, res) => {
     res.set('Content-Type', metrics.register.contentType);
     res.end(await metrics.register.metrics());
   } catch (ex) {
-    res.status(500).end(ex);
+    res.status(500).end('Internal Server Error');
   }
 });
 
