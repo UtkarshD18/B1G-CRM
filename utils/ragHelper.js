@@ -1,6 +1,6 @@
-const fetch = require("node-fetch");
-const { query } = require("../database/dbpromise");
-const config = require("./ragConfig");
+const fetch = require('node-fetch');
+const { query } = require('../database/dbpromise');
+const config = require('./ragConfig');
 
 const EMBEDDING_API_URL = `${config.EMBEDDING_API_BASE}/${config.EMBEDDING_MODEL}:embedContent`;
 
@@ -8,7 +8,7 @@ const EMBEDDING_API_URL = `${config.EMBEDDING_API_BASE}/${config.EMBEDDING_MODEL
  * Format a JS float array as a pgvector literal string: [0.1,0.2,...]
  */
 function pgvectorFormat(vector) {
-  return `[${vector.join(",")}]`;
+  return `[${vector.join(',')}]`;
 }
 
 /**
@@ -17,27 +17,29 @@ function pgvectorFormat(vector) {
  * Throws if no API key or API call fails
  */
 async function getEmbedding(text, apiKey) {
-  if (!apiKey || apiKey === "••••••••••••••••") {
-    throw new Error("Gemini API key required for embedding generation. Configure it in AI Provider Settings.");
+  if (!apiKey || apiKey === '••••••••••••••••') {
+    throw new Error(
+      'Gemini API key required for embedding generation. Configure it in AI Provider Settings.',
+    );
   }
 
   const res = await fetch(`${EMBEDDING_API_URL}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       content: { parts: [{ text }] },
-      outputDimensionality: config.EMBEDDING_DIMS
-    })
+      outputDimensionality: config.EMBEDDING_DIMS,
+    }),
   });
 
   if (!res.ok) {
-    const errBody = await res.text().catch(() => "");
+    const errBody = await res.text().catch(() => '');
     throw new Error(`Gemini embedding API error (${res.status}): ${errBody}`);
   }
 
   const data = await res.json();
   if (!data.embedding || !data.embedding.values) {
-    throw new Error("Gemini embedding API returned no embedding values");
+    throw new Error('Gemini embedding API returned no embedding values');
   }
 
   return data.embedding.values;
@@ -60,7 +62,7 @@ function chunkText(text, size, overlap) {
       chunks.push(chunk);
     }
     if (end >= text.length) break;
-    start += (chunkSize - chunkOverlap);
+    start += chunkSize - chunkOverlap;
   }
   return chunks;
 }
@@ -74,29 +76,47 @@ async function indexDocument(kbId, uid, content, apiKey, metadata = {}) {
   const { title, sourceUrl, filename } = metadata;
 
   // Set status to INDEXING
-  await query("UPDATE knowledge_base SET status = 'INDEXING', index_error = NULL WHERE id = ?", [kbId]);
+  await query("UPDATE knowledge_base SET status = 'INDEXING', index_error = NULL WHERE id = ?", [
+    kbId,
+  ]);
 
   // Delete existing chunks
-  await query("DELETE FROM knowledge_base_chunks WHERE kb_id = ?", [kbId]);
+  await query('DELETE FROM knowledge_base_chunks WHERE kb_id = ?', [kbId]);
 
   const chunks = chunkText(content);
+
+  // 1. Insert all chunks first (with '[]' placeholder for embedding) so they are always visible/saved
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    await query(
+      `INSERT INTO knowledge_base_chunks
+        (kb_id, uid, chunk_index, content, embedding, embedding_vector, doc_title, source_url, filename)
+       VALUES (?, ?, ?, ?, '[]', NULL, ?, ?, ?)`,
+      [kbId, uid, i, chunk, title || null, sourceUrl || null, filename || null],
+    );
+  }
+
+  // Update chunk count on parent document immediately
+  await query('UPDATE knowledge_base SET chunk_count = ? WHERE id = ?', [chunks.length, kbId]);
+
+  // 2. Generate and update embedding vectors
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
     const embedding = await getEmbedding(chunk, apiKey);
     const vectorLiteral = pgvectorFormat(embedding);
 
     await query(
-      `INSERT INTO knowledge_base_chunks
-        (kb_id, uid, chunk_index, content, embedding, embedding_vector, doc_title, source_url, filename)
-       VALUES (?, ?, ?, ?, ?, ?::vector, ?, ?, ?)`,
-      [kbId, uid, i, chunk, JSON.stringify(embedding), vectorLiteral, title || null, sourceUrl || null, filename || null]
+      `UPDATE knowledge_base_chunks 
+       SET embedding = ?, embedding_vector = ?::vector 
+       WHERE kb_id = ? AND chunk_index = ?`,
+      [JSON.stringify(embedding), vectorLiteral, kbId, i],
     );
   }
 
-  // Update parent document status
+  // Update parent document status to INDEXED
   await query(
-    `UPDATE knowledge_base SET status = 'INDEXED', indexed_at = NOW(), embedding_model = ?, chunk_count = ?, index_error = NULL, retry_count = 0 WHERE id = ?`,
-    [config.EMBEDDING_MODEL, chunks.length, kbId]
+    `UPDATE knowledge_base SET status = 'INDEXED', indexed_at = NOW(), embedding_model = ?, index_error = NULL, retry_count = 0 WHERE id = ?`,
+    [config.EMBEDDING_MODEL, kbId],
   );
 }
 
@@ -106,7 +126,7 @@ async function indexDocument(kbId, uid, content, apiKey, metadata = {}) {
 async function markDocumentFailed(kbId, errorMessage) {
   await query(
     "UPDATE knowledge_base SET status = 'FAILED', index_error = ?, retry_count = retry_count + 1 WHERE id = ?",
-    [errorMessage, kbId]
+    [errorMessage, kbId],
   );
 }
 
@@ -134,16 +154,16 @@ async function vectorSearch(uid, queryText, apiKey, topK) {
      WHERE kbc.uid = ? AND kbc.embedding_vector IS NOT NULL
      ORDER BY kbc.embedding_vector <=> ?::vector
      LIMIT ?`,
-    [vectorLiteral, uid, vectorLiteral, k]
+    [vectorLiteral, uid, vectorLiteral, k],
   );
 
-  return rows.map(row => ({
+  return rows.map((row) => ({
     chunk_id: row.chunk_id,
     kb_id: row.kb_id,
     title: row.title || row.doc_title,
     content: row.content,
     score: parseFloat(row.similarity),
-    doc_updated_at: row.doc_updated_at
+    doc_updated_at: row.doc_updated_at,
   }));
 }
 
@@ -156,7 +176,7 @@ function freshnessScore(docUpdatedAt) {
   const ageDays = ageMs / (1000 * 60 * 60 * 24);
   if (ageDays <= 0) return 1;
   if (ageDays >= config.FRESHNESS_DECAY_DAYS) return 0;
-  return 1 - (ageDays / config.FRESHNESS_DECAY_DAYS);
+  return 1 - ageDays / config.FRESHNESS_DECAY_DAYS;
 }
 
 /**
@@ -168,7 +188,7 @@ function hybridRank(vectorResults, keywordResults, topK) {
   const w = config.HYBRID_WEIGHTS;
 
   // Normalize keyword scores to 0-1 range
-  const maxKeywordScore = Math.max(1, ...keywordResults.map(r => r.score));
+  const maxKeywordScore = Math.max(1, ...keywordResults.map((r) => r.score));
 
   // Build a map keyed by content text (for dedup)
   const chunkMap = new Map();
@@ -186,8 +206,8 @@ function hybridRank(vectorResults, keywordResults, topK) {
         vectorScore: vr.score,
         keywordScore: 0,
         freshnessScore: fresh,
-        finalScore: (w.vector * vr.score) + (w.freshness * fresh),
-        type: "vector"
+        finalScore: w.vector * vr.score + w.freshness * fresh,
+        type: 'vector',
       });
     }
   }
@@ -198,8 +218,11 @@ function hybridRank(vectorResults, keywordResults, topK) {
     const existing = chunkMap.get(key);
     if (existing) {
       existing.keywordScore = normalizedKwScore;
-      existing.finalScore = (w.vector * existing.vectorScore) + (w.keyword * normalizedKwScore) + (w.freshness * existing.freshnessScore);
-      existing.type = "hybrid";
+      existing.finalScore =
+        w.vector * existing.vectorScore +
+        w.keyword * normalizedKwScore +
+        w.freshness * existing.freshnessScore;
+      existing.type = 'hybrid';
     } else {
       chunkMap.set(key, {
         chunk_id: kr.chunk_id || null,
@@ -209,8 +232,8 @@ function hybridRank(vectorResults, keywordResults, topK) {
         vectorScore: 0,
         keywordScore: normalizedKwScore,
         freshnessScore: 0,
-        finalScore: (w.keyword * normalizedKwScore),
-        type: "keyword"
+        finalScore: w.keyword * normalizedKwScore,
+        type: 'keyword',
       });
     }
   }
@@ -229,5 +252,5 @@ module.exports = {
   hybridRank,
   freshnessScore,
   pgvectorFormat,
-  config
+  config,
 };

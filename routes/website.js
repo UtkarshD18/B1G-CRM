@@ -140,8 +140,7 @@ router.post(
         }
       }
 
-      // Check if the html contains the verification token inside a meta tag
-      // e.g. <meta name="b1gcrm-verification" content="token" />
+      // Check if the html contains the verification token inside a meta tag or text
       const regex = new RegExp(
         `<meta[^>]*name=["']b1gcrm-verification["'][^>]*content=["']${token}["']`,
         'i',
@@ -232,13 +231,13 @@ router.get('/widget/script', async (req, res) => {
 
   res.setHeader('Content-Type', 'application/javascript');
 
-  // Return widget launcher javascript code
   const scriptContent = `
 (function() {
   const primaryColor = "${customization.primaryColor || '#1ea085'}";
   const title = "${customization.title || 'Chat with Us'}";
   const greeting = "${customization.greeting || 'Hi! How can we help you today?'}";
   const leadCaptureEnabled = ${leadCapture === 1};
+  const actionButtons = ${JSON.stringify(customization.actionButtons || [])};
   const uid = "${uid}";
   const domain = "${domain}";
   const host = "${req.protocol}://${req.get('host')}";
@@ -364,6 +363,46 @@ router.get('/widget/script', async (req, res) => {
       font-weight: bold;
       cursor: pointer;
     }
+    .b1g-action-buttons-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 4px;
+    }
+    .b1g-action-btn-card {
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .b1g-action-btn-media {
+      width: 100%;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .b1g-action-btn-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333333;
+    }
+    .b1g-action-btn-link-btn {
+      align-self: flex-start;
+      background: \${primaryColor};
+      color: #ffffff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+    }
   \`;
   document.head.appendChild(style);
 
@@ -393,6 +432,56 @@ router.get('/widget/script', async (req, res) => {
     </div>
   \`;
   document.body.appendChild(panel);
+
+  // Render quick action buttons
+  const list = panel.querySelector(".b1g-widget-messages");
+  if (actionButtons && actionButtons.length > 0) {
+    const container = document.createElement("div");
+    container.className = "b1g-action-buttons-container";
+    actionButtons.forEach(btn => {
+      const card = document.createElement("div");
+      card.className = "b1g-action-btn-card";
+      
+      if (btn.imageUrl) {
+        const img = document.createElement("img");
+        img.className = "b1g-action-btn-media";
+        img.src = btn.imageUrl;
+        card.appendChild(img);
+      } else if (btn.videoUrl) {
+        const vid = document.createElement("video");
+        vid.className = "b1g-action-btn-media";
+        vid.src = btn.videoUrl;
+        vid.controls = true;
+        card.appendChild(vid);
+      }
+
+      const label = document.createElement("div");
+      label.className = "b1g-action-btn-label";
+      label.innerText = btn.label || btn.type;
+      card.appendChild(label);
+
+      const link = document.createElement("a");
+      link.className = "b1g-action-btn-link-btn";
+      link.innerText = btn.type === "track_order" ? "Track Now" : "View Details";
+      
+      if (btn.type === "track_order") {
+        link.onclick = (e) => {
+          e.preventDefault();
+          const textEl = panel.querySelector("#widget-msg-text");
+          if (textEl) {
+            textEl.value = "track order";
+            panel.querySelector("#widget-send-btn").click();
+          }
+        };
+      } else {
+        link.href = btn.url || "#";
+        link.target = "_blank";
+      }
+      card.appendChild(link);
+      container.appendChild(card);
+    });
+    list.appendChild(container);
+  }
 
   const closeBtn = panel.querySelector(".close-btn");
   closeBtn.onclick = () => panel.style.display = "none";
@@ -675,6 +764,271 @@ router.post('/widget/message', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.json({ success: false, msg: err.message });
+  }
+});
+
+// ─── SITE REMOTE CONFIG ───────────────────────────────────────────────────────
+
+// GET all remote config keys for a site
+router.get(
+  '/site-config/:siteId',
+  validateUserOrAgent,
+  verifyPermission('website_access'),
+  async (req, res) => {
+    try {
+      const { siteId } = req.params;
+      const [site] = await query('SELECT * FROM website_integrations WHERE id = ? AND uid = ?', [
+        siteId,
+        req.decode.uid,
+      ]);
+      if (!site) return res.json({ success: false, msg: 'Site not found' });
+
+      const configs = await query(
+        'SELECT id, config_key, config_value, config_type, is_secret, label, category FROM site_remote_config WHERE site_id = ? ORDER BY category, config_key',
+        [siteId],
+      );
+      // Mask secret values
+      const safeConfigs = configs.map((c) => ({
+        ...c,
+        config_value: c.is_secret ? (c.config_value ? '••••••••' : '') : c.config_value,
+      }));
+      res.json({ success: true, data: safeConfigs });
+    } catch (err) {
+      console.error(err);
+      res.json({ success: false, msg: 'Failed to get site config' });
+    }
+  },
+);
+
+// POST upsert a config key
+router.post(
+  '/site-config/save',
+  validateUserOrAgent,
+  verifyPermission('website_access'),
+  async (req, res) => {
+    try {
+      const { siteId, config_key, config_value, config_type, is_secret, label, category } =
+        req.body;
+      if (!siteId || !config_key)
+        return res.json({ success: false, msg: 'siteId and config_key required' });
+
+      const [site] = await query('SELECT * FROM website_integrations WHERE id = ? AND uid = ?', [
+        siteId,
+        req.decode.uid,
+      ]);
+      if (!site) return res.json({ success: false, msg: 'Site not found' });
+
+      await query(
+        `INSERT INTO site_remote_config (uid, site_id, config_key, config_value, config_type, is_secret, label, category)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (site_id, config_key) DO UPDATE
+       SET config_value = EXCLUDED.config_value, config_type = EXCLUDED.config_type,
+           is_secret = EXCLUDED.is_secret, label = EXCLUDED.label, category = EXCLUDED.category,
+           updated_at = NOW()`,
+        [
+          req.decode.uid,
+          siteId,
+          config_key.trim(),
+          config_value || '',
+          config_type || 'text',
+          is_secret ? true : false,
+          label || config_key,
+          category || 'general',
+        ],
+      );
+      res.json({ success: true, msg: 'Config saved' });
+    } catch (err) {
+      console.error(err);
+      res.json({ success: false, msg: 'Failed to save config' });
+    }
+  },
+);
+
+// DELETE a config key
+router.post(
+  '/site-config/delete',
+  validateUserOrAgent,
+  verifyPermission('website_access'),
+  async (req, res) => {
+    try {
+      const { siteId, configId } = req.body;
+      const [site] = await query('SELECT * FROM website_integrations WHERE id = ? AND uid = ?', [
+        siteId,
+        req.decode.uid,
+      ]);
+      if (!site) return res.json({ success: false, msg: 'Site not found' });
+      await query('DELETE FROM site_remote_config WHERE id = ? AND site_id = ? AND uid = ?', [
+        configId,
+        siteId,
+        req.decode.uid,
+      ]);
+      res.json({ success: true, msg: 'Config key deleted' });
+    } catch (err) {
+      res.json({ success: false, msg: 'Failed to delete config' });
+    }
+  },
+);
+
+// ─── SITE PAYMENT CONFIG ──────────────────────────────────────────────────────
+
+// GET payment gateways for a site
+router.get(
+  '/site-payment/:siteId',
+  validateUserOrAgent,
+  verifyPermission('website_access'),
+  async (req, res) => {
+    try {
+      const { siteId } = req.params;
+      const [site] = await query('SELECT * FROM website_integrations WHERE id = ? AND uid = ?', [
+        siteId,
+        req.decode.uid,
+      ]);
+      if (!site) return res.json({ success: false, msg: 'Site not found' });
+
+      const gateways = await query(
+        'SELECT id, gateway, is_active, is_live_mode, public_key, extra_config FROM site_payment_config WHERE site_id = ? ORDER BY gateway',
+        [siteId],
+      );
+      res.json({ success: true, data: gateways });
+    } catch (err) {
+      res.json({ success: false, msg: 'Failed to get payment config' });
+    }
+  },
+);
+
+// POST save payment gateway
+router.post(
+  '/site-payment/save',
+  validateUserOrAgent,
+  verifyPermission('website_access'),
+  async (req, res) => {
+    try {
+      const {
+        siteId,
+        gateway,
+        is_active,
+        is_live_mode,
+        public_key,
+        secret_key,
+        webhook_secret,
+        extra_config,
+      } = req.body;
+      if (!siteId || !gateway)
+        return res.json({ success: false, msg: 'siteId and gateway required' });
+
+      const [site] = await query('SELECT * FROM website_integrations WHERE id = ? AND uid = ?', [
+        siteId,
+        req.decode.uid,
+      ]);
+      if (!site) return res.json({ success: false, msg: 'Site not found' });
+
+      // Simple base64 encryption for secrets (use proper encryption in production)
+      const encSecret = secret_key ? Buffer.from(secret_key).toString('base64') : null;
+      const encWebhook = webhook_secret ? Buffer.from(webhook_secret).toString('base64') : null;
+      const extraJson = extra_config
+        ? typeof extra_config === 'string'
+          ? extra_config
+          : JSON.stringify(extra_config)
+        : '{}';
+
+      const [existing] = await query(
+        'SELECT id FROM site_payment_config WHERE site_id = ? AND gateway = ?',
+        [siteId, gateway],
+      );
+      if (existing) {
+        await query(
+          `UPDATE site_payment_config SET is_active = ?, is_live_mode = ?, public_key = ?,
+         secret_key_encrypted = COALESCE(?, secret_key_encrypted),
+         webhook_secret_encrypted = COALESCE(?, webhook_secret_encrypted),
+         extra_config = ?, updated_at = NOW() WHERE id = ?`,
+          [
+            is_active ? true : false,
+            is_live_mode ? true : false,
+            public_key || '',
+            encSecret,
+            encWebhook,
+            extraJson,
+            existing.id,
+          ],
+        );
+      } else {
+        await query(
+          `INSERT INTO site_payment_config (uid, site_id, gateway, is_active, is_live_mode, public_key, secret_key_encrypted, webhook_secret_encrypted, extra_config)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            req.decode.uid,
+            siteId,
+            gateway,
+            is_active ? true : false,
+            is_live_mode ? true : false,
+            public_key || '',
+            encSecret,
+            encWebhook,
+            extraJson,
+          ],
+        );
+      }
+      res.json({ success: true, msg: 'Payment gateway saved' });
+    } catch (err) {
+      console.error(err);
+      res.json({ success: false, msg: 'Failed to save payment gateway' });
+    }
+  },
+);
+
+// ─── PUBLIC REMOTE CONFIG API (called from client's site) ─────────────────────
+// GET /api/website/remote-config/:verificationToken
+// Returns only non-secret config + active payment gateway public keys
+router.get('/remote-config/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+
+    const [site] = await query('SELECT * FROM website_integrations WHERE verification_token = ?', [
+      token,
+    ]);
+    if (!site) return res.status(404).json({ success: false, msg: 'Site not found' });
+
+    // Non-secret config keys only
+    const configs = await query(
+      'SELECT config_key, config_value, config_type, label, category FROM site_remote_config WHERE site_id = ? AND is_secret = false',
+      [site.id],
+    );
+
+    // Active payment gateways - public keys only
+    const payments = await query(
+      'SELECT gateway, is_active, is_live_mode, public_key, extra_config FROM site_payment_config WHERE site_id = ? AND is_active = true',
+      [site.id],
+    );
+
+    const configMap = {};
+    configs.forEach((c) => {
+      configMap[c.config_key] = c.config_value;
+    });
+
+    const paymentsMap = {};
+    payments.forEach((p) => {
+      paymentsMap[p.gateway] = {
+        enabled: true,
+        live_mode: p.is_live_mode,
+        public_key: p.public_key,
+        extra: p.extra_config || {},
+      };
+    });
+
+    res.json({
+      success: true,
+      site: { domain: site.domain },
+      config: configMap,
+      payments: paymentsMap,
+      widget_customization: site.widget_customization
+        ? JSON.parse(site.widget_customization || '{}')
+        : {},
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: 'Error fetching remote config' });
   }
 });
 

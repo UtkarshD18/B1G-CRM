@@ -126,10 +126,8 @@ router.get('/get_chats', validateUserOrAgent, async (req, res) => {
     );
     const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [req.decode.uid]);
 
-    if (data.length > 0 && getContacts.length > 0) {
+    if (getContacts.length > 0) {
       data = mergeArrays(getContacts, data);
-    } else {
-      data = data;
     }
 
     res.json({ data, success: true });

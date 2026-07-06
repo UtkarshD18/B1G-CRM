@@ -1,33 +1,33 @@
-import React, { useEffect, useState } from 'react'
-import { useChatbotAutomationStore } from '../../store/chatbotAutomationStore'
-import { apiRequest } from '../../shared/api'
-import { useAuth } from '../../shared/auth'
+import React, { useEffect, useState } from 'react';
+import { useChatbotAutomationStore } from '../../store/chatbotAutomationStore';
+import { apiRequest } from '../../shared/api';
+import { useAuth } from '../../shared/auth';
 
 function FlowInspector() {
-  const { selectedNodeId, nodes, updateNodeData, setSelectedNodeId } = useChatbotAutomationStore()
-  const { tokens } = useAuth()
-  const [templates, setTemplates] = useState([])
+  const { selectedNodeId, nodes, updateNodeData, setSelectedNodeId } = useChatbotAutomationStore();
+  const { tokens } = useAuth();
+  const [templates, setTemplates] = useState([]);
 
-  const [testResult, setTestResult] = useState(null)
-  const [isTesting, setIsTesting] = useState(false)
-  const [showApiKey, setShowApiKey] = useState(false)
-  
+  const [testResult, setTestResult] = useState(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
+
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const result = await apiRequest('/api/user/get_my_meta_templets', { token: tokens?.user })
+        const result = await apiRequest('/api/user/get_my_meta_templets', { token: tokens?.user });
         if (result?.success && Array.isArray(result.data)) {
           // Only show approved/configured templates to prevent sending pending templates
-          setTemplates(result.data.filter(t => String(t.status).toUpperCase() === 'APPROVED'))
+          setTemplates(result.data.filter((t) => String(t.status).toUpperCase() === 'APPROVED'));
         }
       } catch (err) {
-        console.error('Failed to load templates for inspector:', err)
+        console.error('Failed to load templates for inspector:', err);
       }
-    }
-    fetchTemplates()
-  }, [tokens])
+    };
+    fetchTemplates();
+  }, [tokens]);
 
-  const node = nodes.find((n) => n.id === selectedNodeId)
+  const node = nodes.find((n) => n.id === selectedNodeId);
   if (!node) {
     return (
       <div className="flow-inspector">
@@ -36,88 +36,93 @@ function FlowInspector() {
           <span>Select a node on the canvas to configure its settings.</span>
         </div>
       </div>
-    )
+    );
   }
 
-  const nodeData = node.data || {}
-  const type = node.type
+  const nodeData = node.data || {};
+  const type = node.type;
 
   // Handle simple input changes
   const handleChange = (key, value) => {
-    updateNodeData(node.id, key, value)
-  }
+    updateNodeData(node.id, key, value);
+  };
 
   // Handle nested Conditions additions / edits
   const handleAddCondition = () => {
-    const current = nodeData.conditions || []
-    const updated = [...current, { variableName: '{{senderMessage}}', operator: 'equals', valueToCompare: '' }]
-    handleChange('conditions', updated)
-  }
+    const current = nodeData.conditions || [];
+    const updated = [
+      ...current,
+      { variableName: '{{senderMessage}}', operator: 'equals', valueToCompare: '' },
+    ];
+    handleChange('conditions', updated);
+  };
 
   const handleUpdateCondition = (index, key, value) => {
     const updated = (nodeData.conditions || []).map((cond, idx) => {
       if (idx === index) {
-        return { ...cond, [key]: value }
+        return { ...cond, [key]: value };
       }
-      return cond
-    })
-    handleChange('conditions', updated)
-  }
+      return cond;
+    });
+    handleChange('conditions', updated);
+  };
 
   const handleDeleteCondition = (index) => {
-    const updated = (nodeData.conditions || []).filter((_, idx) => idx !== index)
-    handleChange('conditions', updated)
-  }
+    const updated = (nodeData.conditions || []).filter((_, idx) => idx !== index);
+    handleChange('conditions', updated);
+  };
 
   // Handle headers addition / edits for Make Request
   const handleAddHeader = () => {
-    const current = nodeData.headers || []
-    const updated = [...current, { key: '', value: '' }]
-    handleChange('headers', updated)
-  }
+    const current = nodeData.headers || [];
+    const updated = [...current, { key: '', value: '' }];
+    handleChange('headers', updated);
+  };
 
   const handleUpdateHeader = (index, field, value) => {
     const updated = (nodeData.headers || []).map((h, idx) => {
       if (idx === index) {
-        return { ...h, [field]: value }
+        return { ...h, [field]: value };
       }
-      return h
-    })
-    handleChange('headers', updated)
-  }
+      return h;
+    });
+    handleChange('headers', updated);
+  };
 
   const handleDeleteHeader = (index) => {
-    const updated = (nodeData.headers || []).filter((_, idx) => idx !== index)
-    handleChange('headers', updated)
-  }
+    const updated = (nodeData.headers || []).filter((_, idx) => idx !== index);
+    handleChange('headers', updated);
+  };
 
   // Handle response mapping additions for Make Request
   const handleAddMapping = () => {
-    const current = nodeData.responseMappings || []
-    const updated = [...current, { responsePath: '', saveToVariable: '' }]
-    handleChange('responseMappings', updated)
-  }
+    const current = nodeData.responseMappings || [];
+    const updated = [...current, { responsePath: '', saveToVariable: '' }];
+    handleChange('responseMappings', updated);
+  };
 
   const handleUpdateMapping = (index, field, value) => {
     const updated = (nodeData.responseMappings || []).map((m, idx) => {
       if (idx === index) {
-        return { ...m, [field]: value }
+        return { ...m, [field]: value };
       }
-      return m
-    })
-    handleChange('responseMappings', updated)
-  }
+      return m;
+    });
+    handleChange('responseMappings', updated);
+  };
 
   const handleDeleteMapping = (index) => {
-    const updated = (nodeData.responseMappings || []).filter((_, idx) => idx !== index)
-    handleChange('responseMappings', updated)
-  }
+    const updated = (nodeData.responseMappings || []).filter((_, idx) => idx !== index);
+    handleChange('responseMappings', updated);
+  };
 
   return (
     <div className="flow-inspector flex-col">
       <div className="inspector-header">
         <h4>Configure Node</h4>
-        <button className="close-inspector-btn" onClick={() => setSelectedNodeId(null)}>✕</button>
+        <button className="close-inspector-btn" onClick={() => setSelectedNodeId(null)}>
+          ✕
+        </button>
       </div>
 
       <div className="inspector-body flex-1">
@@ -181,13 +186,20 @@ function FlowInspector() {
                 value={nodeData.templateId || ''}
                 onChange={(e) => handleChange('templateId', e.target.value)}
               >
-                <option value="" disabled>Select an approved template</option>
-                {templates.map(t => (
-                  <option key={t.name} value={t.name}>{t.name}</option>
+                <option value="" disabled>
+                  Select an approved template
+                </option>
+                {templates.map((t) => (
+                  <option key={t.name} value={t.name}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
               {templates.length === 0 && (
-                <span className="af-field-hint" style={{ color: '#f59e0b', marginTop: 4, display: 'block' }}>
+                <span
+                  className="af-field-hint"
+                  style={{ color: '#f59e0b', marginTop: 4, display: 'block' }}
+                >
                   No approved templates found.
                 </span>
               )}
@@ -267,7 +279,13 @@ function FlowInspector() {
                 <div key={idx} className="inspector-condition-card">
                   <div className="condition-card-header">
                     <span>Branch {idx + 1} Output</span>
-                    <button type="button" className="delete-cond-btn" onClick={() => handleDeleteCondition(idx)}>🗑</button>
+                    <button
+                      type="button"
+                      className="delete-cond-btn"
+                      onClick={() => handleDeleteCondition(idx)}
+                    >
+                      🗑
+                    </button>
                   </div>
                   <div className="af-field">
                     <label className="sub-label">Compare Variable</label>
@@ -341,7 +359,7 @@ function FlowInspector() {
                 placeholder="https://api.example.com/endpoint"
               />
             </div>
-            
+
             {/* Headers Configuration */}
             <div className="af-field">
               <label className="af-field-label">Headers (Optional)</label>
@@ -360,10 +378,18 @@ function FlowInspector() {
                       onChange={(e) => handleUpdateHeader(idx, 'value', e.target.value)}
                       placeholder="Value"
                     />
-                    <button type="button" className="delete-row-btn" onClick={() => handleDeleteHeader(idx)}>✕</button>
+                    <button
+                      type="button"
+                      className="delete-row-btn"
+                      onClick={() => handleDeleteHeader(idx)}
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
-                <button type="button" className="action-btn" onClick={handleAddHeader}>➕ Add Header</button>
+                <button type="button" className="action-btn" onClick={handleAddHeader}>
+                  ➕ Add Header
+                </button>
               </div>
             </div>
 
@@ -398,10 +424,18 @@ function FlowInspector() {
                       onChange={(e) => handleUpdateMapping(idx, 'saveToVariable', e.target.value)}
                       placeholder="customer_name"
                     />
-                    <button type="button" className="delete-row-btn" onClick={() => handleDeleteMapping(idx)}>✕</button>
+                    <button
+                      type="button"
+                      className="delete-row-btn"
+                      onClick={() => handleDeleteMapping(idx)}
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
-                <button type="button" className="action-btn" onClick={handleAddMapping}>➕ Add Mapping</button>
+                <button type="button" className="action-btn" onClick={handleAddMapping}>
+                  ➕ Add Mapping
+                </button>
               </div>
             </div>
           </div>
@@ -437,7 +471,9 @@ function FlowInspector() {
                 value={nodeData.model || ''}
                 onChange={(e) => handleChange('model', e.target.value)}
               >
-                <option value="" disabled>Select a model</option>
+                <option value="" disabled>
+                  Select a model
+                </option>
                 {(nodeData.provider === 'gemini' || !nodeData.provider) && (
                   <>
                     <option value="gemini-2.5-pro">gemini-2.5-pro</option>
@@ -490,13 +526,26 @@ function FlowInspector() {
                   onChange={(e) => handleChange('apiKey', e.target.value)}
                   placeholder="Enter API Key (Encrypted securely)"
                 />
-                <button type="button" className="action-btn" onClick={() => setShowApiKey(!showApiKey)}>
+                <button
+                  type="button"
+                  className="action-btn"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
                   {showApiKey ? 'Hide' : 'Show'}
                 </button>
               </div>
             </div>
 
-            <div className="af-field" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', marginBottom: '10px' }}>
+            <div
+              className="af-field"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginTop: '10px',
+                marginBottom: '10px',
+              }}
+            >
               <input
                 type="checkbox"
                 id="ragEnabled"
@@ -504,61 +553,86 @@ function FlowInspector() {
                 onChange={(e) => handleChange('ragEnabled', e.target.checked)}
                 style={{ cursor: 'pointer', width: 'auto', height: 'auto', margin: 0 }}
               />
-              <label htmlFor="ragEnabled" className="af-field-label" style={{ margin: 0, cursor: 'pointer' }}>
+              <label
+                htmlFor="ragEnabled"
+                className="af-field-label"
+                style={{ margin: 0, cursor: 'pointer' }}
+              >
                 Enable Knowledge Base Grounding (RAG)
               </label>
             </div>
 
             <div style={{ marginTop: '10px' }}>
-              <button 
-                type="button" 
-                  className="action-btn" 
-                  style={{ width: '100%' }}
-                  disabled={isTesting || !nodeData.apiKey}
-                  onClick={async () => {
-                    setIsTesting(true);
-                    setTestResult(null);
-                    const res = await apiRequest('/api/chatbot-automation/ai/test', {
-                       method: 'POST',
-                       body: {
-                         provider: nodeData.provider || 'gemini',
-                         model: nodeData.model,
-                         apiKey: nodeData.apiKey,
-                         prompt: "Say hello",
-                         flowId: useChatbotAutomationStore.getState().selectedFlow?.flow_id,
-                         nodeId: node.id
-                       }
-                    });
-                    setIsTesting(false);
-                    if(res?.success) {
-                       setTestResult(`Success! Latency: ${res.latencyMs}ms`);
-                    } else {
-                       setTestResult(`Failed: ${res?.msg || 'Error'}`);
-                    }
+              <button
+                type="button"
+                className="action-btn"
+                style={{ width: '100%' }}
+                disabled={isTesting || !nodeData.apiKey}
+                onClick={async () => {
+                  setIsTesting(true);
+                  setTestResult(null);
+                  const res = await apiRequest('/api/chatbot-automation/ai/test', {
+                    method: 'POST',
+                    token: tokens?.user,
+                    body: {
+                      provider: nodeData.provider || 'gemini',
+                      model: nodeData.model,
+                      apiKey: nodeData.apiKey,
+                      prompt: 'Say hello',
+                      flowId: useChatbotAutomationStore.getState().selectedFlow?.flow_id,
+                      nodeId: node.id,
+                    },
+                  });
+                  setIsTesting(false);
+                  if (res?.success) {
+                    setTestResult(`Success! Latency: ${res.latencyMs}ms`);
+                  } else {
+                    setTestResult(`Failed: ${res?.msg || 'Error'}`);
+                  }
+                }}
+              >
+                {isTesting ? 'Testing...' : 'Test Connection'}
+              </button>
+              {testResult && (
+                <div
+                  style={{
+                    marginTop: '8px',
+                    fontSize: '12px',
+                    color: testResult.startsWith('Success') ? 'green' : 'red',
                   }}
                 >
-                  {isTesting ? 'Testing...' : 'Test Connection'}
-                </button>
-                {testResult && (
-                  <div style={{ marginTop: '8px', fontSize: '12px', color: testResult.startsWith('Success') ? 'green' : 'red' }}>
-                    {testResult}
-                  </div>
-                )}
-              </div>
+                  {testResult}
+                </div>
+              )}
+            </div>
 
-            <div className="af-field" style={{ marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '15px' }}>
+            <div
+              className="af-field"
+              style={{ marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '15px' }}
+            >
               <label className="af-field-label">Advanced Settings</label>
-              
+
               <div style={{ marginBottom: '15px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600 }}>Temperature: {nodeData.temperature || '0.7'}</label>
+                <label style={{ fontSize: '12px', fontWeight: 600 }}>
+                  Temperature: {nodeData.temperature || '0.7'}
+                </label>
                 <input
                   type="range"
-                  min="0" max="2" step="0.1"
+                  min="0"
+                  max="2"
+                  step="0.1"
                   value={nodeData.temperature || 0.7}
                   onChange={(e) => handleChange('temperature', parseFloat(e.target.value))}
                   style={{ width: '100%' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#666' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '10px',
+                    color: '#666',
+                  }}
+                >
                   <span>Precise</span>
                   <span>Balanced</span>
                   <span>Creative</span>
@@ -567,7 +641,11 @@ function FlowInspector() {
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 600 }}>Max Tokens</label>
-                <select className="af-select compact" value={nodeData.maxTokens || '1024'} onChange={(e) => handleChange('maxTokens', e.target.value)}>
+                <select
+                  className="af-select compact"
+                  value={nodeData.maxTokens || '1024'}
+                  onChange={(e) => handleChange('maxTokens', e.target.value)}
+                >
                   <option value="100">100</option>
                   <option value="500">500</option>
                   <option value="1024">1024</option>
@@ -576,10 +654,14 @@ function FlowInspector() {
                   <option value="8000">8000</option>
                 </select>
               </div>
-              
+
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 600 }}>Conversation Memory</label>
-                <select className="af-select compact" value={nodeData.memoryMode || 'Last 10 Messages'} onChange={(e) => handleChange('memoryMode', e.target.value)}>
+                <select
+                  className="af-select compact"
+                  value={nodeData.memoryMode || 'Last 10 Messages'}
+                  onChange={(e) => handleChange('memoryMode', e.target.value)}
+                >
                   <option value="Disabled">Disabled</option>
                   <option value="Current Session">Current Session</option>
                   <option value="Last 10 Messages">Last 10 Messages</option>
@@ -588,41 +670,102 @@ function FlowInspector() {
                 </select>
               </div>
 
-              {(nodeData.memoryMode === 'Last 10 Messages' || nodeData.memoryMode === 'Last 50 Messages') && (
+              {(nodeData.memoryMode === 'Last 10 Messages' ||
+                nodeData.memoryMode === 'Last 50 Messages') && (
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Message Reference Count: {nodeData.messageReferenceCount || '10'}</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>
+                    Message Reference Count: {nodeData.messageReferenceCount || '10'}
+                  </label>
                   <input
                     type="range"
-                    min="1" max="50" step="1"
+                    min="1"
+                    max="50"
+                    step="1"
                     value={nodeData.messageReferenceCount || 10}
-                    onChange={(e) => handleChange('messageReferenceCount', parseInt(e.target.value, 10))}
+                    onChange={(e) =>
+                      handleChange('messageReferenceCount', parseInt(e.target.value, 10))
+                    }
                     style={{ width: '100%' }}
                   />
                 </div>
               )}
             </div>
 
-            <div className="af-field" style={{ marginTop: '10px', borderTop: '1px solid #ddd', paddingTop: '15px' }}>
-               <label className="af-field-label">AI Tasks</label>
-               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginTop: '8px' }}>
-                  <input type="checkbox" checked={nodeData.enableVision} onChange={(e) => handleChange('enableVision', e.target.checked)} />
-                  Image Understanding (Vision)
-               </label>
-               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginTop: '8px' }}>
-                  <input type="checkbox" checked={nodeData.enableAudio} onChange={(e) => handleChange('enableAudio', e.target.checked)} />
-                  Audio Understanding
-               </label>
-               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginTop: '8px' }}>
-                  <input type="checkbox" checked={nodeData.enableDocument} onChange={(e) => handleChange('enableDocument', e.target.checked)} />
-                  Document Understanding
-               </label>
-               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginTop: '8px' }}>
-                  <input type="checkbox" checked={nodeData.enableWebSearch} onChange={(e) => handleChange('enableWebSearch', e.target.checked)} />
-                  Web Search
-               </label>
+            <div
+              className="af-field"
+              style={{ marginTop: '10px', borderTop: '1px solid #ddd', paddingTop: '15px' }}
+            >
+              <label className="af-field-label">AI Tasks</label>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  marginTop: '8px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={nodeData.enableVision}
+                  onChange={(e) => handleChange('enableVision', e.target.checked)}
+                />
+                Image Understanding (Vision)
+              </label>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  marginTop: '8px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={nodeData.enableAudio}
+                  onChange={(e) => handleChange('enableAudio', e.target.checked)}
+                />
+                Audio Understanding
+              </label>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  marginTop: '8px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={nodeData.enableDocument}
+                  onChange={(e) => handleChange('enableDocument', e.target.checked)}
+                />
+                Document Understanding
+              </label>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '13px',
+                  marginTop: '8px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={nodeData.enableWebSearch}
+                  onChange={(e) => handleChange('enableWebSearch', e.target.checked)}
+                />
+                Web Search
+              </label>
             </div>
 
-            <div className="af-field" style={{ marginTop: '15px', borderTop: '1px solid #ddd', paddingTop: '15px' }}>
+            <div
+              className="af-field"
+              style={{ marginTop: '15px', borderTop: '1px solid #ddd', paddingTop: '15px' }}
+            >
               <label className="af-field-label">System Prompt</label>
               <textarea
                 className="af-textarea"
@@ -632,7 +775,7 @@ function FlowInspector() {
                 placeholder="You are a helpful AI assistant. Available variables: {{senderName}}, {{senderMobile}}, {{savedVariables.xyz}}"
               />
             </div>
-            
+
             <div className="af-field">
               <label className="af-field-label">Save Output Into Variable</label>
               <input
@@ -652,7 +795,15 @@ function FlowInspector() {
               <input
                 className="af-input"
                 value={nodeData.labels?.join(', ') || ''}
-                onChange={(e) => handleChange('labels', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                onChange={(e) =>
+                  handleChange(
+                    'labels',
+                    e.target.value
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  )
+                }
                 placeholder="e.g. Lead, VIP, Interested"
               />
             </div>
@@ -769,7 +920,7 @@ function FlowInspector() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default FlowInspector
+export default FlowInspector;

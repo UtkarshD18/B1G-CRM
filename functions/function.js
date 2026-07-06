@@ -819,6 +819,32 @@ function getFileExtension(fileName) {
   return '';
 }
 
+function validateMagicBytes(fileBuffer, fileName) {
+  if (!fileBuffer || !fileName) return false;
+  const ext = getFileExtension(fileName);
+  if (!ext) return false;
+
+  const hex = fileBuffer.toString('hex', 0, 12).toLowerCase();
+
+  switch (ext) {
+    case 'png':
+      return hex.startsWith('89504e470d0a1a0a');
+    case 'jpg':
+    case 'jpeg':
+      return hex.startsWith('ffd8ff');
+    case 'gif':
+      return hex.startsWith('474946383761') || hex.startsWith('474946383961');
+    case 'pdf':
+      return hex.startsWith('25504446');
+    case 'mp4':
+      return hex.slice(8, 16) === '66747970';
+    case 'csv':
+      return !hex.includes('00');
+    default:
+      return true;
+  }
+}
+
 function writeJsonToFile(filepath, jsonData, callback) {
   const { validatePath } = require('../utils/pathSafe');
   const cleanPath = validatePath(process.cwd(), filepath);
@@ -1488,15 +1514,48 @@ function sendMetaMsg(uid, msgObj, toNumber, savObj, chatId) {
 }
 
 function mergeArrays(arrA, arrB) {
-  const mergedArray = arrB.map((objB) => {
-    const matchingObject = arrA.find((objA) => objA.mobile === objB.sender_mobile);
-    if (matchingObject) {
-      return { ...objB, contact: matchingObject };
+  const chatsMobiles = new Set(arrB.map((c) => c.sender_mobile));
+  const merged = [...arrB];
+
+  arrA.forEach((contact) => {
+    if (!chatsMobiles.has(contact.mobile)) {
+      merged.push({
+        id: null,
+        chat_id: `contact-${contact.mobile}`,
+        uid: contact.uid,
+        last_message_came: null,
+        sender_name: contact.name,
+        sender_mobile: contact.mobile,
+        last_message: null,
+        is_opened: 1,
+        chat_status: 'open',
+        chat_note: null,
+        chat_tags: '[]',
+        origin: 'whatsapp_cloud',
+        profile: null,
+        other: null,
+        createdat: contact.created_at,
+        updatedat: contact.updated_at,
+        assigned_agent_uid: null,
+        last_reply_by: null,
+        last_incoming_time: null,
+        last_outgoing_time: null,
+        sla_expires_at: null,
+        sla_violated: 0,
+        kanban_order: 0,
+        phonebook: contact,
+      });
     }
-    return objB;
   });
 
-  return mergedArray;
+  return merged.map((chat) => {
+    if (chat.phonebook) return chat;
+    const matchingObject = arrA.find((objA) => objA.mobile === chat.sender_mobile);
+    if (matchingObject) {
+      return { ...chat, contact: matchingObject };
+    }
+    return chat;
+  });
 }
 
 async function getBusinessPhoneNumber(apiVersion, businessPhoneNumberId, bearerToken) {
@@ -1623,18 +1682,23 @@ async function sendMetatemplet(
       template?.name,
     ]);
 
+    const mediaVal = dynamicMedia
+      ? dynamicMedia
+      : getMedia.length > 0
+        ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
+        : getHeader[0].example?.header_handle[0];
+
+    const imageParam =
+      mediaVal && (mediaVal.startsWith('http://') || mediaVal.startsWith('https://'))
+        ? { link: mediaVal }
+        : { handle: mediaVal };
+
     templ.components.unshift({
       type: 'header',
       parameters: [
         {
           type: 'image',
-          image: {
-            link: dynamicMedia
-              ? dynamicMedia
-              : getMedia.length > 0
-                ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
-                : getHeader[0].example?.header_handle[0],
-          },
+          image: imageParam,
         },
       ],
     });
@@ -1645,18 +1709,23 @@ async function sendMetatemplet(
       template?.name,
     ]);
 
+    const mediaVal = dynamicMedia
+      ? dynamicMedia
+      : getMedia.length > 0
+        ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
+        : getHeader[0].example?.header_handle[0];
+
+    const videoParam =
+      mediaVal && (mediaVal.startsWith('http://') || mediaVal.startsWith('https://'))
+        ? { link: mediaVal }
+        : { handle: mediaVal };
+
     templ.components.unshift({
       type: 'header',
       parameters: [
         {
           type: 'video',
-          video: {
-            link: dynamicMedia
-              ? dynamicMedia
-              : getMedia.length > 0
-                ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
-                : getHeader[0].example?.header_handle[0],
-          },
+          video: videoParam,
         },
       ],
     });
@@ -1667,19 +1736,23 @@ async function sendMetatemplet(
       template?.name,
     ]);
 
+    const mediaVal = dynamicMedia
+      ? dynamicMedia
+      : getMedia.length > 0
+        ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
+        : getHeader[0].example?.header_handle[0];
+
+    const docParam =
+      mediaVal && (mediaVal.startsWith('http://') || mediaVal.startsWith('https://'))
+        ? { link: mediaVal, filename: 'document' }
+        : { handle: mediaVal, filename: 'document' };
+
     templ.components.unshift({
       type: 'header',
       parameters: [
         {
           type: 'document',
-          document: {
-            link: dynamicMedia
-              ? dynamicMedia
-              : getMedia.length > 0
-                ? `${env.FRONTEND_URL}/media/${getMedia[0]?.file_name}`
-                : getHeader[0].example?.header_handle[0],
-            filename: 'document',
-          },
+          document: docParam,
         },
       ],
     });
@@ -2351,6 +2424,7 @@ module.exports = {
   deleteFileIfExists,
   areMobileNumbersFilled,
   getFileExtension,
+  validateMagicBytes,
   executeQueries,
   fetchProfileFun,
   returnWidget,

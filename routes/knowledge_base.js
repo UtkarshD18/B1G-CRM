@@ -76,9 +76,9 @@ router.post('/url', validateUserOrAgent, verifyPermission('kb.write'), async (re
       return res.json({ success: false, msg: 'Website URL is required' });
     }
 
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://' + url;
-    }
+    // Normalize any malformed protocol typos (e.g., htttps://, httpss://, plain domain)
+    const cleanPrefix = url.replace(/^[a-zA-Z]+:\/+/i, '');
+    url = 'https://' + cleanPrefix;
 
     // SSRF mitigation check for CodeQL
     const parsed = new URL(url);

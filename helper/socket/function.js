@@ -6,18 +6,67 @@ const mime = require('mime-types');
 const env = require('../../env');
 const { v7: uuidv7 } = require('uuid');
 
-function mergeArraysWithPhonebook(chatArray, phonebookArray) {
-  // Iterate through the chat array and enrich with phonebook data
-  return chatArray.map((chat) => {
-    // Find matching phonebook entry where sender_mobile matches mobile
+function mergeArraysWithPhonebook(chatArray, phonebookArray, search = '', isAgent = false) {
+  const chatsMobiles = new Set(chatArray.map((c) => c.sender_mobile));
+  const merged = [...chatArray];
+
+  const searchLower = String(search || '')
+    .trim()
+    .toLowerCase();
+
+  if (!isAgent) {
+    phonebookArray.forEach((contact) => {
+      if (!chatsMobiles.has(contact.mobile)) {
+        if (searchLower) {
+          const matchesName = String(contact.name || '')
+            .toLowerCase()
+            .includes(searchLower);
+          const matchesMobile = String(contact.mobile || '')
+            .toLowerCase()
+            .includes(searchLower);
+          if (!matchesName && !matchesMobile) {
+            return;
+          }
+        }
+
+        merged.push({
+          id: null,
+          chat_id: `contact-${contact.mobile}`,
+          uid: contact.uid,
+          last_message_came: null,
+          sender_name: contact.name,
+          sender_mobile: contact.mobile,
+          last_message: null,
+          is_opened: 1,
+          chat_status: 'open',
+          chat_note: null,
+          chat_tags: '[]',
+          origin: 'whatsapp_cloud',
+          profile: null,
+          other: null,
+          createdat: contact.created_at,
+          updatedat: contact.updated_at,
+          assigned_agent_uid: null,
+          last_reply_by: null,
+          last_incoming_time: null,
+          last_outgoing_time: null,
+          sla_expires_at: null,
+          sla_violated: 0,
+          kanban_order: 0,
+          phonebook: contact,
+        });
+      }
+    });
+  }
+
+  return merged.map((chat) => {
+    if (chat.phonebook) return chat;
     const phonebookEntry = phonebookArray.find(
       (phonebook) => phonebook.mobile === chat.sender_mobile,
     );
-
-    // Add phonebook data if a match is found
     return {
       ...chat,
-      phonebook: phonebookEntry || null, // Add phonebook data or null if no match
+      phonebook: phonebookEntry || null,
     };
   });
 }

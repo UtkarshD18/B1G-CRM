@@ -201,6 +201,18 @@ a.mini-button {
   text-decoration: none;
 }
 
+.mini-button.subtle-danger {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+.mini-button.subtle-danger:hover {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+
 .dark-text {
   color: #10212d;
   border-color: rgba(16, 33, 45, 0.18);

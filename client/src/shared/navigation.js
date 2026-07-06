@@ -11,23 +11,9 @@ export const ADMIN_NAV = [
   { label: 'Testimonial', path: '/admin/testimonial', icon: '💬' },
   { label: 'Contact Form', path: '/admin/contact-form', icon: '📋' },
   { section: 'DATA & INTEGRATIONS' },
-  { label: 'WA Links data', path: '/admin/wa-link', icon: '🔗' },
-  { label: 'Payment Gateways', path: '/admin/payment-gateways', icon: '💳' },
-  { label: 'Flowbuilder Template', path: '/admin/flow-builder-template', icon: '🔧' },
   { section: 'SETTINGS' },
-  { label: 'Theme Settings', path: '/admin/web-theme', icon: '🎨' },
-  { label: 'Social Login', path: '/admin/social-login', icon: '🔐' },
-  { label: 'Site Settings', path: '/admin/site-settings', icon: '⚙️' },
-  { label: 'SMTP', path: '/admin/smtp', icon: '📧' },
-  { label: 'Web Translation', path: '/admin/translation', icon: '🌐' },
-  { label: 'Update Web', path: '/admin/update-web', icon: '🔄' },
-  { section: 'PRO ADDONS' },
-  { label: 'QR Plugin Settings', path: '/admin/qr-plugin-settings', icon: '📱' },
-  { label: 'Instagram Config', path: '/admin/instagram-config', icon: '📷', badge: 'NEW' },
-  { label: 'Web Notification', path: '/admin/web-notification', icon: '🔔', badge: 'NEW' },
-  { label: 'Manual Web Push', path: '/admin/send-web-push', icon: '📤' },
-  { label: 'WA Embed Login', path: '/admin/embed-config', icon: '🟢' },
-]
+  { label: 'System Settings', path: '/admin/settings', icon: '⚙️' },
+];
 
 export const USER_NAV = [
   { label: 'Dashboard', path: '/user/dashboard' },
@@ -52,9 +38,9 @@ export const USER_NAV = [
   { label: 'API & Webhooks', path: '/user/api-dashboard' },
   { label: 'Webhook Logs', path: '/user/webhook-logs' },
   { label: 'Settings', path: '/user/settings' },
-]
+];
 
 export const AGENT_NAV = [
   { label: 'Workspace', path: '/agent/dashboard' },
   { label: 'Assigned Chats', path: '/agent/chats' },
-]
+];

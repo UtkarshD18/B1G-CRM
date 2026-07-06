@@ -7,6 +7,7 @@ const path = require('path');
 const {
   isValidEmail,
   getFileExtension,
+  validateMagicBytes,
   getBusinessPhoneNumber,
   createMetaTemplet,
   getAllTempletsMeta,
@@ -280,6 +281,10 @@ router.post('/return_media_url', validateUser, async (req, res) => {
 
     const randomString = randomstring.generate();
     const file = req.files.file;
+
+    if (!validateMagicBytes(file.data, file.name)) {
+      return res.json({ success: false, msg: 'File type does not match the file extension' });
+    }
 
     const filename = `${randomString}.${getFileExtension(file.name)}`;
 
@@ -571,6 +576,73 @@ router.get('/get_meta_keys', validateUser, async (req, res) => {
   }
 });
 
+async function syncMetaApiKeys(uid) {
+  try {
+    const existing = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+    if (existing.length > 0) {
+      if (existing[0].app_id) {
+        return existing;
+      }
+      const [credRow] = await query(
+        `SELECT credentials FROM channel_credentials WHERE uid = ? AND channel_type = ?`,
+        [uid, 'whatsapp_cloud'],
+      );
+      if (credRow?.credentials) {
+        const { decrypt } = require('../utils/channels/encryption');
+        const creds = JSON.parse(decrypt(credRow.credentials));
+        if (creds.access_token) {
+          try {
+            const debugUrl = `https://graph.facebook.com/debug_token?input_token=${creds.access_token}&access_token=${creds.access_token}`;
+            const res = await fetch(debugUrl);
+            const data = await res.json();
+            if (data?.data?.app_id) {
+              await query(`UPDATE meta_api SET app_id = ? WHERE uid = ?`, [data.data.app_id, uid]);
+              return await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+            }
+          } catch (debugErr) {
+            console.error('Failed to repair App ID:', debugErr);
+          }
+        }
+      }
+      return existing;
+    }
+
+    const [credRow] = await query(
+      `SELECT credentials FROM channel_credentials WHERE uid = ? AND channel_type = ?`,
+      [uid, 'whatsapp_cloud'],
+    );
+    if (credRow?.credentials) {
+      const { decrypt } = require('../utils/channels/encryption');
+      const creds = JSON.parse(decrypt(credRow.credentials));
+      if (creds.access_token && creds.phone_number_id) {
+        let appId = creds.app_id || '';
+        if (!appId) {
+          try {
+            const debugUrl = `https://graph.facebook.com/debug_token?input_token=${creds.access_token}&access_token=${creds.access_token}`;
+            const res = await fetch(debugUrl);
+            const data = await res.json();
+            if (data?.data?.app_id) {
+              appId = data.data.app_id;
+            }
+          } catch (debugErr) {
+            console.error('Failed to automatically retrieve App ID from debug_token:', debugErr);
+          }
+        }
+
+        await query(
+          `INSERT INTO meta_api (uid, business_phone_number_id, access_token, waba_id, app_id) 
+           VALUES (?, ?, ?, ?, ?)`,
+          [uid, creds.phone_number_id, creds.access_token, creds.business_account_id || '', appId],
+        );
+        return await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to sync Meta API keys:', err);
+  }
+  return [];
+}
+
 // add meta templet
 router.post('/add_meta_templet', validateUser, checkPlan, async (req, res) => {
   try {
@@ -606,7 +678,7 @@ router.post('/add_meta_templet', validateUser, checkPlan, async (req, res) => {
       });
     }
 
-    const getAPIKEYS = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+    const getAPIKEYS = await syncMetaApiKeys(req.decode.uid);
 
     if (getAPIKEYS.length < 1) {
       return res.json({
@@ -664,7 +736,7 @@ router.get('/get_my_meta_templets', validateUser, async (req, res) => {
       return res.json({ success: true, data: mockTemplates });
     }
 
-    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+    const getMETA = await syncMetaApiKeys(req.decode.uid);
     if (getMETA.length < 1) {
       return res.json({
         success: false,
@@ -712,7 +784,7 @@ router.post('/del_meta_templet', validateUser, async (req, res) => {
       });
     }
 
-    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+    const getMETA = await syncMetaApiKeys(req.decode.uid);
     if (getMETA.length < 1) {
       return res.json({
         success: false,
@@ -793,7 +865,7 @@ router.post('/return_media_url_meta', validateUser, async (req, res) => {
       return res.json({ success: false, msg: 'No files were uploaded' });
     }
 
-    const getMETA = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
+    const getMETA = await syncMetaApiKeys(req.decode.uid);
     if (getMETA.length < 1) {
       return res.json({
         success: false,
@@ -803,6 +875,10 @@ router.post('/return_media_url_meta', validateUser, async (req, res) => {
 
     const randomString = randomstring.generate();
     const file = req.files.file;
+
+    if (!validateMagicBytes(file.data, file.name)) {
+      return res.json({ success: false, msg: 'File type does not match the file extension' });
+    }
 
     const filename = `${randomString}.${getFileExtension(file.name)}`;
 
@@ -1625,6 +1701,10 @@ router.post('/add_widget', validateUser, async (req, res) => {
 
       const randomString = randomstring.generate();
       const file = req.files.file;
+
+      if (!validateMagicBytes(file.data, file.name)) {
+        return res.json({ success: false, msg: 'File type does not match the file extension' });
+      }
 
       filename = `${randomString}.${getFileExtension(file.name)}`;
 

@@ -1,56 +1,53 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { apiRequest } from '../../shared/api'
-import { useAuth } from '../../shared/auth'
-import { classNames, formatDateTime, parseStoredJson } from '../../shared/format'
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { apiRequest } from '../../shared/api';
+import { useAuth } from '../../shared/auth';
+import { classNames, formatDateTime, parseStoredJson } from '../../shared/format';
 
-const campaignTabs = [
-  { key: 'workspace', label: 'Campaigns', path: '/user/campaigns' },
-  { key: 'send', label: 'Send campaign', path: '/user/send-campaign' },
-  { key: 'dashboard', label: 'Dashboard', path: '/user/campaign-dashboard' },
-]
+// Dynamic campaign tabs defined inside UserCampaignsPage
 
 function getCampaignMode(pathname) {
   if (pathname.includes('campaign-dashboard')) {
-    return 'dashboard'
+    return 'dashboard';
   }
   if (pathname.includes('send-campaign')) {
-    return 'send'
+    return 'send';
   }
-  return 'workspace'
+  return 'workspace';
 }
 
 function normalizeStatus(value) {
-  return String(value || 'QUEUE').toUpperCase()
+  return String(value || 'QUEUE').toUpperCase();
 }
 
 function getCampaignTemplate(campaign) {
-  const template = parseStoredJson(campaign?.templet, {})
-  return template?.name || campaign?.templet_name || 'N/A'
+  const template = parseStoredJson(campaign?.templet, {});
+  return template?.name || campaign?.templet_name || 'N/A';
 }
 
 function getCampaignAudience(campaign) {
-  const phonebook = parseStoredJson(campaign?.phonebook, {})
-  return phonebook?.name || phonebook?.title || 'N/A'
+  const phonebook = parseStoredJson(campaign?.phonebook, {});
+  return phonebook?.name || phonebook?.title || 'N/A';
 }
 
 function summarizeCampaigns(campaigns) {
-  const now = Date.now()
+  const now = Date.now();
   return campaigns.reduce(
     (summary, campaign) => {
-      const status = normalizeStatus(campaign.status)
-      const scheduleTime = new Date(campaign.schedule).getTime()
+      const status = normalizeStatus(campaign.status);
+      const scheduleTime = new Date(campaign.schedule).getTime();
 
       return {
         total: summary.total + 1,
         queued: summary.queued + (status === 'QUEUE' || status === 'QUEUED' ? 1 : 0),
         paused: summary.paused + (status === 'PAUSED' ? 1 : 0),
         completed: summary.completed + (status === 'COMPLETED' || status === 'DONE' ? 1 : 0),
-        scheduled: summary.scheduled + (Number.isFinite(scheduleTime) && scheduleTime > now ? 1 : 0),
-      }
+        scheduled:
+          summary.scheduled + (Number.isFinite(scheduleTime) && scheduleTime > now ? 1 : 0),
+      };
     },
     { total: 0, queued: 0, paused: 0, completed: 0, scheduled: 0 },
-  )
+  );
 }
 
 function buildDeliveryCards(logSummary, logs) {
@@ -61,11 +58,11 @@ function buildDeliveryCards(logSummary, logs) {
     { label: 'Delivered', value: logSummary?.totalDelivered ?? 0 },
     { label: 'Read', value: logSummary?.totalRead ?? 0 },
     { label: 'Failed', value: logSummary?.totalFailed ?? 0 },
-  ]
+  ];
 }
 
 function buildAggregateDeliveryCards(summary) {
-  const delivery = summary?.delivery || {}
+  const delivery = summary?.delivery || {};
   return [
     { label: 'All recipients', value: delivery.total || 0 },
     { label: 'Pending', value: delivery.pending || 0 },
@@ -73,14 +70,14 @@ function buildAggregateDeliveryCards(summary) {
     { label: 'Delivered', value: delivery.delivered || 0 },
     { label: 'Read', value: delivery.read || 0 },
     { label: 'Failed', value: delivery.failed || 0 },
-  ]
+  ];
 }
 
 function getSeriesMax(series = []) {
-  return Math.max(1, ...series.map((item) => Number(item.value || 0)))
+  return Math.max(1, ...series.map((item) => Number(item.value || 0)));
 }
 
-const emptyDashboardFilters = { from: '', to: '' }
+const emptyDashboardFilters = { from: '', to: '' };
 const contactFieldOptions = [
   { value: '{{name}}', label: 'Contact name' },
   { value: '{{mobile}}', label: 'Mobile number' },
@@ -89,95 +86,123 @@ const contactFieldOptions = [
   { value: '{{var3}}', label: 'Variable 3' },
   { value: '{{var4}}', label: 'Variable 4' },
   { value: '{{var5}}', label: 'Variable 5' },
-]
+];
 
 function buildDashboardQuery(filters) {
-  const params = new URLSearchParams()
+  const params = new URLSearchParams();
   if (filters.from) {
-    params.set('from', filters.from)
+    params.set('from', filters.from);
   }
   if (filters.to) {
-    params.set('to', filters.to)
+    params.set('to', filters.to);
   }
 
-  const query = params.toString()
-  return query ? `?${query}` : ''
+  const query = params.toString();
+  return query ? `?${query}` : '';
 }
 
 function normalizeTemplateStatus(value) {
-  return String(value || '').toUpperCase()
+  return String(value || '').toUpperCase();
 }
 
 function isTemplateApproved(template) {
-  const status = normalizeTemplateStatus(template?.status)
-  return !status || status === 'APPROVED'
+  const status = normalizeTemplateStatus(template?.status);
+  return !status || status === 'APPROVED';
 }
 
 function getTemplateBodyText(template) {
-  const body = template?.components?.find((component) => normalizeTemplateStatus(component?.type) === 'BODY')
-  return body?.text || ''
+  const body = template?.components?.find(
+    (component) => normalizeTemplateStatus(component?.type) === 'BODY',
+  );
+  return body?.text || '';
 }
 
 function getTemplateVariableSlots(template) {
-  const text = getTemplateBodyText(template)
-  const matches = [...text.matchAll(/{{\s*(\d+)\s*}}/g)].map((match) => Number(match[1]))
-  return [...new Set(matches)].filter(Number.isFinite).sort((left, right) => left - right)
+  const text = getTemplateBodyText(template);
+  const matches = [...text.matchAll(/{{\s*(\d+)\s*}}/g)].map((match) => Number(match[1]));
+  return [...new Set(matches)].filter(Number.isFinite).sort((left, right) => left - right);
 }
 
 function buildDefaultVariableMappings(count) {
-  const defaultOrder = ['{{name}}', '{{var1}}', '{{var2}}', '{{var3}}', '{{var4}}', '{{var5}}', '{{mobile}}']
+  const defaultOrder = [
+    '{{name}}',
+    '{{var1}}',
+    '{{var2}}',
+    '{{var3}}',
+    '{{var4}}',
+    '{{var5}}',
+    '{{mobile}}',
+  ];
   return Array.from({ length: count }, (_, index) => {
-    const fallbackIndex = Math.min(index, defaultOrder.length - 1)
-    return defaultOrder[fallbackIndex]
-  })
+    const fallbackIndex = Math.min(index, defaultOrder.length - 1);
+    return defaultOrder[fallbackIndex];
+  });
 }
 
 function getAudienceCount(phonebook) {
-  return Number(phonebook?.contact_count || phonebook?.contacts_count || phonebook?.total_contacts || 0)
+  return Number(
+    phonebook?.contact_count || phonebook?.contacts_count || phonebook?.total_contacts || 0,
+  );
 }
 
 function UserCampaignsPage() {
-  const { tokens } = useAuth()
-  const location = useLocation()
-  const mode = getCampaignMode(location.pathname)
-  const [campaigns, setCampaigns] = useState([])
-  const [phonebooks, setPhonebooks] = useState([])
-  const [templates, setTemplates] = useState([])
-  const [logs, setLogs] = useState([])
-  const [logSummary, setLogSummary] = useState(null)
-  const [dashboardSummary, setDashboardSummary] = useState(null)
-  const [dateDraft, setDateDraft] = useState(emptyDashboardFilters)
-  const [dashboardFilters, setDashboardFilters] = useState(emptyDashboardFilters)
-  const [selectedCampaignId, setSelectedCampaignId] = useState('')
-  const [status, setStatus] = useState('Loading campaigns...')
+  const { tokens } = useAuth();
+  const location = useLocation();
+  const mode = getCampaignMode(location.pathname);
+
+  const isAgent = location.pathname.startsWith('/agent');
+  const activeToken = isAgent ? tokens.agent : tokens.user;
+  const basePath = isAgent ? '/agent' : '/user';
+
+  const campaignTabs = [
+    { key: 'workspace', label: 'Campaigns', path: `${basePath}/campaigns` },
+    { key: 'send', label: 'Send campaign', path: `${basePath}/send-campaign` },
+    { key: 'dashboard', label: 'Dashboard', path: `${basePath}/campaign-dashboard` },
+  ];
+  const [campaigns, setCampaigns] = useState([]);
+  const [phonebooks, setPhonebooks] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [logSummary, setLogSummary] = useState(null);
+  const [dashboardSummary, setDashboardSummary] = useState(null);
+  const [dateDraft, setDateDraft] = useState(emptyDashboardFilters);
+  const [dashboardFilters, setDashboardFilters] = useState(emptyDashboardFilters);
+  const [selectedCampaignId, setSelectedCampaignId] = useState('');
+  const [status, setStatus] = useState('Loading campaigns...');
   const [form, setForm] = useState({
     title: '',
     templateName: '',
     phonebookId: '',
     scheduleTimestamp: new Date().toISOString().slice(0, 16),
     variableMappings: [],
-  })
-  const campaignSummary = useMemo(() => summarizeCampaigns(campaigns), [campaigns])
-  const deliveryCards = useMemo(() => buildDeliveryCards(logSummary, logs), [logSummary, logs])
-  const aggregateDeliveryCards = useMemo(() => buildAggregateDeliveryCards(dashboardSummary), [dashboardSummary])
-  const campaignStatus = dashboardSummary?.campaignStatus || campaignSummary
-  const deliveryTrend = dashboardSummary?.trend || []
-  const templateUsage = dashboardSummary?.templates || []
-  const deliveryTrendMax = getSeriesMax(deliveryTrend)
-  const templateUsageMax = getSeriesMax(templateUsage)
-  const dashboardQuery = useMemo(() => buildDashboardQuery(dashboardFilters), [dashboardFilters])
-  const approvedTemplates = useMemo(() => templates.filter(isTemplateApproved), [templates])
+  });
+  const campaignSummary = useMemo(() => summarizeCampaigns(campaigns), [campaigns]);
+  const deliveryCards = useMemo(() => buildDeliveryCards(logSummary, logs), [logSummary, logs]);
+  const aggregateDeliveryCards = useMemo(
+    () => buildAggregateDeliveryCards(dashboardSummary),
+    [dashboardSummary],
+  );
+  const campaignStatus = dashboardSummary?.campaignStatus || campaignSummary;
+  const deliveryTrend = dashboardSummary?.trend || [];
+  const templateUsage = dashboardSummary?.templates || [];
+  const deliveryTrendMax = getSeriesMax(deliveryTrend);
+  const templateUsageMax = getSeriesMax(templateUsage);
+  const dashboardQuery = useMemo(() => buildDashboardQuery(dashboardFilters), [dashboardFilters]);
+  const approvedTemplates = useMemo(() => templates.filter(isTemplateApproved), [templates]);
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.name === form.templateName),
     [form.templateName, templates],
-  )
+  );
   const selectedPhonebook = useMemo(
     () => phonebooks.find((phonebook) => String(phonebook.id) === String(form.phonebookId)),
     [form.phonebookId, phonebooks],
-  )
-  const selectedAudienceCount = getAudienceCount(selectedPhonebook)
-  const templateVariableSlots = useMemo(() => getTemplateVariableSlots(selectedTemplate), [selectedTemplate])
-  const selectedTemplateBody = getTemplateBodyText(selectedTemplate)
+  );
+  const selectedAudienceCount = getAudienceCount(selectedPhonebook);
+  const templateVariableSlots = useMemo(
+    () => getTemplateVariableSlots(selectedTemplate),
+    [selectedTemplate],
+  );
+  const selectedTemplateBody = getTemplateBodyText(selectedTemplate);
 
   const pageCopy = {
     workspace: {
@@ -192,144 +217,150 @@ function UserCampaignsPage() {
       title: 'Campaign Dashboard',
       text: 'Monitor campaign queue state, schedules, and per-campaign delivery performance.',
     },
-  }[mode]
+  }[mode];
 
-  const loadData = useCallback(async (options = {}) => {
-    const silent = options?.silent === true
-    const finalStatus = options?.finalStatus || ''
+  const loadData = useCallback(
+    async (options = {}) => {
+      const silent = options?.silent === true;
+      const finalStatus = options?.finalStatus || '';
 
-    if (!silent) {
-      setStatus('Loading campaigns...')
-    }
-
-    try {
-      const campaignEndpoint =
-        mode === 'dashboard' ? `/api/broadcast/get_broadcast${dashboardQuery}` : '/api/broadcast/get_broadcast'
-      const dashboardEndpoint =
-        mode === 'dashboard'
-          ? `/api/broadcast/dashboard_summary${dashboardQuery}`
-          : '/api/broadcast/dashboard_summary'
-
-      const [campaignResult, phonebookResult, dashboardResult, templateResult] = await Promise.all([
-        apiRequest(campaignEndpoint, { token: tokens.user }),
-        apiRequest('/api/phonebook/get_by_uid', { token: tokens.user }),
-        apiRequest(dashboardEndpoint, { token: tokens.user }),
-        apiRequest('/api/user/get_my_meta_templets', { token: tokens.user }),
-      ])
-
-      if (!campaignResult?.success) {
-        setStatus(campaignResult?.msg || 'Unable to load campaigns')
-        return
-      }
-      if (!phonebookResult?.success) {
-        setStatus(phonebookResult?.msg || 'Unable to load phonebooks')
-        return
-      }
-      if (!dashboardResult?.success) {
-        setDashboardSummary(null)
-        setStatus(dashboardResult?.msg || 'Unable to load dashboard summary')
-        return
+      if (!silent) {
+        setStatus('Loading campaigns...');
       }
 
-      setCampaigns(Array.isArray(campaignResult?.data) ? campaignResult.data : [])
-      setPhonebooks(Array.isArray(phonebookResult?.data) ? phonebookResult.data : [])
-      setDashboardSummary(dashboardResult.data || null)
-      setTemplates(Array.isArray(templateResult?.data) ? templateResult.data : [])
-      if (finalStatus) {
-        setStatus(finalStatus)
-      } else {
-        setStatus(
-          mode === 'send' && !templateResult?.success
-            ? templateResult?.msg || 'Unable to load Meta templates'
-            : '',
-        )
+      try {
+        const campaignEndpoint =
+          mode === 'dashboard'
+            ? `/api/broadcast/get_broadcast${dashboardQuery}`
+            : '/api/broadcast/get_broadcast';
+        const dashboardEndpoint =
+          mode === 'dashboard'
+            ? `/api/broadcast/dashboard_summary${dashboardQuery}`
+            : '/api/broadcast/dashboard_summary';
+
+        const [campaignResult, phonebookResult, dashboardResult, templateResult] =
+          await Promise.all([
+            apiRequest(campaignEndpoint, { token: activeToken }),
+            apiRequest('/api/phonebook/get_by_uid', { token: activeToken }),
+            apiRequest(dashboardEndpoint, { token: activeToken }),
+            apiRequest('/api/user/get_my_meta_templets', { token: activeToken }),
+          ]);
+
+        if (!campaignResult?.success) {
+          setStatus(campaignResult?.msg || 'Unable to load campaigns');
+          return;
+        }
+        if (!phonebookResult?.success) {
+          setStatus(phonebookResult?.msg || 'Unable to load phonebooks');
+          return;
+        }
+        if (!dashboardResult?.success) {
+          setDashboardSummary(null);
+          setStatus(dashboardResult?.msg || 'Unable to load dashboard summary');
+          return;
+        }
+
+        setCampaigns(Array.isArray(campaignResult?.data) ? campaignResult.data : []);
+        setPhonebooks(Array.isArray(phonebookResult?.data) ? phonebookResult.data : []);
+        setDashboardSummary(dashboardResult.data || null);
+        setTemplates(Array.isArray(templateResult?.data) ? templateResult.data : []);
+        if (finalStatus) {
+          setStatus(finalStatus);
+        } else {
+          setStatus(
+            mode === 'send' && !templateResult?.success
+              ? templateResult?.msg || 'Unable to load Meta templates'
+              : '',
+          );
+        }
+      } catch (error) {
+        setStatus(error.message || 'Unable to load campaigns');
       }
-    } catch (error) {
-      setStatus(error.message || 'Unable to load campaigns')
-    }
-  }, [dashboardQuery, mode, tokens.user])
+    },
+    [dashboardQuery, mode, activeToken],
+  );
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadData();
+  }, [loadData]);
 
   function applyDashboardFilters(event) {
-    event.preventDefault()
+    event.preventDefault();
     if (dateDraft.from && dateDraft.to && dateDraft.from > dateDraft.to) {
-      setStatus('From date must be before to date.')
-      return
+      setStatus('From date must be before to date.');
+      return;
     }
 
-    setDashboardFilters({ ...dateDraft })
+    setDashboardFilters({ ...dateDraft });
   }
 
   function clearDashboardFilters() {
-    const nextFilters = { ...emptyDashboardFilters }
-    setDateDraft(nextFilters)
-    setDashboardFilters(nextFilters)
+    const nextFilters = { ...emptyDashboardFilters };
+    setDateDraft(nextFilters);
+    setDashboardFilters(nextFilters);
   }
 
   function selectTemplate(templateName) {
-    const template = templates.find((item) => item.name === templateName)
-    const slots = getTemplateVariableSlots(template)
+    const template = templates.find((item) => item.name === templateName);
+    const slots = getTemplateVariableSlots(template);
     setForm((current) => ({
       ...current,
       templateName,
       variableMappings: buildDefaultVariableMappings(slots.length),
-    }))
+    }));
   }
 
   function updateVariableMapping(index, value) {
     setForm((current) => {
-      const nextMappings = [...current.variableMappings]
-      nextMappings[index] = value
-      return { ...current, variableMappings: nextMappings }
-    })
+      const nextMappings = [...current.variableMappings];
+      nextMappings[index] = value;
+      return { ...current, variableMappings: nextMappings };
+    });
   }
 
   async function createCampaign(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (!form.title.trim()) {
-      setStatus('Campaign title is required.')
-      return
+      setStatus('Campaign title is required.');
+      return;
     }
 
     if (!form.templateName) {
-      setStatus('Select an approved Meta template.')
-      return
+      setStatus('Select an approved Meta template.');
+      return;
     }
 
     if (selectedTemplate && !isTemplateApproved(selectedTemplate)) {
-      setStatus('Select an approved Meta template.')
-      return
+      setStatus('Select an approved Meta template.');
+      return;
     }
 
     if (!selectedPhonebook) {
-      setStatus('Select a phonebook.')
-      return
+      setStatus('Select a phonebook.');
+      return;
     }
 
     if (selectedAudienceCount < 1) {
-      setStatus('Selected phonebook has no contacts.')
-      return
+      setStatus('Selected phonebook has no contacts.');
+      return;
     }
 
     if (!form.scheduleTimestamp || Number.isNaN(new Date(form.scheduleTimestamp).getTime())) {
-      setStatus('Select a valid schedule.')
-      return
+      setStatus('Select a valid schedule.');
+      return;
     }
 
     if (templateVariableSlots.length && form.variableMappings.some((mapping) => !mapping)) {
-      setStatus('Map every template variable to a contact field.')
-      return
+      setStatus('Map every template variable to a contact field.');
+      return;
     }
 
-    setStatus('Creating campaign...')
+    setStatus('Creating campaign...');
     try {
       const result = await apiRequest('/api/broadcast/add_new', {
         method: 'POST',
-        token: tokens.user,
+        token: activeToken,
         body: {
           title: form.title.trim(),
           templet: selectedTemplate || { name: form.templateName },
@@ -337,85 +368,85 @@ function UserCampaignsPage() {
           scheduleTimestamp: new Date(form.scheduleTimestamp).toISOString(),
           example: form.variableMappings,
         },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to create campaign')
-        return
+        setStatus(result?.msg || 'Unable to create campaign');
+        return;
       }
 
-      setForm({ ...form, title: '' })
-      await loadData({ silent: true, finalStatus: 'Campaign created.' })
+      setForm({ ...form, title: '' });
+      await loadData({ silent: true, finalStatus: 'Campaign created.' });
     } catch (error) {
-      setStatus(error.message || 'Unable to create campaign')
+      setStatus(error.message || 'Unable to create campaign');
     }
   }
 
   async function loadLogs(broadcastId) {
-    setStatus('Loading campaign logs...')
+    setStatus('Loading campaign logs...');
     try {
       const result = await apiRequest('/api/broadcast/get_broadcast_logs', {
         method: 'POST',
-        token: tokens.user,
+        token: activeToken,
         body: { id: broadcastId },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to load logs')
-        return
+        setStatus(result?.msg || 'Unable to load logs');
+        return;
       }
 
-      setLogs(Array.isArray(result.data) ? result.data : [])
-      setLogSummary(result)
-      setSelectedCampaignId(broadcastId)
-      setStatus('')
+      setLogs(Array.isArray(result.data) ? result.data : []);
+      setLogSummary(result);
+      setSelectedCampaignId(broadcastId);
+      setStatus('');
     } catch (error) {
-      setStatus(error.message || 'Unable to load logs')
+      setStatus(error.message || 'Unable to load logs');
     }
   }
 
   async function updateStatus(broadcast_id, nextStatus) {
-    setStatus('Updating campaign status...')
+    setStatus('Updating campaign status...');
     try {
       const result = await apiRequest('/api/broadcast/change_broadcast_status', {
         method: 'POST',
-        token: tokens.user,
+        token: activeToken,
         body: { broadcast_id, status: nextStatus },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to update campaign')
-        return
+        setStatus(result?.msg || 'Unable to update campaign');
+        return;
       }
 
-      setStatus('Campaign updated.')
-      loadData()
+      setStatus('Campaign updated.');
+      loadData();
     } catch (error) {
-      setStatus(error.message || 'Unable to update campaign')
+      setStatus(error.message || 'Unable to update campaign');
     }
   }
 
   async function deleteCampaign(broadcast_id) {
-    setStatus('Deleting campaign...')
+    setStatus('Deleting campaign...');
     try {
       const result = await apiRequest('/api/broadcast/del_broadcast', {
         method: 'POST',
-        token: tokens.user,
+        token: activeToken,
         body: { broadcast_id },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to delete campaign')
-        return
+        setStatus(result?.msg || 'Unable to delete campaign');
+        return;
       }
 
-      setStatus('Campaign deleted.')
-      setLogs([])
-      setLogSummary(null)
-      setSelectedCampaignId('')
-      loadData()
+      setStatus('Campaign deleted.');
+      setLogs([]);
+      setLogSummary(null);
+      setSelectedCampaignId('');
+      loadData();
     } catch (error) {
-      setStatus(error.message || 'Unable to delete campaign')
+      setStatus(error.message || 'Unable to delete campaign');
     }
   }
 
@@ -524,12 +555,19 @@ function UserCampaignsPage() {
                 <div className="bar-row" key={item.label}>
                   <span>{item.label}</span>
                   <div className="bar-track">
-                    <div className="bar-fill" style={{ width: `${Math.max(4, (Number(item.value || 0) / deliveryTrendMax) * 100)}%` }} />
+                    <div
+                      className="bar-fill"
+                      style={{
+                        width: `${Math.max(4, (Number(item.value || 0) / deliveryTrendMax) * 100)}%`,
+                      }}
+                    />
                   </div>
                   <strong>{item.value}</strong>
                 </div>
               ))}
-              {!deliveryTrend.length ? <p className="empty-state">No delivery trend data yet.</p> : null}
+              {!deliveryTrend.length ? (
+                <p className="empty-state">No delivery trend data yet.</p>
+              ) : null}
             </div>
           </div>
 
@@ -542,12 +580,19 @@ function UserCampaignsPage() {
                 <div className="bar-row" key={item.label}>
                   <span>{item.label}</span>
                   <div className="bar-track">
-                    <div className="bar-fill" style={{ width: `${Math.max(4, (Number(item.value || 0) / templateUsageMax) * 100)}%` }} />
+                    <div
+                      className="bar-fill"
+                      style={{
+                        width: `${Math.max(4, (Number(item.value || 0) / templateUsageMax) * 100)}%`,
+                      }}
+                    />
                   </div>
                   <strong>{item.value}</strong>
                 </div>
               ))}
-              {!templateUsage.length ? <p className="empty-state">No template usage data yet.</p> : null}
+              {!templateUsage.length ? (
+                <p className="empty-state">No template usage data yet.</p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -581,14 +626,24 @@ function UserCampaignsPage() {
             <div className="form-grid">
               <label>
                 Campaign title
-                <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+                <input
+                  value={form.title}
+                  onChange={(event) => setForm({ ...form, title: event.target.value })}
+                />
               </label>
               <label>
                 Approved Meta template
-                <select value={form.templateName} onChange={(event) => selectTemplate(event.target.value)}>
+                <select
+                  value={form.templateName}
+                  onChange={(event) => selectTemplate(event.target.value)}
+                >
                   <option value="">Select template</option>
                   {templates.map((template) => (
-                    <option disabled={!isTemplateApproved(template)} key={template.id || template.name} value={template.name}>
+                    <option
+                      disabled={!isTemplateApproved(template)}
+                      key={template.id || template.name}
+                      value={template.name}
+                    >
                       {template.name} {template.status ? `- ${template.status}` : ''}
                     </option>
                   ))}
@@ -596,7 +651,10 @@ function UserCampaignsPage() {
               </label>
               <label>
                 Phonebook
-                <select value={form.phonebookId} onChange={(event) => setForm({ ...form, phonebookId: event.target.value })}>
+                <select
+                  value={form.phonebookId}
+                  onChange={(event) => setForm({ ...form, phonebookId: event.target.value })}
+                >
                   <option value="">Select phonebook</option>
                   {phonebooks.map((phonebook) => (
                     <option key={phonebook.id} value={phonebook.id}>
@@ -623,7 +681,9 @@ function UserCampaignsPage() {
               </div>
             ) : null}
 
-            {selectedTemplateBody ? <code className="code-block">{selectedTemplateBody}</code> : null}
+            {selectedTemplateBody ? (
+              <code className="code-block">{selectedTemplateBody}</code>
+            ) : null}
 
             {templateVariableSlots.length ? (
               <div className="table-panel compact-table">
@@ -678,9 +738,18 @@ function UserCampaignsPage() {
             <h3>No campaigns available</h3>
             <p>To run a marketing campaign broadcast, follow these steps:</p>
             <ol>
-              <li>Go to the <strong>Contacts</strong> page, create a Phonebook, and add or import Contacts.</li>
-              <li>Go to the <strong>Meta Templates</strong> page, create a template, and ensure it is approved.</li>
-              <li>Switch to the <strong>Send campaign</strong> tab here, select your approved template, match variables, select your phonebook, and launch.</li>
+              <li>
+                Go to the <strong>Contacts</strong> page, create a Phonebook, and add or import
+                Contacts.
+              </li>
+              <li>
+                Go to the <strong>Meta Templates</strong> page, create a template, and ensure it is
+                approved.
+              </li>
+              <li>
+                Switch to the <strong>Send campaign</strong> tab here, select your approved
+                template, match variables, select your phonebook, and launch.
+              </li>
             </ol>
           </div>
         ) : (
@@ -706,7 +775,10 @@ function UserCampaignsPage() {
                   <td>
                     <div className="action-row">
                       <button
-                        className={classNames('mini-button', selectedCampaignId === campaign.broadcast_id ? 'dark-text' : '')}
+                        className={classNames(
+                          'mini-button',
+                          selectedCampaignId === campaign.broadcast_id ? 'dark-text' : '',
+                        )}
                         type="button"
                         onClick={() => loadLogs(campaign.broadcast_id)}
                       >
@@ -785,7 +857,7 @@ function UserCampaignsPage() {
         </table>
       </div>
     </div>
-  )
+  );
 }
 
-export default UserCampaignsPage
+export default UserCampaignsPage;

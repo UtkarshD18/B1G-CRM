@@ -155,37 +155,55 @@ async function singleReplyAi({
       }
     }
 
-    // Fetch order information if message mentions "order"
+    // Fetch order information if message mentions "order", "track", "status", "awb", or "where is"
     let orderContext = '';
     const lowerMsg = (incomingMsg || '').toLowerCase();
-    if (lowerMsg.includes('order')) {
-      const cleanNumber = (senderNumber || '').replace(/\D/g, '');
-      const shortNumber = cleanNumber.length > 10 ? cleanNumber.slice(-10) : cleanNumber;
+    if (
+      lowerMsg.includes('order') ||
+      lowerMsg.includes('track') ||
+      lowerMsg.includes('status') ||
+      lowerMsg.includes('awb') ||
+      lowerMsg.includes('where is')
+    ) {
+      try {
+        const { getOrderTrackingContext } = require('./orderTracker');
+        const storefrontOrderContext = await getOrderTrackingContext(senderNumber, incomingMsg);
+        if (storefrontOrderContext) {
+          orderContext = storefrontOrderContext;
+        }
+      } catch (err) {
+        console.error('[AI Autopilot] Failed to fetch storefront order context:', err);
+      }
 
-      const orders = await query(
-        `SELECT id, amount, payment_mode, data, createdat 
-         FROM orders 
-         WHERE uid = ? AND (data LIKE ? OR data LIKE ?) 
-         ORDER BY createdat DESC 
-         LIMIT 5`,
-        [uid, `%${cleanNumber}%`, `%${shortNumber}%`],
-      );
+      if (!orderContext) {
+        const cleanNumber = (senderNumber || '').replace(/\D/g, '');
+        const shortNumber = cleanNumber.length > 10 ? cleanNumber.slice(-10) : cleanNumber;
 
-      if (orders.length > 0) {
-        orderContext =
-          "Customer's Recent Orders:\n" +
-          orders
-            .map((o) => {
-              let details = o.data;
-              try {
-                const parsed = JSON.parse(o.data);
-                details = JSON.stringify(parsed);
-              } catch (e) {}
-              return `- Order ID: ${o.id}, Amount: ${o.amount}, Date: ${o.createdat}, Payment Mode: ${o.payment_mode}, Details: ${details}`;
-            })
-            .join('\n');
-      } else {
-        orderContext = 'No orders found for this customer phone number in the database.';
+        const orders = await query(
+          `SELECT id, amount, payment_mode, data, createdat 
+           FROM orders 
+           WHERE uid = ? AND (data LIKE ? OR data LIKE ?) 
+           ORDER BY createdat DESC 
+           LIMIT 5`,
+          [uid, `%${cleanNumber}%`, `%${shortNumber}%`],
+        );
+
+        if (orders.length > 0) {
+          orderContext =
+            "Customer's Recent CRM Plan Orders:\n" +
+            orders
+              .map((o) => {
+                let details = o.data;
+                try {
+                  const parsed = JSON.parse(o.data);
+                  details = JSON.stringify(parsed);
+                } catch (e) {}
+                return `- Order ID: ${o.id}, Amount: ${o.amount}, Date: ${o.createdat}, Payment Mode: ${o.payment_mode}, Details: ${details}`;
+              })
+              .join('\n');
+        } else {
+          orderContext = 'No orders found for this customer phone number in the database.';
+        }
       }
     }
 

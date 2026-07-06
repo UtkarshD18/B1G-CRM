@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
-import { apiRequest } from '../../shared/api'
-import { useAuth } from '../../shared/auth'
-import { formatDateTime } from '../../shared/format'
+import { useCallback, useEffect, useState } from 'react';
+import { apiRequest } from '../../shared/api';
+import { useAuth } from '../../shared/auth';
+import { formatDateTime } from '../../shared/format';
 
-const tabs = ['Web', 'Payments', 'SMTP', 'CMS', 'Leads', 'Social', 'Deployment']
+const tabs = ['Web', 'Payments', 'SMTP', 'CMS', 'Leads', 'Social', 'Deployment'];
 
 const paymentDefaults = {
   pay_offline_id: '',
@@ -24,7 +24,7 @@ const paymentDefaults = {
   pay_mercadopago_id: '',
   pay_mercadopago_key: '',
   mercadopago_active: 0,
-}
+};
 
 const webDefaults = {
   logo: '',
@@ -39,7 +39,7 @@ const webDefaults = {
   broadcast_screen_tutorial: '',
   login_header_footer: '',
   exchange_rate: 1,
-}
+};
 
 const socialDefaults = {
   google_client_id: '',
@@ -47,7 +47,7 @@ const socialDefaults = {
   fb_login_app_id: '',
   fb_login_app_sec: '',
   fb_login_active: 0,
-}
+};
 
 const deploymentDefaults = {
   meta_app_id: '',
@@ -74,32 +74,32 @@ const deploymentDefaults = {
   ai_custom_url: '',
   ai_custom_model: '',
   widget_domains: '',
-}
+};
 
 function AdminSettingsPage() {
-  const { tokens } = useAuth()
-  const [activeTab, setActiveTab] = useState('Web')
-  const [status, setStatus] = useState('Loading settings...')
-  const [web, setWeb] = useState(webDefaults)
-  const [payments, setPayments] = useState(paymentDefaults)
-  const [smtp, setSmtp] = useState({ email: '', host: '', port: 587, password: '' })
-  const [social, setSocial] = useState(socialDefaults)
-  const [deployment, setDeployment] = useState(deploymentDefaults)
-  const [faqs, setFaqs] = useState([])
-  const [faqForm, setFaqForm] = useState({ question: '', answer: '' })
-  const [testimonials, setTestimonials] = useState([])
+  const { tokens } = useAuth();
+  const [activeTab, setActiveTab] = useState('Web');
+  const [status, setStatus] = useState('Loading settings...');
+  const [web, setWeb] = useState(webDefaults);
+  const [payments, setPayments] = useState(paymentDefaults);
+  const [smtp, setSmtp] = useState({ email: '', host: '', port: 587, password: '' });
+  const [social, setSocial] = useState(socialDefaults);
+  const [deployment, setDeployment] = useState(deploymentDefaults);
+  const [faqs, setFaqs] = useState([]);
+  const [faqForm, setFaqForm] = useState({ question: '', answer: '' });
+  const [testimonials, setTestimonials] = useState([]);
   const [testimonialForm, setTestimonialForm] = useState({
     title: '',
     description: '',
     reviewer_name: '',
     reviewer_position: '',
-  })
-  const [terms, setTerms] = useState({ title: 'Terms and Conditions', content: '' })
-  const [privacy, setPrivacy] = useState({ title: 'Privacy Policy', content: '' })
-  const [leads, setLeads] = useState([])
+  });
+  const [terms, setTerms] = useState({ title: 'Terms and Conditions', content: '' });
+  const [privacy, setPrivacy] = useState({ title: 'Privacy Policy', content: '' });
+  const [leads, setLeads] = useState([]);
 
   const loadSettings = useCallback(async () => {
-    setStatus('Loading settings...')
+    setStatus('Loading settings...');
     try {
       const [
         webResult,
@@ -129,73 +129,73 @@ function AdminSettingsPage() {
           token: tokens.admin,
           body: { slug: 'privacy-policy' },
         }),
-      ])
+      ]);
 
-      setWeb({ ...webDefaults, ...(webResult?.data || {}) })
-      setPayments({ ...paymentDefaults, ...(paymentResult?.data || {}) })
-      setDeployment({ ...deploymentDefaults, ...(paymentResult?.data || {}) })
-      setSmtp({ email: '', host: '', port: 587, password: '', ...(smtpResult?.data || {}) })
-      setSocial({ ...socialDefaults, ...(socialResult?.data || {}) })
-      setFaqs(Array.isArray(faqResult?.data) ? faqResult.data : [])
-      setTestimonials(Array.isArray(testiResult?.data) ? testiResult.data : [])
-      setLeads(Array.isArray(leadResult?.data) ? leadResult.data : [])
+      setWeb({ ...webDefaults, ...(webResult?.data || {}) });
+      setPayments({ ...paymentDefaults, ...(paymentResult?.data || {}) });
+      setDeployment({ ...deploymentDefaults, ...(paymentResult?.data || {}) });
+      setSmtp({ email: '', host: '', port: 587, password: '', ...(smtpResult?.data || {}) });
+      setSocial({ ...socialDefaults, ...(socialResult?.data || {}) });
+      setFaqs(Array.isArray(faqResult?.data) ? faqResult.data : []);
+      setTestimonials(Array.isArray(testiResult?.data) ? testiResult.data : []);
+      setLeads(Array.isArray(leadResult?.data) ? leadResult.data : []);
       if (termsResult?.data?.title) {
-        setTerms({ title: termsResult.data.title, content: termsResult.data.content || '' })
+        setTerms({ title: termsResult.data.title, content: termsResult.data.content || '' });
       }
       if (privacyResult?.data?.title) {
-        setPrivacy({ title: privacyResult.data.title, content: privacyResult.data.content || '' })
+        setPrivacy({ title: privacyResult.data.title, content: privacyResult.data.content || '' });
       }
-      setStatus('')
+      setStatus('');
     } catch (error) {
-      setStatus(error.message || 'Unable to load settings')
+      setStatus(error.message || 'Unable to load settings');
     }
-  }, [tokens.admin])
+  }, [tokens.admin]);
 
   useEffect(() => {
-    loadSettings()
-  }, [loadSettings])
+    loadSettings();
+  }, [loadSettings]);
 
   async function saveJson(path, body, message) {
-    setStatus(message || 'Saving...')
+    setStatus(message || 'Saving...');
     try {
       const result = await apiRequest(path, {
         method: 'POST',
         token: tokens.admin,
         body,
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to save')
-        return false
+        setStatus(result?.msg || 'Unable to save');
+        return false;
       }
 
-      setStatus(result.msg || 'Saved.')
-      return true
+      setStatus(result.msg || 'Saved.');
+      return true;
     } catch (error) {
-      setStatus(error.message || 'Unable to save')
-      return false
+      setStatus(error.message || 'Unable to save');
+      return false;
     }
   }
 
   async function addFaq(event) {
-    event.preventDefault()
+    event.preventDefault();
     if (await saveJson('/api/admin/add_faq', faqForm, 'Adding FAQ...')) {
-      setFaqForm({ question: '', answer: '' })
-      loadSettings()
+      setFaqForm({ question: '', answer: '' });
+      loadSettings();
     }
   }
 
   async function addTestimonial(event) {
-    event.preventDefault()
+    event.preventDefault();
     if (await saveJson('/api/admin/add_testimonial', testimonialForm, 'Adding testimonial...')) {
-      setTestimonialForm({ title: '', description: '', reviewer_name: '', reviewer_position: '' })
-      loadSettings()
+      setTestimonialForm({ title: '', description: '', reviewer_name: '', reviewer_position: '' });
+      loadSettings();
     }
   }
 
   async function deleteItem(path, body) {
     if (await saveJson(path, body, 'Deleting...')) {
-      loadSettings()
+      loadSettings();
     }
   }
 
@@ -228,8 +228,8 @@ function AdminSettingsPage() {
         <form
           className="panel form-panel"
           onSubmit={(event) => {
-            event.preventDefault()
-            saveJson('/api/web/update_web_config', web, 'Saving public web settings...')
+            event.preventDefault();
+            saveJson('/api/web/update_web_config', web, 'Saving public web settings...');
           }}
         >
           <div className="panel-header">
@@ -249,7 +249,10 @@ function AdminSettingsPage() {
             ].map(([key, label]) => (
               <label key={key}>
                 {label}
-                <input value={web[key] || ''} onChange={(event) => setWeb({ ...web, [key]: event.target.value })} />
+                <input
+                  value={web[key] || ''}
+                  onChange={(event) => setWeb({ ...web, [key]: event.target.value })}
+                />
               </label>
             ))}
           </div>
@@ -287,40 +290,114 @@ function AdminSettingsPage() {
         <form
           className="panel form-panel"
           onSubmit={(event) => {
-            event.preventDefault()
-            saveJson('/api/admin/update_pay_gateway', payments, 'Saving payment gateways...')
+            event.preventDefault();
+            saveJson('/api/admin/update_pay_gateway', payments, 'Saving payment gateways...');
           }}
         >
           <div className="panel-header">
-            <h2>Payment gateways</h2>
+            <h2>Payment Gateways</h2>
+            <p>
+              Configure B2B SaaS subscription billing gateways. Unimplemented gateways have been
+              hidden.
+            </p>
           </div>
-          <div className="form-grid">
-            {Object.keys(paymentDefaults)
-              .filter((key) => !key.endsWith('_active'))
-              .map((key) => (
-                <label key={key}>
-                  {key.replaceAll('_', ' ')}
-                  <input
-                    value={payments[key] || ''}
-                    onChange={(event) => setPayments({ ...payments, [key]: event.target.value })}
-                  />
-                </label>
-              ))}
-          </div>
-          <div className="action-row">
-            {['offline_active', 'stripe_active', 'paypal_active', 'rz_active', 'paystack_active', 'mercadopago_active'].map((key) => (
-              <label className="checkbox-row" key={key}>
-                <input
-                  checked={Number(payments[key]) > 0}
-                  type="checkbox"
-                  onChange={(event) => setPayments({ ...payments, [key]: event.target.checked ? 1 : 0 })}
-                />
-                <span>{key.replace('_active', '')}</span>
-              </label>
+
+          <div style={{ display: 'grid', gap: '20px', marginTop: '16px' }}>
+            {[
+              {
+                label: 'Stripe Integration',
+                activeKey: 'stripe_active',
+                fields: [
+                  { key: 'pay_stripe_id', label: 'Stripe Publishable Key' },
+                  { key: 'pay_stripe_key', label: 'Stripe Secret Key', type: 'password' },
+                ],
+              },
+              {
+                label: 'PayPal Integration',
+                activeKey: 'paypal_active',
+                fields: [
+                  { key: 'pay_paypal_id', label: 'PayPal Client ID' },
+                  { key: 'pay_paypal_key', label: 'PayPal Client Secret', type: 'password' },
+                ],
+              },
+              {
+                label: 'Razorpay Integration',
+                activeKey: 'rz_active',
+                fields: [
+                  { key: 'rz_id', label: 'Razorpay Key ID' },
+                  { key: 'rz_key', label: 'Razorpay Key Secret', type: 'password' },
+                ],
+              },
+              {
+                label: 'Paystack Integration',
+                activeKey: 'paystack_active',
+                fields: [
+                  { key: 'pay_paystack_id', label: 'Paystack Public Key' },
+                  { key: 'pay_paystack_key', label: 'Paystack Secret Key', type: 'password' },
+                ],
+              },
+            ].map((gateway) => (
+              <div
+                key={gateway.activeKey}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-panel)',
+                  display: 'grid',
+                  gap: '12px',
+                }}
+              >
+                <div
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <h3 style={{ margin: 0, color: '#1ea085', fontSize: '1rem' }}>{gateway.label}</h3>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      margin: 0,
+                      fontWeight: 'normal',
+                    }}
+                  >
+                    <input
+                      checked={Number(payments[gateway.activeKey]) > 0}
+                      type="checkbox"
+                      onChange={(event) =>
+                        setPayments({
+                          ...payments,
+                          [gateway.activeKey]: event.target.checked ? 1 : 0,
+                        })
+                      }
+                      style={{ width: 'auto' }}
+                    />
+                    Enable Gateway
+                  </label>
+                </div>
+
+                <div className="form-grid" style={{ marginTop: '4px' }}>
+                  {gateway.fields.map((f) => (
+                    <label key={f.key}>
+                      {f.label}
+                      <input
+                        type={f.type || 'text'}
+                        value={payments[f.key] || ''}
+                        onChange={(event) =>
+                          setPayments({ ...payments, [f.key]: event.target.value })
+                        }
+                        placeholder={`Enter ${f.label.toLowerCase()}`}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
-          <button className="primary-button" type="submit">
-            Save gateways
+
+          <button className="primary-button" type="submit" style={{ marginTop: '24px' }}>
+            Save Gateways Configuration
           </button>
         </form>
       ) : null}
@@ -329,8 +406,8 @@ function AdminSettingsPage() {
         <form
           className="panel form-panel"
           onSubmit={(event) => {
-            event.preventDefault()
-            saveJson('/api/admin/update_smtp', smtp, 'Saving SMTP...')
+            event.preventDefault();
+            saveJson('/api/admin/update_smtp', smtp, 'Saving SMTP...');
           }}
         >
           <div className="panel-header">
@@ -406,14 +483,17 @@ function AdminSettingsPage() {
             <form
               className="panel form-panel"
               onSubmit={(event) => {
-                event.preventDefault()
-                saveJson('/api/admin/update_terms', terms, 'Saving terms...')
+                event.preventDefault();
+                saveJson('/api/admin/update_terms', terms, 'Saving terms...');
               }}
             >
               <div className="panel-header">
                 <h2>Terms</h2>
               </div>
-              <input value={terms.title} onChange={(event) => setTerms({ ...terms, title: event.target.value })} />
+              <input
+                value={terms.title}
+                onChange={(event) => setTerms({ ...terms, title: event.target.value })}
+              />
               <textarea
                 rows={8}
                 value={terms.content}
@@ -427,14 +507,17 @@ function AdminSettingsPage() {
             <form
               className="panel form-panel"
               onSubmit={(event) => {
-                event.preventDefault()
-                saveJson('/api/admin/update_privacy_policy', privacy, 'Saving privacy policy...')
+                event.preventDefault();
+                saveJson('/api/admin/update_privacy_policy', privacy, 'Saving privacy policy...');
               }}
             >
               <div className="panel-header">
                 <h2>Privacy policy</h2>
               </div>
-              <input value={privacy.title} onChange={(event) => setPrivacy({ ...privacy, title: event.target.value })} />
+              <input
+                value={privacy.title}
+                onChange={(event) => setPrivacy({ ...privacy, title: event.target.value })}
+              />
               <textarea
                 rows={8}
                 value={privacy.content}
@@ -540,8 +623,8 @@ function AdminSettingsPage() {
         <form
           className="panel form-panel"
           onSubmit={(event) => {
-            event.preventDefault()
-            saveJson('/api/admin/update_social_login', social, 'Saving social login...')
+            event.preventDefault();
+            saveJson('/api/admin/update_social_login', social, 'Saving social login...');
           }}
         >
           <div className="panel-header">
@@ -564,7 +647,9 @@ function AdminSettingsPage() {
                 <input
                   checked={Number(social[key]) > 0}
                   type="checkbox"
-                  onChange={(event) => setSocial({ ...social, [key]: event.target.checked ? 1 : 0 })}
+                  onChange={(event) =>
+                    setSocial({ ...social, [key]: event.target.checked ? 1 : 0 })
+                  }
                 />
                 <span>{key.replaceAll('_', ' ')}</span>
               </label>
@@ -579,16 +664,24 @@ function AdminSettingsPage() {
         <form
           className="panel form-panel"
           onSubmit={(event) => {
-            event.preventDefault()
-            saveJson('/api/admin/update_deployment_settings', deployment, 'Saving deployment settings...')
+            event.preventDefault();
+            saveJson(
+              '/api/admin/update_deployment_settings',
+              deployment,
+              'Saving deployment settings...',
+            );
           }}
         >
           <div className="panel-header">
             <h2>Third-Party Integration settings</h2>
-            <p>Configure global fallbacks for Meta, Instagram, AI Providers, and Website Widgets.</p>
+            <p>
+              Configure global fallbacks for Meta, Instagram, AI Providers, and Website Widgets.
+            </p>
           </div>
-          
-          <h3 style={{ marginTop: '16px', color: '#1ea085' }}>Meta WhatsApp API (Global Fallback)</h3>
+
+          <h3 style={{ marginTop: '16px', color: '#1ea085' }}>
+            Meta WhatsApp API (Global Fallback)
+          </h3>
           <div className="form-grid">
             {[
               ['meta_waba_id', 'WhatsApp Business Account ID (WABA ID)'],
@@ -609,7 +702,9 @@ function AdminSettingsPage() {
             ))}
           </div>
 
-          <h3 style={{ marginTop: '24px', color: '#1ea085' }}>Instagram Messaging API (Global Fallback)</h3>
+          <h3 style={{ marginTop: '24px', color: '#1ea085' }}>
+            Instagram Messaging API (Global Fallback)
+          </h3>
           <div className="form-grid">
             {[
               ['insta_business_account_id', 'Instagram Business Account ID'],
@@ -628,13 +723,17 @@ function AdminSettingsPage() {
             ))}
           </div>
 
-          <h3 style={{ marginTop: '24px', color: '#1ea085' }}>Global Fallback AI Autopilot Provider</h3>
+          <h3 style={{ marginTop: '24px', color: '#1ea085' }}>
+            Global Fallback AI Autopilot Provider
+          </h3>
           <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
             <label>
               Active AI Provider
               <select
                 value={deployment.ai_provider_active}
-                onChange={(event) => setDeployment({ ...deployment, ai_provider_active: event.target.value })}
+                onChange={(event) =>
+                  setDeployment({ ...deployment, ai_provider_active: event.target.value })
+                }
               >
                 <option value="openai">OpenAI</option>
                 <option value="gemini">Gemini</option>
@@ -645,7 +744,7 @@ function AdminSettingsPage() {
               </select>
             </label>
           </div>
-          
+
           <div className="form-grid" style={{ marginTop: '12px' }}>
             {[
               ['ai_openai_key', 'OpenAI API Key'],
@@ -678,7 +777,9 @@ function AdminSettingsPage() {
               Allowed Widget Domains (comma-separated list, e.g. "example.com, mycrm.com")
               <input
                 value={deployment.widget_domains || ''}
-                onChange={(event) => setDeployment({ ...deployment, widget_domains: event.target.value })}
+                onChange={(event) =>
+                  setDeployment({ ...deployment, widget_domains: event.target.value })
+                }
                 placeholder="example.com, mycrm.com"
               />
             </label>
@@ -690,7 +791,7 @@ function AdminSettingsPage() {
         </form>
       ) : null}
     </div>
-  )
+  );
 }
 
-export default AdminSettingsPage
+export default AdminSettingsPage;

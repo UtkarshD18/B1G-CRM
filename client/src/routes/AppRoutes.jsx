@@ -1,51 +1,51 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { RoleGate } from '../shared/auth'
-import { ADMIN_NAV, AGENT_NAV, USER_NAV } from '../shared/navigation'
-import PortalLayout from '../layouts/PortalLayout'
-import PublicSite from '../pages/PublicSite'
-import PortalChooser from '../pages/PortalChooser'
-import LoginPage from '../pages/auth/LoginPage'
-import UnifiedLoginPage from '../pages/auth/UnifiedLoginPage'
-import UserSignupPage from '../pages/auth/UserSignupPage'
-import AdminDashboardPage from '../pages/admin/Dashboard'
-import AdminPlansPage from '../pages/admin/Plans'
-import AdminUsersPage from '../pages/admin/Users'
-import AdminOrdersPage from '../pages/admin/Orders'
-import AdminSettingsPage from '../pages/admin/Settings'
-import AdminFrontPartnerPage from '../pages/admin/FrontPartner'
-import AdminFaqPage from '../pages/admin/Faq'
-import AdminManagePages from '../pages/admin/ManagePages'
-import AdminTestimonialPage from '../pages/admin/Testimonial'
-import AdminContactFormPage from '../pages/admin/ContactForm'
-import AdminPaymentGatewaysPage from '../pages/admin/PaymentGateways'
-import AdminSmtpPage from '../pages/admin/SmtpSettings'
-import AdminSocialLoginPage from '../pages/admin/SocialLogin'
-import AdminSiteSettingsPage from '../pages/admin/SiteSettings'
-import UserDashboardPage from '../pages/user/Dashboard'
-import UserInboxPage from '../pages/user/Inbox'
-import UserKanbanPage from '../pages/user/Kanban'
-import UserContactsPage from '../pages/user/Contacts'
-import UserCampaignsPage from '../pages/user/Campaigns'
-import UserAutomationFlowsPage from '../pages/user/AutomationFlows'
-import UserChatBotPage from '../pages/user/ChatBot'
-import UserChatbotAutomationPage from '../pages/chatbot-automation/ChatbotAutomationPage'
-import UserIntegrationsPage from '../pages/user/Integrations'
-import UserAgentPage from '../pages/user/AgentLogin'
-import UserTaskPage from '../pages/user/AgentTask'
-import UserChatWidgetPage from '../pages/user/ChatWidget'
-import UserBillingPage from '../pages/user/Billing'
-import UserDeveloperApiPage from '../pages/user/DeveloperApi'
-import UserMetaTemplatesPage from '../pages/user/MetaTemplates'
-import UserSettingsPage from '../pages/user/Settings'
-import AgentDashboardPage from '../pages/agent/Dashboard'
-import AgentInboxPage from '../pages/agent/Inbox'
-import ReferenceModulePage from '../pages/ReferenceModulePage'
-import UserAiProvidersPage from '../pages/user/AiProviderSettings'
-import UserKnowledgeBasePage from '../pages/user/KnowledgeBase'
-import UserWebsiteManagerPage from '../pages/user/WebsiteManager'
-import UserCrmPipelinePage from '../pages/user/CrmPipeline'
-import UserSupervisorDashboardPage from '../pages/user/SupervisorDashboard'
-import UserWebhookLogsPage from '../pages/user/WebhookLogs'
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { RoleGate } from '../shared/auth';
+import { ADMIN_NAV, AGENT_NAV, USER_NAV } from '../shared/navigation';
+import PortalLayout from '../layouts/PortalLayout';
+import PublicSite from '../pages/PublicSite';
+import PortalChooser from '../pages/PortalChooser';
+import LoginPage from '../pages/auth/LoginPage';
+import UnifiedLoginPage from '../pages/auth/UnifiedLoginPage';
+import UserSignupPage from '../pages/auth/UserSignupPage';
+import AdminDashboardPage from '../pages/admin/Dashboard';
+import AdminPlansPage from '../pages/admin/Plans';
+import AdminUsersPage from '../pages/admin/Users';
+import AdminOrdersPage from '../pages/admin/Orders';
+import AdminSettingsPage from '../pages/admin/Settings';
+import AdminFrontPartnerPage from '../pages/admin/FrontPartner';
+import AdminFaqPage from '../pages/admin/Faq';
+import AdminManagePages from '../pages/admin/ManagePages';
+import AdminTestimonialPage from '../pages/admin/Testimonial';
+import AdminContactFormPage from '../pages/admin/ContactForm';
+import AdminPaymentGatewaysPage from '../pages/admin/PaymentGateways';
+import AdminSmtpPage from '../pages/admin/SmtpSettings';
+import AdminSocialLoginPage from '../pages/admin/SocialLogin';
+import AdminSiteSettingsPage from '../pages/admin/SiteSettings';
+import UserDashboardPage from '../pages/user/Dashboard';
+import UserInboxPage from '../pages/user/Inbox';
+import UserKanbanPage from '../pages/user/Kanban';
+import UserContactsPage from '../pages/user/Contacts';
+import UserCampaignsPage from '../pages/user/Campaigns';
+import UserAutomationFlowsPage from '../pages/user/AutomationFlows';
+import UserChatBotPage from '../pages/user/ChatBot';
+import UserChatbotAutomationPage from '../pages/chatbot-automation/ChatbotAutomationPage';
+import UserIntegrationsPage from '../pages/user/Integrations';
+import UserAgentPage from '../pages/user/AgentLogin';
+import UserTaskPage from '../pages/user/AgentTask';
+import UserChatWidgetPage from '../pages/user/ChatWidget';
+import UserBillingPage from '../pages/user/Billing';
+import UserDeveloperApiPage from '../pages/user/DeveloperApi';
+import UserMetaTemplatesPage from '../pages/user/MetaTemplates';
+import UserSettingsPage from '../pages/user/Settings';
+import AgentDashboardPage from '../pages/agent/Dashboard';
+import AgentInboxPage from '../pages/agent/Inbox';
+import ReferenceModulePage from '../pages/ReferenceModulePage';
+import UserAiProvidersPage from '../pages/user/AiProviderSettings';
+import UserKnowledgeBasePage from '../pages/user/KnowledgeBase';
+import UserWebsiteManagerPage from '../pages/user/WebsiteManager';
+import UserCrmPipelinePage from '../pages/user/CrmPipeline';
+import UserSupervisorDashboardPage from '../pages/user/SupervisorDashboard';
+import UserWebhookLogsPage from '../pages/user/WebhookLogs';
 
 export const ADMIN_REFERENCE_ROUTES = [
   { path: 'dashboard', component: 'dashboard' },
@@ -72,7 +72,7 @@ export const ADMIN_REFERENCE_ROUTES = [
   { path: 'web-notification', component: 'planned', title: 'Web Notification' },
   { path: 'send-web-push', component: 'planned', title: 'Manual Web Push' },
   { path: 'embed-config', component: 'planned', title: 'WA Embed Login' },
-]
+];
 
 export const USER_REFERENCE_ROUTES = [
   { path: 'dashboard', component: 'dashboard' },
@@ -119,7 +119,7 @@ export const USER_REFERENCE_ROUTES = [
   { path: 'website-manager', component: 'websiteManager' },
   { path: 'pipeline', component: 'pipeline' },
   { path: 'supervisor-dashboard', component: 'supervisorDashboard' },
-]
+];
 
 const adminRouteComponents = {
   dashboard: AdminDashboardPage,
@@ -136,7 +136,7 @@ const adminRouteComponents = {
   smtpSettings: AdminSmtpPage,
   socialLogin: AdminSocialLoginPage,
   siteSettings: AdminSiteSettingsPage,
-}
+};
 
 const userRouteComponents = {
   dashboard: UserDashboardPage,
@@ -161,7 +161,7 @@ const userRouteComponents = {
   pipeline: UserCrmPipelinePage,
   supervisorDashboard: UserSupervisorDashboardPage,
   webhookLogs: UserWebhookLogsPage,
-}
+};
 
 function renderReferenceRoutes(routes, area, components) {
   return routes.map((route) => {
@@ -178,12 +178,12 @@ function renderReferenceRoutes(routes, area, components) {
             />
           }
         />
-      )
+      );
     }
 
-    const Component = components[route.component]
-    return <Route key={route.path} path={route.path} element={<Component />} />
-  })
+    const Component = components[route.component];
+    return <Route key={route.path} path={route.path} element={<Component />} />;
+  });
 }
 
 function AppRoutes() {
@@ -269,6 +269,8 @@ function AppRoutes() {
         <Route path="kanban" element={<UserKanbanPage />} />
         <Route path="pipeline" element={<UserCrmPipelinePage />} />
         <Route path="campaigns" element={<UserCampaignsPage />} />
+        <Route path="send-campaign" element={<UserCampaignsPage />} />
+        <Route path="campaign-dashboard" element={<UserCampaignsPage />} />
         <Route path="automation-flows" element={<UserAutomationFlowsPage />} />
         <Route path="chatbot" element={<UserChatBotPage />} />
         <Route path="knowledge-base" element={<UserKnowledgeBasePage />} />
@@ -281,7 +283,7 @@ function AppRoutes() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default AppRoutes
+export default AppRoutes;

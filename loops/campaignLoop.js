@@ -1,8 +1,8 @@
 // Import necessary modules
-const moment = require("moment-timezone");
-const { query } = require("../database/dbpromise");
-const { getUserPlayDays } = require("../functions/function");
-const { sendMessage } = require("./loopFunctions");
+const moment = require('moment-timezone');
+const { query } = require('../database/dbpromise');
+const { getUserPlayDays } = require('../functions/function');
+const { sendMessage } = require('./loopFunctions');
 
 function delayRandom(fromSeconds, toSeconds) {
   const randomSeconds = Math.random() * (toSeconds - fromSeconds) + fromSeconds;
@@ -23,10 +23,7 @@ function hasDatePassedInTimezone(timezone, date) {
 
 // Function to update the broadcast status in the database
 async function updateBroadcastDatabase(status, broadcastId) {
-  await query("UPDATE broadcast SET status = ? WHERE broadcast_id = ?", [
-    status,
-    broadcastId,
-  ]);
+  await query('UPDATE broadcast SET status = ? WHERE broadcast_id = ?', [status, broadcastId]);
 }
 
 // Function to process a broadcast campaign in batches with SKIP LOCKED queue safety
@@ -34,31 +31,56 @@ async function processBroadcast(campaign) {
   const planDays = await getUserPlayDays(campaign?.uid);
 
   if (planDays < 1) {
-    await updateBroadcastDatabase(
-      "ACTIVE PLAN NOT FOUND",
-      campaign?.broadcast_id
-    );
+    await updateBroadcastDatabase('ACTIVE PLAN NOT FOUND', campaign?.broadcast_id);
     return;
   }
 
-  let metaKeys = await query("SELECT * FROM meta_api WHERE uid = ?", [
-    campaign?.uid,
-  ]);
+  let metaKeys = await query('SELECT * FROM meta_api WHERE uid = ?', [campaign?.uid]);
 
   if (metaKeys.length < 1) {
-    const globalMeta = await query(`SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`, []);
-    if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
-      metaKeys = [{
-        access_token: globalMeta[0].meta_access_token,
-        business_phone_number_id: globalMeta[0].meta_phone_number_id,
-        waba_id: globalMeta[0].meta_waba_id,
-        app_id: globalMeta[0].meta_app_id
-      }];
+    const [credRow] = await query(
+      `SELECT credentials FROM channel_credentials WHERE uid = ? AND channel_type = ?`,
+      [campaign?.uid, 'whatsapp_cloud'],
+    );
+    if (credRow?.credentials) {
+      const { decrypt } = require('../utils/channels/encryption');
+      try {
+        const creds = JSON.parse(decrypt(credRow.credentials));
+        if (creds.access_token && creds.phone_number_id) {
+          metaKeys = [
+            {
+              access_token: creds.access_token,
+              business_phone_number_id: creds.phone_number_id,
+              waba_id: creds.business_account_id || '',
+              app_id: '',
+            },
+          ];
+        }
+      } catch (err) {
+        console.error('Failed to decrypt channel credentials in campaign loop:', err);
+      }
     }
   }
 
   if (metaKeys.length < 1) {
-    await updateBroadcastDatabase("META API NOT FOUND", campaign?.broadcast_id);
+    const globalMeta = await query(
+      `SELECT meta_waba_id, meta_business_account_id, meta_access_token, meta_phone_number_id, meta_app_id FROM web_private`,
+      [],
+    );
+    if (globalMeta.length > 0 && globalMeta[0].meta_access_token) {
+      metaKeys = [
+        {
+          access_token: globalMeta[0].meta_access_token,
+          business_phone_number_id: globalMeta[0].meta_phone_number_id,
+          waba_id: globalMeta[0].meta_waba_id,
+          app_id: globalMeta[0].meta_app_id,
+        },
+      ];
+    }
+  }
+
+  if (metaKeys.length < 1) {
+    await updateBroadcastDatabase('META API NOT FOUND', campaign?.broadcast_id);
     return;
   }
 
@@ -74,7 +96,7 @@ async function processBroadcast(campaign) {
        FOR UPDATE SKIP LOCKED
      )
      RETURNING *`,
-    [campaign?.broadcast_id, batchSize]
+    [campaign?.broadcast_id, batchSize],
   );
 
   if (messages.length < 1) {
@@ -82,10 +104,10 @@ async function processBroadcast(campaign) {
     const activeCount = await query(
       `SELECT COUNT(id)::int as count FROM broadcast_log 
        WHERE broadcast_id = ? AND delivery_status IN ('PENDING', 'PROCESSING')`,
-      [campaign?.broadcast_id]
+      [campaign?.broadcast_id],
     );
     if (activeCount[0].count === 0) {
-      await updateBroadcastDatabase("FINISHED", campaign?.broadcast_id);
+      await updateBroadcastDatabase('FINISHED', campaign?.broadcast_id);
     }
     return;
   }
@@ -98,18 +120,18 @@ async function processBroadcast(campaign) {
       if (getObj.success) {
         await query(
           `UPDATE broadcast_log SET meta_msg_id = ?, delivery_status = ?, delivery_time = ? WHERE id = ?`,
-          [getObj?.msgId, getObj.msg, curTime, message?.id]
+          [getObj?.msgId, getObj.msg, curTime, message?.id],
         );
       } else {
         console.log({ getObj: JSON.stringify(getObj) });
         if (message.retry_count < 3) {
           await query(
             `UPDATE broadcast_log SET delivery_status = 'PENDING', retry_count = retry_count + 1, err = ? WHERE id = ?`,
-            [JSON.stringify(getObj), message?.id]
+            [JSON.stringify(getObj), message?.id],
           );
         } else {
           await query(`UPDATE broadcast_log SET delivery_status = ?, err = ? WHERE id = ?`, [
-            getObj.msg || "FAILED",
+            getObj.msg || 'FAILED',
             JSON.stringify(getObj),
             message?.id,
           ]);
@@ -120,7 +142,7 @@ async function processBroadcast(campaign) {
       if (message.retry_count < 3) {
         await query(
           `UPDATE broadcast_log SET delivery_status = 'PENDING', retry_count = retry_count + 1, err = ? WHERE id = ?`,
-          [err.message, message?.id]
+          [err.message, message?.id],
         );
       } else {
         await query(`UPDATE broadcast_log SET delivery_status = 'FAILED', err = ? WHERE id = ?`, [
@@ -136,15 +158,10 @@ async function processBroadcast(campaign) {
 
 // Function to retrieve and process broadcast campaigns
 async function processBroadcasts() {
-  const broadcasts = await query("SELECT * FROM broadcast WHERE status = ?", [
-    "QUEUE",
-  ]);
+  const broadcasts = await query('SELECT * FROM broadcast WHERE status = ?', ['QUEUE']);
 
   for (const campaign of broadcasts) {
-    if (
-      campaign.schedule &&
-      hasDatePassedInTimezone(campaign?.timezone, campaign?.schedule)
-    ) {
+    if (campaign.schedule && hasDatePassedInTimezone(campaign?.timezone, campaign?.schedule)) {
       await processBroadcast(campaign);
     }
   }
@@ -156,7 +173,7 @@ async function runCampaign() {
     try {
       await processBroadcasts();
     } catch (err) {
-      console.error("Error in campaign run loop:", err.message);
+      console.error('Error in campaign run loop:', err.message);
     }
     await delayRandom(3, 5);
   }

@@ -1644,6 +1644,15 @@ router.post('/suggest-response', validateUserOrAgent, async (req, res) => {
       [req.decode.uid],
     );
     let flowId = chatbot?.flow_id;
+    if (flowId) {
+      const [exists] = await query(
+        'SELECT flow_id FROM automation_flows WHERE flow_id = ? AND uid = ? LIMIT 1',
+        [flowId, req.decode.uid],
+      );
+      if (!exists) {
+        flowId = null;
+      }
+    }
     if (!flowId) {
       const [latestFlow] = await query(
         'SELECT flow_id FROM automation_flows WHERE uid = ? ORDER BY updated_at DESC LIMIT 1',
@@ -1887,6 +1896,43 @@ router.post('/ai-feedback', validateUserOrAgent, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.json({ success: false, msg: 'Failed to save feedback' });
+  }
+});
+
+// POST /api/chatbot-automation/ai/test
+router.post('/ai/test', validateUserOrAgent, async (req, res) => {
+  try {
+    const { provider, model, apiKey, prompt, customEndpoint } = req.body;
+
+    let keyToUse = apiKey;
+    if (apiKey === '••••••••••••••••') {
+      const { flowId, nodeId } = req.body;
+      if (flowId && nodeId) {
+        const [node] = await query(
+          'SELECT data FROM automation_nodes WHERE flow_id = ? AND node_id = ?',
+          [flowId, nodeId],
+        );
+        if (node?.data) {
+          const parsed = JSON.parse(node.data);
+          if (parsed.apiKey) {
+            keyToUse = decryptKey(parsed.apiKey);
+          }
+        }
+      }
+    }
+
+    const result = await testAIProviderConnection(
+      provider,
+      model,
+      keyToUse,
+      prompt || 'Say hello',
+      customEndpoint,
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: err.message });
   }
 });
 
