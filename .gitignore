@@ -90,3 +90,19 @@ client/dist/
 
 .env
 .env.*dump.sql
+
+# Private/personal documents
+.private/
+*.docx
+
+# Generated report assets
+generated_bogecom_report_assets/
+
+# Python cache
+__pycache__/
+
+# Local test files
+test_widget.html
+
+# Report generation scripts
+scripts/generate_bogecom_internship_report.py
