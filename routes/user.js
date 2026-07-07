@@ -1059,11 +1059,11 @@ router.post('/pay_with_rz', validateUser, async (req, res) => {
 
     if (!rzId || !rzKeys) {
       return res.json({
-        msg: `Please fill your razorpay credentials! if: ${rzId} keys: ${rzKeys}`,
+        msg: `Please fill your razorpay credentials!`,
       });
     }
 
-    const finalamt = (parseInt(amount) / parseInt(webPublic.exchange_rate)) * 80;
+    const finalamt = (parseInt(amount) / parseInt(webPublic.exchange_rate || 1)) * 80;
 
     const resp = await rzCapturePayment(rz_payment_id, Math.round(finalamt) * 100, rzId, rzKeys);
 
@@ -1088,6 +1088,38 @@ router.post('/pay_with_rz', validateUser, async (req, res) => {
   } catch (err) {
     res.json({ msg: err.toString(), err });
     console.log({ err, msg: JSON.stringify(err), string: err.toString() });
+  }
+});
+
+// pay offline/custom
+router.post('/pay_offline', validateUser, async (req, res) => {
+  try {
+    const { planId } = req.body;
+    const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
+    const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [planId]);
+    if (getPlan.length < 1) {
+      return res.json({ success: false, msg: 'Invalid plan found' });
+    }
+
+    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
+      req.decode.uid,
+      'OFFLINE',
+      getPlan[0].price,
+      JSON.stringify({
+        plan: getPlan[0],
+        note: 'Manual offline/custom transaction initiated by user.',
+      }),
+    ]);
+
+    await updateUserPlan(getPlan[0], req.decode.uid);
+
+    res.json({
+      success: true,
+      msg: 'Your offline/custom payment was recorded successfully. Plan updated!',
+    });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, msg: 'Failed to record custom payment' });
   }
 });
 

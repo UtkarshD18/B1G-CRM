@@ -2,17 +2,101 @@ const router = require('express').Router();
 const { query, withTransaction } = require('../database/dbpromise.js');
 const { validateUserOrAgent, verifyPermission } = require('../middlewares/auth.js');
 
+async function syncLeadToContact(uid, name, mobile, oldMobile = null) {
+  try {
+    const pbName = 'CRM Leads';
+    let pbId;
+
+    // Get or create the phonebook 'CRM Leads'
+    const existingPb = await query(`SELECT id FROM phonebook WHERE uid = ? AND name = ?`, [
+      uid,
+      pbName,
+    ]);
+    if (existingPb.length > 0) {
+      pbId = existingPb[0].id;
+    } else {
+      const insertPb = await query(`INSERT INTO phonebook (uid, name) VALUES (?, ?) RETURNING id`, [
+        uid,
+        pbName,
+      ]);
+      pbId = insertPb[0]?.id;
+    }
+
+    if (!pbId) return;
+
+    // If we are updating and the mobile number changed
+    if (oldMobile && oldMobile !== mobile) {
+      const checkOldContact = await query(`SELECT id FROM contact WHERE uid = ? AND mobile = ?`, [
+        uid,
+        oldMobile,
+      ]);
+      if (checkOldContact.length > 0) {
+        await query(`UPDATE contact SET name = ?, mobile = ? WHERE uid = ? AND mobile = ?`, [
+          name,
+          mobile,
+          uid,
+          oldMobile,
+        ]);
+        return;
+      }
+    }
+
+    // Check if contact with new mobile exists
+    const checkContact = await query(`SELECT id FROM contact WHERE uid = ? AND mobile = ?`, [
+      uid,
+      mobile,
+    ]);
+    if (checkContact.length > 0) {
+      await query(`UPDATE contact SET name = ? WHERE uid = ? AND mobile = ?`, [name, uid, mobile]);
+    } else {
+      await query(
+        `INSERT INTO contact (uid, phonebook_id, phonebook_name, name, mobile) VALUES (?, ?, ?, ?, ?)`,
+        [uid, pbId, pbName, name, mobile],
+      );
+    }
+  } catch (err) {
+    console.error('Failed to sync lead to contact:', err);
+  }
+}
+
+async function deleteLeadContact(uid, mobile) {
+  try {
+    await query(`DELETE FROM contact WHERE uid = ? AND mobile = ?`, [uid, mobile]);
+  } catch (err) {
+    console.error('Failed to delete lead contact:', err);
+  }
+}
+
 // GET all leads grouped by stage or in list
 router.get('/leads', validateUserOrAgent, verifyPermission('leads_access'), async (req, res) => {
   try {
-    const leads = await query(
-      `SELECT cl.*, a.name as owner_name 
-       FROM crm_leads cl
-       LEFT JOIN agents a ON cl.owner_agent_uid = a.uid
-       WHERE cl.uid = ? 
-       ORDER BY cl.pipeline_order ASC, cl.updated_at DESC`,
-      [req.decode.uid],
-    );
+    const { stage, limit, offset } = req.query;
+
+    let queryStr = `
+      SELECT cl.*, a.name as owner_name 
+      FROM crm_leads cl
+      LEFT JOIN agents a ON cl.owner_agent_uid = a.uid
+      WHERE cl.uid = ?
+    `;
+    const params = [req.decode.uid];
+
+    if (stage) {
+      queryStr += ` AND cl.stage = ?`;
+      params.push(stage);
+    }
+
+    queryStr += ` ORDER BY cl.pipeline_order ASC, cl.updated_at DESC`;
+
+    if (limit) {
+      queryStr += ` LIMIT ?`;
+      params.push(parseInt(limit));
+    }
+    if (offset) {
+      queryStr += ` OFFSET ?`;
+      params.push(parseInt(offset));
+    }
+
+    const leads = await query(queryStr, params);
     res.json({ success: true, data: leads });
   } catch (err) {
     console.error(err);
@@ -30,6 +114,13 @@ router.post(
       const { name, mobile, stage, owner_agent_uid, notes, value } = req.body;
       if (!name || !mobile) {
         return res.json({ success: false, msg: 'Name and Mobile are required' });
+      }
+
+      if (req.decode.role === 'agent' && owner_agent_uid) {
+        return res.json({
+          success: false,
+          msg: 'Only workspace owners can assign lead ownership.',
+        });
       }
 
       const result = await withTransaction(async (tx) => {
@@ -55,6 +146,9 @@ router.post(
 
         return resLead;
       });
+
+      // Sync to contact table
+      await syncLeadToContact(req.decode.uid, name, mobile);
 
       res.json({ success: true, msg: 'Lead created successfully.', data: result[0] });
     } catch (err) {
@@ -117,6 +211,21 @@ router.post(
         return res.json({ success: false, msg: 'Lead ID is required' });
       }
 
+      // Fetch the old lead to get the old mobile number and ownership
+      const oldLeads = await query(
+        'SELECT mobile, owner_agent_uid FROM crm_leads WHERE id = ? AND uid = ?',
+        [id, req.decode.uid],
+      );
+      const oldMobile = oldLeads.length > 0 ? oldLeads[0].mobile : null;
+      const oldOwner = oldLeads.length > 0 ? oldLeads[0].owner_agent_uid : null;
+
+      if (req.decode.role === 'agent' && oldOwner !== owner_agent_uid) {
+        return res.json({
+          success: false,
+          msg: 'Only workspace owners can change lead ownership.',
+        });
+      }
+
       const result = await withTransaction(async (tx) => {
         const resLead = await tx(
           `UPDATE crm_leads 
@@ -147,6 +256,9 @@ router.post(
         return resLead;
       });
 
+      // Sync to contact table
+      await syncLeadToContact(req.decode.uid, name, mobile, oldMobile);
+
       res.json({ success: true, msg: 'Lead details updated.', data: result[0] });
     } catch (err) {
       console.error(err);
@@ -170,6 +282,13 @@ router.post(
         return res.json({ success: false, msg: 'Lead ID is required' });
       }
 
+      // Fetch the lead's mobile first so we can remove it from contacts
+      const leadCheck = await query('SELECT mobile FROM crm_leads WHERE id = ? AND uid = ?', [
+        id,
+        req.decode.uid,
+      ]);
+      const mobile = leadCheck.length > 0 ? leadCheck[0].mobile : null;
+
       const deletedLead = await withTransaction(async (tx) => {
         // Explicit child cleanup keeps this route safe on databases created
         // before the cascade constraints were introduced.
@@ -192,6 +311,10 @@ router.post(
 
         return rows[0];
       });
+
+      if (mobile) {
+        await deleteLeadContact(req.decode.uid, mobile);
+      }
 
       res.json({ success: true, msg: 'Lead deleted successfully.', data: deletedLead });
     } catch (err) {

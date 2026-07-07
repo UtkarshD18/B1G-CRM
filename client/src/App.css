@@ -294,6 +294,28 @@ a.mini-button {
 
 .chooser-page {
   background: linear-gradient(180deg, #f3eee7, #e8efe9);
+  color: #10212d;
+}
+
+.chooser-page .chooser-card {
+  background: #ffffff;
+  color: #10212d;
+  border: 1px solid rgba(16, 33, 45, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.chooser-page .chooser-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(16, 33, 45, 0.08);
+  border-color: #1ea085;
+}
+
+.chooser-page .chooser-card h2 {
+  color: #10212d;
+}
+
+.chooser-page .chooser-card p {
+  color: #506371;
 }
 
 .section-heading {
@@ -1504,11 +1526,11 @@ tr:hover td {
 }
 
 .auth-copy h1 {
-  color: #10212d !important;
+  color: #ffffff !important;
 }
 
 .auth-copy p {
-  color: #365261 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .auth-card {
@@ -1852,4 +1874,191 @@ tr:hover td {
 .empty-onboarding-card li {
   margin-bottom: 8px;
 }
+
+/* Fix text color in dark portal layouts */
+.portal-main .panel h2,
+.portal-main .page-header h2,
+.portal-main .hero-panel h2,
+.portal-main .dashboard-card strong,
+.portal-main .inbox-rail-header h2,
+.portal-main .wa-conversation-header h2,
+.portal-main .wa-chat-main strong {
+  color: var(--text-primary) !important;
+}
+
+/* Fix text colors for sections with light backgrounds on the public landing page */
+.pricing-section,
+.roles-section {
+  color: #10212d !important;
+}
+
+.pricing-section h2,
+.pricing-section p,
+.pricing-section div,
+.pricing-section span,
+.roles-section h3,
+.roles-section p,
+.roles-section li {
+  color: #10212d !important;
+}
+
+.pricing-section .eyebrow,
+.roles-section .eyebrow {
+  color: #1ea085 !important;
+  background: rgba(30, 160, 133, 0.12) !important;
+  border: 1px solid rgba(30, 160, 133, 0.25) !important;
+}
+
+.pricing-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(16, 33, 45, 0.12) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+}
+
+.pricing-card .plan-name {
+  color: #10212d !important;
+}
+
+.pricing-card .plan-price {
+  color: #10212d !important;
+}
+
+.pricing-card .plan-period {
+  color: #506371 !important;
+}
+
+.pricing-card p {
+  color: #506371 !important;
+}
+
+.role-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(16, 33, 45, 0.12) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+}
+
+.role-card h3 {
+  color: #10212d !important;
+}
+
+.role-card li {
+  color: #31424e !important;
+}
+
+/* Fix landing page top-half colors to match the light theme */
+.public-page {
+  background: #f3eee7 !important;
+  color: #10212d !important;
+}
+
+.public-header .brand,
+.public-header nav,
+.public-header nav a,
+.hero-section h1,
+.hero-section p,
+.feature-grid-section h2,
+.feature-card h3,
+.feature-card p {
+  color: #10212d !important;
+}
+
+.public-header nav a {
+  opacity: 0.8;
+}
+.public-header nav a:hover {
+  opacity: 1;
+}
+
+.hero-panel {
+  background: #ffffff !important;
+  border: 1px solid rgba(16, 33, 45, 0.12) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.03) !important;
+  color: #10212d !important;
+}
+
+.hero-panel h2 {
+  color: #10212d !important;
+}
+
+.hero-panel .signal-list li {
+  color: #31424e !important;
+}
+
+.feature-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(16, 33, 45, 0.12) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
+  color: #10212d !important;
+}
+
+/* Smooth transition styles for theme toggling */
+.public-page,
+.public-page *,
+.public-page .hero-panel,
+.public-page .feature-card,
+.public-page .pricing-card,
+.public-page .role-card {
+  transition: background 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+              color 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+              border-color 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+/* Dark theme overrides */
+.public-page.dark-theme {
+  background: #09121f !important;
+  color: #f3f1eb !important;
+}
+
+.public-page.dark-theme .public-header .brand,
+.public-page.dark-theme .public-header nav,
+.public-page.dark-theme .public-header nav a,
+.public-page.dark-theme .hero-section h1,
+.public-page.dark-theme .hero-section p,
+.public-page.dark-theme .feature-grid-section h2,
+.public-page.dark-theme .feature-card h3,
+.public-page.dark-theme .feature-card p,
+.public-page.dark-theme .pricing-section h2,
+.public-page.dark-theme .pricing-section p,
+.public-page.dark-theme .pricing-section div,
+.public-page.dark-theme .pricing-section span,
+.public-page.dark-theme .roles-section h3,
+.public-page.dark-theme .roles-section p,
+.public-page.dark-theme .roles-section li {
+  color: #f3f1eb !important;
+}
+
+.public-page.dark-theme .hero-panel,
+.public-page.dark-theme .feature-card,
+.public-page.dark-theme .pricing-card,
+.public-page.dark-theme .role-card {
+  background: #111e2e !important;
+  border: 1px solid rgba(243, 241, 235, 0.1) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
+  color: #f3f1eb !important;
+}
+
+.public-page.dark-theme .hero-panel h2,
+.public-page.dark-theme .pricing-card .plan-name,
+.public-page.dark-theme .pricing-card .plan-price,
+.public-page.dark-theme .role-card h3 {
+  color: #ffffff !important;
+}
+
+.public-page.dark-theme .pricing-card .plan-period,
+.public-page.dark-theme .pricing-card p,
+.public-page.dark-theme .role-card li {
+  color: rgba(243, 241, 235, 0.7) !important;
+}
+
+.public-page.dark-theme .pricing-section .eyebrow,
+.public-page.dark-theme .roles-section .eyebrow {
+  color: #1ea085 !important;
+  background: rgba(30, 160, 133, 0.15) !important;
+  border: 1px solid rgba(30, 160, 133, 0.3) !important;
+}
+
+
+
+
 

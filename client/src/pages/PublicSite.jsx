@@ -1,44 +1,74 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { apiRequest } from '../shared/api'
-import { ADMIN_MODULES, AGENT_MODULES, DEFAULT_PLANS, PUBLIC_FEATURES, USER_MODULES } from '../shared/constants'
-import { formatMoney } from '../shared/format'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { apiRequest } from '../shared/api';
+import {
+  ADMIN_MODULES,
+  AGENT_MODULES,
+  DEFAULT_PLANS,
+  PUBLIC_FEATURES,
+  USER_MODULES,
+} from '../shared/constants';
+import { formatMoney } from '../shared/format';
 
 function PublicSite() {
-  const [plans, setPlans] = useState(DEFAULT_PLANS)
+  const [plans, setPlans] = useState(DEFAULT_PLANS);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    let active = true
+    let active = true;
 
     async function loadPlans() {
       try {
-        const result = await apiRequest('/api/admin/get_plans')
+        const result = await apiRequest('/api/admin/get_plans');
         if (active && Array.isArray(result?.data) && result.data.length > 0) {
-          setPlans(result.data)
+          setPlans(result.data);
         }
       } catch {
         // Keep fallback marketing content when the API is unavailable.
       }
     }
 
-    loadPlans()
+    loadPlans();
 
     return () => {
-      active = false
-    }
-  }, [])
+      active = false;
+    };
+  }, []);
 
   return (
-    <div className="public-page">
+    <div className={`public-page ${isDarkMode ? 'dark-theme' : ''}`}>
       <header className="public-header">
         <Link className="brand" to="/">
           B1GCRM
         </Link>
-        <nav>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
           <a href="#roles">Portals</a>
           <Link to="/signin">Sign in</Link>
+          <button
+            type="button"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            style={{
+              background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(16, 33, 45, 0.05)',
+              border: isDarkMode
+                ? '1px solid rgba(255, 255, 255, 0.15)'
+                : '1px solid rgba(16, 33, 45, 0.12)',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              padding: '6px 14px',
+              marginLeft: '12px',
+              fontSize: '13px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'inherit',
+              fontWeight: 'bold',
+              transition: 'all 0.3s ease',
+            }}
+          >
+            {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+          </button>
         </nav>
       </header>
 
@@ -79,7 +109,10 @@ function PublicSite() {
             {PUBLIC_FEATURES.map((feature) => (
               <article className="feature-card" key={feature}>
                 <h3>{feature}</h3>
-                <p>Aligned to the parity audit so frontend work follows the real product, not guesses.</p>
+                <p>
+                  Aligned to the parity audit so frontend work follows the real product, not
+                  guesses.
+                </p>
               </article>
             ))}
           </div>
@@ -96,8 +129,13 @@ function PublicSite() {
                 <p className="plan-name">{plan.title}</p>
                 <div className="plan-price">{formatMoney(Number(plan.price || 0))}</div>
                 <p className="plan-period">{plan.plan_duration_in_days}-day access window</p>
-                <p>{plan.short_description || 'Plan details will be expanded from the admin portal.'}</p>
-                <Link className="primary-button" to={`/user/signup?plan=${encodeURIComponent(plan.id || '')}`}>
+                <p>
+                  {plan.short_description || 'Plan details will be expanded from the admin portal.'}
+                </p>
+                <Link
+                  className="primary-button"
+                  to={`/user/signup?plan=${encodeURIComponent(plan.id || '')}`}
+                >
                   {Number(plan.price || 0) > 0 ? 'Choose plan' : 'Start free trial'}
                 </Link>
               </article>
@@ -136,7 +174,7 @@ function PublicSite() {
         </section>
       </main>
     </div>
-  )
+  );
 }
 
-export default PublicSite
+export default PublicSite;

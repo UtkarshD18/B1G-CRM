@@ -16,7 +16,7 @@ const SALT_ROUNDS = 10;
 
 const DEV_ACCOUNTS = {
   admin: { email: 'admin@example.com', password: process.env.TEST_ADMIN_PASSWORD || 'CHANGE_ME' },
-  user:  { email: 'user@example.com',  password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME' },
+  user: { email: 'user@example.com', password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME' },
   agent: { email: 'agent@example.com', password: process.env.TEST_USER_PASSWORD || 'CHANGE_ME' },
 };
 
@@ -31,7 +31,7 @@ async function seedDevCredentials({ logger = console } = {}) {
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (email) DO UPDATE
        SET password = EXCLUDED.password`,
-      ['local-admin-uid', DEV_ACCOUNTS.admin.email, adminHash, 'admin']
+      ['local-admin-uid', DEV_ACCOUNTS.admin.email, adminHash, 'admin'],
     );
 
     // User
@@ -48,9 +48,9 @@ async function seedDevCredentials({ logger = console } = {}) {
         userHash,
         'user',
         'Asia/Kolkata',
-        '{"contact_limit":100000,"allow_note":1,"allow_tag":1,"allow_chatbot":1,"allow_api":1}',
-        4102444800000
-      ]
+        '{"title":"Enterprise","contact_limit":100000,"allow_note":1,"allow_tag":1,"allow_chatbot":1,"allow_api":1,"plan_duration_in_days":365}',
+        4102444800000,
+      ],
     );
 
     // Agent
@@ -69,8 +69,8 @@ async function seedDevCredentials({ logger = console } = {}) {
         'Local Agent',
         '',
         'Local development agent',
-        1
-      ]
+        1,
+      ],
     );
 
     if (logger && typeof logger.info === 'function') {
