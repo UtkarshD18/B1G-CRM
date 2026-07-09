@@ -1,4 +1,3 @@
-const fetch = require('node-fetch');
 const { query } = require('../database/dbpromise');
 const env = require('../env');
 

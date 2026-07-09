@@ -21,7 +21,22 @@ const { validateUserOrAgent, verifyPermission } = require('../middlewares/auth.j
 const { getIOInstance } = require('../socket.js');
 const { checkPlan } = require('../middlewares/plan.js');
 const { processMessage } = require('../helper/inbox/inbox.js');
-const { v7: uuidv7 } = require('uuid');
+const crypto = require('crypto');
+
+function uuidv7() {
+  const value = crypto.randomBytes(16);
+  const timestamp = Date.now();
+  value.writeUIntBE(timestamp, 0, 6);
+  value[6] = (value[6] & 0x0f) | 0x70;
+  value[8] = (value[8] & 0x3f) | 0x80;
+  return [
+    value.toString('hex', 0, 4),
+    value.toString('hex', 4, 6),
+    value.toString('hex', 6, 8),
+    value.toString('hex', 8, 10),
+    value.toString('hex', 10, 16),
+  ].join('-');
+}
 
 // handle post webhook
 router.post('/webhook/:uid', async (req, res) => {

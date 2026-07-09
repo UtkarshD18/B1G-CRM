@@ -1,10 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 const { query } = require('../../database/dbpromise');
-const fetch = require('node-fetch');
 const mime = require('mime-types');
 const env = require('../../env');
-const { v7: uuidv7 } = require('uuid');
+const crypto = require('crypto');
+
+function uuidv7() {
+  const value = crypto.randomBytes(16);
+  const timestamp = Date.now();
+  value.writeUIntBE(timestamp, 0, 6);
+  value[6] = (value[6] & 0x0f) | 0x70;
+  value[8] = (value[8] & 0x3f) | 0x80;
+  return [
+    value.toString('hex', 0, 4),
+    value.toString('hex', 4, 6),
+    value.toString('hex', 6, 8),
+    value.toString('hex', 8, 10),
+    value.toString('hex', 10, 16),
+  ].join('-');
+}
 
 function mergeArraysWithPhonebook(chatArray, phonebookArray, search = '', isAgent = false) {
   const chatsMobiles = new Set(chatArray.map((c) => c.sender_mobile));
@@ -86,7 +100,8 @@ async function fetchImageAsBase64(url) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`);
 
-    const buffer = await response.buffer();
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     const base64Image = `data:${response.headers.get(
       'content-type',
     )};base64,${buffer.toString('base64')}`;

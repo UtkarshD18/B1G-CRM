@@ -1,6 +1,5 @@
 const { query } = require('../database/dbpromise');
 const nodemailer = require('nodemailer');
-const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const { sendMetaMsg } = require('../helper/chatbot/meta/function');

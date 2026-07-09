@@ -1,18 +1,13 @@
-const fetch = require("node-fetch");
-const { sendMetatemplet } = require("../functions/function");
-const env = require("../env");
+const { sendMetatemplet } = require('../functions/function');
+const env = require('../env');
 
 const templateCache = new Map();
 
 function replaceVariables(obj, arr) {
   const replacedArr = arr.map((item) => {
-    if (item.startsWith("{{") && item.endsWith("}}")) {
+    if (item.startsWith('{{') && item.endsWith('}}')) {
       const key = item.slice(2, -2); // Remove '{{' and '}}' to get the key
-      if (
-        obj.hasOwnProperty(key) &&
-        obj[key] !== undefined &&
-        obj[key] !== ""
-      ) {
+      if (obj.hasOwnProperty(key) && obj[key] !== undefined && obj[key] !== '') {
         return obj[key];
       } else {
         return item; // Keep the original placeholder if key not found in object or value is empty
@@ -30,10 +25,10 @@ async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
       data: [
         {
           name: name,
-          language: "en",
-          components: []
-        }
-      ]
+          language: 'en',
+          components: [],
+        },
+      ],
     };
   }
 
@@ -44,7 +39,7 @@ async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
 
   const url = `https://graph.facebook.com/v18.0/${metaKeys?.waba_id}/message_templates?name=${name}`;
   const options = {
-    method: "GET",
+    method: 'GET',
     headers: {
       Authorization: `Bearer ${metaKeys?.access_token}`,
     },
@@ -59,10 +54,8 @@ async function getMetaTempletByName(name, metaKeys, retries = 3, delay = 1000) {
       }
       return data;
     } catch (error) {
-      if (error.code === "EAI_AGAIN" && attempt < retries) {
-        console.warn(
-          `Attempt ${attempt} failed with EAI_AGAIN. Retrying in ${delay}ms...`
-        );
+      if (error.code === 'EAI_AGAIN' && attempt < retries) {
+        console.warn(`Attempt ${attempt} failed with EAI_AGAIN. Retrying in ${delay}ms...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         throw error; // Rethrow if not a temporary error or if max retries reached
@@ -93,8 +86,8 @@ async function sendMessage(message, metaKeys) {
   if (env.MOCK_META_DELIVERY || metaKeys?.access_token === 'mock-token') {
     return {
       success: true,
-      msgId: "mock-msg-id-" + Math.random().toString(36).substring(7),
-      msg: "sent"
+      msgId: 'mock-msg-id-' + Math.random().toString(36).substring(7),
+      msg: 'sent',
     };
   }
   const templetName = message?.templet_name;
@@ -104,35 +97,32 @@ async function sendMessage(message, metaKeys) {
   if (templet.error || templet?.data?.length < 1) {
     return {
       success: false,
-      msg: templet.error?.message || "Unable to fetch templet from meta",
+      msg: templet.error?.message || 'Unable to fetch templet from meta',
     };
   } else {
     // return { success: true, data: templet?.data[0] }
-    const exampleArr = replaceVariables(
-      contact,
-      removeNulls(JSON.parse(message?.example))
-    );
+    const exampleArr = replaceVariables(contact, removeNulls(JSON.parse(message?.example)));
 
     console.log({
       exampleArr: JSON.stringify(exampleArr),
     });
 
     const resp = await sendMetatemplet(
-      message?.send_to?.replace("+", ""),
+      message?.send_to?.replace('+', ''),
       metaKeys?.business_phone_number_id,
       metaKeys?.access_token,
       templet?.data[0],
-      exampleArr
+      exampleArr,
     );
 
     if (resp.error) {
       console.dir(resp, { depth: null });
       return {
         success: false,
-        msg: resp?.error?.error_user_title || "Please check your API",
+        msg: resp?.error?.error_user_title || 'Please check your API',
       };
     } else {
-      return { success: true, msgId: resp?.messages[0]?.id, msg: "sent" };
+      return { success: true, msgId: resp?.messages[0]?.id, msg: 'sent' };
     }
   }
 }

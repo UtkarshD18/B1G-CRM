@@ -31,7 +31,6 @@ const Stripe = require('stripe');
 const { checkPlan, checkNote, checkTags, checkContactLimit } = require('../middlewares/plan.js');
 const { recoverEmail } = require('../emails/returnEmails.js');
 const moment = require('moment');
-const fetch = require('node-fetch');
 const jwt = require('jsonwebtoken');
 const { checkQr } = require('../helper/addon/qr/index.js');
 const env = require('../env.js');

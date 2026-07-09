@@ -1,5 +1,4 @@
 const { MongoClient, ObjectId } = require('mongodb');
-const fetch = require('node-fetch');
 const env = require('../env');
 
 // Cache Expressbees Auth Token
