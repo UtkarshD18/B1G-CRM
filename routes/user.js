@@ -38,6 +38,7 @@ const { addON } = env;
 const { invalidatePermissionCache } = require('../utils/permissionResolver.js');
 const { logActivity } = require('../utils/activityLogger.js');
 const authController = require('../controllers/authController.js');
+const userController = require('../controllers/userController.js');
 
 // facebook login
 router.post('/login_with_facebook', async (req, res) => {
@@ -226,26 +227,7 @@ router.post('/return_media_url', validateUser, async (req, res) => {
 });
 
 // get user
-router.get('/get_me', validateUser, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
-
-    const qrCheck = checkQr();
-    const finalAddon = qrCheck ? [...addON, 'QR'] : addON;
-
-    // getting phonebook
-    const contact = await query(`SELECT * FROM contact WHERE uid = ?`, [req.decode.uid]);
-
-    res.json({
-      data: { ...data[0], contact: contact.length },
-      success: true,
-      addon: finalAddon,
-    });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong', err });
-    console.log(err);
-  }
-});
+router.get('/get_me', validateUser, userController.getMe);
 
 // update notes
 router.post('/save_note', validateUser, checkPlan, checkNote, async (req, res) => {
@@ -1292,38 +1274,7 @@ router.post('/pay_with_paystack', validateUser, async (req, res) => {
 });
 
 // update profile
-router.post('/update_profile', validateUser, async (req, res) => {
-  try {
-    const { newPassword, name, mobile_with_country_code, email, timezone } = req.body;
-
-    if (!name || !mobile_with_country_code || !email || !timezone) {
-      return res.json({
-        msg: 'Name, Mobile, Email, Timezone are required fields',
-      });
-    }
-
-    if (newPassword) {
-      const hash = await bcrypt.hash(newPassword, 10);
-      await query(
-        `UPDATE user SET name = ?, email = ?, password = ?, mobile_with_country_code = ?, timezone = ? WHERE uid = ?`,
-        [name, email, hash, mobile_with_country_code, timezone, req.decode.uid],
-      );
-    } else {
-      await query(
-        `UPDATE user SET name = ?, email = ?, mobile_with_country_code = ?, timezone = ? WHERE uid = ?`,
-        [name, email, mobile_with_country_code, timezone, req.decode.uid],
-      );
-    }
-
-    invalidatePermissionCache(req.decode.uid);
-    await logActivity(req, 'Users', 'update_profile', email, { name, timezone });
-
-    res.json({ success: true, msg: 'Profile was updated' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.post('/update_profile', validateUser, userController.updateProfile);
 
 // get dashboard
 router.get('/get_dashboard', validateUser, async (req, res) => {
