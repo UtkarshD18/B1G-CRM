@@ -116,8 +116,30 @@ async function getMetaKeys(uid) {
   }
 }
 
+async function getBusinessProfile(uid) {
+  const metaKeys = await query('SELECT * FROM meta_api WHERE uid = ?', [uid]);
+
+  if (!metaKeys[0]?.access_token || !metaKeys[0]?.business_phone_number_id) {
+    return {
+      success: false,
+      msg: 'Please fill the meta token and mobile id',
+    };
+  }
+
+  const fetchProfile = await metaHelper.fetchProfileFun(
+    metaKeys[0]?.business_phone_number_id,
+    metaKeys[0]?.access_token,
+  );
+
+  return {
+    success: true,
+    data: fetchProfile,
+  };
+}
+
 module.exports = {
   syncMetaApiKeys,
   updateMetaKeys,
   getMetaKeys,
+  getBusinessProfile,
 };

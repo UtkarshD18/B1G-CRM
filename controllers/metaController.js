@@ -40,7 +40,26 @@ async function getMetaKeys(req, res, next) {
   }
 }
 
+async function fetchProfile(req, res, next) {
+  try {
+    const result = await metaService.getBusinessProfile(req.decode.uid);
+    if (!result.success) {
+      return res.json({
+        success: false,
+        msg: result.msg,
+      });
+    }
+    // Note: original router.get('/fetch_profile') returns res.json(fetchProfile) directly
+    // which is the data inside result.data
+    return res.json(result.data);
+  } catch (err) {
+    console.log(err);
+    return res.json({ msg: 'something went wrong', err });
+  }
+}
+
 module.exports = {
   updateMeta,
   getMetaKeys,
+  fetchProfile,
 };

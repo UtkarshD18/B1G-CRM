@@ -1268,29 +1268,7 @@ router.get('/generate_api_keys', validateUser, async (req, res) => {
   }
 });
 
-router.get('/fetch_profile', validateUser, async (req, res) => {
-  try {
-    // const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid])
-
-    const metaKeys = await query('SELECT * FROM meta_api WHERE uid = ?', [req.decode?.uid]);
-
-    if (!metaKeys[0]?.access_token || !metaKeys[0]?.business_phone_number_id) {
-      return res.json({
-        success: false,
-        msg: 'Please fill the meta token and mobile id',
-      });
-    }
-    const fetchProfile = await fetchProfileFun(
-      metaKeys[0]?.business_phone_number_id,
-      metaKeys[0]?.access_token,
-    );
-
-    res.json(fetchProfile);
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'something went wrong', err });
-  }
-});
+router.get('/fetch_profile', validateUser, metaController.fetchProfile);
 
 // adding task for agent
 router.post('/add_task_for_agent', validateUser, async (req, res) => {
