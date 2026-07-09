@@ -39,6 +39,8 @@ const { invalidatePermissionCache } = require('../utils/permissionResolver.js');
 const { logActivity } = require('../utils/activityLogger.js');
 const authController = require('../controllers/authController.js');
 const userController = require('../controllers/userController.js');
+const metaController = require('../controllers/metaController.js');
+const { syncMetaApiKeys } = require('../services/metaService.js');
 
 // facebook login
 router.post('/login_with_facebook', async (req, res) => {
@@ -410,142 +412,10 @@ router.post('/del_contact', validateUser, async (req, res) => {
   }
 });
 
-router.post('/update_meta', validateUser, async (req, res) => {
-  try {
-    const { waba_id, business_account_id, access_token, business_phone_number_id, app_id } =
-      req.body;
-
-    if (!waba_id || !business_account_id || !access_token || !business_phone_number_id || !app_id) {
-      return res.json({ success: false, msg: 'Please fill all the fields' });
-    }
-
-    const resp = await getBusinessPhoneNumber('v18.0', business_phone_number_id, access_token);
-
-    if (resp?.error) {
-      return res.json({
-        success: false,
-        msg: resp?.error?.message || 'Please check your details',
-      });
-    }
-
-    const findOne = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
-    if (findOne.length > 0) {
-      await query(
-        `UPDATE meta_api SET waba_id = ?, business_account_id = ?, access_token = ?, business_phone_number_id = ?, app_id = ? WHERE uid = ?`,
-        [
-          waba_id,
-          business_account_id,
-          access_token,
-          business_phone_number_id,
-          app_id,
-          req.decode.uid,
-        ],
-      );
-    } else {
-      await query(
-        `INSERT INTO meta_api (uid, waba_id, business_account_id, access_token, business_phone_number_id, app_id) VALUES (?,?,?,?,?,?)`,
-        [
-          req.decode.uid,
-          waba_id,
-          business_account_id,
-          access_token,
-          business_phone_number_id,
-          app_id,
-        ],
-      );
-    }
-
-    res.json({
-      success: true,
-      msg: 'Your meta settings were updated successfully!',
-    });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong', err });
-    console.log(err);
-  }
-});
+router.post('/update_meta', validateUser, metaController.updateMeta);
 
 // get meta keys
-router.get('/get_meta_keys', validateUser, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM meta_api WHERE uid = ?`, [req.decode.uid]);
-    if (data.length < 1) {
-      res.json({ success: true, data: {} });
-    } else {
-      res.json({ success: true, data: data[0] });
-    }
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong', err });
-    console.log(err);
-  }
-});
-
-async function syncMetaApiKeys(uid) {
-  try {
-    const existing = await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
-    if (existing.length > 0) {
-      if (existing[0].app_id) {
-        return existing;
-      }
-      const [credRow] = await query(
-        `SELECT credentials FROM channel_credentials WHERE uid = ? AND channel_type = ?`,
-        [uid, 'whatsapp_cloud'],
-      );
-      if (credRow?.credentials) {
-        const { decrypt } = require('../utils/channels/encryption');
-        const creds = JSON.parse(decrypt(credRow.credentials));
-        if (creds.access_token) {
-          try {
-            const debugUrl = `https://graph.facebook.com/debug_token?input_token=${creds.access_token}&access_token=${creds.access_token}`;
-            const res = await fetch(debugUrl);
-            const data = await res.json();
-            if (data?.data?.app_id) {
-              await query(`UPDATE meta_api SET app_id = ? WHERE uid = ?`, [data.data.app_id, uid]);
-              return await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
-            }
-          } catch (debugErr) {
-            console.error('Failed to repair App ID:', debugErr);
-          }
-        }
-      }
-      return existing;
-    }
-
-    const [credRow] = await query(
-      `SELECT credentials FROM channel_credentials WHERE uid = ? AND channel_type = ?`,
-      [uid, 'whatsapp_cloud'],
-    );
-    if (credRow?.credentials) {
-      const { decrypt } = require('../utils/channels/encryption');
-      const creds = JSON.parse(decrypt(credRow.credentials));
-      if (creds.access_token && creds.phone_number_id) {
-        let appId = creds.app_id || '';
-        if (!appId) {
-          try {
-            const debugUrl = `https://graph.facebook.com/debug_token?input_token=${creds.access_token}&access_token=${creds.access_token}`;
-            const res = await fetch(debugUrl);
-            const data = await res.json();
-            if (data?.data?.app_id) {
-              appId = data.data.app_id;
-            }
-          } catch (debugErr) {
-            console.error('Failed to automatically retrieve App ID from debug_token:', debugErr);
-          }
-        }
-
-        await query(
-          `INSERT INTO meta_api (uid, business_phone_number_id, access_token, waba_id, app_id) 
-           VALUES (?, ?, ?, ?, ?)`,
-          [uid, creds.phone_number_id, creds.access_token, creds.business_account_id || '', appId],
-        );
-        return await query(`SELECT * FROM meta_api WHERE uid = ?`, [uid]);
-      }
-    }
-  } catch (err) {
-    console.error('Failed to sync Meta API keys:', err);
-  }
-  return [];
-}
+router.get('/get_meta_keys', validateUser, metaController.getMetaKeys);
 
 // add meta templet
 router.post('/add_meta_templet', validateUser, checkPlan, async (req, res) => {
