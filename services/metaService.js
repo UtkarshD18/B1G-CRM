@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { query } = require('../database/dbpromise');
 const env = require('../env.js');
 const metaHelper = require('../functions/helpers/metaHelper');
@@ -137,9 +139,244 @@ async function getBusinessProfile(uid) {
   };
 }
 
+async function addTemplate({ uid, templateData }) {
+  if (env.MOCK_META_DELIVERY) {
+    const mockFilePath = path.join(
+      __dirname,
+      '../conversations',
+      `mock_meta_templates_${uid}.json`,
+    );
+    let mockTemplates = [];
+    if (fs.existsSync(mockFilePath)) {
+      mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
+    }
+    const newTemplate = {
+      name: templateData.name,
+      language: templateData.language || 'en_US',
+      category: templateData.category || 'UTILITY',
+      status: 'APPROVED',
+      components: templateData.components || [],
+    };
+    const idx = mockTemplates.findIndex((t) => t.name === newTemplate.name);
+    if (idx >= 0) {
+      mockTemplates[idx] = newTemplate;
+    } else {
+      mockTemplates.push(newTemplate);
+    }
+    fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
+    return {
+      success: true,
+      msg: 'Templet was added and waiting for the review',
+    };
+  }
+
+  const getAPIKEYS = await syncMetaApiKeys(uid);
+
+  if (getAPIKEYS.length < 1) {
+    return {
+      success: false,
+      msg: 'Please fill your meta API keys',
+    };
+  }
+
+  const resp = await metaHelper.createMetaTemplet(
+    'v18.0',
+    getAPIKEYS[0]?.waba_id,
+    getAPIKEYS[0]?.access_token,
+    templateData,
+  );
+
+  if (resp.error) {
+    return {
+      success: false,
+      msg: resp?.error?.error_user_msg || resp?.error?.message,
+    };
+  } else {
+    return {
+      success: true,
+      msg: 'Templet was added and waiting for the review',
+    };
+  }
+}
+
+async function getMyTemplates(uid) {
+  if (env.MOCK_META_DELIVERY) {
+    const mockFilePath = path.join(
+      __dirname,
+      '../conversations',
+      `mock_meta_templates_${uid}.json`,
+    );
+    let mockTemplates = [];
+    if (fs.existsSync(mockFilePath)) {
+      mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
+    } else {
+      mockTemplates = [
+        {
+          name: 'order_update',
+          language: 'en_US',
+          category: 'UTILITY',
+          status: 'APPROVED',
+          components: [{ type: 'BODY', text: 'Hello {{1}}, your order {{2}} has been shipped.' }],
+        },
+      ];
+      fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
+    }
+    return { success: true, data: mockTemplates };
+  }
+
+  const getMETA = await syncMetaApiKeys(uid);
+  if (getMETA.length < 1) {
+    return {
+      success: false,
+      msg: 'Please check your meta API keys',
+    };
+  }
+
+  const resp = await metaHelper.getAllTempletsMeta(
+    'v18.0',
+    getMETA[0]?.waba_id,
+    getMETA[0]?.access_token,
+  );
+
+  if (resp?.error) {
+    return {
+      success: false,
+      msg: resp?.error?.message || 'Please check your API',
+    };
+  } else {
+    return { success: true, data: resp?.data || [] };
+  }
+}
+
+async function deleteTemplate({ uid, name }) {
+  if (env.MOCK_META_DELIVERY) {
+    const mockFilePath = path.join(
+      __dirname,
+      '../conversations',
+      `mock_meta_templates_${uid}.json`,
+    );
+    let mockTemplates = [];
+    if (fs.existsSync(mockFilePath)) {
+      mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
+    }
+    mockTemplates = mockTemplates.filter((t) => t.name !== name);
+    fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
+    return {
+      success: true,
+      data: mockTemplates,
+      msg: 'Templet was deleted',
+    };
+  }
+
+  const getMETA = await syncMetaApiKeys(uid);
+  if (getMETA.length < 1) {
+    return {
+      success: false,
+      msg: 'Please check your meta API keys',
+    };
+  }
+
+  const resp = await metaHelper.delMetaTemplet(
+    'v18.0',
+    getMETA[0]?.waba_id,
+    getMETA[0]?.access_token,
+    name,
+  );
+
+  if (resp.error) {
+    return {
+      success: false,
+      msg: resp?.error?.error_user_title || 'Please check your API',
+    };
+  } else {
+    return {
+      success: true,
+      data: resp?.data || [],
+      msg: 'Templet was deleted',
+    };
+  }
+}
+
+async function updateTemplate({ uid, name, language, category, components }) {
+  if (env.MOCK_META_DELIVERY) {
+    const mockFilePath = path.join(
+      __dirname,
+      '../conversations',
+      `mock_meta_templates_${uid}.json`,
+    );
+    let mockTemplates = [];
+    if (fs.existsSync(mockFilePath)) {
+      mockTemplates = JSON.parse(fs.readFileSync(mockFilePath, 'utf8'));
+    }
+    const idx = mockTemplates.findIndex((t) => t.name === name);
+    if (idx < 0) {
+      return { success: false, msg: 'Template not found' };
+    }
+    mockTemplates[idx] = {
+      ...mockTemplates[idx],
+      language: language || mockTemplates[idx].language,
+      category: category || mockTemplates[idx].category,
+      components: components || mockTemplates[idx].components,
+    };
+    fs.writeFileSync(mockFilePath, JSON.stringify(mockTemplates, null, 2), 'utf8');
+    return { success: true, msg: 'Template was updated successfully' };
+  }
+
+  return {
+    success: false,
+    msg: 'Direct template updates are not supported by the Meta API. Please delete and recreate the template.',
+  };
+}
+
+async function uploadTemplateMedia({ uid, templet_name, filename, filePath }) {
+  const getMETA = await syncMetaApiKeys(uid);
+  if (getMETA.length < 1) {
+    return {
+      success: false,
+      msg: 'Please check your meta API keys',
+    };
+  }
+
+  const { fileSizeInBytes, mimeType } = await metaHelper.getFileInfo(filePath);
+
+  const getSession = await metaHelper.getSessionUploadMediaMeta(
+    'v18.0',
+    getMETA[0]?.app_id,
+    getMETA[0]?.access_token,
+    fileSizeInBytes,
+    mimeType,
+  );
+
+  const uploadFile = await metaHelper.uploadFileMeta(
+    getSession?.id,
+    filePath,
+    'v18.0',
+    getMETA[0]?.access_token,
+  );
+
+  if (!uploadFile?.success) {
+    return { success: false, msg: 'Please check your meta API' };
+  }
+
+  await query(
+    `INSERT INTO meta_templet_media (uid, templet_name, meta_hash, file_name) VALUES (?,?,?,?)`,
+    [uid, templet_name, uploadFile?.data?.h, filename],
+  );
+
+  return {
+    success: true,
+    hash: uploadFile?.data?.h,
+  };
+}
+
 module.exports = {
   syncMetaApiKeys,
   updateMetaKeys,
   getMetaKeys,
   getBusinessProfile,
+  addTemplate,
+  getMyTemplates,
+  deleteTemplate,
+  updateTemplate,
+  uploadTemplateMedia,
 };
