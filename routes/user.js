@@ -8,26 +8,16 @@ const {
   isValidEmail,
   getFileExtension,
   validateMagicBytes,
-  getBusinessPhoneNumber,
-  createMetaTemplet,
-  getAllTempletsMeta,
-  delMetaTemplet,
   getFileInfo,
-  getSessionUploadMediaMeta,
-  uploadFileMeta,
-  updateUserPlan,
   getUserOrderssByMonth,
   sendEmail,
-  fetchProfileFun,
   returnWidget,
   generateWhatsAppURL,
-  rzCapturePayment,
   validateFacebookToken,
   writeJsonToFile,
 } = require('../functions/function.js');
 const { sign } = require('jsonwebtoken');
 const validateUser = require('../middlewares/user.js');
-const Stripe = require('stripe');
 const { checkPlan, checkNote, checkTags, checkContactLimit } = require('../middlewares/plan.js');
 const { recoverEmail } = require('../emails/returnEmails.js');
 const moment = require('moment');
@@ -40,6 +30,7 @@ const { logActivity } = require('../utils/activityLogger.js');
 const authController = require('../controllers/authController.js');
 const userController = require('../controllers/userController.js');
 const metaController = require('../controllers/metaController.js');
+const billingController = require('../controllers/billingController.js');
 const { syncMetaApiKeys } = require('../services/metaService.js');
 
 // facebook login
@@ -433,440 +424,25 @@ router.post('/update_meta_templet', validateUser, metaController.updateTemplate)
 router.post('/return_media_url_meta', validateUser, metaController.uploadMedia);
 
 // get plan detail
-router.post('/get_plan_details', validateUser, async (req, res) => {
-  try {
-    const { id } = req.body;
-
-    const data = await query(`SELECT * FROM plan WHERE id = ?`, [id]);
-    if (data.length < 1) {
-      return res.json({ success: false, data: null });
-    } else {
-      res.json({ success: true, data: data[0] });
-    }
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong', err });
-    console.log(err);
-  }
-});
+router.post('/get_plan_details', validateUser, billingController.getPlanDetails);
 
 // get payment gateway
-router.get('/get_payment_details', validateUser, async (req, res) => {
-  try {
-    const resp = await query(`SELECT * FROM web_private`, []);
-    let data = resp[0];
-    const [userData] = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
+router.get('/get_payment_details', validateUser, billingController.getPaymentDetails);
 
-    data.pay_stripe_key = '';
-    data.pay_mercadopago_key = '';
-    res.json({ data, userData, success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong', err });
-    console.log(err);
-  }
-});
+router.post('/create_stripe_session', validateUser, billingController.createStripeSession);
 
-// creating stripe pay session
-router.post('/create_stripe_session', validateUser, async (req, res) => {
-  try {
-    const getWeb = await query(`SELECT * FROM web_private`, []);
-
-    if (getWeb.length < 1 || !getWeb[0]?.pay_stripe_key || !getWeb[0]?.pay_stripe_id) {
-      return res.json({
-        success: false,
-        msg: 'Opss.. payment keys found not found',
-      });
-    }
-
-    const stripeKeys = getWeb[0]?.pay_stripe_key;
-
-    const stripeClient = new Stripe(stripeKeys);
-
-    const { planId } = req.body;
-
-    const plan = await query(`SELECT * FROM plan WHERE id = ?`, [planId]);
-
-    if (plan.length < 1) {
-      return res.json({ msg: 'No plan found with the id' });
-    }
-
-    const randomSt = randomstring.generate();
-    const orderID = `STRIPE_${randomSt}`;
-
-    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
-      req.decode.uid,
-      'STRIPE',
-      plan[0]?.price,
-      orderID,
-    ]);
-
-    const web = await query(`SELECT * FROM web_public`, []);
-
-    const productStripe = [
-      {
-        price_data: {
-          currency: web[0]?.currency_code,
-          product_data: {
-            name: plan[0]?.title,
-            // images:[product.imgdata]
-          },
-          unit_amount: plan[0]?.price * 100,
-        },
-        quantity: 1,
-      },
-    ];
-
-    const session = await stripeClient.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: productStripe,
-      mode: 'payment',
-      success_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
-      cancel_url: `${env.BACKEND_URL}/api/user/stripe_payment?order=${orderID}&plan=${plan[0]?.id}`,
-      locale: env.STRIPE_LANG,
-    });
-
-    await query(`UPDATE orders SET s_token = ? WHERE data = ?`, [session?.id, orderID]);
-
-    res.json({ success: true, session: session });
-  } catch (err) {
-    res.json({ msg: err.toString(), err });
-    console.log({ err, msg: JSON.stringify(err), string: err.toString() });
-  }
-});
-
-router.post('/pay_with_rz', validateUser, async (req, res) => {
-  try {
-    const { rz_payment_id, plan, amount } = req.body;
-    if (!rz_payment_id || !plan || !amount) {
-      return res.json({ msg: 'please send required fields' });
-    }
-
-    // getting plan
-    const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan?.id]);
-
-    if (getPlan.length < 1) {
-      return res.json({
-        msg: 'Invalid plan found',
-      });
-    }
-
-    // getting private web
-    const [webPrivate] = await query(`SELECT * from web_private`, []);
-    const [webPublic] = await query(`SELECT * FROM web_public`, []);
-
-    const rzId = webPrivate?.rz_id;
-    const rzKeys = webPrivate?.rz_key;
-
-    if (!rzId || !rzKeys) {
-      return res.json({
-        msg: `Please fill your razorpay credentials!`,
-      });
-    }
-
-    const finalamt = (parseInt(amount) / parseInt(webPublic.exchange_rate || 1)) * 80;
-
-    const resp = await rzCapturePayment(rz_payment_id, Math.round(finalamt) * 100, rzId, rzKeys);
-
-    if (!resp) {
-      res.json({ success: false, msg: resp.description });
-      return;
-    }
-
-    await updateUserPlan(getPlan[0], req.decode.uid);
-
-    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
-      req.decode.uid,
-      'RAZORPAY',
-      plan?.price,
-      JSON.stringify(resp),
-    ]);
-
-    res.json({
-      success: true,
-      msg: 'Thank for your payment you are good to go now.',
-    });
-  } catch (err) {
-    res.json({ msg: err.toString(), err });
-    console.log({ err, msg: JSON.stringify(err), string: err.toString() });
-  }
-});
+router.post('/pay_with_rz', validateUser, billingController.payWithRazorpay);
 
 // pay offline/custom
-router.post('/pay_offline', validateUser, async (req, res) => {
-  try {
-    const { planId } = req.body;
-    const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
-    const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [planId]);
-    if (getPlan.length < 1) {
-      return res.json({ success: false, msg: 'Invalid plan found' });
-    }
-
-    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
-      req.decode.uid,
-      'OFFLINE',
-      getPlan[0].price,
-      JSON.stringify({
-        plan: getPlan[0],
-        note: 'Manual offline/custom transaction initiated by user.',
-      }),
-    ]);
-
-    await updateUserPlan(getPlan[0], req.decode.uid);
-
-    res.json({
-      success: true,
-      msg: 'Your offline/custom payment was recorded successfully. Plan updated!',
-    });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, msg: 'Failed to record custom payment' });
-  }
-});
+router.post('/pay_offline', validateUser, billingController.payOffline);
 
 // pay with paypal
-router.post('/pay_with_paypal', validateUser, async (req, res) => {
-  try {
-    const { orderID, plan } = req.body;
+router.post('/pay_with_paypal', validateUser, billingController.payWithPaypal);
 
-    if (!plan || !orderID) {
-      return res.json({ msg: 'order id and plan required' });
-    }
-
-    if (!/^[a-zA-Z0-9_-]+$/.test(orderID)) {
-      return res.json({ msg: 'Invalid order ID format' });
-    }
-
-    // getting plan
-    const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan?.id]);
-
-    if (getPlan.length < 1) {
-      return res.json({
-        msg: 'Invalid plan found',
-      });
-    }
-
-    // getting private web
-    const [webPrivate] = await query(`SELECT * from web_private`, []);
-
-    const paypalClientId = webPrivate?.pay_paypal_id;
-    const paypalClientSecret = webPrivate?.pay_paypal_key;
-
-    if (!paypalClientId || !paypalClientSecret) {
-      return res.json({
-        msg: 'Please provide paypal ID and keys from the Admin',
-      });
-    }
-
-    let response = await fetch('https://api.sandbox.paypal.com/v1/oauth2/token', {
-      method: 'POST',
-      body: 'grant_type=client_credentials',
-      headers: {
-        Authorization:
-          'Basic ' +
-          Buffer.from(`${paypalClientId}:${paypalClientSecret}`, 'binary').toString('base64'),
-      },
-    });
-
-    let data = await response.json();
-
-    let resp_order = await fetch(`https://api.sandbox.paypal.com/v1/checkout/orders/${orderID}`, {
-      method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + data.access_token,
-      },
-    });
-
-    let order_details = await resp_order.json();
-
-    if (order_details.status === 'COMPLETED') {
-      await updateUserPlan(getPlan[0], req.decode.uid);
-
-      await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
-        req.decode.uid,
-        'PAYPAL',
-        plan?.price,
-        JSON.stringify(order_details),
-      ]);
-
-      res.json({
-        success: true,
-        msg: 'Thank for your payment you are good to go now.',
-      });
-    } else {
-      res.json({ success: false, msg: 'error_description' });
-      return;
-    }
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'something went wrong', err });
-  }
-});
-
-function checlStripePayment(orderId) {
-  return new Promise(async (resolve) => {
-    try {
-      const getStripe = await query(`SELECT * FROM web_private`, []);
-
-      const stripeClient = new Stripe(getStripe[0]?.pay_stripe_key);
-      const getPay = await stripeClient.checkout.sessions.retrieve(orderId);
-
-      console.log({ status: getPay?.payment_status });
-
-      if (getPay?.payment_status === 'paid') {
-        resolve({ success: true, data: getPay });
-      } else {
-        resolve({ success: false });
-      }
-    } catch (err) {
-      resolve({ success: false, data: {} });
-    }
-  });
-}
-
-function returnHtmlRes(msg) {
-  const html = `<!DOCTYPE html>
-    <html>
-    <head>
-      <meta http-equiv="refresh" content="5;url=${env.FRONTEND_URL}/user">
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          background-color: #f4f4f4;
-          text-align: center;
-          margin: 0;
-          padding: 0;
-        }
-
-        .container {
-          background-color: #ffffff;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-          margin: 100px auto;
-          padding: 20px;
-          width: 300px;
-        }
-
-        p {
-          font-size: 18px;
-          color: #333;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <p>${msg}</p>
-      </div>
-    </body>
-    </html>
-    `;
-  return html;
-}
-
-router.get('/stripe_payment', async (req, res) => {
-  try {
-    const { order, plan } = req.query;
-
-    if (!order || !plan) {
-      return res.send('INVALID REQUEST');
-    }
-
-    const getOrder = await query(`SELECT * FROM orders WHERE data = ?`, [order || '']);
-    const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan]);
-
-    if (getOrder.length < 1) {
-      return res.send('Invalid payment found');
-    }
-
-    if (getPlan.length < 1) {
-      return res.send('Invalid plan found');
-    }
-
-    const checkPayment = await checlStripePayment(getOrder[0]?.s_token);
-    console.log({ checkPayment: checkPayment });
-
-    if (checkPayment.success) {
-      res.send(returnHtmlRes('Payment Success! Redirecting...'));
-
-      await query(`UPDATE orders SET data = ? WHERE data = ?`, [
-        JSON.stringify(checkPayment?.data),
-        order,
-      ]);
-
-      await updateUserPlan(getPlan[0], getOrder[0]?.uid);
-    } else {
-      res.send(
-        'Payment Failed! If the balance was deducted please contact to the HamWiz support. Redirecting...',
-      );
-    }
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.get('/stripe_payment', billingController.stripePaymentCallback);
 
 // pay with paystack
-router.post('/pay_with_paystack', validateUser, async (req, res) => {
-  try {
-    const { planData, trans_id, reference } = req.body;
-
-    if (!planData || !trans_id) {
-      return res.json({
-        msg: 'Order id and plan required',
-      });
-    }
-
-    if (!reference || !/^[a-zA-Z0-9_-]+$/.test(reference)) {
-      return res.json({ msg: 'Invalid reference format' });
-    }
-
-    // getting plan
-    const plan = await query(`SELECT * FROM plan WHERE id = ?`, [planData.id]);
-
-    if (plan.length < 1) {
-      return res.json({ msg: 'Sorry this plan was not found' });
-    }
-
-    // gettings paystack keys
-    const getWebPrivate = await query(`SELECT * FROM web_private`, []);
-    const paystackSecretKey = getWebPrivate[0]?.pay_paystack_key;
-    const paystackId = getWebPrivate[0]?.pay_paystack_id;
-
-    if (!paystackSecretKey || !paystackId) {
-      return res.json({ msg: 'Paystack credentials not found' });
-    }
-
-    var response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: {
-        Authorization: `Bearer ${paystackSecretKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const resp = await response.json();
-
-    if (resp.data?.status !== 'success') {
-      res.json({ success: false, msg: `${resp.message} - Ref:-${reference}` });
-      return;
-    }
-
-    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
-      req.decode.uid,
-      'PAYSTACK',
-      plan[0]?.price,
-      reference,
-    ]);
-
-    await updateUserPlan(plan[0], req.decode.uid);
-
-    res.json({
-      success: true,
-      msg: 'Payment success! Redirecting...',
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.post('/pay_with_paystack', validateUser, billingController.payWithPaystack);
 
 // update profile
 router.post('/update_profile', validateUser, userController.updateProfile);
@@ -931,46 +507,7 @@ router.get('/get_dashboard', validateUser, async (req, res) => {
 });
 
 // enroll free plan
-router.post('/start_free_trial', validateUser, async (req, res) => {
-  try {
-    const { planId } = req.body;
-
-    const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [req.decode.uid]);
-    if (getUser[0]?.trial > 0) {
-      return res.json({
-        success: false,
-        msg: 'You have already taken Trial once. You can not enroll for trial again.',
-      });
-    }
-
-    const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [planId]);
-    if (getPlan.length < 1) {
-      return res.json({ msg: 'Invalid plan found' });
-    }
-
-    if (getPlan[0]?.price > 0) {
-      return res.json({ msg: 'This plan is not a trial plan.' });
-    }
-    await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
-      req.decode.uid,
-      'OFFLINE',
-      0,
-      JSON.stringify({ plan: getPlan[0] }),
-    ]);
-
-    await updateUserPlan(getPlan[0], getUser[0]?.uid);
-
-    await query(`UPDATE user SET trial = ? WHERE uid = ?`, [1, req.decode.uid]);
-
-    res.json({
-      success: true,
-      msg: 'Your trial plan has been activated. You are redirecting to the panel...',
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.post('/start_free_trial', validateUser, billingController.startFreeTrial);
 
 // send recover
 router.post('/send_resovery', authController.sendRecovery);
