@@ -1,64 +1,22 @@
-const router = require("express").Router();
-const { query, withTransaction } = require("../database/dbpromise.js");
-const randomstring = require("randomstring");
-const bcrypt = require("bcrypt");
-const { sign } = require("jsonwebtoken");
-const adminValidator = require("../middlewares/admin.js");
+const router = require('express').Router();
+const { query, withTransaction } = require('../database/dbpromise.js');
+const randomstring = require('randomstring');
+const adminValidator = require('../middlewares/admin.js');
+const adminAuthController = require('../controllers/adminAuthController.js');
 const {
   updateUserPlan,
   getFileExtension,
   sendEmail,
   getUserSignupsByMonth,
   getUserOrderssByMonth,
-  isValidEmail,
-} = require("../functions/function.js");
-const moment = require("moment");
-const { recoverEmail } = require("../emails/returnEmails.js");
-const env = require("../env.js");
+} = require('../functions/function.js');
+const moment = require('moment');
+const env = require('../env.js');
 
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.json({
-        success: false,
-        msg: "Please fill email and password",
-      });
-    }
-    // check for user
-    const userFind = await query(`SELECT * FROM admin WHERE email = ?`, [
-      email,
-    ]);
-    if (userFind.length < 1) {
-      return res.json({ msg: "Invalid credentials found" });
-    }
-
-    const compare = await bcrypt.compare(password, userFind[0].password);
-    if (!compare) {
-      return res.json({ msg: "Invalid credentials" });
-    } else {
-      const token = sign(
-        {
-          uid: userFind[0].uid,
-          role: "admin",
-          email: userFind[0].email,
-        },
-        env.JWT_SECRET,
-        { expiresIn: env.JWT_EXPIRY }
-      );
-      res.json({
-        success: true,
-        token,
-      });
-    }
-  } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
-    console.log(err);
-  }
-});
+router.post('/login', adminAuthController.login);
 
 // add new plan
-router.post("/add_plan", adminValidator, async (req, res) => {
+router.post('/add_plan', adminValidator, async (req, res) => {
   try {
     const {
       title,
@@ -75,7 +33,7 @@ router.post("/add_plan", adminValidator, async (req, res) => {
     } = req.body;
 
     if (!title || !short_description || !plan_duration_in_days) {
-      return res.json({ success: false, msg: " Please fill details" });
+      return res.json({ success: false, msg: ' Please fill details' });
     }
 
     await query(
@@ -93,53 +51,53 @@ router.post("/add_plan", adminValidator, async (req, res) => {
         is_trial ? 0 : price,
         price_strike,
         parseInt(plan_duration_in_days || 1),
-      ]
+      ],
     );
 
-    res.json({ success: true, msg: "Plan has been updated" });
+    res.json({ success: true, msg: 'Plan has been updated' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // get plans
-router.get("/get_plans", async (req, res) => {
+router.get('/get_plans', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM plan`, []);
     res.json({ success: true, data });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // get web public
-router.get("/get_web_public", async (req, res) => {
+router.get('/get_web_public', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM web_public`, []);
     res.json({ data: data[0], success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // del plan
-router.post("/del_plan", adminValidator, async (req, res) => {
+router.post('/del_plan', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
 
     await query(`DELETE FROM plan WHERE id = ?`, [id]);
-    res.json({ success: true, msg: "Plan was deleted" });
+    res.json({ success: true, msg: 'Plan was deleted' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // edit plan
-router.post("/edit_plan", adminValidator, async (req, res) => {
+router.post('/edit_plan', adminValidator, async (req, res) => {
   try {
     const {
       id,
@@ -157,7 +115,7 @@ router.post("/edit_plan", adminValidator, async (req, res) => {
     } = req.body;
 
     if (!id || !title || !short_description || !plan_duration_in_days) {
-      return res.json({ success: false, msg: "Please fill details" });
+      return res.json({ success: false, msg: 'Please fill details' });
     }
 
     await query(
@@ -176,54 +134,49 @@ router.post("/edit_plan", adminValidator, async (req, res) => {
         price_strike || 0,
         parseInt(plan_duration_in_days || 1),
         id,
-      ]
+      ],
     );
 
-    res.json({ success: true, msg: "Plan was updated" });
+    res.json({ success: true, msg: 'Plan was updated' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // get all users
-router.get("/get_users", adminValidator, async (req, res) => {
+router.get('/get_users', adminValidator, async (req, res) => {
   try {
     const data = await query(`SELECT * FROM user`, []);
     res.json({ data, success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // update user
-router.post("/update_user", adminValidator, async (req, res) => {
+router.post('/update_user', adminValidator, async (req, res) => {
   try {
-    const { newPassword, name, email, mobile_with_country_code, uid } =
-      req.body;
+    const { newPassword, name, email, mobile_with_country_code, uid } = req.body;
 
     console.log(req.body);
 
     if (!uid || !name || !email || !mobile_with_country_code) {
       return res.json({
         success: false,
-        msg: "You forgot to enter some field(s)",
+        msg: 'You forgot to enter some field(s)',
       });
     }
 
-    const findUserByEmail = await query(`SELECT * FROM user WHERE email = ?`, [
-      email,
-    ]);
+    const findUserByEmail = await query(`SELECT * FROM user WHERE email = ?`, [email]);
     if (findUserByEmail.length > 0 && findUserByEmail[0].uid !== uid) {
-      return res.json({ msg: "This email is already taken by another user" });
+      return res.json({ msg: 'This email is already taken by another user' });
     }
 
-    const findUserByUid = await query(`SELECT * FROM user WHERE uid = ?`, [
-      uid,
-    ]);
+    const findUserByUid = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
     if (findUserByUid.length === 0) {
-      return res.json({ success: false, msg: "User not found" });
+      return res.json({ success: false, msg: 'User not found' });
     }
 
     if (newPassword) {
@@ -231,47 +184,47 @@ router.post("/update_user", adminValidator, async (req, res) => {
 
       await query(
         `UPDATE user SET name = ?, email = ?, password = ?, mobile_with_country_code = ? WHERE uid = ?`,
-        [name, email, hashpass, mobile_with_country_code, uid]
+        [name, email, hashpass, mobile_with_country_code, uid],
       );
     } else {
       await query(
         `UPDATE user SET name = ?, email = ?, mobile_with_country_code = ? WHERE uid = ?`,
-        [name, email, mobile_with_country_code, uid]
+        [name, email, mobile_with_country_code, uid],
       );
     }
 
-    res.json({ msg: "User was updated", success: true });
+    res.json({ msg: 'User was updated', success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // update plan
-router.post("/update_plan", adminValidator, async (req, res) => {
+router.post('/update_plan', adminValidator, async (req, res) => {
   try {
     const { plan, uid } = req.body;
 
     if (!plan || !uid) {
-      return res.json({ success: false, msg: "Invalid input provided" });
+      return res.json({ success: false, msg: 'Invalid input provided' });
     }
 
     const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan?.id]);
     if (getPlan.length < 1) {
-      return res.json({ success: false, msg: "Invalid plan found" });
+      return res.json({ success: false, msg: 'Invalid plan found' });
     }
 
     await updateUserPlan(getPlan[0], uid);
 
-    res.json({ success: true, msg: "User plan was updated" });
+    res.json({ success: true, msg: 'User plan was updated' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // get payment gateway admin
-router.get("/get_payment_gateway_admin", adminValidator, async (req, res) => {
+router.get('/get_payment_gateway_admin', adminValidator, async (req, res) => {
   try {
     const data = await query(`SELECT * FROM web_private`, []);
     if (data.length < 1) {
@@ -279,13 +232,13 @@ router.get("/get_payment_gateway_admin", adminValidator, async (req, res) => {
     }
     res.json({ data: data[0], success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // update payment gateway
-router.post("/update_pay_gateway", adminValidator, async (req, res) => {
+router.post('/update_pay_gateway', adminValidator, async (req, res) => {
   try {
     const {
       pay_offline_id,
@@ -348,21 +301,21 @@ router.post("/update_pay_gateway", adminValidator, async (req, res) => {
         pay_mercadopago_id,
         pay_mercadopago_key,
         mercadopago_active,
-      ]
+      ],
     );
 
-    res.json({ success: true, msg: "Payment gateway updated" });
+    res.json({ success: true, msg: 'Payment gateway updated' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // add partners logo
-router.post("/add_brand_image", adminValidator, async (req, res) => {
+router.post('/add_brand_image', adminValidator, async (req, res) => {
   try {
     if (!req.files || Object.keys(req.files).length === 0) {
-      return res.json({ success: false, msg: "No files were uploaded" });
+      return res.json({ success: false, msg: 'No files were uploaded' });
     }
 
     const randomString = randomstring.generate();
@@ -379,107 +332,100 @@ router.post("/add_brand_image", adminValidator, async (req, res) => {
 
     await query(`INSERT INTO partners (filename) VALUES (?)`, [filename]);
 
-    res.json({ success: true, msg: "Logo was uploaded" });
+    res.json({ success: true, msg: 'Logo was uploaded' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // get all brands
-router.get("/get_brands", async (req, res) => {
+router.get('/get_brands', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM partners`, []);
     res.json({ data, success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // del image
-router.post("/del_brand_logo", adminValidator, async (req, res) => {
+router.post('/del_brand_logo', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
     await query(`DELETE from partners WHERE id = ?`, [id]);
 
-    res.json({ success: true, msg: "Bran was deleted" });
+    res.json({ success: true, msg: 'Bran was deleted' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // add faq
-router.post("/add_faq", adminValidator, async (req, res) => {
+router.post('/add_faq', adminValidator, async (req, res) => {
   try {
     const { question, answer } = req.body;
 
     if (!answer || !question) {
       return res.json({
         success: false,
-        msg: "Please provide question and answer both",
+        msg: 'Please provide question and answer both',
       });
     }
 
-    await query(`INSERT INTO faq (question, answer) VALUES (?,?)`, [
-      question,
-      answer,
-    ]);
+    await query(`INSERT INTO faq (question, answer) VALUES (?,?)`, [question, answer]);
 
-    res.json({ success: true, msg: "Faq was added" });
+    res.json({ success: true, msg: 'Faq was added' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // get all faq
-router.get("/get_faq", async (req, res) => {
+router.get('/get_faq', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM faq`, []);
     res.json({ data, success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // del faq
-router.post("/del_faq", adminValidator, async (req, res) => {
+router.post('/del_faq', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
     await query(`DELETE FROM faq WHERE id = ?`, [id]);
-    res.json({ success: true, msg: "Faq was deleted" });
+    res.json({ success: true, msg: 'Faq was deleted' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // add page
-router.post("/add_page", adminValidator, async (req, res) => {
+router.post('/add_page', adminValidator, async (req, res) => {
   try {
     const { title, content, slug } = req.body;
 
     if (!title || !content || !slug) {
-      return res.json({ success: false, msg: "Please fill all fields" });
+      return res.json({ success: false, msg: 'Please fill all fields' });
     }
 
     if (!req.files || Object.keys(req.files).length === 0) {
-      return res.json({ success: false, msg: "No image was selected" });
+      return res.json({ success: false, msg: 'No image was selected' });
     }
 
     // checking few pages
-    const pageAlready = [
-      "contact-form",
-      "privacy-policy",
-      "terms-and-conditions",
-    ];
+    const pageAlready = ['contact-form', 'privacy-policy', 'terms-and-conditions'];
 
     if (pageAlready.includes(slug)) {
       return res.json({
-        msg: "This slug is already used by system please use another slug.",
+        msg: 'This slug is already used by system please use another slug.',
       });
     }
 
@@ -488,7 +434,7 @@ router.post("/add_page", adminValidator, async (req, res) => {
     if (getPage.length > 0) {
       return res.json({
         success: false,
-        msg: "Thi slug was already used by another page.",
+        msg: 'Thi slug was already used by another page.',
       });
     }
 
@@ -504,60 +450,62 @@ router.post("/add_page", adminValidator, async (req, res) => {
       }
     });
 
-    await query(
-      `INSERT INTO page (slug, title, image, content) VALUES (?,?,?,?)`,
-      [slug, title, filename, content]
-    );
+    await query(`INSERT INTO page (slug, title, image, content) VALUES (?,?,?,?)`, [
+      slug,
+      title,
+      filename,
+      content,
+    ]);
 
-    res.json({ success: true, msg: "Page was added" });
+    res.json({ success: true, msg: 'Page was added' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // get all pages
-router.get("/get_pages", async (req, res) => {
+router.get('/get_pages', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM page WHERE permanent = ?`, [0]);
     res.json({ data, success: true });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // del page
-router.post("/del_page", adminValidator, async (req, res) => {
+router.post('/del_page', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
 
     await query(`DELETE FROM page WHERE id = ?`, [id]);
-    res.json({ success: true, msg: "Page was deleted" });
+    res.json({ success: true, msg: 'Page was deleted' });
   } catch (err) {
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
     console.log(err);
   }
 });
 
 // auto user login
-router.post("/auto_login", adminValidator, async (req, res) => {
+router.post('/auto_login', adminValidator, async (req, res) => {
   try {
     const { uid } = req.body;
 
     if (!uid) {
-      return res.json({ success: false, msg: "Invalid input" });
+      return res.json({ success: false, msg: 'Invalid input' });
     }
 
     const user = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
     const token = sign(
       {
         uid: user[0].uid,
-        role: "user",
+        role: 'user',
         email: user[0].email,
       },
       env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRY }
+      { expiresIn: env.JWT_EXPIRY },
     );
     console.log(token);
     res.json({
@@ -566,57 +514,57 @@ router.post("/auto_login", adminValidator, async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // ading testtimonial
-router.post("/add_testimonial", adminValidator, async (req, res) => {
+router.post('/add_testimonial', adminValidator, async (req, res) => {
   try {
     const { title, description, reviewer_name, reviewer_position } = req.body;
 
     if (!title || !description || !reviewer_name || !reviewer_position) {
-      return res.json({ success: false, msg: "Please fill all fields" });
+      return res.json({ success: false, msg: 'Please fill all fields' });
     }
 
     await query(
       `INSERT INTO testimonial (title, description, reviewer_name, reviewer_position) VALUES (?,?,?,?)`,
-      [title, description, reviewer_name, reviewer_position]
+      [title, description, reviewer_name, reviewer_position],
     );
 
-    res.json({ success: true, msg: "Testimonial was added" });
+    res.json({ success: true, msg: 'Testimonial was added' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // get all testi
-router.get("/get_testi", async (req, res) => {
+router.get('/get_testi', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM testimonial`, []);
     res.json({ success: true, data });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // del testi
-router.post("/del_testi", adminValidator, async (req, res) => {
+router.post('/del_testi', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
 
     await query(`DELETE FROM testimonial WHERE id = ?`, [id]);
-    res.json({ success: true, msg: "Testimonial was deleted" });
+    res.json({ success: true, msg: 'Testimonial was deleted' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // get orders
-router.get("/get_orders", adminValidator, async (req, res) => {
+router.get('/get_orders', adminValidator, async (req, res) => {
   try {
     const data = await query(
       `
@@ -642,41 +590,41 @@ router.get("/get_orders", adminValidator, async (req, res) => {
             FROM orders
             LEFT JOIN user ON orders.uid = user.uid
         `,
-      []
+      [],
     );
 
     res.json({ data, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // get all contact forms
-router.get("/get_contact_leads", adminValidator, async (req, res) => {
+router.get('/get_contact_leads', adminValidator, async (req, res) => {
   try {
     const data = await query(`SELECT * FROM contact_form`, []);
     res.json({ data, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // del contact entry
-router.post("/del_cotact_entry", adminValidator, async (req, res) => {
+router.post('/del_cotact_entry', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
     await query(`DELETE FROM contact_form WHERE id = ?`, [id]);
-    res.json({ success: true, msg: "Entry was deleted" });
+    res.json({ success: true, msg: 'Entry was deleted' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // get page by slug
-router.post("/get_page_slug", async (req, res) => {
+router.post('/get_page_slug', async (req, res) => {
   try {
     const { slug } = req.body;
 
@@ -688,120 +636,124 @@ router.post("/get_page_slug", async (req, res) => {
     }
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 // update termns
-router.post("/update_terms", adminValidator, async (req, res) => {
+router.post('/update_terms', adminValidator, async (req, res) => {
   try {
     const { title, content } = req.body;
 
     // check
-    const getPP = await query(`SELECT * FROM page WHERE slug = ?`, [
-      "terms-and-conditions",
-    ]);
+    const getPP = await query(`SELECT * FROM page WHERE slug = ?`, ['terms-and-conditions']);
 
     if (getPP.length > 0) {
       await query(`UPDATE page SET title = ?, content = ? WHERE slug = ?`, [
         title,
         content,
-        "terms-and-conditions",
+        'terms-and-conditions',
       ]);
     } else {
-      await query(
-        `INSERT INTO page (slug, title, content, permanent) VALUES (?,?,?,?)`,
-        ["terms-and-conditions", title, content, 1]
-      );
+      await query(`INSERT INTO page (slug, title, content, permanent) VALUES (?,?,?,?)`, [
+        'terms-and-conditions',
+        title,
+        content,
+        1,
+      ]);
     }
 
-    res.json({ success: true, msg: "Page updated" });
+    res.json({ success: true, msg: 'Page updated' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // update privacy policy
-router.post("/update_privacy_policy", adminValidator, async (req, res) => {
+router.post('/update_privacy_policy', adminValidator, async (req, res) => {
   try {
     const { title, content } = req.body;
 
     // check
-    const getPP = await query(`SELECT * FROM page WHERE slug = ?`, [
-      "privacy-policy",
-    ]);
+    const getPP = await query(`SELECT * FROM page WHERE slug = ?`, ['privacy-policy']);
 
     if (getPP.length > 0) {
       await query(`UPDATE page SET title = ?, content = ? WHERE slug = ?`, [
         title,
         content,
-        "privacy-policy",
+        'privacy-policy',
       ]);
     } else {
-      await query(
-        `INSERT INTO page (slug, title, content, permanent) VALUES (?,?,?,?)`,
-        ["privacy-policy", title, content, 1]
-      );
+      await query(`INSERT INTO page (slug, title, content, permanent) VALUES (?,?,?,?)`, [
+        'privacy-policy',
+        title,
+        content,
+        1,
+      ]);
     }
 
-    res.json({ success: true, msg: "Page updated" });
+    res.json({ success: true, msg: 'Page updated' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // get smtp
-router.get("/get_smtp", adminValidator, async (req, res) => {
+router.get('/get_smtp', adminValidator, async (req, res) => {
   try {
     const data = await query(`SELECT * FROM smtp`, []);
     if (data.length < 1) {
-      return res.json({ data: { id: "ID" }, success: true });
+      return res.json({ data: { id: 'ID' }, success: true });
     } else {
       return res.json({ data: data[0], success: true });
     }
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // update smtp
-router.post("/update_smtp", adminValidator, async (req, res) => {
+router.post('/update_smtp', adminValidator, async (req, res) => {
   try {
     const { email, port, password, host } = req.body;
 
     if (!email || !port || !password || !host) {
-      return res.json({ msg: "Please fill all the fields" });
+      return res.json({ msg: 'Please fill all the fields' });
     }
 
     const getOne = await query(`SELECT * FROM smtp`, []);
     if (getOne.length < 1) {
-      await query(
-        `INSERT INTO smtp (email, host, port, password) VALUES (?,?,?,?)`,
-        [email, host, port, password]
-      );
+      await query(`INSERT INTO smtp (email, host, port, password) VALUES (?,?,?,?)`, [
+        email,
+        host,
+        port,
+        password,
+      ]);
     } else {
-      await query(
-        `UPDATE smtp SET email = ?, host = ?, port = ?, password = ?`,
-        [email, host, port, password]
-      );
+      await query(`UPDATE smtp SET email = ?, host = ?, port = ?, password = ?`, [
+        email,
+        host,
+        port,
+        password,
+      ]);
     }
 
-    res.json({ success: true, msg: "Email settings was updated" });
+    res.json({ success: true, msg: 'Email settings was updated' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // send test email
-router.post("/send_test_email", adminValidator, async (req, res) => {
+router.post('/send_test_email', adminValidator, async (req, res) => {
   try {
     const { email, port, password, host, to } = req.body;
 
     if (!email || !port || !password || !host) {
-      return res.json({ msg: "Please fill all the fields" });
+      return res.json({ msg: 'Please fill all the fields' });
     }
 
     const checkEmail = await sendEmail(
@@ -810,28 +762,27 @@ router.post("/send_test_email", adminValidator, async (req, res) => {
       email,
       password,
       `<h1>This is a test SMTP email!</h1>`,
-      "SMTP Testing",
-      "Testing Sender",
-      to
+      'SMTP Testing',
+      'Testing Sender',
+      to,
     );
 
     if (checkEmail.success) {
-      res.json({ msg: "Email sent", success: true });
+      res.json({ msg: 'Email sent', success: true });
     } else {
       res.json({ msg: checkEmail?.err });
     }
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // get dashboard user
-router.get("/get_dashboard_for_user", adminValidator, async (req, res) => {
+router.get('/get_dashboard_for_user', adminValidator, async (req, res) => {
   try {
     const getUsers = await query(`SELECT * FROM user`, []);
-    const { paidSignupsByMonth, unpaidSignupsByMonth } =
-      getUserSignupsByMonth(getUsers);
+    const { paidSignupsByMonth, unpaidSignupsByMonth } = getUserSignupsByMonth(getUsers);
 
     const getOrders = await query(`SELECT * FROM orders`, []);
     const orders = getUserOrderssByMonth(getOrders);
@@ -851,187 +802,60 @@ router.get("/get_dashboard_for_user", adminValidator, async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "server error", err });
+    res.json({ msg: 'server error', err });
   }
 });
 
 // get admin
-router.get("/get_admin", adminValidator, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM admin`, []);
-    res.json({ data: data[0], success: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: "server error", err });
-  }
-});
+router.get('/get_admin', adminValidator, adminAuthController.getAdmin);
 
 // update admin
-router.post("/update-admin", adminValidator, async (req, res) => {
-  try {
-    if (req.body.newpass) {
-      const hash = await bcrypt.hash(req.body.newpass, 10);
-      await query(`UPDATE admin SET email = ?, password = ? WHERE uid = ?`, [
-        req.body.email,
-        hash,
-        req.decode.uid,
-      ]);
-      res.json({ success: true, msg: "Admin was updated refresh the page" });
-    } else {
-      await query(`UPDATE admin SET email = ? WHERE uid = ?`, [
-        req.body.email,
-        req.decode.uid,
-      ]);
-      res.json({ success: true, msg: "Admin was updated refresh the page" });
-    }
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: "server error", err });
-  }
-});
+router.post('/update-admin', adminValidator, adminAuthController.updateAdmin);
 
 // send recover
-router.post("/send_resovery", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!isValidEmail(email)) {
-      return res.json({ msg: "Please enter a valid email" });
-    }
-
-    const checkEmailValid = await query(`SELECT * FROM admin WHERE email = ?`, [
-      email,
-    ]);
-    if (checkEmailValid.length < 1) {
-      return res.json({
-        success: true,
-        msg: "We have sent a recovery link if this email is associated with admin account.",
-      });
-    }
-
-    const getWeb = await query(`SELECT * FROM web_public`, []);
-    const appName = getWeb[0]?.app_name;
-
-    const jsontoken = sign(
-      {
-        uid: checkEmailValid[0].uid,
-        old_email: email,
-        email: email,
-        time: moment(new Date()),
-        role: "admin",
-      },
-      env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    const recpveryUrl = `${env.FRONTEND_URL}/recovery-admin/${jsontoken}`;
-
-    const getHtml = recoverEmail(appName, recpveryUrl);
-
-    // getting smtp
-    const smtp = await query(`SELECT * FROM smtp`, []);
-    if (
-      !smtp[0]?.email ||
-      !smtp[0]?.host ||
-      !smtp[0]?.port ||
-      !smtp[0]?.password
-    ) {
-      return res.json({
-        success: false,
-        msg: "SMTP connections not found! Unable to send recovery link",
-      });
-    }
-
-    await sendEmail(
-      smtp[0]?.host,
-      smtp[0]?.port,
-      smtp[0]?.email,
-      smtp[0]?.password,
-      getHtml,
-      `${appName} - Password Recovery`,
-      smtp[0]?.email,
-      email
-    );
-
-    res.json({
-      success: true,
-      msg: "We have sent your a password recovery link. Please check your email",
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
-  }
-});
+router.post('/send_resovery', adminAuthController.sendRecovery);
 
 // modify recpvery passwrod
-router.get("/modify_password", adminValidator, async (req, res) => {
-  try {
-    const { pass } = req.query;
-
-    if (!pass) {
-      return res.json({ success: false, msg: "Please provide a password" });
-    }
-
-    if (moment(new Date()).diff(moment(req.decode.time), "hours") > 1) {
-      return res.json({ success: false, msg: "Token expired" });
-    }
-
-    const hashpassword = await bcrypt.hash(pass, 10);
-
-    const result = await query(
-      `UPDATE admin SET password = ? WHERE email = ?`,
-      [hashpassword, req.decode.old_email]
-    );
-
-    res.json({
-      success: true,
-      msg: "Your password has been changed. You may login now! Redirecting...",
-      data: result,
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
-  }
-});
+router.get('/modify_password', adminValidator, adminAuthController.modifyPassword);
 
 // Duplicate del_user route removed to avoid conflicts.
 
 // get all genn wa links
-router.get("/get_wa_gen", adminValidator, async (req, res) => {
+router.get('/get_wa_gen', adminValidator, async (req, res) => {
   try {
     const data = await query(`SELECT * FROM gen_links`, []);
     res.json({ data, success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // del gen link
-router.post("/de_wa_den_link", adminValidator, async (req, res) => {
+router.post('/de_wa_den_link', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
     await query(`DELETE FROM gen_links WHERE id = ?`, [id]);
-    res.json({ msg: "Generated link was deleted", success: true });
+    res.json({ msg: 'Generated link was deleted', success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // get social login
-router.get("/get_social_login", async (req, res) => {
+router.get('/get_social_login', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM web_public`, []);
     res.json({ data: data[0], success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // update social things
-router.post("/update_social_login", adminValidator, async (req, res) => {
+router.post('/update_social_login', adminValidator, async (req, res) => {
   try {
     const {
       google_client_id,
@@ -1043,43 +867,37 @@ router.post("/update_social_login", adminValidator, async (req, res) => {
 
     await query(
       `UPDATE web_public SET google_client_id = ?, google_login_active = ?, fb_login_app_id = ?, fb_login_app_sec = ?, fb_login_active = ?`,
-      [
-        google_client_id,
-        google_login_active,
-        fb_login_app_id,
-        fb_login_app_sec,
-        fb_login_active,
-      ]
+      [google_client_id, google_login_active, fb_login_app_id, fb_login_app_sec, fb_login_active],
     );
 
-    res.json({ msg: "Settings updated", success: true });
+    res.json({ msg: 'Settings updated', success: true });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // update rtl
-router.post("/update_rtl", adminValidator, async (req, res) => {
+router.post('/update_rtl', adminValidator, async (req, res) => {
   try {
     const { rtl } = req.body;
 
     await query(`UPDATE web_public SET rtl = ?`, [rtl ? 1 : 0]);
 
-    res.json({ success: true, msg: "RTL was updated" });
+    res.json({ success: true, msg: 'RTL was updated' });
   } catch (err) {
     console.log(err);
-    res.json({ msg: "Something went wrong", err, success: false });
+    res.json({ msg: 'Something went wrong', err, success: false });
   }
 });
 
 // delete user
-router.post("/del_user", adminValidator, async (req, res) => {
+router.post('/del_user', adminValidator, async (req, res) => {
   try {
     const { id } = req.body;
 
     if (!id) {
-      return res.json({ success: false, msg: "User ID is required" });
+      return res.json({ success: false, msg: 'User ID is required' });
     }
 
     const user = await query(`SELECT uid FROM "user" WHERE id = ?`, [id]);
@@ -1115,15 +933,15 @@ router.post("/del_user", adminValidator, async (req, res) => {
       await query(`DELETE FROM "user" WHERE id = ?`, [id]);
     }
 
-    res.json({ success: true, msg: "User was deleted" });
+    res.json({ success: true, msg: 'User was deleted' });
   } catch (err) {
     console.log(err);
-    res.json({ success: false, msg: "something went wrong" });
+    res.json({ success: false, msg: 'something went wrong' });
   }
 });
 
 // update deployment settings
-router.post("/update_deployment_settings", adminValidator, async (req, res) => {
+router.post('/update_deployment_settings', adminValidator, async (req, res) => {
   try {
     const {
       meta_app_id,
@@ -1149,7 +967,7 @@ router.post("/update_deployment_settings", adminValidator, async (req, res) => {
       ai_ollama_model,
       ai_custom_url,
       ai_custom_model,
-      widget_domains
+      widget_domains,
     } = req.body;
 
     await query(
@@ -1179,42 +997,42 @@ router.post("/update_deployment_settings", adminValidator, async (req, res) => {
         ai_custom_model = ?,
         widget_domains = ?`,
       [
-        meta_app_id || "",
-        meta_app_secret || "",
-        meta_waba_id || "",
-        meta_business_account_id || "",
-        meta_access_token || "",
-        meta_phone_number_id || "",
-        insta_app_id || "",
-        insta_app_secret || "",
-        insta_business_account_id || "",
-        insta_access_token || "",
-        ai_provider_active || "",
-        ai_openai_key || "",
-        ai_openai_model || "",
-        ai_gemini_key || "",
-        ai_gemini_model || "",
-        ai_claude_key || "",
-        ai_claude_model || "",
-        ai_openrouter_key || "",
-        ai_openrouter_model || "",
-        ai_ollama_url || "",
-        ai_ollama_model || "",
-        ai_custom_url || "",
-        ai_custom_model || "",
-        widget_domains || ""
-      ]
+        meta_app_id || '',
+        meta_app_secret || '',
+        meta_waba_id || '',
+        meta_business_account_id || '',
+        meta_access_token || '',
+        meta_phone_number_id || '',
+        insta_app_id || '',
+        insta_app_secret || '',
+        insta_business_account_id || '',
+        insta_access_token || '',
+        ai_provider_active || '',
+        ai_openai_key || '',
+        ai_openai_model || '',
+        ai_gemini_key || '',
+        ai_gemini_model || '',
+        ai_claude_key || '',
+        ai_claude_model || '',
+        ai_openrouter_key || '',
+        ai_openrouter_model || '',
+        ai_ollama_url || '',
+        ai_ollama_model || '',
+        ai_custom_url || '',
+        ai_custom_model || '',
+        widget_domains || '',
+      ],
     );
 
-    res.json({ success: true, msg: "Deployment settings updated successfully" });
+    res.json({ success: true, msg: 'Deployment settings updated successfully' });
   } catch (err) {
     console.error(err);
-    res.json({ success: false, msg: "something went wrong", error: err.message });
+    res.json({ success: false, msg: 'something went wrong', error: err.message });
   }
 });
 
 // get transport metrics
-router.get("/get_transport_metrics", adminValidator, async (req, res) => {
+router.get('/get_transport_metrics', adminValidator, async (req, res) => {
   try {
     const queueMetrics = await query(`
       SELECT 
@@ -1223,8 +1041,10 @@ router.get("/get_transport_metrics", adminValidator, async (req, res) => {
         (SELECT COUNT(*) FROM channel_incoming_queue WHERE state = 'pending') as pending_in
     `);
 
-    const channelMetrics = await query(`SELECT * FROM channel_metrics ORDER BY updated_at DESC LIMIT 50`);
-    
+    const channelMetrics = await query(
+      `SELECT * FROM channel_metrics ORDER BY updated_at DESC LIMIT 50`,
+    );
+
     const workers = await query(`SELECT * FROM transport_workers ORDER BY last_seen DESC`);
 
     res.json({
@@ -1232,12 +1052,12 @@ router.get("/get_transport_metrics", adminValidator, async (req, res) => {
       data: {
         queue: queueMetrics[0] || { pending_out: 0, failed_out: 0, pending_in: 0 },
         channels: channelMetrics,
-        workers
-      }
+        workers,
+      },
     });
   } catch (err) {
     console.error(err);
-    res.json({ success: false, msg: "failed to fetch metrics" });
+    res.json({ success: false, msg: 'failed to fetch metrics' });
   }
 });
 
