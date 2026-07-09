@@ -130,10 +130,58 @@ async function deleteUser(id) {
   return { success: true, msg: 'User was deleted' };
 }
 
+// ─── Reporting ───────────────────────────────────────────────────────────────
+// Kept here because order/contact data is tightly related to user administration.
+// Promote to adminReportsService if this section grows substantially.
+
+async function getOrders() {
+  const data = await query(
+    `
+            SELECT 
+                orders.id,
+                orders.uid,
+                orders.payment_mode,
+                orders.amount,
+                orders.data,
+                orders.s_token,
+                orders.createdat AS "orderCreatedAt",
+                user.role,
+                user.name,
+                user.email,
+                user.password,
+                user.mobile_with_country_code,
+                user.timezone,
+                user.plan,
+                user.plan_expire,
+                user.trial,
+                user.api_key,
+                user.createdat AS "userCreatedAt"
+            FROM orders
+            LEFT JOIN user ON orders.uid = user.uid
+        `,
+    [],
+  );
+  return { success: true, data };
+}
+
+async function getContactLeads() {
+  const data = await query(`SELECT * FROM contact_form`, []);
+  return { success: true, data };
+}
+
+async function deleteContactEntry(id) {
+  await query(`DELETE FROM contact_form WHERE id = ?`, [id]);
+  return { success: true, msg: 'Entry was deleted' };
+}
+
 module.exports = {
   getUsers,
   updateUser,
   autoLogin,
   getDashboardForUser,
   deleteUser,
+  // Reporting
+  getOrders,
+  getContactLeads,
+  deleteContactEntry,
 };

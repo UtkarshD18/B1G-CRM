@@ -75,10 +75,47 @@ async function deleteUser(req, res, next) {
   }
 }
 
+// ─── Reporting ───────────────────────────────────────────────────────────────
+
+async function getOrders(req, res, next) {
+  try {
+    const result = await adminUserService.getOrders();
+    return res.json({ data: result.data, success: true });
+  } catch (err) {
+    console.log(err);
+    return res.json({ msg: 'server error', err });
+  }
+}
+
+async function getContactLeads(req, res, next) {
+  try {
+    const result = await adminUserService.getContactLeads();
+    return res.json({ data: result.data, success: true });
+  } catch (err) {
+    console.log(err);
+    return res.json({ msg: 'server error', err });
+  }
+}
+
+async function deleteContactEntry(req, res, next) {
+  try {
+    const { id } = req.body;
+    const result = await adminUserService.deleteContactEntry(id);
+    return res.json({ success: true, msg: result.msg });
+  } catch (err) {
+    console.log(err);
+    return res.json({ msg: 'server error', err });
+  }
+}
+
 module.exports = {
   getUsers,
   updateUser,
   autoLogin,
   getDashboardForUser,
   deleteUser,
+  // Reporting
+  getOrders,
+  getContactLeads,
+  deleteContactEntry,
 };

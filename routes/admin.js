@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const { query } = require('../database/dbpromise.js');
 const adminValidator = require('../middlewares/admin.js');
 const adminAuthController = require('../controllers/adminAuthController.js');
 const adminUserController = require('../controllers/adminUserController.js');
@@ -79,64 +78,13 @@ router.get('/get_testi', adminCmsController.getTestimonials);
 router.post('/del_testi', adminValidator, adminCmsController.deleteTestimonial);
 
 // get orders
-router.get('/get_orders', adminValidator, async (req, res) => {
-  try {
-    const data = await query(
-      `
-            SELECT 
-                orders.id,
-                orders.uid,
-                orders.payment_mode,
-                orders.amount,
-                orders.data,
-                orders.s_token,
-                orders.createdat AS "orderCreatedAt",
-                user.role,
-                user.name,
-                user.email,
-                user.password,
-                user.mobile_with_country_code,
-                user.timezone,
-                user.plan,
-                user.plan_expire,
-                user.trial,
-                user.api_key,
-                user.createdat AS "userCreatedAt"
-            FROM orders
-            LEFT JOIN user ON orders.uid = user.uid
-        `,
-      [],
-    );
-
-    res.json({ data, success: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.get('/get_orders', adminValidator, adminUserController.getOrders);
 
 // get all contact forms
-router.get('/get_contact_leads', adminValidator, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM contact_form`, []);
-    res.json({ data, success: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.get('/get_contact_leads', adminValidator, adminUserController.getContactLeads);
 
 // del contact entry
-router.post('/del_cotact_entry', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-    await query(`DELETE FROM contact_form WHERE id = ?`, [id]);
-    res.json({ success: true, msg: 'Entry was deleted' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/del_cotact_entry', adminValidator, adminUserController.deleteContactEntry);
 
 // get page by slug
 router.post('/get_page_slug', adminCmsController.getPageBySlug);
