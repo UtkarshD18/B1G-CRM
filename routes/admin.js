@@ -1,11 +1,11 @@
 const router = require('express').Router();
 const { query } = require('../database/dbpromise.js');
-const randomstring = require('randomstring');
 const adminValidator = require('../middlewares/admin.js');
 const adminAuthController = require('../controllers/adminAuthController.js');
 const adminUserController = require('../controllers/adminUserController.js');
 const adminPlanController = require('../controllers/adminPlanController.js');
-const { getFileExtension, sendEmail } = require('../functions/function.js');
+const adminCmsController = require('../controllers/adminCmsController.js');
+const { sendEmail } = require('../functions/function.js');
 const moment = require('moment');
 const env = require('../env.js');
 
@@ -132,229 +132,43 @@ router.post('/update_pay_gateway', adminValidator, async (req, res) => {
 });
 
 // add partners logo
-router.post('/add_brand_image', adminValidator, async (req, res) => {
-  try {
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.json({ success: false, msg: 'No files were uploaded' });
-    }
-
-    const randomString = randomstring.generate();
-    const file = req.files.file;
-
-    const filename = `${randomString}.${getFileExtension(file.name)}`;
-
-    file.mv(`${__dirname}/../client/public/media/${filename}`, (err) => {
-      if (err) {
-        console.log(err);
-        return res.json({ err });
-      }
-    });
-
-    await query(`INSERT INTO partners (filename) VALUES (?)`, [filename]);
-
-    res.json({ success: true, msg: 'Logo was uploaded' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/add_brand_image', adminValidator, adminCmsController.addBrandImage);
 
 // get all brands
-router.get('/get_brands', async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM partners`, []);
-    res.json({ data, success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.get('/get_brands', adminCmsController.getBrands);
 
 // del image
-router.post('/del_brand_logo', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-    await query(`DELETE from partners WHERE id = ?`, [id]);
-
-    res.json({ success: true, msg: 'Bran was deleted' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/del_brand_logo', adminValidator, adminCmsController.deleteBrand);
 
 // add faq
-router.post('/add_faq', adminValidator, async (req, res) => {
-  try {
-    const { question, answer } = req.body;
-
-    if (!answer || !question) {
-      return res.json({
-        success: false,
-        msg: 'Please provide question and answer both',
-      });
-    }
-
-    await query(`INSERT INTO faq (question, answer) VALUES (?,?)`, [question, answer]);
-
-    res.json({ success: true, msg: 'Faq was added' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/add_faq', adminValidator, adminCmsController.addFaq);
 
 // get all faq
-router.get('/get_faq', async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM faq`, []);
-    res.json({ data, success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.get('/get_faq', adminCmsController.getFaqs);
 
 // del faq
-router.post('/del_faq', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-    await query(`DELETE FROM faq WHERE id = ?`, [id]);
-    res.json({ success: true, msg: 'Faq was deleted' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/del_faq', adminValidator, adminCmsController.deleteFaq);
 
 // add page
-router.post('/add_page', adminValidator, async (req, res) => {
-  try {
-    const { title, content, slug } = req.body;
-
-    if (!title || !content || !slug) {
-      return res.json({ success: false, msg: 'Please fill all fields' });
-    }
-
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res.json({ success: false, msg: 'No image was selected' });
-    }
-
-    // checking few pages
-    const pageAlready = ['contact-form', 'privacy-policy', 'terms-and-conditions'];
-
-    if (pageAlready.includes(slug)) {
-      return res.json({
-        msg: 'This slug is already used by system please use another slug.',
-      });
-    }
-
-    // checking already one
-    const getPage = await query(`SELECT * FROM page WHERE slug = ?`, [slug]);
-    if (getPage.length > 0) {
-      return res.json({
-        success: false,
-        msg: 'Thi slug was already used by another page.',
-      });
-    }
-
-    const randomString = randomstring.generate();
-    const file = req.files.file;
-
-    const filename = `${randomString}.${getFileExtension(file.name)}`;
-
-    file.mv(`${__dirname}/../client/public/media/${filename}`, (err) => {
-      if (err) {
-        console.log(err);
-        return res.json({ err });
-      }
-    });
-
-    await query(`INSERT INTO page (slug, title, image, content) VALUES (?,?,?,?)`, [
-      slug,
-      title,
-      filename,
-      content,
-    ]);
-
-    res.json({ success: true, msg: 'Page was added' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/add_page', adminValidator, adminCmsController.addPage);
 
 // get all pages
-router.get('/get_pages', async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM page WHERE permanent = ?`, [0]);
-    res.json({ data, success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.get('/get_pages', adminCmsController.getPages);
 
 // del page
-router.post('/del_page', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-
-    await query(`DELETE FROM page WHERE id = ?`, [id]);
-    res.json({ success: true, msg: 'Page was deleted' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/del_page', adminValidator, adminCmsController.deletePage);
 
 // auto user login
 router.post('/auto_login', adminValidator, adminUserController.autoLogin);
 
 // ading testtimonial
-router.post('/add_testimonial', adminValidator, async (req, res) => {
-  try {
-    const { title, description, reviewer_name, reviewer_position } = req.body;
-
-    if (!title || !description || !reviewer_name || !reviewer_position) {
-      return res.json({ success: false, msg: 'Please fill all fields' });
-    }
-
-    await query(
-      `INSERT INTO testimonial (title, description, reviewer_name, reviewer_position) VALUES (?,?,?,?)`,
-      [title, description, reviewer_name, reviewer_position],
-    );
-
-    res.json({ success: true, msg: 'Testimonial was added' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/add_testimonial', adminValidator, adminCmsController.addTestimonial);
 
 // get all testi
-router.get('/get_testi', async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM testimonial`, []);
-    res.json({ success: true, data });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.get('/get_testi', adminCmsController.getTestimonials);
 
 // del testi
-router.post('/del_testi', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-
-    await query(`DELETE FROM testimonial WHERE id = ?`, [id]);
-    res.json({ success: true, msg: 'Testimonial was deleted' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/del_testi', adminValidator, adminCmsController.deleteTestimonial);
 
 // get orders
 router.get('/get_orders', adminValidator, async (req, res) => {
@@ -417,80 +231,13 @@ router.post('/del_cotact_entry', adminValidator, async (req, res) => {
 });
 
 // get page by slug
-router.post('/get_page_slug', async (req, res) => {
-  try {
-    const { slug } = req.body;
+router.post('/get_page_slug', adminCmsController.getPageBySlug);
 
-    const data = await query(`SELECT * FROM page WHERE slug = ?`, [slug]);
-    if (data.length < 1) {
-      return res.json({ data: {}, success: true, page: false });
-    } else {
-      return res.json({ data: data[0], success: true, page: true });
-    }
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
 // update termns
-router.post('/update_terms', adminValidator, async (req, res) => {
-  try {
-    const { title, content } = req.body;
-
-    // check
-    const getPP = await query(`SELECT * FROM page WHERE slug = ?`, ['terms-and-conditions']);
-
-    if (getPP.length > 0) {
-      await query(`UPDATE page SET title = ?, content = ? WHERE slug = ?`, [
-        title,
-        content,
-        'terms-and-conditions',
-      ]);
-    } else {
-      await query(`INSERT INTO page (slug, title, content, permanent) VALUES (?,?,?,?)`, [
-        'terms-and-conditions',
-        title,
-        content,
-        1,
-      ]);
-    }
-
-    res.json({ success: true, msg: 'Page updated' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/update_terms', adminValidator, adminCmsController.updateTerms);
 
 // update privacy policy
-router.post('/update_privacy_policy', adminValidator, async (req, res) => {
-  try {
-    const { title, content } = req.body;
-
-    // check
-    const getPP = await query(`SELECT * FROM page WHERE slug = ?`, ['privacy-policy']);
-
-    if (getPP.length > 0) {
-      await query(`UPDATE page SET title = ?, content = ? WHERE slug = ?`, [
-        title,
-        content,
-        'privacy-policy',
-      ]);
-    } else {
-      await query(`INSERT INTO page (slug, title, content, permanent) VALUES (?,?,?,?)`, [
-        'privacy-policy',
-        title,
-        content,
-        1,
-      ]);
-    }
-
-    res.json({ success: true, msg: 'Page updated' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/update_privacy_policy', adminValidator, adminCmsController.updatePrivacyPolicy);
 
 // get smtp
 router.get('/get_smtp', adminValidator, async (req, res) => {
