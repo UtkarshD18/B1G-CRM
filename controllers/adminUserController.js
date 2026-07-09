@@ -33,20 +33,6 @@ async function updateUser(req, res, next) {
   }
 }
 
-async function updatePlan(req, res, next) {
-  try {
-    const { plan, uid } = req.body;
-    const result = await adminUserService.updateUserPlan({ plan, uid });
-    if (!result.success) {
-      return res.json({ success: false, msg: result.msg });
-    }
-    return res.json({ success: true, msg: result.msg });
-  } catch (err) {
-    console.log(err);
-    return res.json({ success: false, msg: 'something went wrong' });
-  }
-}
-
 async function autoLogin(req, res, next) {
   try {
     const { uid } = req.body;
@@ -92,7 +78,6 @@ async function deleteUser(req, res, next) {
 module.exports = {
   getUsers,
   updateUser,
-  updatePlan,
   autoLogin,
   getDashboardForUser,
   deleteUser,

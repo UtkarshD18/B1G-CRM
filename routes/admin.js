@@ -4,68 +4,18 @@ const randomstring = require('randomstring');
 const adminValidator = require('../middlewares/admin.js');
 const adminAuthController = require('../controllers/adminAuthController.js');
 const adminUserController = require('../controllers/adminUserController.js');
-const { updateUserPlan, getFileExtension, sendEmail } = require('../functions/function.js');
+const adminPlanController = require('../controllers/adminPlanController.js');
+const { getFileExtension, sendEmail } = require('../functions/function.js');
 const moment = require('moment');
 const env = require('../env.js');
 
 router.post('/login', adminAuthController.login);
 
 // add new plan
-router.post('/add_plan', adminValidator, async (req, res) => {
-  try {
-    const {
-      title,
-      short_description,
-      allow_tag,
-      allow_note,
-      allow_chatbot,
-      contact_limit,
-      allow_api,
-      is_trial,
-      price,
-      price_strike,
-      plan_duration_in_days,
-    } = req.body;
-
-    if (!title || !short_description || !plan_duration_in_days) {
-      return res.json({ success: false, msg: ' Please fill details' });
-    }
-
-    await query(
-      `INSERT INTO plan (title, short_description, allow_tag, allow_note, allow_chatbot, 
-            contact_limit, allow_api, is_trial, price, price_strike, plan_duration_in_days) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      [
-        title,
-        short_description,
-        allow_tag ? 1 : 0,
-        allow_note ? 1 : 0,
-        allow_chatbot ? 1 : 0,
-        parseInt(contact_limit || 0),
-        allow_api ? 1 : 0,
-        is_trial ? 1 : 0,
-        is_trial ? 0 : price,
-        price_strike,
-        parseInt(plan_duration_in_days || 1),
-      ],
-    );
-
-    res.json({ success: true, msg: 'Plan has been updated' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/add_plan', adminValidator, adminPlanController.addPlan);
 
 // get plans
-router.get('/get_plans', async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM plan`, []);
-    res.json({ success: true, data });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.get('/get_plans', adminPlanController.getPlans);
 
 // get web public
 router.get('/get_web_public', async (req, res) => {
@@ -79,65 +29,10 @@ router.get('/get_web_public', async (req, res) => {
 });
 
 // del plan
-router.post('/del_plan', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-
-    await query(`DELETE FROM plan WHERE id = ?`, [id]);
-    res.json({ success: true, msg: 'Plan was deleted' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/del_plan', adminValidator, adminPlanController.deletePlan);
 
 // edit plan
-router.post('/edit_plan', adminValidator, async (req, res) => {
-  try {
-    const {
-      id,
-      title,
-      short_description,
-      allow_tag,
-      allow_note,
-      allow_chatbot,
-      contact_limit,
-      allow_api,
-      is_trial,
-      price,
-      price_strike,
-      plan_duration_in_days,
-    } = req.body;
-
-    if (!id || !title || !short_description || !plan_duration_in_days) {
-      return res.json({ success: false, msg: 'Please fill details' });
-    }
-
-    await query(
-      `UPDATE plan SET title = ?, short_description = ?, allow_tag = ?, allow_note = ?, allow_chatbot = ?,
-            contact_limit = ?, allow_api = ?, is_trial = ?, price = ?, price_strike = ?, plan_duration_in_days = ? WHERE id = ?`,
-      [
-        title,
-        short_description,
-        allow_tag ? 1 : 0,
-        allow_note ? 1 : 0,
-        allow_chatbot ? 1 : 0,
-        parseInt(contact_limit || 0),
-        allow_api ? 1 : 0,
-        is_trial ? 1 : 0,
-        is_trial ? 0 : price || 0,
-        price_strike || 0,
-        parseInt(plan_duration_in_days || 1),
-        id,
-      ],
-    );
-
-    res.json({ success: true, msg: 'Plan was updated' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/edit_plan', adminValidator, adminPlanController.editPlan);
 
 // get all users
 router.get('/get_users', adminValidator, adminUserController.getUsers);
@@ -145,8 +40,8 @@ router.get('/get_users', adminValidator, adminUserController.getUsers);
 // update user
 router.post('/update_user', adminValidator, adminUserController.updateUser);
 
-// update plan
-router.post('/update_plan', adminValidator, adminUserController.updatePlan);
+// update plan (assign plan to user — owned by plan domain)
+router.post('/update_plan', adminValidator, adminPlanController.assignPlanToUser);
 
 // get payment gateway admin
 router.get('/get_payment_gateway_admin', adminValidator, async (req, res) => {

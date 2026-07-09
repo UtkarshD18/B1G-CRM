@@ -2,7 +2,6 @@ const { query, withTransaction } = require('../database/dbpromise.js');
 const bcrypt = require('bcrypt');
 const { sign } = require('jsonwebtoken');
 const env = require('../env.js');
-const billingHelper = require('../functions/helpers/billingHelper.js');
 const { getUserSignupsByMonth, getUserOrderssByMonth } = require('../functions/function.js');
 
 async function getUsers() {
@@ -44,21 +43,6 @@ async function updateUser({ newPassword, name, email, mobile_with_country_code, 
   }
 
   return { success: true, msg: 'User was updated' };
-}
-
-async function updateUserPlan({ plan, uid }) {
-  if (!plan || !uid) {
-    return { success: false, msg: 'Invalid input provided' };
-  }
-
-  const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan?.id]);
-  if (getPlan.length < 1) {
-    return { success: false, msg: 'Invalid plan found' };
-  }
-
-  await billingHelper.updateUserPlan(getPlan[0], uid);
-
-  return { success: true, msg: 'User plan was updated' };
 }
 
 async function autoLogin(uid) {
@@ -149,7 +133,6 @@ async function deleteUser(id) {
 module.exports = {
   getUsers,
   updateUser,
-  updateUserPlan,
   autoLogin,
   getDashboardForUser,
   deleteUser,
