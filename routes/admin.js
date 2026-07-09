@@ -1,15 +1,10 @@
 const router = require('express').Router();
-const { query, withTransaction } = require('../database/dbpromise.js');
+const { query } = require('../database/dbpromise.js');
 const randomstring = require('randomstring');
 const adminValidator = require('../middlewares/admin.js');
 const adminAuthController = require('../controllers/adminAuthController.js');
-const {
-  updateUserPlan,
-  getFileExtension,
-  sendEmail,
-  getUserSignupsByMonth,
-  getUserOrderssByMonth,
-} = require('../functions/function.js');
+const adminUserController = require('../controllers/adminUserController.js');
+const { updateUserPlan, getFileExtension, sendEmail } = require('../functions/function.js');
 const moment = require('moment');
 const env = require('../env.js');
 
@@ -145,83 +140,13 @@ router.post('/edit_plan', adminValidator, async (req, res) => {
 });
 
 // get all users
-router.get('/get_users', adminValidator, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM user`, []);
-    res.json({ data, success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.get('/get_users', adminValidator, adminUserController.getUsers);
 
 // update user
-router.post('/update_user', adminValidator, async (req, res) => {
-  try {
-    const { newPassword, name, email, mobile_with_country_code, uid } = req.body;
-
-    console.log(req.body);
-
-    if (!uid || !name || !email || !mobile_with_country_code) {
-      return res.json({
-        success: false,
-        msg: 'You forgot to enter some field(s)',
-      });
-    }
-
-    const findUserByEmail = await query(`SELECT * FROM user WHERE email = ?`, [email]);
-    if (findUserByEmail.length > 0 && findUserByEmail[0].uid !== uid) {
-      return res.json({ msg: 'This email is already taken by another user' });
-    }
-
-    const findUserByUid = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
-    if (findUserByUid.length === 0) {
-      return res.json({ success: false, msg: 'User not found' });
-    }
-
-    if (newPassword) {
-      const hashpass = await bcrypt.hash(newPassword, 10);
-
-      await query(
-        `UPDATE user SET name = ?, email = ?, password = ?, mobile_with_country_code = ? WHERE uid = ?`,
-        [name, email, hashpass, mobile_with_country_code, uid],
-      );
-    } else {
-      await query(
-        `UPDATE user SET name = ?, email = ?, mobile_with_country_code = ? WHERE uid = ?`,
-        [name, email, mobile_with_country_code, uid],
-      );
-    }
-
-    res.json({ msg: 'User was updated', success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/update_user', adminValidator, adminUserController.updateUser);
 
 // update plan
-router.post('/update_plan', adminValidator, async (req, res) => {
-  try {
-    const { plan, uid } = req.body;
-
-    if (!plan || !uid) {
-      return res.json({ success: false, msg: 'Invalid input provided' });
-    }
-
-    const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan?.id]);
-    if (getPlan.length < 1) {
-      return res.json({ success: false, msg: 'Invalid plan found' });
-    }
-
-    await updateUserPlan(getPlan[0], uid);
-
-    res.json({ success: true, msg: 'User plan was updated' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/update_plan', adminValidator, adminUserController.updatePlan);
 
 // get payment gateway admin
 router.get('/get_payment_gateway_admin', adminValidator, async (req, res) => {
@@ -489,34 +414,7 @@ router.post('/del_page', adminValidator, async (req, res) => {
 });
 
 // auto user login
-router.post('/auto_login', adminValidator, async (req, res) => {
-  try {
-    const { uid } = req.body;
-
-    if (!uid) {
-      return res.json({ success: false, msg: 'Invalid input' });
-    }
-
-    const user = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
-    const token = sign(
-      {
-        uid: user[0].uid,
-        role: 'user',
-        email: user[0].email,
-      },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRY },
-    );
-    console.log(token);
-    res.json({
-      success: true,
-      token: token,
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/auto_login', adminValidator, adminUserController.autoLogin);
 
 // ading testtimonial
 router.post('/add_testimonial', adminValidator, async (req, res) => {
@@ -779,32 +677,7 @@ router.post('/send_test_email', adminValidator, async (req, res) => {
 });
 
 // get dashboard user
-router.get('/get_dashboard_for_user', adminValidator, async (req, res) => {
-  try {
-    const getUsers = await query(`SELECT * FROM user`, []);
-    const { paidSignupsByMonth, unpaidSignupsByMonth } = getUserSignupsByMonth(getUsers);
-
-    const getOrders = await query(`SELECT * FROM orders`, []);
-    const orders = getUserOrderssByMonth(getOrders);
-
-    const getContactForm = await query(`SELECT * FROM contact_form`, []);
-
-    res.json({
-      data: {
-        paid: paidSignupsByMonth,
-        unpaid: unpaidSignupsByMonth,
-        orders,
-        userLength: getUsers.length,
-        orderLength: getOrders.length,
-        contactLength: getContactForm.length,
-      },
-      success: true,
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.get('/get_dashboard_for_user', adminValidator, adminUserController.getDashboardForUser);
 
 // get admin
 router.get('/get_admin', adminValidator, adminAuthController.getAdmin);
@@ -892,53 +765,7 @@ router.post('/update_rtl', adminValidator, async (req, res) => {
 });
 
 // delete user
-router.post('/del_user', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-
-    if (!id) {
-      return res.json({ success: false, msg: 'User ID is required' });
-    }
-
-    const user = await query(`SELECT uid FROM "user" WHERE id = ?`, [id]);
-    if (user.length > 0) {
-      const userUid = user[0].uid;
-      // Cascade delete all associated tenant resources inside a transaction to maintain database integrity
-      await withTransaction(async (tx) => {
-        await tx(`DELETE FROM agents WHERE owner_uid = ?`, [userUid]);
-        await tx(`DELETE FROM phonebook WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM contact WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM broadcast WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM broadcast_log WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM orders WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM meta_api WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM meta_templet_media WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM chats WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM rooms WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM agent_chats WHERE owner_uid = ?`, [userUid]);
-        await tx(`DELETE FROM chat_tags WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM chatbot WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM flow WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM flow_data WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM templets WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM instance WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM agent_task WHERE owner_uid = ?`, [userUid]);
-        await tx(`DELETE FROM chat_widget WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM chatbot_log WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM webhook_rules WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM webhook_logs WHERE uid = ?`, [userUid]);
-        await tx(`DELETE FROM "user" WHERE id = ?`, [id]);
-      });
-    } else {
-      await query(`DELETE FROM "user" WHERE id = ?`, [id]);
-    }
-
-    res.json({ success: true, msg: 'User was deleted' });
-  } catch (err) {
-    console.log(err);
-    res.json({ success: false, msg: 'something went wrong' });
-  }
-});
+router.post('/del_user', adminValidator, adminUserController.deleteUser);
 
 // update deployment settings
 router.post('/update_deployment_settings', adminValidator, async (req, res) => {
