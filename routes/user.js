@@ -37,6 +37,7 @@ const env = require('../env.js');
 const { addON } = env;
 const { invalidatePermissionCache } = require('../utils/permissionResolver.js');
 const { logActivity } = require('../utils/activityLogger.js');
+const authController = require('../controllers/authController.js');
 
 // facebook login
 router.post('/login_with_facebook', async (req, res) => {
@@ -187,89 +188,11 @@ router.post('/login_with_google', async (req, res) => {
   }
 });
 
-// aignup user
-router.post('/signup', async (req, res) => {
-  try {
-    const { email, name, password, mobile_with_country_code, acceptPolicy } = req.body;
-
-    if (!email || !name || !password || !mobile_with_country_code) {
-      return res.json({ msg: 'Please fill the details', success: false });
-    }
-
-    if (!acceptPolicy) {
-      return res.json({
-        msg: 'You did not click on checkbox of Privacy & Terms',
-        success: false,
-      });
-    }
-
-    if (!isValidEmail(email)) {
-      return res.json({ msg: 'Please enter a valid email', success: false });
-    }
-
-    // check if user already has same email
-    const findEx = await query(`SELECT * FROM user WHERE email = ?`, email);
-    if (findEx.length > 0) {
-      return res.json({ msg: 'A user already exist with this email' });
-    }
-
-    const haspass = await bcrypt.hash(password, 10);
-    const uid = randomstring.generate();
-
-    await query(
-      `INSERT INTO user (name, uid, email, password, mobile_with_country_code) VALUES (?,?,?,?,?)`,
-      [name, uid, email, haspass, mobile_with_country_code],
-    );
-
-    res.json({ msg: 'Signup Success', success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong', err });
-    console.log(err);
-  }
-});
+// signup user
+router.post('/signup', authController.signup);
 
 // login user
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.json({
-        success: false,
-        msg: 'Please provide email and password',
-      });
-    }
-
-    // check for user
-    const userFind = await query(`SELECT * FROM user WHERE email = ?`, [email]);
-    if (userFind.length < 1) {
-      return res.json({ msg: 'Invalid credentials' });
-    }
-
-    const compare = await bcrypt.compare(password, userFind[0].password);
-
-    if (!compare) {
-      return res.json({ msg: 'Invalid credentials' });
-    } else {
-      const token = sign(
-        {
-          uid: userFind[0].uid,
-          role: 'user',
-          email: userFind[0].email,
-        },
-        env.JWT_SECRET,
-        { expiresIn: env.JWT_EXPIRY },
-      );
-      res.json({
-        success: true,
-        token,
-      });
-    }
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong', err });
-    console.log(err);
-  }
-});
+router.post('/login', authController.login);
 
 // return image url
 router.post('/return_media_url', validateUser, async (req, res) => {
@@ -1504,101 +1427,10 @@ router.post('/start_free_trial', validateUser, async (req, res) => {
 });
 
 // send recover
-router.post('/send_resovery', async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!isValidEmail(email)) {
-      return res.json({ msg: 'Please enter a valid email' });
-    }
-
-    const checkEmailValid = await query(`SELECT * FROM user WHERE email = ?`, [email]);
-    if (checkEmailValid.length < 1) {
-      return res.json({
-        success: true,
-        msg: 'We have sent a recovery link if this email is associated with user account.',
-      });
-    }
-
-    const getWeb = await query(`SELECT * FROM web_public`, []);
-    const appName = getWeb[0]?.app_name;
-
-    const jsontoken = sign(
-      {
-        uid: checkEmailValid[0].uid,
-        old_email: email,
-        email: email,
-        time: moment(new Date()),
-        role: 'user',
-      },
-      env.JWT_SECRET,
-      { expiresIn: '1h' },
-    );
-
-    const recpveryUrl = `${env.FRONTEND_URL}/recovery-user/${jsontoken}`;
-
-    const getHtml = recoverEmail(appName, recpveryUrl);
-
-    // getting smtp
-    const smtp = await query(`SELECT * FROM smtp`, []);
-    if (!smtp[0]?.email || !smtp[0]?.host || !smtp[0]?.port || !smtp[0]?.password) {
-      return res.json({
-        success: false,
-        msg: 'SMTP connections not found! Unable to send recovery link',
-      });
-    }
-
-    await sendEmail(
-      smtp[0]?.host,
-      smtp[0]?.port,
-      smtp[0]?.email,
-      smtp[0]?.password,
-      getHtml,
-      `${appName} - Password Recovery`,
-      smtp[0]?.email,
-      email,
-    );
-
-    res.json({
-      success: true,
-      msg: 'We have sent your a password recovery link. Please check your email',
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.post('/send_resovery', authController.sendRecovery);
 
 // modify recpvery passwrod
-router.get('/modify_password', validateUser, async (req, res) => {
-  try {
-    const { pass } = req.query;
-
-    if (!pass) {
-      return res.json({ success: false, msg: 'Please provide a password' });
-    }
-
-    if (moment(new Date()).diff(moment(req.decode.time), 'hours') > 1) {
-      return res.json({ success: false, msg: 'Token expired' });
-    }
-
-    const hashpassword = await bcrypt.hash(pass, 10);
-
-    const result = await query(`UPDATE user SET password = ? WHERE email = ?`, [
-      hashpassword,
-      req.decode.old_email,
-    ]);
-
-    res.json({
-      success: true,
-      msg: 'Your password has been changed. You may login now! Redirecting...',
-      data: result,
-    });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.get('/modify_password', validateUser, authController.modifyRecoveryPassword);
 
 // generate api keys
 router.get('/generate_api_keys', validateUser, async (req, res) => {
