@@ -5,9 +5,7 @@ const adminAuthController = require('../controllers/adminAuthController.js');
 const adminUserController = require('../controllers/adminUserController.js');
 const adminPlanController = require('../controllers/adminPlanController.js');
 const adminCmsController = require('../controllers/adminCmsController.js');
-const { sendEmail } = require('../functions/function.js');
-const moment = require('moment');
-const env = require('../env.js');
+const adminSettingsController = require('../controllers/adminSettingsController.js');
 
 router.post('/login', adminAuthController.login);
 
@@ -18,15 +16,7 @@ router.post('/add_plan', adminValidator, adminPlanController.addPlan);
 router.get('/get_plans', adminPlanController.getPlans);
 
 // get web public
-router.get('/get_web_public', async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM web_public`, []);
-    res.json({ data: data[0], success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.get('/get_web_public', adminSettingsController.getWebPublic);
 
 // del plan
 router.post('/del_plan', adminValidator, adminPlanController.deletePlan);
@@ -44,92 +34,10 @@ router.post('/update_user', adminValidator, adminUserController.updateUser);
 router.post('/update_plan', adminValidator, adminPlanController.assignPlanToUser);
 
 // get payment gateway admin
-router.get('/get_payment_gateway_admin', adminValidator, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM web_private`, []);
-    if (data.length < 1) {
-      return res.json({ data: {}, success: true });
-    }
-    res.json({ data: data[0], success: true });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.get('/get_payment_gateway_admin', adminValidator, adminSettingsController.getPaymentGateway);
 
 // update payment gateway
-router.post('/update_pay_gateway', adminValidator, async (req, res) => {
-  try {
-    const {
-      pay_offline_id,
-      pay_offline_key,
-      offline_active,
-      pay_stripe_id,
-      pay_stripe_key,
-      stripe_active,
-      pay_paypal_id,
-      pay_paypal_key,
-      paypal_active,
-      rz_id,
-      rz_key,
-      rz_active,
-      pay_paystack_id,
-      pay_paystack_key,
-      paystack_active,
-      pay_mercadopago_id,
-      pay_mercadopago_key,
-      mercadopago_active,
-    } = req.body;
-
-    await query(
-      `UPDATE web_private SET  
-            pay_offline_id = ?, 
-            pay_offline_key = ?, 
-            offline_active = ?,
-            pay_stripe_id = ?, 
-            pay_stripe_key = ?, 
-            stripe_active = ?,
-            pay_paypal_id = ?,
-            pay_paypal_key = ?,
-            paypal_active = ?,
-            rz_id = ?,
-            rz_key = ?,
-            rz_active = ?,
-            pay_paystack_id = ?,
-            pay_paystack_key = ?,
-            paystack_active = ?,
-            pay_mercadopago_id = ?,
-            pay_mercadopago_key = ?,
-            mercadopago_active = ?
-            `,
-      [
-        pay_offline_id,
-        pay_offline_key,
-        offline_active,
-        pay_stripe_id,
-        pay_stripe_key,
-        stripe_active,
-        pay_paypal_id,
-        pay_paypal_key,
-        paypal_active,
-        rz_id,
-        rz_key,
-        rz_active,
-        pay_paystack_id,
-        pay_paystack_key,
-        paystack_active,
-        pay_mercadopago_id,
-        pay_mercadopago_key,
-        mercadopago_active,
-      ],
-    );
-
-    res.json({ success: true, msg: 'Payment gateway updated' });
-  } catch (err) {
-    res.json({ success: false, msg: 'something went wrong' });
-    console.log(err);
-  }
-});
+router.post('/update_pay_gateway', adminValidator, adminSettingsController.updatePaymentGateway);
 
 // add partners logo
 router.post('/add_brand_image', adminValidator, adminCmsController.addBrandImage);
@@ -240,83 +148,13 @@ router.post('/update_terms', adminValidator, adminCmsController.updateTerms);
 router.post('/update_privacy_policy', adminValidator, adminCmsController.updatePrivacyPolicy);
 
 // get smtp
-router.get('/get_smtp', adminValidator, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM smtp`, []);
-    if (data.length < 1) {
-      return res.json({ data: { id: 'ID' }, success: true });
-    } else {
-      return res.json({ data: data[0], success: true });
-    }
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.get('/get_smtp', adminValidator, adminSettingsController.getSmtp);
 
 // update smtp
-router.post('/update_smtp', adminValidator, async (req, res) => {
-  try {
-    const { email, port, password, host } = req.body;
-
-    if (!email || !port || !password || !host) {
-      return res.json({ msg: 'Please fill all the fields' });
-    }
-
-    const getOne = await query(`SELECT * FROM smtp`, []);
-    if (getOne.length < 1) {
-      await query(`INSERT INTO smtp (email, host, port, password) VALUES (?,?,?,?)`, [
-        email,
-        host,
-        port,
-        password,
-      ]);
-    } else {
-      await query(`UPDATE smtp SET email = ?, host = ?, port = ?, password = ?`, [
-        email,
-        host,
-        port,
-        password,
-      ]);
-    }
-
-    res.json({ success: true, msg: 'Email settings was updated' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/update_smtp', adminValidator, adminSettingsController.updateSmtp);
 
 // send test email
-router.post('/send_test_email', adminValidator, async (req, res) => {
-  try {
-    const { email, port, password, host, to } = req.body;
-
-    if (!email || !port || !password || !host) {
-      return res.json({ msg: 'Please fill all the fields' });
-    }
-
-    const checkEmail = await sendEmail(
-      host,
-      port,
-      email,
-      password,
-      `<h1>This is a test SMTP email!</h1>`,
-      'SMTP Testing',
-      'Testing Sender',
-      to,
-    );
-
-    if (checkEmail.success) {
-      res.json({ msg: 'Email sent', success: true });
-    } else {
-      res.json({ msg: checkEmail?.err });
-    }
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'server error', err });
-  }
-});
+router.post('/send_test_email', adminValidator, adminSettingsController.sendTestEmail);
 
 // get dashboard user
 router.get('/get_dashboard_for_user', adminValidator, adminUserController.getDashboardForUser);
@@ -336,198 +174,31 @@ router.get('/modify_password', adminValidator, adminAuthController.modifyPasswor
 // Duplicate del_user route removed to avoid conflicts.
 
 // get all genn wa links
-router.get('/get_wa_gen', adminValidator, async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM gen_links`, []);
-    res.json({ data, success: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.get('/get_wa_gen', adminValidator, adminSettingsController.getWaGenLinks);
 
 // del gen link
-router.post('/de_wa_den_link', adminValidator, async (req, res) => {
-  try {
-    const { id } = req.body;
-    await query(`DELETE FROM gen_links WHERE id = ?`, [id]);
-    res.json({ msg: 'Generated link was deleted', success: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.post('/de_wa_den_link', adminValidator, adminSettingsController.deleteWaGenLink);
 
 // get social login
-router.get('/get_social_login', async (req, res) => {
-  try {
-    const data = await query(`SELECT * FROM web_public`, []);
-    res.json({ data: data[0], success: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.get('/get_social_login', adminSettingsController.getSocialLogin);
 
 // update social things
-router.post('/update_social_login', adminValidator, async (req, res) => {
-  try {
-    const {
-      google_client_id,
-      google_login_active,
-      fb_login_app_id,
-      fb_login_app_sec,
-      fb_login_active,
-    } = req.body;
-
-    await query(
-      `UPDATE web_public SET google_client_id = ?, google_login_active = ?, fb_login_app_id = ?, fb_login_app_sec = ?, fb_login_active = ?`,
-      [google_client_id, google_login_active, fb_login_app_id, fb_login_app_sec, fb_login_active],
-    );
-
-    res.json({ msg: 'Settings updated', success: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.post('/update_social_login', adminValidator, adminSettingsController.updateSocialLogin);
 
 // update rtl
-router.post('/update_rtl', adminValidator, async (req, res) => {
-  try {
-    const { rtl } = req.body;
-
-    await query(`UPDATE web_public SET rtl = ?`, [rtl ? 1 : 0]);
-
-    res.json({ success: true, msg: 'RTL was updated' });
-  } catch (err) {
-    console.log(err);
-    res.json({ msg: 'Something went wrong', err, success: false });
-  }
-});
+router.post('/update_rtl', adminValidator, adminSettingsController.updateRtl);
 
 // delete user
 router.post('/del_user', adminValidator, adminUserController.deleteUser);
 
 // update deployment settings
-router.post('/update_deployment_settings', adminValidator, async (req, res) => {
-  try {
-    const {
-      meta_app_id,
-      meta_app_secret,
-      meta_waba_id,
-      meta_business_account_id,
-      meta_access_token,
-      meta_phone_number_id,
-      insta_app_id,
-      insta_app_secret,
-      insta_business_account_id,
-      insta_access_token,
-      ai_provider_active,
-      ai_openai_key,
-      ai_openai_model,
-      ai_gemini_key,
-      ai_gemini_model,
-      ai_claude_key,
-      ai_claude_model,
-      ai_openrouter_key,
-      ai_openrouter_model,
-      ai_ollama_url,
-      ai_ollama_model,
-      ai_custom_url,
-      ai_custom_model,
-      widget_domains,
-    } = req.body;
-
-    await query(
-      `UPDATE web_private SET 
-        meta_app_id = ?,
-        meta_app_secret = ?,
-        meta_waba_id = ?,
-        meta_business_account_id = ?,
-        meta_access_token = ?,
-        meta_phone_number_id = ?,
-        insta_app_id = ?,
-        insta_app_secret = ?,
-        insta_business_account_id = ?,
-        insta_access_token = ?,
-        ai_provider_active = ?,
-        ai_openai_key = ?,
-        ai_openai_model = ?,
-        ai_gemini_key = ?,
-        ai_gemini_model = ?,
-        ai_claude_key = ?,
-        ai_claude_model = ?,
-        ai_openrouter_key = ?,
-        ai_openrouter_model = ?,
-        ai_ollama_url = ?,
-        ai_ollama_model = ?,
-        ai_custom_url = ?,
-        ai_custom_model = ?,
-        widget_domains = ?`,
-      [
-        meta_app_id || '',
-        meta_app_secret || '',
-        meta_waba_id || '',
-        meta_business_account_id || '',
-        meta_access_token || '',
-        meta_phone_number_id || '',
-        insta_app_id || '',
-        insta_app_secret || '',
-        insta_business_account_id || '',
-        insta_access_token || '',
-        ai_provider_active || '',
-        ai_openai_key || '',
-        ai_openai_model || '',
-        ai_gemini_key || '',
-        ai_gemini_model || '',
-        ai_claude_key || '',
-        ai_claude_model || '',
-        ai_openrouter_key || '',
-        ai_openrouter_model || '',
-        ai_ollama_url || '',
-        ai_ollama_model || '',
-        ai_custom_url || '',
-        ai_custom_model || '',
-        widget_domains || '',
-      ],
-    );
-
-    res.json({ success: true, msg: 'Deployment settings updated successfully' });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, msg: 'something went wrong', error: err.message });
-  }
-});
+router.post(
+  '/update_deployment_settings',
+  adminValidator,
+  adminSettingsController.updateDeploymentSettings,
+);
 
 // get transport metrics
-router.get('/get_transport_metrics', adminValidator, async (req, res) => {
-  try {
-    const queueMetrics = await query(`
-      SELECT 
-        (SELECT COUNT(*) FROM channel_outgoing_queue WHERE state = 'pending') as pending_out,
-        (SELECT COUNT(*) FROM channel_outgoing_queue WHERE state = 'failed' OR state = 'dead_letter') as failed_out,
-        (SELECT COUNT(*) FROM channel_incoming_queue WHERE state = 'pending') as pending_in
-    `);
-
-    const channelMetrics = await query(
-      `SELECT * FROM channel_metrics ORDER BY updated_at DESC LIMIT 50`,
-    );
-
-    const workers = await query(`SELECT * FROM transport_workers ORDER BY last_seen DESC`);
-
-    res.json({
-      success: true,
-      data: {
-        queue: queueMetrics[0] || { pending_out: 0, failed_out: 0, pending_in: 0 },
-        channels: channelMetrics,
-        workers,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.json({ success: false, msg: 'failed to fetch metrics' });
-  }
-});
+router.get('/get_transport_metrics', adminValidator, adminSettingsController.getTransportMetrics);
 
 module.exports = router;
