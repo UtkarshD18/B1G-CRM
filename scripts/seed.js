@@ -45,7 +45,7 @@ async function execSeed() {
       `
       INSERT INTO admin (uid, email, password, role)
       VALUES ('local-admin-uid', 'admin@example.com', $1, 'admin')
-      ON CONFLICT (email) DO NOTHING
+      ON CONFLICT (email) DO UPDATE SET password = $1
     `,
       [adminHash],
     );
@@ -56,7 +56,7 @@ async function execSeed() {
       `
       INSERT INTO "user" (uid, name, email, password, role, timezone, plan, plan_expire)
       VALUES ('tenant-uid', 'Tenant Admin', 'tenant@example.com', $1, 'user', 'Asia/Kolkata', '{"contact_limit":100000,"allow_note":1,"allow_tag":1,"allow_chatbot":1,"allow_api":1}', 4102444800000)
-      ON CONFLICT (email) DO UPDATE SET plan_expire = 4102444800000
+      ON CONFLICT (email) DO UPDATE SET password = $1, plan_expire = 4102444800000
     `,
       [tenantHash],
     );

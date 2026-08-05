@@ -19,7 +19,7 @@ function uuidv7() {
 const fs = require('fs');
 const path = require('path');
 
-const API_BASE = 'http://127.0.0.1:3020/api';
+const API_BASE = 'http://127.0.0.1:3010/api';
 
 // Configuration
 const TARGETS = {
