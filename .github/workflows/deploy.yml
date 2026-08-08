@@ -57,6 +57,18 @@ jobs:
           DATABASE_URL: postgres://b1gcrm:b1gcrm_local_dev@localhost:5432/b1gcrm
         run: npm run db:migrate
 
+      - name: Seed database (Local)
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: b1gcrm
+          PGPASSWORD: b1gcrm_local_dev
+          PGDATABASE: b1gcrm
+          DATABASE_URL: postgres://b1gcrm:b1gcrm_local_dev@localhost:5432/b1gcrm
+          TEST_ADMIN_PASSWORD: password
+          TEST_USER_PASSWORD: password
+        run: node scripts/seed.js
+
       - name: Run developer credentials seed check
         env:
           PGHOST: localhost
