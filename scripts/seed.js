@@ -18,7 +18,8 @@ function uuidv7() {
 }
 const bcrypt = require('bcrypt');
 
-const API_BASE = 'http://127.0.0.1:3010/api';
+const PORT = process.env.PORT || '3010';
+const API_BASE = `http://127.0.0.1:${PORT}/api`;
 const SALT_ROUNDS = 10;
 
 // Configuration
@@ -159,12 +160,12 @@ async function execSeed() {
     for (let i = 1; i <= TARGETS.leads; i++) {
       await axios
         .post(
-          `${API_BASE}/crm_leads/create`,
+          `${API_BASE}/crm/leads/add`,
           {
             name: `Lead ${i}`,
             mobile: `9166666666${String(i).padStart(2, '0')}`,
             email: `lead${i}@sat.local`,
-            status: 'new',
+            stage: i % 2 === 0 ? 'Qualified' : 'Lead',
           },
           { headers: authHeaders },
         )

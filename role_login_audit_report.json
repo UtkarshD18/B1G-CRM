@@ -2,68 +2,68 @@
   {
     "role": "Admin",
     "email": "admin@example.com",
-    "loginUrl": "http://localhost:3010/admin/login",
-    "postLoginUrl": "http://localhost:3010/admin/dashboard",
+    "loginUrl": "http://127.0.0.1:3010/admin/login",
+    "postLoginUrl": "http://127.0.0.1:3010/admin/dashboard",
     "sessionPersists": true,
-    "postReloadUrl": "http://localhost:3010/admin/dashboard",
+    "postReloadUrl": "http://127.0.0.1:3010/admin/dashboard",
     "persistsAfterReload": true,
-    "postLogoutUrl": "http://localhost:3010/admin/login",
+    "postLogoutUrl": "http://127.0.0.1:3010/admin/login",
     "loggedOutOk": true,
-    "reLoginUrl": "http://localhost:3010/admin/dashboard",
+    "reLoginUrl": "http://127.0.0.1:3010/admin/dashboard",
     "reLoginOk": true,
     "apiCalls": [
       {
-        "url": "http://localhost:3010/api/admin/login",
+        "url": "http://127.0.0.1:3010/api/admin/login",
         "status": 200,
         "method": "POST"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_plans",
+        "url": "http://127.0.0.1:3010/api/admin/get_dashboard_for_user",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_users",
+        "url": "http://127.0.0.1:3010/api/admin/get_plans",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_dashboard_for_user",
+        "url": "http://127.0.0.1:3010/api/admin/get_users",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_plans",
+        "url": "http://127.0.0.1:3010/api/admin/get_plans",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_users",
+        "url": "http://127.0.0.1:3010/api/admin/get_users",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_dashboard_for_user",
+        "url": "http://127.0.0.1:3010/api/admin/get_dashboard_for_user",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/login",
+        "url": "http://127.0.0.1:3010/api/admin/login",
         "status": 200,
         "method": "POST"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_plans",
+        "url": "http://127.0.0.1:3010/api/admin/get_plans",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_users",
+        "url": "http://127.0.0.1:3010/api/admin/get_dashboard_for_user",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/admin/get_dashboard_for_user",
+        "url": "http://127.0.0.1:3010/api/admin/get_users",
         "status": 304,
         "method": "GET"
       }
@@ -72,38 +72,38 @@
   {
     "role": "User",
     "email": "user@example.com",
-    "loginUrl": "http://localhost:3010/user/login",
-    "postLoginUrl": "http://localhost:3010/user/dashboard",
+    "loginUrl": "http://127.0.0.1:3010/user/login",
+    "postLoginUrl": "http://127.0.0.1:3010/user/dashboard",
     "sessionPersists": true,
-    "postReloadUrl": "http://localhost:3010/user/dashboard",
+    "postReloadUrl": "http://127.0.0.1:3010/user/dashboard",
     "persistsAfterReload": true,
-    "postLogoutUrl": "http://localhost:3010/user/login",
+    "postLogoutUrl": "http://127.0.0.1:3010/user/login",
     "loggedOutOk": true,
-    "reLoginUrl": "http://localhost:3010/user/dashboard",
+    "reLoginUrl": "http://127.0.0.1:3010/user/dashboard",
     "reLoginOk": true,
     "apiCalls": [
       {
-        "url": "http://localhost:3010/api/user/login",
+        "url": "http://127.0.0.1:3010/api/user/login",
         "status": 200,
         "method": "POST"
       },
       {
-        "url": "http://localhost:3010/api/user/get_dashboard",
+        "url": "http://127.0.0.1:3010/api/user/get_dashboard",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/user/get_dashboard",
+        "url": "http://127.0.0.1:3010/api/user/get_dashboard",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/user/login",
+        "url": "http://127.0.0.1:3010/api/user/login",
         "status": 200,
         "method": "POST"
       },
       {
-        "url": "http://localhost:3010/api/user/get_dashboard",
+        "url": "http://127.0.0.1:3010/api/user/get_dashboard",
         "status": 304,
         "method": "GET"
       }
@@ -112,68 +112,68 @@
   {
     "role": "Agent",
     "email": "agent@example.com",
-    "loginUrl": "http://localhost:3010/agent/login",
-    "postLoginUrl": "http://localhost:3010/agent/dashboard",
+    "loginUrl": "http://127.0.0.1:3010/agent/login",
+    "postLoginUrl": "http://127.0.0.1:3010/agent/dashboard",
     "sessionPersists": true,
-    "postReloadUrl": "http://localhost:3010/agent/dashboard",
+    "postReloadUrl": "http://127.0.0.1:3010/agent/dashboard",
     "persistsAfterReload": true,
-    "postLogoutUrl": "http://localhost:3010/agent/login",
+    "postLogoutUrl": "http://127.0.0.1:3010/agent/login",
     "loggedOutOk": true,
-    "reLoginUrl": "http://localhost:3010/agent/dashboard",
+    "reLoginUrl": "http://127.0.0.1:3010/agent/dashboard",
     "reLoginOk": true,
     "apiCalls": [
       {
-        "url": "http://localhost:3010/api/agent/login",
+        "url": "http://127.0.0.1:3010/api/agent/login",
         "status": 200,
         "method": "POST"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_me",
+        "url": "http://127.0.0.1:3010/api/agent/get_my_task",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_task",
+        "url": "http://127.0.0.1:3010/api/agent/get_me",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
+        "url": "http://127.0.0.1:3010/api/agent/get_my_assigned_chats",
         "status": 200,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_me",
+        "url": "http://127.0.0.1:3010/api/agent/get_my_task",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
+        "url": "http://127.0.0.1:3010/api/agent/get_my_assigned_chats",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_task",
+        "url": "http://127.0.0.1:3010/api/agent/get_me",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/login",
+        "url": "http://127.0.0.1:3010/api/agent/login",
         "status": 200,
         "method": "POST"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_me",
+        "url": "http://127.0.0.1:3010/api/agent/get_my_task",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_assigned_chats",
+        "url": "http://127.0.0.1:3010/api/agent/get_my_assigned_chats",
         "status": 304,
         "method": "GET"
       },
       {
-        "url": "http://localhost:3010/api/agent/get_my_task",
+        "url": "http://127.0.0.1:3010/api/agent/get_me",
         "status": 304,
         "method": "GET"
       }

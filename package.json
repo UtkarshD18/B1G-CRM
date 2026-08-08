@@ -14,7 +14,9 @@
     "dev": "nodemon server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "verify": "npm run lint && node scripts/verify-seed-data.js && npm test",
+    "verify-live": "node verify-role-logins.js"
   },
   "engines": {
     "node": ">=20.0.0"
