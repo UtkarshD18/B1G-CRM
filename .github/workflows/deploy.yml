@@ -1,0 +1,198 @@
+name: CI/CD Cloud Demo Deployment
+
+on:
+  push:
+    branches:
+      - demo-live
+
+concurrency:
+  group: demo-live-deployment-b1gcrm
+  cancel-in-progress: false
+
+jobs:
+  quality-gate:
+    name: 🛡️ Quality Gate
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: b1gcrm
+          POSTGRES_PASSWORD: b1gcrm_local_dev
+          POSTGRES_DB: b1gcrm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm --prefix client ci
+
+      - name: Scan codebase (Husky style linters)
+        run: npm run lint || echo "Lint warnings ignored"
+
+      - name: Run database migrations
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: b1gcrm
+          PGPASSWORD: b1gcrm_local_dev
+          PGDATABASE: b1gcrm
+          DATABASE_URL: postgres://b1gcrm:b1gcrm_local_dev@localhost:5432/b1gcrm
+        run: npm run db:migrate
+
+      - name: Run developer credentials seed check
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: b1gcrm
+          PGPASSWORD: b1gcrm_local_dev
+          PGDATABASE: b1gcrm
+          DATABASE_URL: postgres://b1gcrm:b1gcrm_local_dev@localhost:5432/b1gcrm
+          TEST_ADMIN_PASSWORD: password
+          TEST_USER_PASSWORD: password
+        run: node scripts/verify-seed-data.js
+
+      - name: Run server backend Jest test suite
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: b1gcrm
+          PGPASSWORD: b1gcrm_local_dev
+          PGDATABASE: b1gcrm
+          DATABASE_URL: postgres://b1gcrm:b1gcrm_local_dev@localhost:5432/b1gcrm
+          JWT_SECRET: test-secret-key-123456
+          REFRESH_TOKEN_SECRET: test-refresh-secret-key-123456
+        run: npm test
+
+      - name: Build client production static assets
+        run: npm --prefix client run build
+
+  deploy-staging:
+    name: 🚀 Deploy Staging
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy & Poll Staging Service
+        env:
+          RENDER_DEPLOY_WEBHOOK_URL: ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_STAGING }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: node scripts/deploy-to-render.js
+
+  staging-verify:
+    name: 🧪 Verify Staging
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (Puppeteer client)
+        run: npm ci
+
+      - name: Run verify-live audit checks against Staging Service (Read-only)
+        env:
+          BACKEND_URL: ${{ secrets.STAGING_BACKEND_URL }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
+          TEST_USER_PASSWORD: ${{ secrets.STAGING_TEST_USER_PASSWORD }}
+        run: npm run verify-live
+
+  deploy-demo:
+    name: 🚀 Deploy Recruiter Demo
+    needs: staging-verify
+    runs-on: ubuntu-latest
+    environment: demo-production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy & Poll Demo Service
+        env:
+          RENDER_DEPLOY_WEBHOOK_URL: ${{ secrets.RENDER_DEPLOY_WEBHOOK_URL_DEMO }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: node scripts/deploy-to-render.js
+
+  demo-verify:
+    name: 🧪 Verify Recruiter Demo
+    needs: deploy-demo
+    runs-on: ubuntu-latest
+    environment: demo-production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (Puppeteer client)
+        run: npm ci
+
+      - name: Run verify-live audit checks against Demo Service (Read-only)
+        env:
+          BACKEND_URL: ${{ secrets.DEMO_BACKEND_URL }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.DEMO_TEST_ADMIN_PASSWORD }}
+          TEST_USER_PASSWORD: ${{ secrets.DEMO_TEST_USER_PASSWORD }}
+        run: npm run verify-live
+
+  release-manifest:
+    name: 📦 Generate Release Manifest
+    needs: demo-verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create manifest JSON
+        run: |
+          echo "{" > release_manifest.json
+          echo "  \"release\": \"v1.0.0-demo\"," >> release_manifest.json
+          echo "  \"service\": \"B1GCRM\"," >> release_manifest.json
+          echo "  \"sha\": \"${{ github.sha }}\"," >> release_manifest.json
+          echo "  \"node_version\": \"20.x\"," >> release_manifest.json
+          echo "  \"deployment_time\": \"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"," >> release_manifest.json
+          echo "  \"staging_verified\": true," >> release_manifest.json
+          echo "  \"demo_verified\": true" >> release_manifest.json
+          echo "}" >> release_manifest.json
+
+      - name: Upload release manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: B1GCRM-release-manifest
+          path: release_manifest.json
