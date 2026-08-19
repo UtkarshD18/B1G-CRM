@@ -1,5 +1,40 @@
 const { query } = require('../database/dbpromise');
 const env = require('../env');
+const fs = require('fs');
+const path = require('path');
+
+function getRecentHistory(uid, chatId) {
+  const history = [];
+  if (!chatId) return history;
+
+  const chatFilePath = path.resolve(__dirname, `../conversations/inbox/${uid}/${chatId}.json`);
+  if (!fs.existsSync(chatFilePath)) return history;
+
+  try {
+    const rawData = fs.readFileSync(chatFilePath, 'utf8');
+    const messages = JSON.parse(rawData);
+    if (Array.isArray(messages)) {
+      const recent = messages.slice(-5);
+      for (const m of recent) {
+        const route = m.route || 'INCOMING';
+        const role = route === 'OUTGOING' ? 'assistant' : 'user';
+        const content = m.text?.body || m.msgContext?.text?.body || m.msgContext?.text || '';
+        if (content) {
+          history.push({
+            role,
+            content,
+            timestamp: m.timestamp
+              ? new Date(m.timestamp * 1000).toISOString()
+              : new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[AI Autopilot] Failed to read conversation history:', e);
+  }
+  return history;
+}
 
 async function singleReplyAi({
   uid,
@@ -196,7 +231,9 @@ async function singleReplyAi({
                 try {
                   const parsed = JSON.parse(o.data);
                   details = JSON.stringify(parsed);
-                } catch (e) {}
+                } catch (e) {
+                  // ignore JSON parse issues
+                }
                 return `- Order ID: ${o.id}, Amount: ${o.amount}, Date: ${o.createdat}, Payment Mode: ${o.payment_mode}, Details: ${details}`;
               })
               .join('\n');
@@ -206,7 +243,35 @@ async function singleReplyAi({
       }
     }
 
-    const systemPrompt = `You are a helpful CRM AI assistant for our customer service workspace. 
+    let replyText = '';
+    const startTime = Date.now();
+
+    // Call the new LangGraph-based agentic autopilot
+    try {
+      const { runAgenticAutopilot } = require('./agenticAutopilot');
+      const history = getRecentHistory(uid, chatId);
+      replyText = await runAgenticAutopilot({
+        uid,
+        provider,
+        api_key,
+        model,
+        custom_endpoint,
+        temperature,
+        incomingMsg,
+        senderNumber,
+        embeddingKey,
+        history,
+      });
+    } catch (graphErr) {
+      console.error('[AI Autopilot] Agentic autopilot graph invocation failed:', graphErr);
+    }
+
+    if (!replyText) {
+      console.log(
+        '[AI Autopilot] Agentic autopilot bypassed or failed. Falling back to naive completions.',
+      );
+
+      const systemPrompt = `You are a helpful CRM AI assistant for our customer service workspace. 
 Answer the customer's question politely. 
 If relevant, use the following official Knowledge Base context retrieved from our company documentation:
 
@@ -217,101 +282,104 @@ ${orderContext ? `\nHere is the customer's order history from the site database:
 If the answer is not in the context, answer using your general knowledge but keep it professional.
 Keep your response concise, under 3 sentences.`;
 
-    let replyText = '';
-    const startTime = Date.now();
+      const isMock =
+        env.MOCK_META_DELIVERY ||
+        !api_key ||
+        api_key.startsWith('mock_') ||
+        api_key === 'CHANGE_ME';
 
-    const isMock =
-      env.MOCK_META_DELIVERY || !api_key || api_key.startsWith('mock_') || api_key === 'CHANGE_ME';
-
-    // 3. Make LLM API call
-    if (isMock) {
-      // Simulate network latency of 300ms
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      replyText = `Mock AI response from ${provider} for query: "${incomingMsg}".`;
-      if (context) {
-        replyText += ` Context matching: ${context.slice(0, 100)}...`;
-      }
-    } else if (provider === 'gemini') {
-      const geminiModel = model || 'gemini-1.5-flash';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${api_key}`;
-      const payload = {
-        contents: [
-          {
-            parts: [{ text: `${systemPrompt}\n\nCustomer Message: ${incomingMsg}\nAI Response:` }],
+      // 3. Make LLM API call
+      if (isMock) {
+        // Simulate network latency of 300ms
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        replyText = `Mock AI response from ${provider} for query: "${incomingMsg}".`;
+        if (context) {
+          replyText += ` Context matching: ${context.slice(0, 100)}...`;
+        }
+      } else if (provider === 'gemini') {
+        const geminiModel = model || 'gemini-1.5-flash';
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${api_key}`;
+        const payload = {
+          contents: [
+            {
+              parts: [
+                { text: `${systemPrompt}\n\nCustomer Message: ${incomingMsg}\nAI Response:` },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: parseFloat(temperature || 0.7),
           },
-        ],
-        generationConfig: {
+        };
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      } else if (provider === 'claude') {
+        const claudeModel = model || 'claude-3-5-sonnet-20240620';
+        const url = 'https://api.anthropic.com/v1/messages';
+        const payload = {
+          model: claudeModel,
+          max_tokens: 500,
+          messages: [
+            {
+              role: 'user',
+              content: `${systemPrompt}\n\nCustomer Message: ${incomingMsg}\nAI Response:`,
+            },
+          ],
           temperature: parseFloat(temperature || 0.7),
-        },
-      };
+        };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    } else if (provider === 'claude') {
-      const claudeModel = model || 'claude-3-5-sonnet-20240620';
-      const url = 'https://api.anthropic.com/v1/messages';
-      const payload = {
-        model: claudeModel,
-        max_tokens: 500,
-        messages: [
-          {
-            role: 'user',
-            content: `${systemPrompt}\n\nCustomer Message: ${incomingMsg}\nAI Response:`,
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'x-api-key': api_key,
+            'anthropic-version': '2023-06-01',
+            'Content-Type': 'application/json',
           },
-        ],
-        temperature: parseFloat(temperature || 0.7),
-      };
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'x-api-key': api_key,
-          'anthropic-version': '2023-06-01',
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        replyText = data?.content?.[0]?.text || '';
+      } else {
+        // OpenAI / OpenRouter / Ollama / Custom compatible endpoint
+        let url = 'https://api.openai.com/v1/chat/completions';
+        let headers = {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      replyText = data?.content?.[0]?.text || '';
-    } else {
-      // OpenAI / OpenRouter / Ollama / Custom compatible endpoint
-      let url = 'https://api.openai.com/v1/chat/completions';
-      let headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${api_key}`,
-      };
+          Authorization: `Bearer ${api_key}`,
+        };
 
-      if (provider === 'openrouter') {
-        url = 'https://openrouter.ai/api/v1/chat/completions';
-      } else if (provider === 'ollama') {
-        url = custom_endpoint || 'http://localhost:11434/v1/chat/completions';
-      } else if (provider === 'custom') {
-        url = custom_endpoint;
-      } else if (provider === 'deepseek') {
-        url = custom_endpoint || 'https://api.deepseek.com/v1/chat/completions';
+        if (provider === 'openrouter') {
+          url = 'https://openrouter.ai/api/v1/chat/completions';
+        } else if (provider === 'ollama') {
+          url = custom_endpoint || 'http://localhost:11434/v1/chat/completions';
+        } else if (provider === 'custom') {
+          url = custom_endpoint;
+        } else if (provider === 'deepseek') {
+          url = custom_endpoint || 'https://api.deepseek.com/v1/chat/completions';
+        }
+
+        const payload = {
+          model: model || (provider === 'openai' ? 'gpt-4o-mini' : ''),
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: incomingMsg },
+          ],
+          temperature: parseFloat(temperature || 0.7),
+        };
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        replyText = data?.choices?.[0]?.message?.content || '';
       }
-
-      const payload = {
-        model: model || (provider === 'openai' ? 'gpt-4o-mini' : ''),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: incomingMsg },
-        ],
-        temperature: parseFloat(temperature || 0.7),
-      };
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      });
-      const data = await response.json();
-      replyText = data?.choices?.[0]?.message?.content || '';
     }
 
     replyText = replyText.trim();
