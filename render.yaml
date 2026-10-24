@@ -5,7 +5,6 @@ services:
     runtime: node
     plan: free
     region: singapore
-    branch: main
     autoDeployTrigger: off
     buildCommand: npm ci --legacy-peer-deps
     startCommand: npm start
