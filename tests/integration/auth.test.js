@@ -2,6 +2,11 @@ const request = require('supertest');
 const { app } = require('../../server');
 
 describe('Authentication & Authorization Integration Tests', () => {
+  it('requires administrator authentication to reset an account password', async () => {
+    const res = await request(app).post('/api/admin/reset_account_password')
+      .send({role:'user',uid:'local-user-uid',password:'test-only-password'});
+    expect(res.status).toBe(401);
+  });
   it('should reject requests without a token on protected routes', async () => {
     const res = await request(app).get('/api/user/get_me');
     expect(res.status).toBe(401);

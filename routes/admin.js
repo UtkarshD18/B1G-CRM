@@ -7,6 +7,13 @@ const adminCmsController = require('../controllers/adminCmsController.js');
 const adminSettingsController = require('../controllers/adminSettingsController.js');
 
 router.post('/login', adminAuthController.login);
+router.post('/reset_account_password', adminValidator, async (req, res, next) => {
+  try {
+    const {resetAccountPassword} = require('../services/accountPasswordService');
+    const result = await resetAccountPassword(req.body);
+    res.status(result.status).json({success:result.success, msg:result.msg});
+  } catch (error) { next(error); }
+});
 
 // add new plan
 router.post('/add_plan', adminValidator, adminPlanController.addPlan);
