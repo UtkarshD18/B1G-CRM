@@ -9,6 +9,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      DATABASE_URL: postgres://b1gcrm:ci-only-password@localhost:5432/b1gcrm
+      TEST_DATABASE_URL: postgres://b1gcrm:ci-only-password@localhost:5432/b1gcrm
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: b1gcrm
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: b1gcrm
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U b1gcrm"
+          --health-interval 10s --health-timeout 5s --health-retries 5
     strategy:
       matrix:
         node-version: [20.x, 22.x]
@@ -21,6 +36,7 @@ jobs:
         cache: 'npm'
     - run: npm ci --legacy-peer-deps
     - run: npm run lint
+    - run: npm run db:migrate
     - run: npm test -- --coverage
     - name: Upload coverage
       uses: actions/upload-artifact@v4

@@ -31,6 +31,10 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         value: https://omnicrms.app
+      - key: BACKEND_URL
+        value: https://omnicrms-api.onrender.com
+      - key: API_BASE_URL
+        value: https://omnicrms-api.onrender.com/api
       - key: CORS_ORIGINS
         value: https://omnicrms.app,https://www.omnicrms.app,https://omnicrms-app.web.app,https://omnicrms-app.firebaseapp.com
 databases:
