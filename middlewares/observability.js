@@ -1,4 +1,5 @@
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
+const uuidv4 = () => crypto.randomUUID();
 const httpContext = require('express-http-context');
 
 function correlationIdMiddleware(req, res, next) {
@@ -10,5 +11,5 @@ function correlationIdMiddleware(req, res, next) {
 
 module.exports = {
   httpContextMiddleware: httpContext.middleware,
-  correlationIdMiddleware
+  correlationIdMiddleware,
 };

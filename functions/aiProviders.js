@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-
 function getSanitizedGeminiModel(model) {
   const modelStr = String(model || 'gemini-1.5-flash');
   switch (modelStr) {

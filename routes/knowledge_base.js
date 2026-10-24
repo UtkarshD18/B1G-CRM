@@ -3,7 +3,6 @@ const { query } = require('../database/dbpromise.js');
 const { validateUserOrAgent, verifyPermission } = require('../middlewares/auth.js');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
-const fetch = require('node-fetch');
 const { decryptKey } = require('../utils/crypto');
 const { indexDocument } = require('../utils/ragHelper');
 const { logActivity } = require('../utils/activityLogger');

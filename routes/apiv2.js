@@ -1,27 +1,21 @@
-const router = require("express").Router();
-const { query } = require("../database/dbpromise.js");
-const randomstring = require("randomstring");
-const bcrypt = require("bcrypt");
+const router = require('express').Router();
+const { query } = require('../database/dbpromise.js');
+const randomstring = require('randomstring');
+const bcrypt = require('bcrypt');
 const {
   getUserPlayDays,
   sendAPIMessage,
   getNumberOfDaysFromTimestamp,
   sendMetatemplet,
-} = require("../functions/function.js");
-const { sign } = require("jsonwebtoken");
-const validateUser = require("../middlewares/user.js");
-const Stripe = require("stripe");
-const {
-  checkPlan,
-  checkNote,
-  checkTags,
-  checkContactLimit,
-} = require("../middlewares/plan.js");
-const { recoverEmail } = require("../emails/returnEmails.js");
-const moment = require("moment");
-const jwt = require("jsonwebtoken");
-const { getMetaTempletByName } = require("../loops/loopFunctions.js");
-const env = require("../env.js");
+} = require('../functions/function.js');
+const { sign } = require('jsonwebtoken');
+const validateUser = require('../middlewares/user.js');
+const Stripe = require('stripe');
+const { checkPlan, checkNote, checkTags, checkContactLimit } = require('../middlewares/plan.js');
+const { recoverEmail } = require('../emails/returnEmails.js');
+const jwt = require('jsonwebtoken');
+const { getMetaTempletByName } = require('../loops/loopFunctions.js');
+const env = require('../env.js');
 
 function decodeToken(token) {
   return new Promise((resolve) => {
@@ -30,17 +24,15 @@ function decodeToken(token) {
         return resolve({
           success: false,
           data: {},
-          message: "Invalid API keys",
+          message: 'Invalid API keys',
         });
       }
-      const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [
-        decode?.uid,
-      ]);
+      const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [decode?.uid]);
       if (getUser.length < 1) {
         return resolve({
           success: false,
           data: {},
-          message: "Invalid API keys",
+          message: 'Invalid API keys',
         });
       }
 
@@ -48,7 +40,7 @@ function decodeToken(token) {
         resolve({
           success: false,
           data: {},
-          message: "Token was expired.",
+          message: 'Token was expired.',
         });
       } else {
         resolve({
@@ -60,19 +52,19 @@ function decodeToken(token) {
   });
 }
 
-router.post("/send-message", async (req, res) => {
+router.post('/send-message', async (req, res) => {
   try {
     const { token } = req.query;
     const { messageObject } = req.body;
 
     if (!token) {
-      return res.json({ success: false, message: "API keys not found" });
+      return res.json({ success: false, message: 'API keys not found' });
     }
 
     const checkToken = await decodeToken(token);
 
     if (!checkToken.success) {
-      return res.json({ success: false, message: "Invalid API keys found" });
+      return res.json({ success: false, message: 'Invalid API keys found' });
     }
 
     const user = checkToken.data;
@@ -80,7 +72,7 @@ router.post("/send-message", async (req, res) => {
     if (!user.plan || !user?.plan_expire) {
       return res.json({
         success: false,
-        message: "Your dont have any plan please buy one.",
+        message: 'Your dont have any plan please buy one.',
       });
     }
 
@@ -89,7 +81,7 @@ router.post("/send-message", async (req, res) => {
     if (getDays < 1) {
       return res.json({
         success: false,
-        message: "Your plan was expired please renew your plan.",
+        message: 'Your plan was expired please renew your plan.',
       });
     }
 
@@ -99,25 +91,22 @@ router.post("/send-message", async (req, res) => {
     if (plan?.allow_api < 1) {
       return res.json({
         success: false,
-        message:
-          "Your plan does not allow you to use API feature. Please get another plan",
+        message: 'Your plan does not allow you to use API feature. Please get another plan',
       });
     }
 
     if (!messageObject) {
       return res.json({
         success: false,
-        message: "messageObject key is required as body response.",
+        message: 'messageObject key is required as body response.',
       });
     }
 
-    const getMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      user?.uid,
-    ]);
+    const getMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [user?.uid]);
     if (getMetaApi.length < 1) {
       return res.json({
         success: false,
-        message: "Please provide your META API keys in the profile section",
+        message: 'Please provide your META API keys in the profile section',
       });
     }
 
@@ -127,7 +116,7 @@ router.post("/send-message", async (req, res) => {
     if (!waToken || !waNumId) {
       return res.json({
         success: false,
-        message: "Please provide your META API keys in the profile section",
+        message: 'Please provide your META API keys in the profile section',
       });
     }
 
@@ -136,25 +125,25 @@ router.post("/send-message", async (req, res) => {
     res.json(sendMsg);
   } catch (err) {
     console.log(err);
-    res.json({ err, success: false, msg: "Something went wrong" });
+    res.json({ err, success: false, msg: 'Something went wrong' });
   }
 });
 
 // send templet
-router.post("/send_templet", async (req, res) => {
+router.post('/send_templet', async (req, res) => {
   try {
     let dynamicMedia;
     const { sendTo, templetName, exampleArr, token, mediaUri } = req.body;
 
     // checking plan
     if (!token) {
-      return res.json({ success: false, message: "API keys not found" });
+      return res.json({ success: false, message: 'API keys not found' });
     }
 
     const checkToken = await decodeToken(token);
 
     if (!checkToken.success) {
-      return res.json({ success: false, message: "Invalid API keys found" });
+      return res.json({ success: false, message: 'Invalid API keys found' });
     }
 
     const user = checkToken.data;
@@ -162,7 +151,7 @@ router.post("/send_templet", async (req, res) => {
     if (!user.plan || !user?.plan_expire) {
       return res.json({
         success: false,
-        message: "Your dont have any plan please buy one.",
+        message: 'Your dont have any plan please buy one.',
       });
     }
 
@@ -171,11 +160,11 @@ router.post("/send_templet", async (req, res) => {
     if (getDays < 1) {
       return res.json({
         success: false,
-        message: "Your plan was expired please renew your plan.",
+        message: 'Your plan was expired please renew your plan.',
       });
     }
 
-    console.log("1");
+    console.log('1');
 
     // checking api eligibility
     const plan = JSON.parse(user?.plan);
@@ -183,26 +172,23 @@ router.post("/send_templet", async (req, res) => {
     if (plan?.allow_api < 1) {
       return res.json({
         success: false,
-        message:
-          "Your plan does not allow you to use API feature. Please get another plan",
+        message: 'Your plan does not allow you to use API feature. Please get another plan',
       });
     }
-    console.log("2");
+    console.log('2');
 
     // checking plan end
 
     // getting user meta keys
-    const getMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [
-      user?.uid,
-    ]);
+    const getMetaApi = await query(`SELECT * FROM meta_api WHERE uid = ?`, [user?.uid]);
     if (getMetaApi.length < 1) {
       return res.json({
         success: false,
-        message: "Please provide your META API keys in the profile section",
+        message: 'Please provide your META API keys in the profile section',
       });
     }
 
-    console.log("3");
+    console.log('3');
 
     const waToken = getMetaApi[0]?.access_token;
     const waNumId = getMetaApi[0]?.business_phone_number_id;
@@ -210,15 +196,15 @@ router.post("/send_templet", async (req, res) => {
     if (!waToken || !waNumId) {
       return res.json({
         success: false,
-        message: "Please update Api Settings in your user panel",
+        message: 'Please update Api Settings in your user panel',
       });
     }
 
-    console.log("4");
+    console.log('4');
 
     if (!sendTo) {
       return res.json({
-        message: "Please provide `sendTo` key",
+        message: 'Please provide `sendTo` key',
         success: false,
       });
     }
@@ -226,25 +212,25 @@ router.post("/send_templet", async (req, res) => {
     if (!exampleArr) {
       return res.json({
         success: false,
-        message: "Please provide exampleArr array",
+        message: 'Please provide exampleArr array',
       });
     }
 
     if (!templetName) {
       return res.json({
-        message: "Please provide `templetName`",
+        message: 'Please provide `templetName`',
         success: false,
       });
     }
 
     const templet = await getMetaTempletByName(templetName, getMetaApi[0]);
 
-    console.log("5");
+    console.log('5');
 
     if (templet.error || templet?.data?.length < 1) {
       return res.json({
         success: false,
-        message: templet.error?.message || "Unable to fetch templet from meta",
+        message: templet.error?.message || 'Unable to fetch templet from meta',
         metaResponse: templet,
         token,
         waToken,
@@ -262,15 +248,15 @@ router.post("/send_templet", async (req, res) => {
     console.log({ dynamicMedia });
 
     const resp = await sendMetatemplet(
-      sendTo?.replace("+", ""),
+      sendTo?.replace('+', ''),
       waNumId,
       waToken,
       templet?.data[0],
       exampleArr,
-      dynamicMedia
+      dynamicMedia,
     );
 
-    console.log("6");
+    console.log('6');
 
     if (resp.error) {
       res.json({
@@ -288,7 +274,7 @@ router.post("/send_templet", async (req, res) => {
     res.json({
       err: err?.toString(),
       success: false,
-      msg: "Something went wrong",
+      msg: 'Something went wrong',
     });
   }
 });

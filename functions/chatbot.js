@@ -1,7 +1,6 @@
-const { query } = require("../database/dbpromise");
-const moment = require("moment-timezone");
-const fetch = require("node-fetch");
-const { addON } = require("../env.js");
+const { query } = require('../database/dbpromise');
+const moment = require('moment-timezone');
+const { addON } = require('../env.js');
 
 async function makeRequest({ method, url, body = null, headers = [] }) {
   try {
@@ -17,13 +16,13 @@ async function makeRequest({ method, url, body = null, headers = [] }) {
 
     // Convert body array to an object if it's not GET or DELETE
     const requestBody =
-      method === "GET" || method === "DELETE"
+      method === 'GET' || method === 'DELETE'
         ? undefined
         : JSON.stringify(
             body.reduce((acc, { key, value }) => {
               acc[key] = value;
               return acc;
-            }, {})
+            }, {}),
           );
 
     // Set up the request configuration
@@ -53,10 +52,10 @@ async function makeRequest({ method, url, body = null, headers = [] }) {
     const data = await response.json();
 
     // Validate the response
-    if (typeof data === "object" || Array.isArray(data)) {
+    if (typeof data === 'object' || Array.isArray(data)) {
       return { success: true, data };
     } else {
-      return { success: false, msg: "Invalid response format" };
+      return { success: false, msg: 'Invalid response format' };
     }
   } catch (error) {
     // Handle errors (e.g., timeout, network issues)
@@ -72,52 +71,38 @@ function hasDatePassedInTimezone(timezone, date) {
 }
 
 const msgType = [
-  "TEXT",
-  "IMAGE",
-  "AUDIO",
-  "VIDEO",
-  "DOCUMENT",
-  "BUTTON",
-  "LIST",
-  "LOCATION",
-  "TAKE_INPUT",
+  'TEXT',
+  'IMAGE',
+  'AUDIO',
+  'VIDEO',
+  'DOCUMENT',
+  'BUTTON',
+  'LIST',
+  'LOCATION',
+  'TAKE_INPUT',
 ];
 
-const toolsType = [
-  "ASSIGN_AGENT",
-  "DISABLE_CHAT",
-  "MAKE_REQUEST",
-  "TAKE_INPUT",
-];
+const toolsType = ['ASSIGN_AGENT', 'DISABLE_CHAT', 'MAKE_REQUEST', 'TAKE_INPUT'];
 
-const addonType = ["AI_BOT"];
+const addonType = ['AI_BOT'];
 
 async function checkIfDisabled(flow, senderNumber) {
   try {
-    const parseDisableArr = flow?.prevent_list
-      ? JSON.parse(flow?.prevent_list)
-      : [];
+    const parseDisableArr = flow?.prevent_list ? JSON.parse(flow?.prevent_list) : [];
 
-    const extractMobileDataFromList = parseDisableArr.filter(
-      (x) => x.mobile == senderNumber
-    );
+    const extractMobileDataFromList = parseDisableArr.filter((x) => x.mobile == senderNumber);
 
     if (extractMobileDataFromList.length > 0) {
       const scheduleDate = extractMobileDataFromList[0]?.timestamp
         ? new Date(extractMobileDataFromList[0]?.timestamp)
         : null;
 
-      if (
-        !hasDatePassedInTimezone(
-          extractMobileDataFromList[0]?.timezone,
-          scheduleDate
-        )
-      ) {
-        return "STOP";
+      if (!hasDatePassedInTimezone(extractMobileDataFromList[0]?.timezone, scheduleDate)) {
+        return 'STOP';
       }
     }
   } catch (err) {
-    console.log("ERROR FOUND IN replyMessage in chatbot.js");
+    console.log('ERROR FOUND IN replyMessage in chatbot.js');
     console.log(err);
   }
 }
@@ -145,19 +130,16 @@ async function replyMessage({
     });
 
     const saveObj = {
-      type:
-        k?.type?.toLowerCase() === "take_input"
-          ? "text"
-          : k?.type?.toLowerCase(),
-      metaChatId: "",
+      type: k?.type?.toLowerCase() === 'take_input' ? 'text' : k?.type?.toLowerCase(),
+      metaChatId: '',
       msgContext: k?.data.msgContent,
-      reaction: "",
-      timestamp: "",
+      reaction: '',
+      timestamp: '',
       senderName: toName,
       senderMobile: senderNumber,
-      status: "sent",
+      status: 'sent',
       star: false,
-      route: "OUTGOING",
+      route: 'OUTGOING',
     };
 
     // console.dir({ saveObj, k }, { depth: null });
@@ -170,7 +152,7 @@ async function replyMessage({
       chatbotFromMysq: chatbotFromMysq,
     });
   } catch (err) {
-    console.log("ERROR FOUND IN replyMessage in chatbot.js");
+    console.log('ERROR FOUND IN replyMessage in chatbot.js');
     console.log(err);
   }
 }
@@ -192,47 +174,47 @@ async function completeTools({
 }) {
   try {
     // assigning chat to agent
-    if (k?.type == "ASSIGN_AGENT") {
+    if (k?.type == 'ASSIGN_AGENT') {
       if (k?.data?.msgContent?.agentEmail) {
         // checking if the chat was already assigned
         const checkIfAlreadyChatAsssigned = await query(
           `SELECT * FROM agent_chats WHERE owner_uid = ? AND uid = ? AND chat_id = ?`,
-          [uid, k?.data?.msgContent?.agentObj?.uid, chatId]
+          [uid, k?.data?.msgContent?.agentObj?.uid, chatId],
         );
         if (checkIfAlreadyChatAsssigned?.length < 1) {
-          await query(
-            `INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)`,
-            [uid, k?.data?.msgContent?.agentObj?.uid, chatId]
-          );
+          await query(`INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)`, [
+            uid,
+            k?.data?.msgContent?.agentObj?.uid,
+            chatId,
+          ]);
         }
       }
     }
 
-    if (k?.type === "TAKE_INPUT") {
+    if (k?.type === 'TAKE_INPUT') {
       if (flow_data?.id) {
         await query(`UPDATE flow_data SET other = ? WHERE uniqueId = ?`, [
           JSON.stringify(k),
           uniqueId,
         ]);
       } else {
-        await query(
-          `INSERT INTO flow_data (uid, uniqueId, other) VALUES (?,?,?)`,
-          [uid, uniqueId, JSON.stringify(k)]
-        );
+        await query(`INSERT INTO flow_data (uid, uniqueId, other) VALUES (?,?,?)`, [
+          uid,
+          uniqueId,
+          JSON.stringify(k),
+        ]);
       }
     }
 
     // adding disabling chat to PostgreSQL for chat
-    if (k?.type == "DISABLE_CHAT") {
-      const getChat = await query(
-        `SELECT * FROM chats WHERE chat_id = ? AND uid = ?`,
-        [chatId, uid]
-      );
+    if (k?.type == 'DISABLE_CHAT') {
+      const getChat = await query(`SELECT * FROM chats WHERE chat_id = ? AND uid = ?`, [
+        chatId,
+        uid,
+      ]);
 
       if (getChat?.length > 0) {
-        const oldObj = getChat[0]?.prevent_list
-          ? JSON.parse(getChat[0]?.prevent_list)
-          : [];
+        const oldObj = getChat[0]?.prevent_list ? JSON.parse(getChat[0]?.prevent_list) : [];
 
         const newObj = {
           mobile: senderNumber,
@@ -242,21 +224,18 @@ async function completeTools({
 
         const finalArr = [...oldObj, newObj];
 
-        await query(
-          `UPDATE flow SET prevent_list = ? WHERE uid = ? AND flow_id = ?`,
-          [JSON.stringify(finalArr), uid, flow?.flow_id]
-        );
+        await query(`UPDATE flow SET prevent_list = ? WHERE uid = ? AND flow_id = ?`, [
+          JSON.stringify(finalArr),
+          uid,
+          flow?.flow_id,
+        ]);
 
-        console.log(
-          senderNumber,
-          "was moved to disable list till",
-          k?.data?.msgContent?.timestamp
-        );
+        console.log(senderNumber, 'was moved to disable list till', k?.data?.msgContent?.timestamp);
       }
     }
 
     // making a request
-    if (k?.type == "MAKE_REQUEST") {
+    if (k?.type == 'MAKE_REQUEST') {
       const msgContent = k?.data?.msgContent;
 
       const urll = replacePlaceholders(msgContent?.url, {
@@ -287,10 +266,7 @@ async function completeTools({
             const getNodeFromSource = nodes?.filter((x) => x.id == f?.target);
 
             for (const k of getNodeFromSource) {
-              k.data.msgContent = returnAfterAddingVariable(
-                k.data.msgContent,
-                resp?.data
-              );
+              k.data.msgContent = returnAfterAddingVariable(k.data.msgContent, resp?.data);
 
               await destributeTaskFlow({
                 uid,
@@ -307,13 +283,11 @@ async function completeTools({
           }
         }
       } else {
-        console.log(
-          "There was no connected node found in the MAKE_REQUEST tool"
-        );
+        console.log('There was no connected node found in the MAKE_REQUEST tool');
       }
     }
   } catch (err) {
-    console.log("ERROR FOUND IN completeTools in chatbot.js");
+    console.log('ERROR FOUND IN completeTools in chatbot.js');
     console.log(err);
   }
 }
@@ -331,11 +305,11 @@ async function completeAddon({
   incomingMsg,
   destributeTaskFlow,
 }) {
-  console.log("came to completeAddon", { k: k?.type, addON });
+  console.log('came to completeAddon', { k: k?.type, addON });
   try {
-    if (k?.type == "AI_BOT" && addON?.includes("AI_BOT")) {
-      console.log("Came to if");
-      const { singleReplyAi } = require("./ai.js");
+    if (k?.type == 'AI_BOT' && addON?.includes('AI_BOT')) {
+      console.log('Came to if');
+      const { singleReplyAi } = require('./ai.js');
       console.log(`singleReplyAi ran`);
       await singleReplyAi({
         uid,
@@ -373,15 +347,13 @@ async function manupulateAiForAll({
   try {
     const aiArr = flow?.ai_list ? JSON.parse(flow?.ai_list) : [];
 
-    const findIncomingNumber = aiArr?.filter(
-      (x) => x.senderNumber == senderNumber
-    );
+    const findIncomingNumber = aiArr?.filter((x) => x.senderNumber == senderNumber);
 
     console.log({ findIncomingNumber });
 
     // Checking if assigned to AI
     if (k?.data?.msgContent?.assignAi) {
-      console.log("this chat is assigned to ai");
+      console.log('this chat is assigned to ai');
       if (findIncomingNumber?.length < 1) {
         // Updating PostgreSQL flow and adding sender number to AI array
         const pusObj = {
@@ -391,32 +363,30 @@ async function manupulateAiForAll({
         };
         const newArr = [...aiArr, pusObj];
 
-        await query(
-          `UPDATE flow SET ai_list = ? WHERE uid = ? AND flow_id = ?`,
-          [JSON.stringify(newArr), uid, flow?.flow_id]
-        );
+        await query(`UPDATE flow SET ai_list = ? WHERE uid = ? AND flow_id = ?`, [
+          JSON.stringify(newArr),
+          uid,
+          flow?.flow_id,
+        ]);
 
-        return "NO_CHANGE"; // No modification needed for k
+        return 'NO_CHANGE'; // No modification needed for k
       }
     } else {
       if (findIncomingNumber?.length > 0) {
-        return "MODIFY"; // Indicate that k should be modified
+        return 'MODIFY'; // Indicate that k should be modified
       }
     }
 
-    return "NO_CHANGE"; // Default return value
+    return 'NO_CHANGE'; // Default return value
   } catch (err) {
-    console.log("Error found in manupulateAiForAll() in chatbot.js", err);
-    return "NO_CHANGE"; // Return to continue flow even if there's an error
+    console.log('Error found in manupulateAiForAll() in chatbot.js', err);
+    return 'NO_CHANGE'; // Return to continue flow even if there's an error
   }
 }
 
 async function returnVariables({ uniqueId, k, incomingMsg, nodes, edges }) {
   // getting the flow data
-  const [flow_data] = await query(
-    `SELECT * FROM flow_data WHERE uniqueId = ?`,
-    [uniqueId]
-  );
+  const [flow_data] = await query(`SELECT * FROM flow_data WHERE uniqueId = ?`, [uniqueId]);
 
   if (flow_data && Object.keys(flow_data).length > 0) {
     let inputs = flow_data?.inputs ? JSON.parse(flow_data.inputs) : {};
@@ -429,10 +399,11 @@ async function returnVariables({ uniqueId, k, incomingMsg, nodes, edges }) {
       inputs = { ...inputs, [savedNode?.data?.variableName]: incomingMsg };
 
       // Update the database with the new inputs and clear the 'other' column
-      await query(
-        `UPDATE flow_data SET inputs = ?, other = ? WHERE uniqueId = ?`,
-        [JSON.stringify(inputs), null, uniqueId]
-      );
+      await query(`UPDATE flow_data SET inputs = ?, other = ? WHERE uniqueId = ?`, [
+        JSON.stringify(inputs),
+        null,
+        uniqueId,
+      ]);
 
       // Parse flow_data.other appropriately.
       // If it's an integer stored as a string:
@@ -482,13 +453,11 @@ async function destributeTaskFlow({
   // console.dir({ updatedK, k }, { depth: null });
 
   // getting flow data
-  const [flow] = await query(`SELECT * FROM flow WHERE flow_id = ?`, [
-    flowData?.flow_id,
-  ]);
+  const [flow] = await query(`SELECT * FROM flow WHERE flow_id = ?`, [flowData?.flow_id]);
 
   // returning fucntion if the number is in prevent list
   const checkOnce = await checkIfDisabled(flow, senderNumber);
-  if (checkOnce === "STOP") {
+  if (checkOnce === 'STOP') {
     return;
   }
 
@@ -507,11 +476,9 @@ async function destributeTaskFlow({
     flow_data,
   });
 
-  if (check == "MODIFY") {
+  if (check == 'MODIFY') {
     const aiArr = flow?.ai_list ? JSON.parse(flow?.ai_list) : [];
-    const findIncomingNumber = aiArr?.filter(
-      (x) => x.senderNumber == senderNumber
-    );
+    const findIncomingNumber = aiArr?.filter((x) => x.senderNumber == senderNumber);
     const aiObj = findIncomingNumber[0];
     k = aiObj?.k;
   }
@@ -539,7 +506,7 @@ async function destributeTaskFlow({
 
   // if the node type is addon
   if (addonType.includes(taskName)) {
-    console.log("GOing to completeAddon");
+    console.log('GOing to completeAddon');
     await completeAddon({
       uid,
       k,
@@ -577,25 +544,25 @@ async function destributeTaskFlow({
 
 function returnAfterAddingVariable(msgContent, response) {
   let returnObj;
-  if (msgContent.type == "text") {
+  if (msgContent.type == 'text') {
     returnObj = {
-      type: "text",
+      type: 'text',
       text: {
         preview_url: true,
         body: replacePlaceholders(msgContent?.text?.body, response),
       },
     };
-  } else if (msgContent.type == "video") {
+  } else if (msgContent.type == 'video') {
     returnObj = {
-      type: "video",
+      type: 'video',
       video: {
         link: replacePlaceholders(msgContent?.video?.link, response),
         caption: replacePlaceholders(msgContent?.video?.caption, response),
       },
     };
-  } else if (msgContent.type == "location") {
+  } else if (msgContent.type == 'location') {
     returnObj = {
-      type: "location",
+      type: 'location',
       location: {
         latitude: msgContent?.location?.latitude,
         longitude: msgContent?.location?.longitude,
@@ -603,73 +570,61 @@ function returnAfterAddingVariable(msgContent, response) {
         address: replacePlaceholders(msgContent?.location?.address, response),
       },
     };
-  } else if (
-    msgContent.type == "interactive" &&
-    msgContent?.interactive?.type == "list"
-  ) {
+  } else if (msgContent.type == 'interactive' && msgContent?.interactive?.type == 'list') {
     returnObj = {
-      type: "interactive",
+      type: 'interactive',
       interactive: {
-        type: "list",
+        type: 'list',
         header: {
-          type: "text",
-          text: replacePlaceholders(
-            msgContent.interactive.header.text,
-            response
-          ),
+          type: 'text',
+          text: replacePlaceholders(msgContent.interactive.header.text, response),
         },
         body: {
           text: replacePlaceholders(msgContent.interactive.body.text, response),
         },
         footer: {
-          text: replacePlaceholders(
-            msgContent.interactive.footer.text,
-            response
-          ),
+          text: replacePlaceholders(msgContent.interactive.footer.text, response),
         },
         action: msgContent.interactive.action,
       },
     };
-  } else if (msgContent.type == "image") {
+  } else if (msgContent.type == 'image') {
     returnObj = {
-      type: "image",
+      type: 'image',
       image: {
         link: replacePlaceholders(msgContent.image.link, response),
         caption: replacePlaceholders(msgContent.image.caption, response),
       },
     };
-  } else if (msgContent.type == "document") {
+  } else if (msgContent.type == 'document') {
     returnObj = {
-      type: "document",
+      type: 'document',
       document: {
         link: replacePlaceholders(msgContent.document.link, response),
         caption: replacePlaceholders(msgContent.document.caption, response),
       },
     };
-  } else if (
-    msgContent.type == "interactive" &&
-    msgContent.interactive.type == "button"
-  ) {
+  } else if (msgContent.type == 'interactive' && msgContent.interactive.type == 'button') {
     returnObj = {
-      type: "interactive",
+      type: 'interactive',
       interactive: {
-        type: "button",
+        type: 'button',
         body: {
           text: replacePlaceholders(msgContent.interactive.body.text, response),
         },
         action: msgContent.interactive.action,
       },
     };
-  } else if (msgContent.type == "audio") {
+  } else if (msgContent.type == 'audio') {
     returnObj = {
-      type: "audio",
+      type: 'audio',
       audio: {
         link: replacePlaceholders(msgContent.audio.link, response),
       },
     };
-  } else if (msgContent.type == "take_input") {
+  } else if (msgContent.type == 'take_input') {
     returnObj = {
-      type: "text",
+      type: 'text',
       text: {
         preview_url: true,
         body: replacePlaceholders(msgContent?.text?.body, response),
@@ -689,7 +644,7 @@ function replacePlaceholders(template, data) {
     }
 
     // Handle `JSON.stringify()` calls
-    if (key.startsWith("JSON.stringify(") && key.endsWith(")")) {
+    if (key.startsWith('JSON.stringify(') && key.endsWith(')')) {
       const innerKey = key.slice(15, -1).trim();
       const keys = innerKey.split(/[\.\[\]]/).filter(Boolean);
 
@@ -703,7 +658,7 @@ function replacePlaceholders(template, data) {
         ) {
           value = Array.isArray(value) ? value[parseInt(k, 10)] : value[k];
         } else {
-          return "NA";
+          return 'NA';
         }
       }
 
@@ -723,11 +678,11 @@ function replacePlaceholders(template, data) {
       ) {
         value = Array.isArray(value) ? value[parseInt(k, 10)] : value[k];
       } else {
-        return "NA"; // Return 'NA' if key or index is not found
+        return 'NA'; // Return 'NA' if key or index is not found
       }
     }
 
-    return value !== undefined ? value : "NA"; // Return 'NA' if value is undefined
+    return value !== undefined ? value : 'NA'; // Return 'NA' if value is undefined
   });
 }
 
