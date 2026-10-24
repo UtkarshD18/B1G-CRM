@@ -15,13 +15,19 @@ async function bootstrapAdmin({
   try {
     await client.query('BEGIN');
     await client.query('LOCK TABLE admin IN EXCLUSIVE MODE');
-    const existing = await client.query('SELECT 1 FROM admin LIMIT 1');
-    if (existing.rows.length) {
+    const existing = await client.query('SELECT uid, email, password FROM admin LIMIT 2');
+    const legacy = existing.rows.length === 1 && existing.rows[0].uid === 'local-admin-uid'
+      && existing.rows[0].email === 'admin@example.com'
+      && existing.rows[0].password === '$2b$10$QjLCkPVd83A5hebBarGAFedPqWLhc8iHXufUx0QJoXrp1Av.5ngGa';
+    if (existing.rows.length && !legacy) {
       await client.query('COMMIT');
       return false;
     }
     const hash = await bcrypt.hash(password, 12);
-    await client.query(
+    if (legacy) {
+      await client.query('UPDATE admin SET email = $1, password = $2 WHERE uid = $3',
+        [email.trim().toLowerCase(), hash, existing.rows[0].uid]);
+    } else await client.query(
       'INSERT INTO admin (uid, email, password, role) VALUES ($1, $2, $3, $4)',
       [crypto.randomUUID(), email.trim().toLowerCase(), hash, 'admin'],
     );

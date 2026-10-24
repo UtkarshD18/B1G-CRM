@@ -44,7 +44,8 @@ To initialize the first administrator, temporarily set GitHub Actions secrets
 The deployment passes them to Render, initializes only an empty administrator
 table with a bcrypt hash, verifies sign-in and the authenticated profile, and
 removes the temporary Render variables. Delete these two GitHub secrets after
-setup succeeds. It never resets an existing administrator. No public setup
+setup succeeds. It can replace the exact unchanged legacy demo administrator
+from migration 000; it never resets a modified or real administrator. No public setup
 endpoint is provided.
 
 `FRONTEND_URL` is `https://omnicrms.app`. `CORS_ORIGINS` includes that origin,

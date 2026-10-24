@@ -4,7 +4,7 @@ const { bootstrapAdmin } = require('../database/bootstrap-admin');
 
 function database(existing = false) {
   const client = {
-    query: jest.fn(async sql => ({ rows: sql.startsWith('SELECT') && existing ? [{}] : [] })),
+    query: jest.fn(async sql => ({ rows: sql.startsWith('SELECT') && existing ? (Array.isArray(existing) ? existing : [{}]) : [] })),
     release: jest.fn(),
   };
   return { db: {connect: async () => client}, client };
@@ -35,4 +35,17 @@ test('does nothing when initial credentials are not provided', async () => {
 
 test('rejects incomplete or weak setup credentials', async () => {
   await expect(bootstrapAdmin({email: 'owner@example.invalid', password: 'short'})).rejects.toThrow(/at least 20/);
+});
+
+test('replaces only the unchanged legacy migration administrator', async () => {
+  const {db, client} = database([{uid: 'local-admin-uid', email: 'admin@example.com',
+    password: '$2b$10$QjLCkPVd83A5hebBarGAFedPqWLhc8iHXufUx0QJoXrp1Av.5ngGa'}]);
+  expect(await bootstrapAdmin({db, email: 'owner@example.invalid', password: 'a-strong-generated-test-password'})).toBe(true);
+  expect(client.query.mock.calls.find(([sql]) => sql.startsWith('UPDATE'))[1][0]).toBe('owner@example.invalid');
+});
+
+test('preserves a legacy administrator whose password has been changed', async () => {
+  const {db, client} = database([{uid: 'local-admin-uid', email: 'admin@example.com', password: 'changed-hash'}]);
+  expect(await bootstrapAdmin({db, email: 'owner@example.invalid', password: 'a-strong-generated-test-password'})).toBe(false);
+  expect(client.query.mock.calls.some(([sql]) => sql.startsWith('UPDATE'))).toBe(false);
 });
