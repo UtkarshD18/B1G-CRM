@@ -1,0 +1,109 @@
+name: OmniCRMS build, test and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omnicrms-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      NODE_ENV: test
+      DATABASE_URL: postgres://b1gcrm:ci-only-password@localhost:5432/b1gcrm
+      TEST_DATABASE_URL: postgres://b1gcrm:ci-only-password@localhost:5432/b1gcrm
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: b1gcrm
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: b1gcrm
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U b1gcrm"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run lint
+      - name: Validate backend entry point (plain JavaScript, no compilation required)
+        run: node --check server.js
+      - run: npm run db:migrate
+      - run: npm test -- --ci --runInBand
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm --prefix client ci --legacy-peer-deps
+      - run: npm --prefix client test -- --ci --runInBand
+      - name: Build frontend for Render API
+        env:
+          VITE_API_URL: ${{ vars.RENDER_BACKEND_URL }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ] && [ -z "$VITE_API_URL" ]; then
+            echo 'Set repository variable RENDER_BACKEND_URL before deploying.'
+            exit 1
+          fi
+          npm --prefix client run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: client/dist
+          if-no-files-found: error
+
+  deploy-backend:
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Deploy tested commit and wait for readiness
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+          RENDER_BACKEND_URL: ${{ vars.RENDER_BACKEND_URL }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: node scripts/deploy-production.mjs
+
+  deploy-frontend:
+    needs: [deploy-backend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: client/dist
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_OMNICRMS_APP }}
+          projectId: omnicrms-app
+          channelId: live

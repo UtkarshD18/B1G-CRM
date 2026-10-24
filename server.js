@@ -37,6 +37,8 @@ function cleanupAll() {
 nodeCleanup(cleanupAll);
 
 const app = express();
+// Render terminates HTTPS at its reverse proxy.
+if (process.env.RENDER === 'true') app.set('trust proxy', 1);
 
 // Production Hardening Middleware
 app.use(
