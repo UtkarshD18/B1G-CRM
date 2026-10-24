@@ -1,7 +1,9 @@
 export const API_BASE =
   typeof window !== 'undefined' && typeof window.__B1GCRM_API_URL__ === 'string'
     ? window.__B1GCRM_API_URL__.replace(/\/$/, '')
-    : ''
+    : typeof __B1GCRM_BUILD_API_URL__ === 'string'
+      ? __B1GCRM_BUILD_API_URL__.replace(/\/$/, '')
+      : ''
 
 async function parseApiResponse(response) {
   if (typeof response.text === 'function') {
@@ -9,7 +11,12 @@ async function parseApiResponse(response) {
     try {
       return JSON.parse(text)
     } catch {
-      return { success: false, msg: text || 'Invalid server response' }
+      return {
+        success: false,
+        msg: [502, 503, 504].includes(response.status)
+          ? 'The server is starting or temporarily unavailable. Please try again in a minute.'
+          : 'Unexpected server response. Please refresh the page and try again.',
+      }
     }
   }
 

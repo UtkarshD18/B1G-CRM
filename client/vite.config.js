@@ -5,6 +5,9 @@ const backendTarget = process.env.BACKEND_URL || 'http://localhost:3010';
 
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __B1GCRM_BUILD_API_URL__: JSON.stringify(process.env.VITE_API_URL || ''),
+  },
   plugins: [react(), {
     name: 'backend-url',
     transformIndexHtml() {
