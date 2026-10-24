@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { apiRequest } from '../../shared/api';
+import { API_BASE, apiRequest } from '../../shared/api';
 import { useAuth } from '../../shared/auth';
 
 const widgetPositions = [
@@ -21,7 +21,7 @@ function sanitizeFilename(name) {
 }
 
 function widgetUrl(widget) {
-  return `${window.location.origin}/api/user/widget?id=${encodeURIComponent(widget.unique_id)}`;
+  return `${API_BASE || window.location.origin}/api/user/widget?id=${encodeURIComponent(widget.unique_id)}`;
 }
 
 function widgetPositionStyle(place) {

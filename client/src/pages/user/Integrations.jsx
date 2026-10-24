@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { apiRequest } from '../../shared/api';
+import { API_BASE, apiRequest } from '../../shared/api';
 import { useAuth } from '../../shared/auth';
 import { classNames } from '../../shared/format';
 
@@ -412,7 +412,7 @@ function UserIntegrationsPage() {
                     fontSize: '0.82rem',
                   }}
                 >
-                  {window.location.origin}/api/instagram/webhook/YOUR_UID
+                  {API_BASE || window.location.origin}/api/instagram/webhook/YOUR_UID
                 </code>
               </li>
               <li>Set Verify Token to your User UID (shown in Settings)</li>
