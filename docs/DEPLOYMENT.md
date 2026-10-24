@@ -41,8 +41,8 @@ in Render when those integrations are needed.
 
 To initialize the first administrator, temporarily set GitHub Actions secrets
 `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` (at least 20 characters).
-The deployment passes them to Render, initializes only an empty administrator
-table with a bcrypt hash, verifies sign-in and the authenticated profile, and
+The deployment passes them to Render, initializes the administrator with a bcrypt
+hash, verifies sign-in and the authenticated profile, and
 removes the temporary Render variables. Delete these two GitHub secrets after
 setup succeeds. It can replace the exact unchanged legacy demo administrator
 from migration 000; it never resets a modified or real administrator. No public setup
@@ -68,8 +68,9 @@ The web service sleeps when idle; startup can take around a minute.
 Uploads, QR sessions, and other local files are lost on restart, redeploy, or sleep.
 Background campaigns cannot run reliably while the free service is asleep.
 Use durable storage and an always-running service before using real CRM data.
-No demo accounts are seeded in production. Create application accounts through
-the normal signup flow; administrator provisioning is a separate setup task.
+The original base migration includes legacy demo records. Provision your own
+administrator using the secure setup above; do not rely on demo credentials.
+Create tenant accounts through the normal signup flow.
 
 ## Verify and recover
 
