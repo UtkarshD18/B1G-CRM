@@ -92,9 +92,13 @@ const AWS_REGION = envValue("AWS_REGION") || "us-east-1";
 const S3_ENABLED = boolValue("S3_ENABLED", false);
 
 const FRONTEND_URL =
-  envValue("FRONTEND_URL", "FRONTENDURI") || "http://localhost:5173";
+  envValue("FRONTEND_URL", "FRONTENDURI") || (isProduction ? "https://omnicrms.app" : "http://localhost:5173");
 const BACKEND_URL = envValue("BACKEND_URL", "BACKURI") || `http://localhost:${PORT}`;
-const CORS_ORIGINS = (envValue("CORS_ORIGINS") || FRONTEND_URL)
+const defaultCorsOrigins = isProduction
+  ? [FRONTEND_URL, "https://omnicrms.app", "https://www.omnicrms.app",
+    "https://omnicrms-app.web.app", "https://omnicrms-app.firebaseapp.com"].join(",")
+  : FRONTEND_URL;
+const CORS_ORIGINS = (envValue("CORS_ORIGINS") || defaultCorsOrigins)
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);

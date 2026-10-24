@@ -12,11 +12,13 @@ const path = require('path');
 const fs = require('fs');
 
 const env = require('./env');
+const { createCorsOptions } = require('./utils/corsConfig');
 const logger = require('./utils/logger');
 const metrics = require('./utils/metrics');
 const { errorHandler } = require('./middlewares/errorHandler');
 const { runMigrations } = require('./database/migrate');
 const { seedDevCredentials } = require('./database/seed-dev');
+const { bootstrapAdmin } = require('./database/bootstrap-admin');
 const setupSwagger = require('./utils/swagger');
 const { runCampaign } = require('./loops/campaignLoop.js');
 const { init, cleanup } = require('./helper/addon/qr');
@@ -107,13 +109,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(
-  cors({
-    origin: env.CORS_ORIGINS,
-    credentials: true,
-    optionsSuccessStatus: 200,
-  }),
-);
+app.use(cors(createCorsOptions(env.CORS_ORIGINS)));
 
 app.use(
   fileUpload({
@@ -292,6 +288,9 @@ const runtime = {
 async function startServer() {
   try {
     await runMigrations({ logger });
+    if (env.NODE_ENV === 'production') {
+      await bootstrapAdmin();
+    }
     if (env.NODE_ENV !== 'production') {
       await seedDevCredentials({ logger });
     }

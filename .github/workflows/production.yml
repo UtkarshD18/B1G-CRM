@@ -90,7 +90,9 @@ jobs:
           RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
           RENDER_BACKEND_URL: ${{ vars.RENDER_BACKEND_URL }}
           DEPLOY_SHA: ${{ github.sha }}
-        run: node scripts/deploy-production.mjs
+          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.BOOTSTRAP_ADMIN_EMAIL }}
+          BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.BOOTSTRAP_ADMIN_PASSWORD }}
+        run: node scripts/deploy-with-bootstrap.mjs
 
   deploy-frontend:
     needs: [deploy-backend]

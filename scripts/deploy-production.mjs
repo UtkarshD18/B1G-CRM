@@ -29,3 +29,16 @@ if (!live) throw new Error('Render deployment timed out.');
 const ready = await fetch(new URL('/ready', RENDER_BACKEND_URL), { signal: AbortSignal.timeout(60000) });
 if (!ready.ok || (await ready.json()).status !== 'READY') throw new Error('Backend readiness check failed.');
 console.log('Tested backend commit deployed and database is ready.');
+for (const origin of ['https://omnicrms.app', 'https://omnicrms-app.web.app', 'https://untrusted.example.invalid']) {
+  const response = await fetch(new URL('/api/admin/login', RENDER_BACKEND_URL), {
+    method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'authorization,content-type' }, signal: AbortSignal.timeout(30000),
+  });
+  const permitted = response.headers.get('access-control-allow-origin');
+  if (origin.includes('untrusted')) {
+    if (permitted) throw new Error('CORS granted an unlisted origin access.');
+  } else if (!response.ok || permitted !== origin || response.headers.get('access-control-allow-credentials') !== 'true') {
+    throw new Error('Frontend CORS preflight verification failed.');
+  }
+}
+console.log('Production CORS checks passed for allowed and blocked origins.');

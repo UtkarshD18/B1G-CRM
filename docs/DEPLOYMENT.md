@@ -39,9 +39,22 @@ frontend variables. `DATABASE_URL`, `JWT_SECRET`, `REFRESH_TOKEN_SECRET`, and
 across deployments. Set provider-specific email, AI, payment, and Meta credentials
 in Render when those integrations are needed.
 
+To initialize the first administrator, temporarily set GitHub Actions secrets
+`BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` (at least 20 characters).
+The deployment passes them to Render, initializes only an empty administrator
+table with a bcrypt hash, verifies sign-in and the authenticated profile, and
+removes the temporary Render variables. Delete these two GitHub secrets after
+setup succeeds. It never resets an existing administrator. No public setup
+endpoint is provided.
+
 `FRONTEND_URL` is `https://omnicrms.app`. `CORS_ORIGINS` includes that origin,
 www, and both Firebase default origins. `BACKEND_URL` and `API_BASE_URL` point
 to Render so generated media and callback links do not use localhost.
+HTTP and Socket.IO share `utils/corsConfig.js`. Credentials are allowed only
+for listed origins. Preflight requests support authorization and content headers;
+unknown origins receive no CORS access headers. Requests without Origin remain
+available for health checks and provider callbacks. Deployment verifies the live
+database readiness and both allowed and unlisted browser origins before release.
 
 The frontend build injects `VITE_API_URL` into the HTML before the application
 starts so both API clients and Socket.IO use the same backend.

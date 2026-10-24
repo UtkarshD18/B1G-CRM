@@ -3,6 +3,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken"); // Make sure to install this package (npm install jsonwebtoken)
 const { processSocketEvent } = require("./helper/socket");
 const env = require("./env");
+const { createCorsOptions } = require('./utils/corsConfig');
 
 // Module-level variable to store the io instance.
 let ioInstance = null;
@@ -15,10 +16,7 @@ let ioInstance = null;
 function initializeSocket(server) {
   // Create a new Socket.IO server with basic CORS settings.
   ioInstance = new Server(server, {
-    cors: {
-      origin: env.CORS_ORIGINS,
-      methods: ["GET", "POST"],
-    },
+    cors: createCorsOptions(env.CORS_ORIGINS),
   });
 
   // When a client connects...
