@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#141c24"/>
+      <stop offset="100%" stop-color="#0a1017"/>
+    </linearGradient>
+    <linearGradient id="neonTeal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="45%" stop-color="#14b8a6"/>
+      <stop offset="75%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="blur1"/>
+      <feGaussianBlur stdDeviation="30" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#bgDark)"/>
+  <rect width="508" height="508" x="2" y="2" rx="116" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+  <g filter="url(#glow)" opacity="0.45">
+    <path d="M 256 226 C 276 190, 298 180, 322 180 A 76 76 0 0 1 398 256 C 398 274, 388 290, 374 302 L 396 338 L 344 324 C 337 329, 329 332, 322 332 C 298 332, 276 322, 256 286 C 236 322, 214 332, 190 332 A 76 76 0 0 1 114 256 A 76 76 0 0 1 190 180 C 214 180, 236 190, 256 226 Z M 190 218 A 38 38 0 1 0 190 294 A 38 38 0 1 0 190 218 Z M 322 218 A 38 38 0 1 0 322 294 A 38 38 0 1 0 322 218 Z" fill="url(#neonTeal)" fill-rule="evenodd"/>
+  </g>
+  <path d="M 256 226 C 276 190, 298 180, 322 180 A 76 76 0 0 1 398 256 C 398 274, 388 290, 374 302 L 396 338 L 344 324 C 337 329, 329 332, 322 332 C 298 332, 276 322, 256 286 C 236 322, 214 332, 190 332 A 76 76 0 0 1 114 256 A 76 76 0 0 1 190 180 C 214 180, 236 190, 256 226 Z M 190 218 A 38 38 0 1 0 190 294 A 38 38 0 1 0 190 218 Z M 322 218 A 38 38 0 1 0 322 294 A 38 38 0 1 0 322 218 Z" fill="url(#neonTeal)" fill-rule="evenodd"/>
+</svg>
