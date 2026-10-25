@@ -39,7 +39,12 @@ function PublicSite() {
     <div className={`public-page ${isDarkMode ? 'dark-theme' : ''}`}>
       <header className="public-header">
         <Link className="brand" to="/">
-          OMNI CRM
+          <img
+            src={isDarkMode ? '/favicon-dark.svg' : '/favicon-light.svg'}
+            alt="OMNI CRM Logo"
+            className="brand-logo-img"
+          />
+          <span className="brand-text">OMNI CRM</span>
         </Link>
         <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <a href="#features">Features</a>

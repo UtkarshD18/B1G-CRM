@@ -100,7 +100,11 @@ function PortalLayout({ role, title, navItems }) {
       <aside className="portal-sidebar">
         <div className="sidebar-brand">
           <div className="sidebar-logo">
-            <span className="sidebar-logo-icon">O</span>
+            <img
+              src="/favicon-dark.svg"
+              alt="OMNI CRM Logo"
+              className="sidebar-logo-img"
+            />
           </div>
           <span className="sidebar-brand-name">OMNI CRM</span>
         </div>
