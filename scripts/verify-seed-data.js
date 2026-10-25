@@ -1,7 +1,7 @@
 const pool = require('../database/config');
 
 async function verifySeed() {
-  console.log('\n=== B1GCRM Database Seed Verification ===');
+  console.log('\n=== OMNI CRM Database Seed Verification ===');
   const client = await pool.connect();
 
   try {
@@ -57,10 +57,10 @@ async function verifySeed() {
     const activityCount = parseInt(activityRes.rows[0].count, 10);
     console.log(`🕒 CRM Lead Timeline Activities: ${activityCount}`);
 
-    console.log('\n🟢 B1GCRM Seeder Realism Validation PASSED.\n');
+    console.log('\n🟢 OMNI CRM Seeder Realism Validation PASSED.\n');
     process.exit(0);
   } catch (err) {
-    console.error('\n❌ B1GCRM Seeder Realism Validation FAILED:');
+    console.error('\n❌ OMNI CRM Seeder Realism Validation FAILED:');
     console.error(err.message || err);
     process.exit(1);
   } finally {

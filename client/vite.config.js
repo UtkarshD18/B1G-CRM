@@ -13,7 +13,7 @@ export default defineConfig({
         throw new Error('VITE_API_URL must use HTTPS');
       }
       return [{ tag: 'script', injectTo: 'head-prepend', children:
-        `window.__B1GCRM_API_URL__=${JSON.stringify(apiUrl).replace(/</g, '\\u003c')};` }];
+        `window.__OMNICRM_API_URL__=${JSON.stringify(apiUrl).replace(/</g, '\\u003c')};` }];
     },
   }],
   server: {

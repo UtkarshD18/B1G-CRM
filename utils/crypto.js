@@ -4,7 +4,7 @@ const env = require("../env");
 const ALGORITHM = "aes-256-cbc";
 
 // 32-byte key derived from JWT_SECRET or a fallback
-const ENCRYPTION_KEY = crypto.scryptSync(env.JWT_SECRET || "fallback-secret-b1gcrm-key", "salt", 32);
+const ENCRYPTION_KEY = crypto.scryptSync(env.JWT_SECRET || "fallback-secret-omnicrm-key", "salt", 32);
 
 /**
  * Encrypts a plain text string using AES-256-CBC.

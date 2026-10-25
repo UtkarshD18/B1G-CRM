@@ -5,9 +5,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'B1GCRM API',
+      title: 'OMNI CRM API',
       version: '1.0.0',
-      description: 'Enterprise API Documentation for B1GCRM',
+      description: 'Enterprise API Documentation for OMNI CRM',
     },
     components: {
       securitySchemes: {

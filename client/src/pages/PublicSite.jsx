@@ -39,7 +39,7 @@ function PublicSite() {
     <div className={`public-page ${isDarkMode ? 'dark-theme' : ''}`}>
       <header className="public-header">
         <Link className="brand" to="/">
-          B1GCRM
+          OMNI CRM
         </Link>
         <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <a href="#features">Features</a>

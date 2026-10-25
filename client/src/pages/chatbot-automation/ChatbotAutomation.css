@@ -398,7 +398,7 @@
   100% { transform: scale(0.9); opacity: 0.8; }
 }
 
-/* Initial Trigger Node Card (WhatsCRM Design Language) */
+/* Initial Trigger Node Card (OMNI CRM Design Language) */
 .initial-node-card {
   width: 320px;
   background: var(--bg-card);

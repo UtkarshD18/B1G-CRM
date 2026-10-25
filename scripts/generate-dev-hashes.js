@@ -18,7 +18,7 @@ async function main() {
   const userOk  = await bcrypt.compare(process.env.TEST_USER_PASSWORD || 'CHANGE_ME', userHash);
 
   console.log('');
-  console.log('=== B1G-CRM Dev Credential Hashes ===');
+  console.log('=== OMNI CRM Dev Credential Hashes ===');
   console.log('');
   console.log('ADMIN_HASH=' + adminHash);
   console.log('USER_HASH=' + userHash);

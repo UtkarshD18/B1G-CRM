@@ -100,9 +100,9 @@ function PortalLayout({ role, title, navItems }) {
       <aside className="portal-sidebar">
         <div className="sidebar-brand">
           <div className="sidebar-logo">
-            <span className="sidebar-logo-icon">W</span>
+            <span className="sidebar-logo-icon">O</span>
           </div>
-          <span className="sidebar-brand-name">whatsCRM</span>
+          <span className="sidebar-brand-name">OMNI CRM</span>
         </div>
         {role === 'admin' && (
           <div className="sidebar-search">
@@ -145,7 +145,7 @@ function PortalLayout({ role, title, navItems }) {
             Sign out
           </button>
           <span className="sidebar-version">
-            whatsCRM <span className="version-badge">5.9.5</span>
+            OMNI CRM <span className="version-badge">5.9.5</span>
           </span>
         </div>
       </aside>

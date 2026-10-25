@@ -48,7 +48,7 @@ router.post('/add', validateUserOrAgent, verifyPermission('website_access'), asy
       return res.json({ success: false, msg: 'This website domain is already registered' });
     }
 
-    const verificationToken = 'b1gcrm_verify_' + Math.random().toString(36).substring(2, 15);
+    const verificationToken = 'omnicrm_verify_' + Math.random().toString(36).substring(2, 15);
     const trackingCode = `<script src="${req.protocol}://${req.get('host')}/api/website/widget/script?uid=${req.decode.uid}&domain=${cleanDomain}"></script>`;
 
     const result = await query(
@@ -141,7 +141,7 @@ router.post(
 
       // Check if the html contains the verification token inside a meta tag or text
       const regex = new RegExp(
-        `<meta[^>]*name=["']b1gcrm-verification["'][^>]*content=["']${token}["']`,
+        `<meta[^>]*name=["'](omnicrm|b1gcrm)-verification["'][^>]*content=["']${token}["']`,
         'i',
       );
       const matched = regex.test(html) || html.includes(token);
@@ -241,10 +241,10 @@ router.get('/widget/script', async (req, res) => {
   const domain = "${domain}";
   const host = "${req.protocol}://${req.get('host')}";
 
-  let sessionId = localStorage.getItem("b1gcrm_widget_session");
+  let sessionId = localStorage.getItem("omnicrm_widget_session") || localStorage.getItem("b1gcrm_widget_session");
   if (!sessionId) {
     sessionId = "sess_" + Math.random().toString(36).substring(2, 15);
-    localStorage.setItem("b1gcrm_widget_session", sessionId);
+    localStorage.setItem("omnicrm_widget_session", sessionId);
   }
 
   // Create style tag
@@ -422,7 +422,7 @@ router.get('/widget/script', async (req, res) => {
       <div class="b1g-msg outbound">\${greeting}</div>
     </div>
     <div class="b1g-widget-form" id="widget-form-container">
-      \${leadCaptureEnabled && !localStorage.getItem("b1gcrm_lead_captured") ? \`
+      \${leadCaptureEnabled && !(localStorage.getItem("omnicrm_lead_captured") || localStorage.getItem("b1gcrm_lead_captured")) ? \`
         <input type="text" id="lead-name" placeholder="Your Name" required />
         <input type="email" id="lead-email" placeholder="Your Email" required />
       \` : ''}
@@ -506,14 +506,14 @@ router.get('/widget/script', async (req, res) => {
       message: text
     };
 
-    if (leadCaptureEnabled && !localStorage.getItem("b1gcrm_lead_captured")) {
+    if (leadCaptureEnabled && !(localStorage.getItem("omnicrm_lead_captured") || localStorage.getItem("b1gcrm_lead_captured"))) {
       if (!nameEl.value.trim() || !emailEl.value.trim()) {
         alert("Name and Email are required.");
         return;
       }
       payload.name = nameEl.value.trim();
       payload.email = emailEl.value.trim();
-      localStorage.setItem("b1gcrm_lead_captured", "true");
+      localStorage.setItem("omnicrm_lead_captured", "true");
     }
 
     textEl.value = "";

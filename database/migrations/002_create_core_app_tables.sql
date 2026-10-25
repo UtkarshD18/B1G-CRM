@@ -10,7 +10,7 @@ ALTER TABLE agents ADD COLUMN IF NOT EXISTS updatedAt TIMESTAMPTZ DEFAULT CURREN
 CREATE TABLE IF NOT EXISTS web_public (
   id SERIAL PRIMARY KEY,
   logo TEXT,
-  app_name VARCHAR(255) DEFAULT 'B1G CRM',
+  app_name VARCHAR(255) DEFAULT 'OMNI CRM',
   custom_home TEXT,
   is_custom_home SMALLINT DEFAULT 0,
   meta_description TEXT,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS web_public (
 );
 
 INSERT INTO web_public (app_name, currency_code, currency_symbol, exchange_rate)
-SELECT 'B1G CRM', 'USD', '$', 1
+SELECT 'OMNI CRM', 'USD', '$', 1
 WHERE NOT EXISTS (SELECT 1 FROM web_public);
 
 CREATE TABLE IF NOT EXISTS web_private (

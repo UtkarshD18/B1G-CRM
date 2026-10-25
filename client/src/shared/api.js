@@ -1,6 +1,6 @@
 export const API_BASE =
-  typeof window !== 'undefined' && typeof window.__B1GCRM_API_URL__ === 'string'
-    ? window.__B1GCRM_API_URL__.replace(/\/$/, '')
+  typeof window !== 'undefined' && typeof window.__OMNICRM_API_URL__ === 'string'
+    ? window.__OMNICRM_API_URL__.replace(/\/$/, '')
     : ''
 
 async function parseApiResponse(response) {
