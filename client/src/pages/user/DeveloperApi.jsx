@@ -18,7 +18,7 @@ function buildSendMessageSample(apiKey) {
       to: '15551234567',
       type: 'text',
       text: {
-        body: 'Hello from B1GCRM API',
+        body: 'Hello from OMNI CRM API',
       },
     },
     token: apiKey || 'YOUR_API_KEY',

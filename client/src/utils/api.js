@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  (typeof window !== 'undefined' && window.__B1GCRM_API_URL__) ||
+  (typeof window !== 'undefined' && window.__OMNICRM_API_URL__) ||
   ''
 
 const api = axios.create({
@@ -13,7 +13,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token =
     localStorage.getItem('accessToken') ||
-    localStorage.getItem('b1gcrm-active-token')
+    localStorage.getItem('omnicrm-active-token')
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

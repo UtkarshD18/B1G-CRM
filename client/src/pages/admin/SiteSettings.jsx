@@ -3,7 +3,7 @@ import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 
 const defaults = {
-  logo: '', app_name: 'B1G CRM', custom_home: '', is_custom_home: 0,
+  logo: '', app_name: 'OMNI CRM', custom_home: '', is_custom_home: 0,
   meta_description: '', currency_code: 'USD', currency_symbol: '$',
   home_page_tutorial: '', chatbot_screen_tutorial: '', broadcast_screen_tutorial: '',
   login_header_footer: '', exchange_rate: 1,

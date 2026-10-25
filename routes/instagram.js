@@ -262,7 +262,7 @@ router.post('/webhook/:uid', async (req, res) => {
       }
     }
 
-    // Check if chat thread already exists in B1GCRM
+    // Check if chat thread already exists in OMNI CRM
     const [existingChat] = await query('SELECT * FROM chats WHERE chat_id = ? AND uid = ?', [
       senderId,
       uid,

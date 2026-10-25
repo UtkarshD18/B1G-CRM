@@ -49,9 +49,9 @@ const PORT = numberValue(["PORT"], 3010);
 const SOCKET_PORT = numberValue(["SOCKET_PORT"], 3002);
 
 const PGHOST = envValue("PGHOST", "DBHOST") || "127.0.0.1";
-const PGUSER = envValue("PGUSER", "DBUSER") || "b1gcrm";
+const PGUSER = envValue("PGUSER", "DBUSER") || "omnicrm";
 const PGPASSWORD = envValue("PGPASSWORD", "DBPASS");
-const PGDATABASE = envValue("PGDATABASE", "DBNAME") || "b1gcrm";
+const PGDATABASE = envValue("PGDATABASE", "DBNAME") || "omnicrm";
 const PGPORT = numberValue(["PGPORT", "DBPORT"], 5432);
 const DATABASE_URL = envValue("DATABASE_URL", "POSTGRES_URL");
 const PGSSL = boolValue("PGSSL", false);

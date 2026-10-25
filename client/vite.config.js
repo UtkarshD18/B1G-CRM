@@ -6,6 +6,7 @@ const backendTarget = process.env.BACKEND_URL || 'http://localhost:3010';
 // https://vite.dev/config/
 export default defineConfig({
   define: {
+    __OMNICRM_BUILD_API_URL__: JSON.stringify(process.env.VITE_API_URL || ''),
     __B1GCRM_BUILD_API_URL__: JSON.stringify(process.env.VITE_API_URL || ''),
   },
   plugins: [react(), {
@@ -16,7 +17,7 @@ export default defineConfig({
         throw new Error('VITE_API_URL must use HTTPS');
       }
       return [{ tag: 'script', injectTo: 'head-prepend', children:
-        `window.__B1GCRM_API_URL__=${JSON.stringify(apiUrl).replace(/</g, '\\u003c')};` }];
+        `window.__OMNICRM_API_URL__=${JSON.stringify(apiUrl).replace(/</g, '\\u003c')};` }];
     },
   }],
   server: {

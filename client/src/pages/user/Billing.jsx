@@ -119,7 +119,7 @@ function UserBillingPage() {
         key: rzId,
         amount: Math.round(Number(plan.price || 0) * 100),
         currency: 'INR',
-        name: 'B1GCRM',
+        name: 'OMNI CRM',
         description: plan.title,
         handler: async function (response) {
           setStatus('Verifying Razorpay payment...');

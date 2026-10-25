@@ -1,9 +1,18 @@
-export const API_BASE =
-  typeof window !== 'undefined' && typeof window.__B1GCRM_API_URL__ === 'string'
-    ? window.__B1GCRM_API_URL__.replace(/\/$/, '')
+const runtimeApiUrl =
+  (typeof window !== 'undefined' &&
+    (typeof window.__OMNICRM_API_URL__ === 'string'
+      ? window.__OMNICRM_API_URL__
+      : typeof window.__B1GCRM_API_URL__ === 'string'
+        ? window.__B1GCRM_API_URL__
+        : '')) ||
+  (typeof __OMNICRM_BUILD_API_URL__ === 'string'
+    ? __OMNICRM_BUILD_API_URL__
     : typeof __B1GCRM_BUILD_API_URL__ === 'string'
-      ? __B1GCRM_BUILD_API_URL__.replace(/\/$/, '')
-      : ''
+      ? __B1GCRM_BUILD_API_URL__
+      : '') ||
+  ''
+
+export const API_BASE = runtimeApiUrl.replace(/\/$/, '')
 
 async function parseApiResponse(response) {
   if (typeof response.text === 'function') {

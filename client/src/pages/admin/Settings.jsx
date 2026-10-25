@@ -28,7 +28,7 @@ const paymentDefaults = {
 
 const webDefaults = {
   logo: '',
-  app_name: 'B1G CRM',
+  app_name: 'OMNI CRM',
   custom_home: '',
   is_custom_home: 0,
   meta_description: '',

@@ -72,7 +72,7 @@ function createToken(uid, role) {
 
 function setAuthToken(role) {
   window.localStorage.setItem(
-    'b1gcrm-auth',
+    'omnicrm-auth',
     JSON.stringify({
       admin: role === 'admin' ? createToken('admin-1', 'admin') : '',
       user: role === 'user' ? createToken('user-1', 'user') : '',

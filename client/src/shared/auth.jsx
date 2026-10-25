@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
-const STORAGE_KEY = 'b1gcrm-auth';
+const STORAGE_KEY = 'omnicrm-auth';
 const AuthContext = createContext(null);
 
 function loadStoredAuth() {
@@ -10,7 +10,8 @@ function loadStoredAuth() {
   }
 
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}');
+    const raw = window.localStorage.getItem(STORAGE_KEY) || '{}';
+    const parsed = JSON.parse(raw);
     return {
       admin: parsed.admin || '',
       user: parsed.user || '',

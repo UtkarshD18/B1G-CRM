@@ -4,8 +4,8 @@ import { useAuth } from '../../shared/auth';
 
 const getApiOrigin = () => {
   if (typeof window === 'undefined') return '';
-  if (window.__B1GCRM_API_URL__) {
-    return window.__B1GCRM_API_URL__.replace(/\/$/, '');
+  if (window.__OMNICRM_API_URL__) {
+    return window.__OMNICRM_API_URL__.replace(/\/$/, '');
   }
   if (window.location.origin.includes('5173')) {
     return window.location.origin.replace('5173', '3010');
@@ -401,7 +401,7 @@ function UserWebsiteManagerPage() {
   };
 
   const apiSnippet = selectedSite
-    ? `// Fetch your site config from B1GCRM
+    ? `// Fetch your site config from OMNI CRM
 const res = await fetch('${apiOrigin}/api/website/remote-config/${selectedSite.verification_token}');
 const { config, payments } = await res.json();
 
@@ -569,14 +569,14 @@ const { config, payments } = await res.json();
                             wordBreak: 'break-all',
                           }}
                         >
-                          {`<meta name="b1gcrm-verification" content="${selectedSite.verification_token}" />`}
+                          {`<meta name="omnicrm-verification" content="${selectedSite.verification_token}" />`}
                         </code>
                         <button
                           type="button"
                           className="mini-button"
                           onClick={() =>
                             copyToClipboard(
-                              `<meta name="b1gcrm-verification" content="${selectedSite.verification_token}" />`,
+                              `<meta name="omnicrm-verification" content="${selectedSite.verification_token}" />`,
                             )
                           }
                         >
@@ -1275,14 +1275,14 @@ const { config, payments } = await res.json();
                         wordBreak: 'break-all',
                       }}
                     >
-                      {`<meta name="b1gcrm-verification" content="${selectedSite.verification_token}" />`}
+                      {`<meta name="omnicrm-verification" content="${selectedSite.verification_token}" />`}
                     </code>
                     <button
                       type="button"
                       className="mini-button"
                       onClick={() =>
                         copyToClipboard(
-                          `<meta name="b1gcrm-verification" content="${selectedSite.verification_token}" />`,
+                          `<meta name="omnicrm-verification" content="${selectedSite.verification_token}" />`,
                         )
                       }
                     >
