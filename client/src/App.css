@@ -6,11 +6,9 @@
 }
 
 .public-page {
-  background:
-    radial-gradient(circle at top left, rgba(30, 160, 133, 0.22), transparent 28%),
-    radial-gradient(circle at top right, rgba(235, 112, 72, 0.18), transparent 26%),
-    linear-gradient(180deg, #07131d 0%, #0d1f2b 48%, #f3eee7 48%, #f3eee7 100%);
-  color: #f3f1eb;
+  background: var(--bg-canvas, #faf8f5);
+  color: var(--text-primary, #1c1917);
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .public-header,
@@ -28,7 +26,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28px 0;
+  padding: 20px 0;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .brand,
@@ -43,65 +42,73 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  font-size: 1.15rem;
+  gap: 10px;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
   text-decoration: none;
+  color: #111111;
 }
 
 .brand-logo-img {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   object-fit: contain;
-  box-shadow: 0 4px 12px rgba(15, 163, 131, 0.22);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
 }
 
 .brand:hover .brand-logo-img {
-  transform: scale(1.08) rotate(-2deg);
-  box-shadow: 0 6px 18px rgba(15, 163, 131, 0.38);
-}
-
-.public-page.dark-theme .brand-logo-img {
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
-}
-
-.public-page.dark-theme .brand:hover .brand-logo-img {
-  box-shadow: 0 6px 22px rgba(20, 184, 166, 0.5);
+  transform: scale(1.04);
 }
 
 .brand-text {
+  color: #111111 !important;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 16px;
+  letter-spacing: -0.02em;
 }
 
 .public-header nav {
   display: flex;
-  gap: 20px;
-  color: rgba(243, 241, 235, 0.82);
+  align-items: center;
+  gap: 22px;
+  color: #666666;
+  font-size: 14px;
+}
+
+.public-header nav a {
+  color: #666666;
+  transition: color 0.15s ease;
+}
+
+.public-header nav a:hover {
+  color: #111111;
 }
 
 .hero-section {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
-  gap: 28px;
-  padding: 60px 0 96px;
+  gap: 32px;
+  padding: 56px 0 80px;
 }
 
 .hero-copy h1,
 .section-heading h1,
 .auth-copy h1 {
-  font-size: clamp(2.8rem, 6vw, 4.8rem);
-  line-height: 0.98;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   margin: 14px 0 18px;
+  color: #111111;
 }
 
 .hero-copy p,
 .sidebar-copy {
-  color: rgba(243, 241, 235, 0.78);
+  color: #666666;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .page-header p,
@@ -112,7 +119,7 @@
 .status-line,
 .empty-state,
 .panel p {
-  color: #506371;
+  color: #666666;
 }
 
 .hero-panel,
@@ -123,27 +130,28 @@
 .auth-panel,
 .panel,
 .dashboard-card {
-  border: 1px solid rgba(10, 25, 37, 0.12);
-  border-radius: 24px;
-  box-shadow: 0 24px 70px rgba(7, 19, 29, 0.14);
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  color: #111111;
 }
 
 .hero-panel {
-  background: rgba(9, 25, 36, 0.72);
-  border-color: rgba(243, 241, 235, 0.12);
-  padding: 26px;
+  padding: 24px;
 }
 
 .eyebrow {
   display: inline-flex;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: rgba(30, 160, 133, 0.12);
-  color: #1ea085;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  color: #52525b;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
 }
 
 .hero-actions,
@@ -357,17 +365,23 @@ a.mini-button {
 .auth-screen {
   display: grid;
   place-items: center;
-  background:
-    radial-gradient(circle at top left, rgba(30, 160, 133, 0.24), transparent 26%),
-    linear-gradient(180deg, #07131d 0%, #10212d 100%);
-  padding: 28px 0;
+  background: #ffffff;
+  color: #111111;
+  padding: 40px 20px;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .auth-panel {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 28px;
+  gap: 32px;
   align-items: start;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  padding: 36px 32px;
+  color: #111111;
 }
 
 .auth-copy {
@@ -576,15 +590,15 @@ td select:focus {
 }
 
 .sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .sidebar-link.active {
-  background: var(--accent-primary) !important;
-  color: #ffffff !important;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+  border-left: 3px solid #38bdf8;
 }
 
 .sidebar-link-icon {
@@ -1925,177 +1939,761 @@ tr:hover td {
   color: var(--text-primary) !important;
 }
 
-/* Fix text colors for sections with light backgrounds on the public landing page */
-.pricing-section,
-.roles-section {
-  color: #10212d !important;
-}
-
-.pricing-section h2,
-.pricing-section p,
-.pricing-section div,
-.pricing-section span,
-.roles-section h3,
-.roles-section p,
-.roles-section li {
-  color: #10212d !important;
-}
-
-.pricing-section .eyebrow,
-.roles-section .eyebrow {
-  color: #1ea085 !important;
-  background: rgba(30, 160, 133, 0.12) !important;
-  border: 1px solid rgba(30, 160, 133, 0.25) !important;
-}
-
-.pricing-card {
-  background: #ffffff !important;
-  border: 1px solid rgba(16, 33, 45, 0.12) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
-}
-
-.pricing-card .plan-name {
-  color: #10212d !important;
-}
-
-.pricing-card .plan-price {
-  color: #10212d !important;
-}
-
-.pricing-card .plan-period {
-  color: #506371 !important;
-}
-
-.pricing-card p {
-  color: #506371 !important;
-}
-
-.role-card {
-  background: #ffffff !important;
-  border: 1px solid rgba(16, 33, 45, 0.12) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
-}
-
-.role-card h3 {
-  color: #10212d !important;
-}
-
-.role-card li {
-  color: #31424e !important;
-}
-
-/* Fix landing page top-half colors to match the light theme */
+/* Prompt Motion-inspired Clean Minimalist Design System */
 .public-page {
-  background: #f3eee7 !important;
-  color: #10212d !important;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  background: var(--bg-canvas, #faf8f5) !important;
+  color: var(--text-primary, #1c1917) !important;
 }
 
-.public-header .brand,
-.public-header nav,
-.public-header nav a,
-.hero-section h1,
-.hero-section p,
-.feature-grid-section h2,
-.feature-card h3,
-.feature-card p {
-  color: #10212d !important;
+.public-page .public-header {
+  border-bottom: 1px solid #e5e5e5;
+  padding: 18px 0;
 }
 
-.public-header nav a {
-  opacity: 0.8;
-}
-.public-header nav a:hover {
-  opacity: 1;
+.public-page .brand {
+  text-decoration: none !important;
+  color: #111111 !important;
 }
 
-.hero-panel {
-  background: #ffffff !important;
-  border: 1px solid rgba(16, 33, 45, 0.12) !important;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.03) !important;
-  color: #10212d !important;
+.public-page .brand-text {
+  color: #111111 !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  letter-spacing: -0.02em !important;
+  text-transform: none !important;
 }
 
-.hero-panel h2 {
-  color: #10212d !important;
+.public-page .public-header nav a:not(.primary-button):not(.nav-cta-btn) {
+  color: #64748b !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease;
 }
 
-.hero-panel .signal-list li {
-  color: #31424e !important;
+.public-page .public-header nav a:not(.primary-button):not(.nav-cta-btn):hover {
+  color: #0f172a !important;
 }
 
-.feature-card {
-  background: #ffffff !important;
-  border: 1px solid rgba(16, 33, 45, 0.12) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
-  color: #10212d !important;
+.public-page .public-header nav a.nav-cta-btn,
+.public-page .public-header nav a.primary-button {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: 9999px !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-/* Smooth transition styles for theme toggling */
-.public-page,
-.public-page *,
+.public-page .public-header nav a.nav-cta-btn:hover,
+.public-page .public-header nav a.primary-button:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25) !important;
+}
+
+.public-page .public-header nav a.nav-cta-btn span,
+.public-page .public-header nav a.primary-button span {
+  color: #ffffff !important;
+}
+
+.public-page .hero-section {
+  padding: 56px 0 80px !important;
+}
+
+.public-page .hero-section h1 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.1 !important;
+  font-size: clamp(2.4rem, 4.8vw, 3.8rem) !important;
+}
+
+.public-page .hero-section p {
+  color: #64748b !important;
+  font-size: 17px !important;
+  line-height: 1.6 !important;
+}
+
 .public-page .hero-panel,
 .public-page .feature-card,
 .public-page .pricing-card,
 .public-page .role-card {
-  transition: background 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
-              color 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-              border-color 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-              box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  background: #ffffff !important;
+  border: 1px solid #e7e3da !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 10px rgba(40, 30, 20, 0.04) !important;
+  color: #1c1917 !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
 }
 
-/* Dark theme overrides */
+.public-page .feature-card:hover,
+.public-page .pricing-card:hover,
+.public-page .role-card:hover {
+  border-color: #d1cbc0 !important;
+  box-shadow: 0 8px 24px -4px rgba(40, 30, 20, 0.08) !important;
+  transform: translateY(-2px) !important;
+}
+
+.public-page .feature-card h3,
+.public-page .pricing-card .plan-name,
+.public-page .roles-section h3 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.public-page .feature-card p,
+.public-page .pricing-card p,
+.public-page .role-card p {
+  color: #64748b !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+.public-page .pricing-card .plan-price {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.public-page .eyebrow {
+  color: #2563eb !important;
+  background: #eff6ff !important;
+  border: 1px solid #dbeafe !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  border-radius: 9999px !important;
+  padding: 5px 14px !important;
+}
+
+.public-page .primary-button {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-radius: 9px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 12px 22px !important;
+  line-height: 1.2 !important;
+  text-decoration: none !important;
+  border: 1px solid #2563eb !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3), 0 4px 12px -2px rgba(37, 99, 235, 0.25) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+}
+
+.public-page .primary-button:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 16px -2px rgba(37, 99, 235, 0.45), 0 2px 6px -1px rgba(37, 99, 235, 0.3) !important;
+}
+
+.public-page .primary-button:hover .btn-arrow {
+  transform: translateX(4px) !important;
+}
+
+.public-page .primary-button:active {
+  transform: translateY(0px) scale(0.98) !important;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3) !important;
+}
+
+.public-page .secondary-button {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 9px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  padding: 12px 22px !important;
+  line-height: 1.2 !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+}
+
+.public-page .secondary-button:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08) !important;
+}
+
+.public-page .secondary-button:active {
+  transform: translateY(0px) scale(0.98) !important;
+}
+
+.public-page .roles-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+  gap: 20px;
+}
+
+/* Dark Theme (Minimalist Carbon) */
 .public-page.dark-theme {
-  background: #09121f !important;
-  color: #f3f1eb !important;
+  background: #0a0a0a !important;
+  color: #ededed !important;
 }
 
-.public-page.dark-theme .public-header .brand,
-.public-page.dark-theme .public-header nav,
-.public-page.dark-theme .public-header nav a,
+.public-page.dark-theme .public-header {
+  border-bottom: 1px solid #222222 !important;
+}
+
+.public-page.dark-theme .brand-text {
+  color: #ffffff !important;
+}
+
+.public-page.dark-theme .public-header nav a:not(.nav-cta-btn):not(.primary-button) {
+  color: #888888 !important;
+}
+
+.public-page.dark-theme .public-header nav a:not(.nav-cta-btn):not(.primary-button):hover {
+  color: #ffffff !important;
+}
+
+.public-page.dark-theme .public-header nav a.nav-cta-btn,
+.public-page.dark-theme .public-header nav a.primary-button {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #ffffff !important;
+  box-shadow: 0 1px 6px rgba(255, 255, 255, 0.2) !important;
+}
+
+.public-page.dark-theme .public-header nav a.nav-cta-btn:hover,
+.public-page.dark-theme .public-header nav a.primary-button:hover {
+  background: #f1f5f9 !important;
+  color: #000000 !important;
+}
+
+.public-page.dark-theme .public-header nav a.nav-cta-btn span,
+.public-page.dark-theme .public-header nav a.primary-button span {
+  color: #0f172a !important;
+}
+
 .public-page.dark-theme .hero-section h1,
-.public-page.dark-theme .hero-section p,
-.public-page.dark-theme .feature-grid-section h2,
 .public-page.dark-theme .feature-card h3,
+.public-page.dark-theme .pricing-card .plan-name,
+.public-page.dark-theme .pricing-card .plan-price,
+.public-page.dark-theme .roles-section h3 {
+  color: #ffffff !important;
+}
+
+.public-page.dark-theme .hero-section p,
 .public-page.dark-theme .feature-card p,
-.public-page.dark-theme .pricing-section h2,
-.public-page.dark-theme .pricing-section p,
-.public-page.dark-theme .pricing-section div,
-.public-page.dark-theme .pricing-section span,
-.public-page.dark-theme .roles-section h3,
-.public-page.dark-theme .roles-section p,
-.public-page.dark-theme .roles-section li {
-  color: #f3f1eb !important;
+.public-page.dark-theme .pricing-card p,
+.public-page.dark-theme .role-card p {
+  color: #888888 !important;
 }
 
 .public-page.dark-theme .hero-panel,
 .public-page.dark-theme .feature-card,
 .public-page.dark-theme .pricing-card,
 .public-page.dark-theme .role-card {
-  background: #111e2e !important;
-  border: 1px solid rgba(243, 241, 235, 0.1) !important;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
-  color: #f3f1eb !important;
+  background: #121212 !important;
+  border: 1px solid #242424 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  color: #ededed !important;
 }
 
-.public-page.dark-theme .hero-panel h2,
-.public-page.dark-theme .pricing-card .plan-name,
-.public-page.dark-theme .pricing-card .plan-price,
-.public-page.dark-theme .role-card h3 {
+.public-page.dark-theme .feature-card:hover,
+.public-page.dark-theme .pricing-card:hover,
+.public-page.dark-theme .role-card:hover {
+  border-color: #ffffff !important;
+}
+
+.public-page.dark-theme .eyebrow {
+  color: #a3a3a3 !important;
+  background: #181818 !important;
+  border: 1px solid #262626 !important;
+}
+
+.public-page.dark-theme .primary-button {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+}
+
+.public-page.dark-theme .secondary-button {
+  background: #141414 !important;
+  color: #ffffff !important;
+  border-color: #262626 !important;
+}
+
+.public-page.dark-theme .secondary-button:hover {
+  background: #1a1a1a !important;
+  border-color: #ffffff !important;
+}
+
+/* ========================================================
+   Circular View Transition for Light/Dark Theme Wipe
+   Smoothly expands from the exact theme toggle button coordinates
+   ======================================================== */
+::view-transition-old(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+  z-index: 1 !important;
+}
+
+::view-transition-new(root) {
+  animation: theme-circular-reveal 850ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important;
+  mix-blend-mode: normal !important;
+  z-index: 999999 !important;
+}
+
+@keyframes theme-circular-reveal {
+  0% {
+    clip-path: circle(var(--theme-start-r, 16px) at var(--theme-x, calc(100vw - 120px)) var(--theme-y, 75px));
+  }
+  100% {
+    clip-path: circle(var(--theme-end-r, 2500px) at var(--theme-x, calc(100vw - 120px)) var(--theme-y, 75px));
+  }
+}
+
+/* ========================================================
+   Aesthetic Company Branding Typography
+   ======================================================== */
+.brand-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 11px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  height: 38px !important;
+}
+
+.brand-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  flex-shrink: 0;
+}
+
+.public-page.dark-theme .brand-icon-wrapper {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.brand-link:hover .brand-icon-wrapper {
+  transform: scale(1.06) rotate(-2deg);
+}
+
+.brand-typography {
+  display: inline-flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+  line-height: 1 !important;
+}
+
+.brand-name {
+  font-family: 'Plus Jakarta Sans', 'Geist', sans-serif !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+  background: linear-gradient(135deg, #090d16 0%, #1e293b 80%, #334155 100%);
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  transition: opacity 0.2s ease;
+}
+
+.public-page.dark-theme .brand-name {
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 60%, #94a3b8 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.brand-badge {
+  font-family: 'Plus Jakarta Sans', 'Geist Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2.5px 7px;
+  border-radius: 6px;
+  line-height: 1;
+  background: rgba(15, 23, 42, 0.06);
+  color: #475569;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  vertical-align: middle;
+}
+
+.public-page.dark-theme .brand-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* ========================================================
+   Liquid Glass Ripple Water Effect Button & Perfect Alignment
+   ======================================================== */
+.public-page .public-header {
+  height: 68px !important;
+  padding: 0 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.public-page .public-header nav {
+  display: flex !important;
+  align-items: center !important;
+  height: 38px !important;
+  gap: 24px !important;
+}
+
+.public-page .public-header nav a.nav-link-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 38px !important;
+  padding: 0 4px !important;
+  line-height: 1 !important;
+  font-family: 'Plus Jakarta Sans', 'Geist', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease, transform 0.15s ease !important;
+  vertical-align: middle !important;
+}
+
+.public-page .public-header nav a.nav-link-item:hover {
+  color: #0f172a !important;
+  transform: translateY(-0.5px);
+}
+
+.public-page.dark-theme .public-header nav a.nav-link-item {
+  color: #94a3b8 !important;
+}
+
+.public-page.dark-theme .public-header nav a.nav-link-item:hover {
   color: #ffffff !important;
 }
 
-.public-page.dark-theme .pricing-card .plan-period,
-.public-page.dark-theme .pricing-card p,
-.public-page.dark-theme .role-card li {
-  color: rgba(243, 241, 235, 0.7) !important;
+/* Liquid Glass Theme Toggle Button */
+.liquid-glass-theme-btn {
+  position: relative;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 9999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-family: 'Plus Jakarta Sans', 'Geist', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(18px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(200%) !important;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
 }
 
-.public-page.dark-theme .pricing-section .eyebrow,
-.public-page.dark-theme .roles-section .eyebrow {
-  color: #1ea085 !important;
-  background: rgba(30, 160, 133, 0.15) !important;
-  border: 1px solid rgba(30, 160, 133, 0.3) !important;
+/* Light Mode Liquid Glass */
+:root:not(.dark-theme) .liquid-glass-theme-btn,
+body:not(.dark-theme) .liquid-glass-theme-btn {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 240, 232, 0.7) 100%) !important;
+  border: 1px solid rgba(225, 218, 206, 0.9) !important;
+  box-shadow: 
+    0 4px 14px -1px rgba(40, 30, 20, 0.06),
+    0 2px 6px -1px rgba(40, 30, 20, 0.03),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(40, 30, 20, 0.04) !important;
+  color: #1c1917 !important;
 }
+
+:root:not(.dark-theme) .liquid-glass-theme-btn:hover,
+body:not(.dark-theme) .liquid-glass-theme-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 240, 232, 0.85) 100%) !important;
+  border-color: rgba(210, 200, 185, 1) !important;
+  box-shadow: 
+    0 6px 20px -2px rgba(40, 30, 20, 0.1),
+    0 2px 8px -1px rgba(40, 30, 20, 0.05),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 1) !important;
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Dark Mode Liquid Glass */
+:root.dark-theme .liquid-glass-theme-btn,
+body.dark-theme .liquid-glass-theme-btn {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 
+    0 4px 20px -2px rgba(0, 0, 0, 0.6),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.5) !important;
+  color: #f1f5f9 !important;
+}
+
+:root.dark-theme .liquid-glass-theme-btn:hover,
+body.dark-theme .liquid-glass-theme-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 
+    0 6px 24px -2px rgba(0, 0, 0, 0.7),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.35) !important;
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* CRM Interior & Dashboard Theme Support */
+:root:not(.dark-theme) .portal-shell {
+  background: #faf8f5 !important;
+  color: #1c1917 !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar {
+  background: #ffffff !important;
+  border-right: 1px solid #e7e3da !important;
+  color: #1c1917 !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-brand-name {
+  color: #1c1917 !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-search {
+  background: #f4f0e8 !important;
+  border: 1px solid #e7e3da !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-search input {
+  color: #1c1917 !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-search input::placeholder {
+  color: #78716c !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-link {
+  color: #57534e !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-link:hover {
+  background: #f4f0e8 !important;
+  color: #1c1917 !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-link.active {
+  background: #ede8dd !important;
+  color: #1c1917 !important;
+  font-weight: 600 !important;
+  border: 1px solid #e2ddd3 !important;
+  border-left: 3px solid #2563eb !important;
+  box-shadow: 0 1px 3px rgba(40, 30, 20, 0.04) !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-link.active .sidebar-link-label {
+  color: #1c1917 !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-link.active .sidebar-link-icon {
+  color: #2563eb !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-section {
+  color: #a8a29e !important;
+}
+
+:root:not(.dark-theme) .portal-sidebar .sidebar-version {
+  color: #78716c !important;
+}
+
+:root:not(.dark-theme) .portal-topbar {
+  background: #ffffff !important;
+  border: 1px solid #e7e3da !important;
+  color: #1c1917 !important;
+  padding: 10px 16px !important;
+  border-radius: 12px !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 1px 3px rgba(40, 30, 20, 0.03) !important;
+}
+
+:root:not(.dark-theme) .portal-main {
+  background-color: #faf8f5 !important;
+  color: #1c1917 !important;
+}
+
+:root:not(.dark-theme) .portal-main .panel,
+:root:not(.dark-theme) .portal-main .dashboard-card,
+:root:not(.dark-theme) .portal-main .hero-panel,
+:root:not(.dark-theme) .portal-main .table-container,
+:root:not(.dark-theme) .portal-main .card,
+:root:not(.dark-theme) .portal-main .form-panel {
+  background: #ffffff !important;
+  border: 1px solid #e7e3da !important;
+  color: #1c1917 !important;
+  box-shadow: 0 2px 8px rgba(40, 30, 20, 0.03) !important;
+}
+
+:root.dark-theme .portal-shell {
+  background: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+:root.dark-theme .portal-sidebar {
+  background: #111111 !important;
+  border-right: 1px solid #242424 !important;
+  color: #ededed !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-section {
+  color: #71717a !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-version {
+  color: #71717a !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-search input {
+  background: #18181b !important;
+  border: 1px solid #27272a !important;
+  color: #ededed !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-search input::placeholder {
+  color: #71717a !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-link {
+  color: #94a3b8 !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-link.active {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border: 1px solid #334155 !important;
+  border-left: 3px solid #38bdf8 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-link.active .sidebar-link-label {
+  color: #ffffff !important;
+}
+
+:root.dark-theme .portal-sidebar .sidebar-link.active .sidebar-link-icon {
+  color: #38bdf8 !important;
+}
+
+:root.dark-theme .portal-topbar {
+  background: #111111 !important;
+  border: 1px solid #242424 !important;
+  color: #ededed !important;
+  padding: 10px 16px !important;
+  border-radius: 12px !important;
+  margin-bottom: 16px !important;
+}
+
+:root.dark-theme .portal-main {
+  background-color: #0a0a0a !important;
+  color: #ededed !important;
+}
+
+:root.dark-theme .portal-main .panel,
+:root.dark-theme .portal-main .dashboard-card,
+:root.dark-theme .portal-main .hero-panel,
+:root.dark-theme .portal-main .table-container,
+:root.dark-theme .portal-main .card,
+:root.dark-theme .portal-main .form-panel {
+  background: #121212 !important;
+  border: 1px solid #242424 !important;
+  color: #ededed !important;
+}
+
+/* Concentric Liquid Water Ripple Wave on Click */
+@keyframes liquidWaterDropletRipple {
+  0% {
+    box-shadow: 
+      0 0 0 0 rgba(56, 189, 248, 0.8),
+      0 0 0 0 rgba(255, 255, 255, 0.9);
+    transform: scale(0.95);
+  }
+  30% {
+    box-shadow: 
+      0 0 0 8px rgba(56, 189, 248, 0.4),
+      0 0 0 16px rgba(14, 165, 233, 0.2),
+      0 0 0 24px rgba(255, 255, 255, 0.1);
+    transform: scale(1.03);
+  }
+  65% {
+    box-shadow: 
+      0 0 0 18px rgba(56, 189, 248, 0.15),
+      0 0 0 32px rgba(14, 165, 233, 0.06),
+      0 0 0 46px rgba(56, 189, 248, 0.02);
+    transform: scale(1.01);
+  }
+  100% {
+    box-shadow: 
+      0 0 0 28px rgba(56, 189, 248, 0),
+      0 0 0 48px rgba(14, 165, 233, 0),
+      0 0 0 64px rgba(56, 189, 248, 0);
+    transform: scale(1);
+  }
+}
+
+.liquid-ripple-active {
+  animation: liquidWaterDropletRipple 0.85s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important;
+}
+
+/* Specular Light Shimmer across Liquid Glass Button */
+.liquid-glass-theme-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+.liquid-glass-theme-btn:hover::before {
+  left: 140%;
+}
+
 
 
 

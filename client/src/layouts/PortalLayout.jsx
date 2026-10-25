@@ -2,9 +2,11 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../shared/auth';
 import { classNames } from '../shared/format';
+import { useTheme } from '../shared/theme';
 
 function PortalLayout({ role, title, navItems }) {
   const { tokens, clearRoleToken } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -101,7 +103,7 @@ function PortalLayout({ role, title, navItems }) {
         <div className="sidebar-brand">
           <div className="sidebar-logo">
             <img
-              src="/favicon-dark.svg"
+              src={isDarkMode ? '/favicon-dark.svg' : '/favicon-light.svg'}
               alt="OMNI CRM Logo"
               className="sidebar-logo-img"
             />
@@ -163,6 +165,23 @@ function PortalLayout({ role, title, navItems }) {
             </span>
           </div>
           <div className="topbar-actions">
+            <button
+              id="portal-theme-toggle-btn"
+              type="button"
+              onClick={toggleTheme}
+              className="liquid-glass-theme-btn"
+              aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+              style={{ height: '34px', padding: '0 12px', fontSize: '13px' }}
+            >
+              <span className="liquid-glass-icon" style={{ fontSize: '13px', lineHeight: 1 }}>
+                {isDarkMode ? '☀️' : '🌙'}
+              </span>
+              <span style={{ fontWeight: '600', letterSpacing: '-0.01em' }}>
+                {isDarkMode ? 'Light' : 'Dark'}
+              </span>
+              <span className="liquid-ripple-wave" />
+            </button>
             <span className="topbar-lang">🌐 English</span>
           </div>
         </div>

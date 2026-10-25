@@ -193,8 +193,10 @@ function AppRoutes() {
       <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
       <Route path="/signin" element={<PortalChooser />} />
       <Route path="/login" element={<UnifiedLoginPage />} />
-      <Route path="/register" element={<Navigate to="/user/signup" replace />} />
+      <Route path="/register" element={<Navigate to="/signup" replace />} />
+      <Route path="/signup" element={<UserSignupPage />} />
       <Route path="/user/signup" element={<UserSignupPage />} />
+      <Route path="/admin/signin" element={<Navigate to="/admin/login" replace />} />
       <Route
         path="/admin/login"
         element={

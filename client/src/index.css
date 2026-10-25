@@ -1,18 +1,26 @@
 :root {
-  --bg-primary: #0B1220;
-  --bg-card: #111827;
-  --bg-panel: #1F2937;
-  --border-color: #374151;
-  --accent-primary: #10B981;
-  --text-primary: #F9FAFB;
-  --text-secondary: #9CA3AF;
+  /* Warm rich light theme (Default) */
+  --bg-canvas: #faf8f5;
+  --bg-primary: #faf8f5;
+  --bg-card: #ffffff;
+  --bg-panel: #f4f0e8;
+  --border-color: #e7e3da;
+  --border-subtle: #f0ece3;
+  --accent-primary: #0f172a;
+  --accent-emerald: #10B981;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+  --text-muted: #78716c;
   --color-danger: #EF4444;
   --color-warning: #F59E0B;
+  --header-bg: rgba(250, 248, 245, 0.85);
+  --header-border: rgba(231, 227, 218, 0.85);
+  --card-shadow: 0 2px 10px rgba(40, 30, 20, 0.04), 0 1px 3px rgba(40, 30, 20, 0.03);
 
-  color: var(--text-primary);
-  background-color: var(--bg-primary);
+  color: #1c1917;
+  background-color: #faf8f5;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    'Geist', Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 16px;
   line-height: 1.5;
   font-synthesis: none;
@@ -21,18 +29,50 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dark Theme */
+:root.dark-theme,
+body.dark-theme {
+  --bg-canvas: #0a0a0a;
+  --bg-primary: #0a0a0a;
+  --bg-card: #121212;
+  --bg-panel: #171717;
+  --border-color: #242424;
+  --border-subtle: #1e1e1e;
+  --accent-primary: #ffffff;
+  --accent-emerald: #10B981;
+  --text-primary: #ededed;
+  --text-secondary: #888888;
+  --text-muted: #666666;
+  --header-bg: rgba(10, 10, 10, 0.85);
+  --header-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+
+  color: #ededed;
+  background-color: #0a0a0a;
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  background-color: #faf8f5;
+}
+
+html.dark-theme {
+  background-color: #0a0a0a;
 }
 
 body {
   margin: 0;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: #faf8f5;
+  color: #1c1917;
+}
+
+body.dark-theme {
+  background-color: #0a0a0a;
+  color: #ededed;
 }
 
 body,
@@ -44,6 +84,7 @@ textarea {
 
 a {
   color: inherit;
+  text-decoration: none;
 }
 
 h1,

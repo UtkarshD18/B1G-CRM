@@ -630,9 +630,7 @@ describe('App routing shell', () => {
     await renderAtRoute('/');
 
     expect(
-      await screen.findByText(
-        'Public site, tenant workspace, staff portal, and admin controls in one product.',
-      ),
+      await screen.findByText('One unified inbox for WhatsApp, Instagram, and web visitors.'),
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe('/');
   });

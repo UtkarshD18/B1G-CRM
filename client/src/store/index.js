@@ -1,16 +1,16 @@
-import { create } from 'zustand'
-import api from '../utils/api'
+import { create } from 'zustand';
+import api from '../utils/api';
 
 function decodeToken(token) {
   if (!token) {
-    return null
+    return null;
   }
 
   try {
-    const [, payload] = token.split('.')
-    return JSON.parse(window.atob(payload))
+    const [, payload] = token.split('.');
+    return JSON.parse(window.atob(payload));
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -24,7 +24,7 @@ export const useAuthStore = create((set, get) => ({
   error: null,
 
   login: async (email, password, userType = 'user') => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null });
 
     try {
       const endpoint =
@@ -32,22 +32,22 @@ export const useAuthStore = create((set, get) => ({
           ? '/api/admin/login'
           : userType === 'agent'
             ? '/api/agent/login'
-            : '/api/user/login'
+            : '/api/user/login';
 
-      const response = await api.post(endpoint, { email, password })
-      const payload = response.data?.data || response.data || {}
-      const accessToken = payload.accessToken || payload.token || response.data?.token
-      const refreshToken = payload.refreshToken || ''
-      const user = payload.user || payload.decode || decodeToken(accessToken)
+      const response = await api.post(endpoint, { email, password });
+      const payload = response.data?.data || response.data || {};
+      const accessToken = payload.accessToken || payload.token || response.data?.token;
+      const refreshToken = payload.refreshToken || '';
+      const user = payload.user || payload.decode || decodeToken(accessToken);
 
       if (!response.data?.success || !accessToken) {
-        throw new Error(response.data?.msg || 'Login failed')
+        throw new Error(response.data?.msg || 'Login failed');
       }
 
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      localStorage.setItem('userType', userType)
-      localStorage.setItem('user', JSON.stringify(user))
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('userType', userType);
+      localStorage.setItem('user', JSON.stringify(user));
 
       set({
         user,
@@ -56,21 +56,21 @@ export const useAuthStore = create((set, get) => ({
         userType,
         isAuthenticated: true,
         isLoading: false,
-      })
+      });
 
-      return { success: true }
+      return { success: true };
     } catch (error) {
-      const errorMsg = error.response?.data?.msg || error.message || 'Login failed'
-      set({ error: errorMsg, isLoading: false })
-      return { success: false, error: errorMsg }
+      const errorMsg = error.response?.data?.msg || error.message || 'Login failed';
+      set({ error: errorMsg, isLoading: false });
+      return { success: false, error: errorMsg };
     }
   },
 
   logout: () => {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('userType')
-    localStorage.removeItem('user')
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('user');
 
     set({
       user: null,
@@ -79,40 +79,60 @@ export const useAuthStore = create((set, get) => ({
       userType: null,
       isAuthenticated: false,
       error: null,
-    })
+    });
   },
 
   checkAuth: async () => Boolean(get().token),
-}))
+}));
+
+function getStoreInitialDark() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const theme = localStorage.getItem('omnicrm-theme');
+    if (theme === 'dark') return true;
+    if (theme === 'light') return false;
+    const legacy = localStorage.getItem('darkMode');
+    if (legacy === 'true') return true;
+    if (legacy === 'false') return false;
+    if (window.matchMedia && typeof window.matchMedia === 'function') {
+      return Boolean(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
 
 export const useUIStore = create((set) => ({
   sidebarOpen: true,
-  darkMode: localStorage.getItem('darkMode') === 'true',
+  darkMode: getStoreInitialDark(),
   modals: {},
   notifications: [],
 
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   toggleTheme: () =>
     set((state) => {
-      localStorage.setItem('darkMode', String(!state.darkMode))
-      return { darkMode: !state.darkMode }
+      const nextMode = !state.darkMode;
+      try {
+        localStorage.setItem('darkMode', String(nextMode));
+        localStorage.setItem('omnicrm-theme', nextMode ? 'dark' : 'light');
+        localStorage.setItem('omnicrm-theme-user-choice', 'true');
+      } catch {
+        // ignore
+      }
+      return { darkMode: nextMode };
     }),
-  openModal: (name) =>
-    set((state) => ({ modals: { ...state.modals, [name]: true } })),
-  closeModal: (name) =>
-    set((state) => ({ modals: { ...state.modals, [name]: false } })),
+  openModal: (name) => set((state) => ({ modals: { ...state.modals, [name]: true } })),
+  closeModal: (name) => set((state) => ({ modals: { ...state.modals, [name]: false } })),
   addNotification: (notification) =>
     set((state) => ({
-      notifications: [
-        ...state.notifications,
-        { id: Date.now(), ...notification },
-      ],
+      notifications: [...state.notifications, { id: Date.now(), ...notification }],
     })),
   removeNotification: (id) =>
     set((state) => ({
       notifications: state.notifications.filter((item) => item.id !== id),
     })),
-}))
+}));
 
 export const useAppStore = create((set) => ({
   conversations: [],
@@ -126,4 +146,4 @@ export const useAppStore = create((set) => ({
   setAgents: (agents) => set({ agents }),
   setCampaigns: (campaigns) => set({ campaigns }),
   setLoading: (loading) => set({ loading }),
-}))
+}));
