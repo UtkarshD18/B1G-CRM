@@ -898,23 +898,16 @@ function PublicSite() {
           </motion.div>
         </section>
 
-        {/* 5. Attio Signature Interactive Sticky Pinned Stage (Section 2 from reverse engineering report) */}
+        {/* 5. Attio Signature Interactive Stage - Anti-Overlap Responsive Engine */}
         <section
+          className="pillars-stage-section"
           style={{
-            padding: '64px 0 84px',
             borderTop: isDarkMode ? '1px solid #202020' : '1px solid #f1f5f9',
           }}
         >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '48px',
-              alignItems: 'start',
-            }}
-          >
-            {/* Left Column: Sticky Navigation List */}
-            <div style={{ position: 'sticky', top: '100px' }}>
+          <div className="pillars-stage-grid">
+            {/* Left Column: Navigation Area */}
+            <div className="pillars-nav-col">
               <div
                 style={{
                   display: 'inline-block',
@@ -943,7 +936,28 @@ function PublicSite() {
                 The platform built for high-velocity teams.
               </h2>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Mobile tabs for screens < 960px - prevents vertical clutter & zero overlapping */}
+              <div className="pillars-mobile-tabs-container">
+                <div className="pillars-mobile-tabs">
+                  {pillars.map((pillar, idx) => {
+                    const isActive = activePillar === idx;
+                    return (
+                      <button
+                        key={pillar.id}
+                        type="button"
+                        onClick={() => setActivePillar(idx)}
+                        className={`pillars-mobile-tab-btn ${isActive ? 'active' : ''}`}
+                      >
+                        {pillar.title}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="pillars-mobile-active-desc">{pillars[activePillar].subtitle}</div>
+              </div>
+
+              {/* Desktop vertical list for screens >= 960px */}
+              <div className="pillars-desktop-list">
                 {pillars.map((pillar, idx) => {
                   const isActive = activePillar === idx;
                   return (
@@ -991,10 +1005,11 @@ function PublicSite() {
             </div>
 
             {/* Right Column: Dynamic Interactive Stage */}
-            <div>
+            <div className="pillars-stage-col">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={pillars[activePillar].id}
+                  className="pillars-stage-card"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
@@ -1003,7 +1018,6 @@ function PublicSite() {
                     background: isDarkMode ? '#121212' : '#ffffff',
                     border: isDarkMode ? '1px solid #27272a' : '1px solid #e2e8f0',
                     borderRadius: '16px',
-                    padding: '28px',
                     boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
                   }}
                 >

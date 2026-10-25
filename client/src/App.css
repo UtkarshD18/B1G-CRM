@@ -2694,8 +2694,139 @@ body.dark-theme .liquid-glass-theme-btn:hover {
   left: 140%;
 }
 
+/* ==========================================================================
+   Pillars of Revenue Section - Anti-Overlap Responsive Engine
+   ========================================================================== */
+.pillars-stage-section {
+  padding: 64px 0 84px;
+  position: relative;
+}
 
+.pillars-stage-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+  position: relative;
+  width: 100%;
+}
 
+/* Navigation column - STRICTLY static/relative on mobile to prevent overlapping */
+.pillars-nav-col {
+  position: relative !important;
+  top: auto !important;
+  width: 100%;
+}
 
+/* Mobile Pill Switcher (< 960px) */
+.pillars-mobile-tabs-container {
+  display: block;
+  margin-bottom: 20px;
+}
 
+.pillars-mobile-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
 
+.pillars-mobile-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.pillars-mobile-tab-btn {
+  white-space: nowrap;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e2ddd3;
+  background: #ffffff;
+  color: #57534e;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.pillars-mobile-tab-btn.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25) !important;
+}
+
+.pillars-mobile-active-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 4px;
+  color: #78716c;
+  padding: 0 2px;
+}
+
+:root.dark-theme .pillars-mobile-tab-btn,
+.public-page.dark-theme .pillars-mobile-tab-btn {
+  background: #18181b;
+  border-color: #27272a;
+  color: #a1a1aa;
+}
+
+:root.dark-theme .pillars-mobile-tab-btn.active,
+.public-page.dark-theme .pillars-mobile-tab-btn.active {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4) !important;
+}
+
+:root.dark-theme .pillars-mobile-active-desc,
+.public-page.dark-theme .pillars-mobile-active-desc {
+  color: #a1a1aa;
+}
+
+/* Desktop vertical list - hidden on mobile */
+.pillars-desktop-list {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Stage Preview column */
+.pillars-stage-col {
+  width: 100%;
+  min-width: 0;
+}
+
+.pillars-stage-card {
+  padding: 20px;
+}
+
+@media (min-width: 640px) {
+  .pillars-stage-card {
+    padding: 28px;
+  }
+}
+
+/* Desktop Breakpoint: side-by-side with sticky pinning ONLY when 2 columns exist */
+@media (min-width: 960px) {
+  .pillars-stage-grid {
+    grid-template-columns: 380px 1fr;
+    gap: 56px;
+  }
+
+  .pillars-nav-col {
+    position: sticky !important;
+    top: 100px !important;
+    align-self: start;
+  }
+
+  .pillars-desktop-list {
+    display: flex;
+  }
+
+  .pillars-mobile-tabs-container {
+    display: none;
+  }
+}
