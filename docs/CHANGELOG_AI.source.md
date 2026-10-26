@@ -2,6 +2,16 @@
 
 Keep this file short. Retain only recent implementation history.
 
+## 2026-10-26 - Documentation: Production Hosted URL Exposure
+
+| Field | Details |
+| --- | --- |
+| Feature | Added the canonical hosted production URL to the root README in a clearly labeled section for faster discoverability. |
+| Files changed | `README.md`, `docs/CHANGELOG_AI.source.md`. |
+| Impact | Makes the live deployment URL explicit to contributors and visitors without changing runtime behavior or architecture. |
+| Breaking changes | None. |
+| Migration notes | None. |
+
 ## 2026-06-21 - Sprint 14: Payment Gateway Parity & MercadoPago Integration
 
 | Field | Details |

@@ -2,6 +2,10 @@
 
 A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichannel Inbox, Chatbots, and Agent Management.
 
+## Hosted Production URL
+
+- https://omnicrms.app/
+
 ## Project Documentation
 
 - [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md): Setup and deployment guidelines.
