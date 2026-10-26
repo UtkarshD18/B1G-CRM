@@ -4,6 +4,7 @@ const request = require('supertest');
 
 const mockCreateOrder = jest.fn();
 const mockFetchOrder = jest.fn();
+const mockListOrders = jest.fn();
 const mockQuery = jest.fn();
 const mockUpdateUserPlan = jest.fn();
 
@@ -12,6 +13,7 @@ jest.mock('razorpay', () =>
     orders: {
       create: mockCreateOrder,
       fetch: mockFetchOrder,
+      all: mockListOrders,
     },
   })),
 );
@@ -24,6 +26,7 @@ jest.mock('../functions/helpers/billingHelper', () => ({
 jest.mock('../env', () => ({
   RAZORPAY_KEY_ID: 'rzp_test_unit_key',
   RAZORPAY_KEY_SECRET: 'unit_test_secret',
+  RAZORPAY_WEBHOOK_SECRET: 'unit_webhook_secret',
 }));
 
 const razorpayRoute = require('../routes/razorpay');
@@ -36,15 +39,26 @@ describe('Razorpay Standard Web Checkout Integration Tests', () => {
 
   beforeAll(() => {
     app = express();
-    app.use(express.json());
+    app.use(
+      express.json({
+        verify: (req, res, buf) => {
+          req.rawBody = buf;
+        },
+      }),
+    );
     app.use('/api', razorpayRoute);
   });
 
-  describe('STEP 1: Backend - Create Order (/api/create-order)', () => {
-    beforeEach(() => {
-      mockCreateOrder.mockReset();
-    });
+  beforeEach(() => {
+    mockQuery.mockReset();
+    mockQuery.mockResolvedValue([]);
+    mockCreateOrder.mockReset();
+    mockFetchOrder.mockReset();
+    mockListOrders.mockReset();
+    mockUpdateUserPlan.mockReset();
+  });
 
+  describe('STEP 1: Backend - Create Order (/api/create-order)', () => {
     it('should reject requests with amount less than 100 paise with status 400', async () => {
       const res = await request(app)
         .post('/api/create-order')
@@ -192,8 +206,11 @@ describe('Razorpay Standard Web Checkout Integration Tests', () => {
         .update(`${orderId}|${paymentId}`)
         .digest('hex');
 
-      mockQuery.mockResolvedValueOnce([{ id: 7, price: 500 }]);
-      mockFetchOrder.mockResolvedValueOnce({ amount: 100, currency: 'INR' });
+      mockQuery
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ id: 7, price: 500 }])
+        .mockResolvedValueOnce([]);
+      mockFetchOrder.mockResolvedValueOnce({ amount: 100, currency: 'INR', status: 'paid' });
 
       await expect(
         razorpayService.verifyPayment({
@@ -204,10 +221,44 @@ describe('Razorpay Standard Web Checkout Integration Tests', () => {
           plan_id: 7,
         }),
       ).rejects.toMatchObject({
-        code: 'PLAN_AMOUNT_MISMATCH',
+        code: 'PLAN_PAYMENT_MISMATCH',
         statusCode: 400,
       });
       expect(mockUpdateUserPlan).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Razorpay webhook', () => {
+    it('rejects an invalid webhook signature', async () => {
+      const res = await request(app)
+        .post('/api/razorpay/webhook')
+        .set('x-razorpay-signature', 'invalid')
+        .send({ event: 'payment.failed' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('WEBHOOK_SIGNATURE_MISMATCH');
+    });
+
+    it('accepts and records a signed payment.failed webhook', async () => {
+      const body = JSON.stringify({
+        event: 'payment.failed',
+        payload: { payment: { entity: { id: 'pay_failed', order_id: 'order_failed' } } },
+      });
+      const signature = crypto
+        .createHmac('sha256', 'unit_webhook_secret')
+        .update(body)
+        .digest('hex');
+      mockQuery.mockResolvedValueOnce([{ id: 1, status: 'received' }]).mockResolvedValueOnce([]);
+
+      const res = await request(app)
+        .post('/api/razorpay/webhook')
+        .set('Content-Type', 'application/json')
+        .set('x-razorpay-signature', signature)
+        .set('x-razorpay-event-id', 'evt_failed_1')
+        .send(body);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ success: true, duplicate: false, event: 'payment.failed' });
     });
   });
 

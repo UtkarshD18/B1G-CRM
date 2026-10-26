@@ -1,17 +1,17 @@
-const crypto = require("crypto");
+const crypto = require('crypto');
 
-const appVersion = "3.0.1";
-const addON = [""];
+const appVersion = '3.0.1';
+const addON = [''];
 
 function envValue(...names) {
   for (const name of names) {
     const value = process.env[name];
-    if (value !== undefined && value !== "") {
+    if (value !== undefined && value !== '') {
       return value;
     }
   }
 
-  return "";
+  return '';
 }
 
 function numberValue(names, fallback) {
@@ -25,11 +25,11 @@ function boolValue(name, fallback = false) {
     return fallback;
   }
 
-  return value.toLowerCase() === "true";
+  return value.toLowerCase() === 'true';
 }
 
-const NODE_ENV = envValue("NODE_ENV") || "development";
-const isProduction = NODE_ENV === "production";
+const NODE_ENV = envValue('NODE_ENV') || 'development';
+const isProduction = NODE_ENV === 'production';
 
 function requiredSecret(name, aliases = []) {
   const value = envValue(name, ...aliases);
@@ -42,91 +42,95 @@ function requiredSecret(name, aliases = []) {
   }
 
   console.warn(`[config] ${name} is not set; using an ephemeral development secret.`);
-  return crypto.randomBytes(32).toString("hex");
+  return crypto.randomBytes(32).toString('hex');
 }
 
-const PORT = numberValue(["PORT"], 3010);
-const SOCKET_PORT = numberValue(["SOCKET_PORT"], 3002);
+const PORT = numberValue(['PORT'], 3010);
+const SOCKET_PORT = numberValue(['SOCKET_PORT'], 3002);
 
-const PGHOST = envValue("PGHOST", "DBHOST") || "127.0.0.1";
-const PGUSER = envValue("PGUSER", "DBUSER") || "omnicrm";
-const PGPASSWORD = envValue("PGPASSWORD", "DBPASS");
-const PGDATABASE = envValue("PGDATABASE", "DBNAME") || "omnicrm";
-const PGPORT = numberValue(["PGPORT", "DBPORT"], 5432);
-const DATABASE_URL = envValue("DATABASE_URL", "POSTGRES_URL");
-const PGSSL = boolValue("PGSSL", false);
+const PGHOST = envValue('PGHOST', 'DBHOST') || '127.0.0.1';
+const PGUSER = envValue('PGUSER', 'DBUSER') || 'omnicrm';
+const PGPASSWORD = envValue('PGPASSWORD', 'DBPASS');
+const PGDATABASE = envValue('PGDATABASE', 'DBNAME') || 'omnicrm';
+const PGPORT = numberValue(['PGPORT', 'DBPORT'], 5432);
+const DATABASE_URL = envValue('DATABASE_URL', 'POSTGRES_URL');
+const PGSSL = boolValue('PGSSL', false);
 
-const JWT_SECRET = requiredSecret("JWT_SECRET", ["JWTKEY"]);
-const JWT_EXPIRY = envValue("JWT_EXPIRY") || "7d";
-const REFRESH_TOKEN_SECRET = requiredSecret("REFRESH_TOKEN_SECRET", [
-  "JWT_REFRESH_SECRET",
-  "JWTKEY",
+const JWT_SECRET = requiredSecret('JWT_SECRET', ['JWTKEY']);
+const JWT_EXPIRY = envValue('JWT_EXPIRY') || '7d';
+const REFRESH_TOKEN_SECRET = requiredSecret('REFRESH_TOKEN_SECRET', [
+  'JWT_REFRESH_SECRET',
+  'JWTKEY',
 ]);
 
-const STRIPE_API_KEY = envValue("STRIPE_API_KEY");
-const STRIPE_WEBHOOK_SECRET = envValue("STRIPE_WEBHOOK_SECRET");
-const RAZORPAY_KEY_ID = envValue("RAZORPAY_KEY_ID");
-const RAZORPAY_KEY_SECRET = envValue("RAZORPAY_KEY_SECRET");
+const STRIPE_API_KEY = envValue('STRIPE_API_KEY');
+const STRIPE_WEBHOOK_SECRET = envValue('STRIPE_WEBHOOK_SECRET');
+const RAZORPAY_KEY_ID = envValue('RAZORPAY_KEY_ID');
+const RAZORPAY_KEY_SECRET = envValue('RAZORPAY_KEY_SECRET');
+const RAZORPAY_WEBHOOK_SECRET = envValue('RAZORPAY_WEBHOOK_SECRET');
 
-const SMTP_HOST = envValue("SMTP_HOST");
-const SMTP_PORT = numberValue(["SMTP_PORT"], 587);
-const SMTP_USER = envValue("SMTP_USER");
-const SMTP_PASSWORD = envValue("SMTP_PASSWORD");
-const SMTP_FROM_EMAIL = envValue("SMTP_FROM_EMAIL");
+const SMTP_HOST = envValue('SMTP_HOST');
+const SMTP_PORT = numberValue(['SMTP_PORT'], 587);
+const SMTP_USER = envValue('SMTP_USER');
+const SMTP_PASSWORD = envValue('SMTP_PASSWORD');
+const SMTP_FROM_EMAIL = envValue('SMTP_FROM_EMAIL');
 
-const META_VERIFY_TOKEN = envValue("META_VERIFY_TOKEN");
-const META_WEBHOOK_TOKEN = envValue("META_WEBHOOK_TOKEN");
-const WHATSAPP_API_TOKEN = envValue("WHATSAPP_API_TOKEN");
-const META_APP_ID = envValue("META_APP_ID");
-const META_APP_SECRET = envValue("META_APP_SECRET");
+const META_VERIFY_TOKEN = envValue('META_VERIFY_TOKEN');
+const META_WEBHOOK_TOKEN = envValue('META_WEBHOOK_TOKEN');
+const WHATSAPP_API_TOKEN = envValue('WHATSAPP_API_TOKEN');
+const META_APP_ID = envValue('META_APP_ID');
+const META_APP_SECRET = envValue('META_APP_SECRET');
 
-const REDIS_URL = envValue("REDIS_URL") || "redis://localhost:6379";
-const REDIS_ENABLED = boolValue("REDIS_ENABLED", false);
-const MOCK_META_DELIVERY = boolValue("MOCK_META_DELIVERY", false);
-const UNIFIED_AI_RUNTIME = boolValue("UNIFIED_AI_RUNTIME", false);
+const REDIS_URL = envValue('REDIS_URL') || 'redis://localhost:6379';
+const REDIS_ENABLED = boolValue('REDIS_ENABLED', false);
+const MOCK_META_DELIVERY = boolValue('MOCK_META_DELIVERY', false);
+const UNIFIED_AI_RUNTIME = boolValue('UNIFIED_AI_RUNTIME', false);
 
-const AWS_ACCESS_KEY = envValue("AWS_ACCESS_KEY");
-const AWS_SECRET_KEY = envValue("AWS_SECRET_KEY");
-const AWS_S3_BUCKET = envValue("AWS_S3_BUCKET") || "b1g-crm-media";
-const AWS_REGION = envValue("AWS_REGION") || "us-east-1";
-const S3_ENABLED = boolValue("S3_ENABLED", false);
+const AWS_ACCESS_KEY = envValue('AWS_ACCESS_KEY');
+const AWS_SECRET_KEY = envValue('AWS_SECRET_KEY');
+const AWS_S3_BUCKET = envValue('AWS_S3_BUCKET') || 'b1g-crm-media';
+const AWS_REGION = envValue('AWS_REGION') || 'us-east-1';
+const S3_ENABLED = boolValue('S3_ENABLED', false);
 
 const FRONTEND_URL =
-  envValue("FRONTEND_URL", "FRONTENDURI") || (isProduction ? "https://omnicrms.app" : "http://localhost:5173");
-const BACKEND_URL = envValue("BACKEND_URL", "BACKURI") || `http://localhost:${PORT}`;
+  envValue('FRONTEND_URL', 'FRONTENDURI') ||
+  (isProduction ? 'https://omnicrms.app' : 'http://localhost:5173');
+const BACKEND_URL = envValue('BACKEND_URL', 'BACKURI') || `http://localhost:${PORT}`;
 const defaultCorsOrigins = isProduction
-  ? [FRONTEND_URL, "https://omnicrms.app", "https://www.omnicrms.app",
-    "https://omnicrms-app.web.app", "https://omnicrms-app.firebaseapp.com"].join(",")
+  ? [
+      FRONTEND_URL,
+      'https://omnicrms.app',
+      'https://www.omnicrms.app',
+      'https://omnicrms-app.web.app',
+      'https://omnicrms-app.firebaseapp.com',
+    ].join(',')
   : FRONTEND_URL;
-const CORS_ORIGINS = (envValue("CORS_ORIGINS") || defaultCorsOrigins)
-  .split(",")
+const CORS_ORIGINS = (envValue('CORS_ORIGINS') || defaultCorsOrigins)
+  .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
-const API_BASE_URL = envValue("API_BASE_URL") || `http://localhost:${PORT}/api`;
-const STRIPE_LANG = envValue("STRIPE_LANG") || "en";
+const API_BASE_URL = envValue('API_BASE_URL') || `http://localhost:${PORT}/api`;
+const STRIPE_LANG = envValue('STRIPE_LANG') || 'en';
 
-const MAX_FILE_SIZE = numberValue(["MAX_FILE_SIZE"], 10 * 1024 * 1024);
-const UPLOAD_DIR = envValue("UPLOAD_DIR") || "./client/public/media";
+const MAX_FILE_SIZE = numberValue(['MAX_FILE_SIZE'], 10 * 1024 * 1024);
+const UPLOAD_DIR = envValue('UPLOAD_DIR') || './client/public/media';
 
-const TWILIO_ACCOUNT_SID = envValue("TWILIO_ACCOUNT_SID");
-const TWILIO_AUTH_TOKEN = envValue("TWILIO_AUTH_TOKEN");
-const TWILIO_PHONE_NUMBER = envValue("TWILIO_PHONE_NUMBER");
+const TWILIO_ACCOUNT_SID = envValue('TWILIO_ACCOUNT_SID');
+const TWILIO_AUTH_TOKEN = envValue('TWILIO_AUTH_TOKEN');
+const TWILIO_PHONE_NUMBER = envValue('TWILIO_PHONE_NUMBER');
 
-const RATE_LIMIT_WINDOW_MS = numberValue(
-  ["RATE_LIMIT_WINDOW_MS"],
-  15 * 60 * 1000
-);
-const RATE_LIMIT_MAX_REQUESTS = numberValue(["RATE_LIMIT_MAX_REQUESTS"], 1000);
+const RATE_LIMIT_WINDOW_MS = numberValue(['RATE_LIMIT_WINDOW_MS'], 15 * 60 * 1000);
+const RATE_LIMIT_MAX_REQUESTS = numberValue(['RATE_LIMIT_MAX_REQUESTS'], 1000);
 
-const LOG_LEVEL = envValue("LOG_LEVEL") || "info";
+const LOG_LEVEL = envValue('LOG_LEVEL') || 'info';
 
 const FEATURES = {
-  ENABLE_WHATSAPP: envValue("ENABLE_WHATSAPP") !== "false",
-  ENABLE_INSTAGRAM: envValue("ENABLE_INSTAGRAM") !== "false",
-  ENABLE_PAYMENTS: envValue("ENABLE_PAYMENTS") !== "false",
-  ENABLE_BROADCAST: envValue("ENABLE_BROADCAST") !== "false",
-  ENABLE_CHATBOT: envValue("ENABLE_CHATBOT") !== "false",
-  ENABLE_API_KEYS: envValue("ENABLE_API_KEYS") !== "false",
+  ENABLE_WHATSAPP: envValue('ENABLE_WHATSAPP') !== 'false',
+  ENABLE_INSTAGRAM: envValue('ENABLE_INSTAGRAM') !== 'false',
+  ENABLE_PAYMENTS: envValue('ENABLE_PAYMENTS') !== 'false',
+  ENABLE_BROADCAST: envValue('ENABLE_BROADCAST') !== 'false',
+  ENABLE_CHATBOT: envValue('ENABLE_CHATBOT') !== 'false',
+  ENABLE_API_KEYS: envValue('ENABLE_API_KEYS') !== 'false',
 };
 
 module.exports = {
@@ -149,6 +153,7 @@ module.exports = {
   STRIPE_WEBHOOK_SECRET,
   RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET,
+  RAZORPAY_WEBHOOK_SECRET,
   SMTP_HOST,
   SMTP_PORT,
   SMTP_USER,
@@ -182,5 +187,5 @@ module.exports = {
   FEATURES,
   MOCK_META_DELIVERY,
   UNIFIED_AI_RUNTIME,
-  FLOW_LOCK_TIMEOUT: numberValue(["FLOW_LOCK_TIMEOUT"], 15), // minutes
+  FLOW_LOCK_TIMEOUT: numberValue(['FLOW_LOCK_TIMEOUT'], 15), // minutes
 };

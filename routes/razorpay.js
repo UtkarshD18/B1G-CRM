@@ -40,6 +40,10 @@ router.post('/create-order', optionalAuth, razorpayController.createOrder);
  */
 router.post('/verify-payment', optionalAuth, razorpayController.verifyPayment);
 
+// Razorpay retries non-2xx deliveries. Signature verification uses req.rawBody,
+// which is preserved by the global express.json verify hook.
+router.post('/razorpay/webhook', razorpayController.webhook);
+
 /**
  * Public configuration endpoint for Frontend
  * GET /api/razorpay/config

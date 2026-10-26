@@ -1,5 +1,6 @@
 const { query } = require('../database/dbpromise.js');
 const { sendEmail } = require('../functions/helpers/notificationHelper.js');
+const razorpayService = require('./razorpayService.js');
 
 // ─── Web Configuration ────────────────────────────────────────────────────────
 
@@ -38,6 +39,15 @@ async function updatePaymentGateway({
   pay_mercadopago_key,
   mercadopago_active,
 }) {
+  const existingRows = await query('SELECT rz_id, rz_key FROM web_private LIMIT 1', []);
+  const existing = existingRows[0] || {};
+  const finalRazorpayId = String(rz_id || existing.rz_id || '').trim();
+  const finalRazorpaySecret = String(rz_key || existing.rz_key || '').trim();
+
+  if (Number(rz_active || 0) > 0) {
+    await razorpayService.validateCredentials(finalRazorpayId, finalRazorpaySecret);
+  }
+
   await query(
     `UPDATE web_private SET  
             pay_offline_id = ?, 
@@ -69,8 +79,8 @@ async function updatePaymentGateway({
       pay_paypal_id,
       pay_paypal_key,
       paypal_active,
-      rz_id,
-      rz_key,
+      finalRazorpayId,
+      finalRazorpaySecret,
       rz_active,
       pay_paystack_id,
       pay_paystack_key,

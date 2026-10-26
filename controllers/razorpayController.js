@@ -9,13 +9,15 @@ const logger = require('../utils/logger');
  */
 async function createOrder(req, res) {
   try {
-    const { amount, currency, receipt, notes } = req.body || {};
+    const { amount, currency, receipt, notes, plan_id } = req.body || {};
 
     const order = await razorpayService.createOrder({
       amount,
       currency,
       receipt,
       notes,
+      uid: req.decode?.uid,
+      plan_id,
     });
 
     return res.status(200).json({
@@ -40,6 +42,30 @@ async function createOrder(req, res) {
       error: err.message || 'Failed to create Razorpay order',
       code: err.code || 'ORDER_CREATION_FAILED',
       details: err.details || null,
+    });
+  }
+}
+
+async function webhook(req, res) {
+  try {
+    const result = await razorpayService.processWebhook({
+      rawBody: req.rawBody,
+      signature: req.get('x-razorpay-signature'),
+      eventId: req.get('x-razorpay-event-id'),
+      payload: req.body,
+    });
+    return res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    const status = err.statusCode || 500;
+    logger.warn('Razorpay webhook processing failed', {
+      message: err.message,
+      statusCode: status,
+      code: err.code,
+    });
+    return res.status(status).json({
+      success: false,
+      error: err.message || 'Webhook processing failed',
+      code: err.code || 'WEBHOOK_PROCESSING_FAILED',
     });
   }
 }
@@ -129,4 +155,5 @@ module.exports = {
   createOrder,
   verifyPayment,
   getConfig,
+  webhook,
 };

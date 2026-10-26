@@ -14,7 +14,17 @@ async function setCredential(name, value) {
   });
   if (!response.ok) throw new Error(`Render setup request failed: HTTP ${response.status}`);
 }
+async function main() {
 try {
+  for (const [name, value] of Object.entries({
+    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+    RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
+  })) {
+    if (!value) throw new Error(`Required deployment secret ${name} is missing.`);
+    await setCredential(name, value);
+  }
+  console.log('Razorpay deployment credentials synchronized to Render.');
   if (email && password) {
     for (const [name, value] of Object.entries({ BOOTSTRAP_ADMIN_EMAIL: email, BOOTSTRAP_ADMIN_PASSWORD: password })) {
       await setCredential(name, value);
@@ -41,3 +51,9 @@ try {
   for (const name of configured) await setCredential(name);
   if (configured.length) console.log('Temporary administrator setup credentials removed from Render configuration.');
 }
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});

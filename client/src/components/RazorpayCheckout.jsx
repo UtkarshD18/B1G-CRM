@@ -60,16 +60,6 @@ export function RazorpayCheckoutButton({
       setErrorMessage('');
       setStatusMessage('Initializing checkout...');
 
-      // Get public Key ID (KEY_SECRET is NEVER exposed to frontend)
-      const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
-      if (!keyId) {
-        const msg = 'Razorpay Key ID not configured. Please set VITE_RAZORPAY_KEY_ID in .env';
-        setErrorMessage(msg);
-        if (onError) onError(new Error(msg));
-        setLoading(false);
-        return;
-      }
-
       // Ensure SDK script is ready
       const isLoaded = await ensureRazorpayLoaded();
       if (!isLoaded || !window.Razorpay) {
@@ -90,6 +80,7 @@ export function RazorpayCheckoutButton({
           currency,
           receipt: `rcpt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
           notes,
+          plan_id: plan?.id || plan || undefined,
         },
       });
 
@@ -103,6 +94,14 @@ export function RazorpayCheckoutButton({
       }
 
       const orderId = orderResponse.order_id || orderResponse.id;
+      const keyId = orderResponse.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!keyId) {
+        const msg = 'Razorpay Key ID not configured. Please contact your administrator.';
+        setErrorMessage(msg);
+        if (onError) onError(new Error(msg));
+        setLoading(false);
+        return;
+      }
       setStatusMessage('Opening payment window...');
 
       // STEP 2: Configure Razorpay modal with order_id

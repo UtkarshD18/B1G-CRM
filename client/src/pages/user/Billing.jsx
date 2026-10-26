@@ -117,12 +117,6 @@ function UserBillingPage() {
     setCheckoutPlanId(plan.id);
     setStatus('Initializing Razorpay checkout...');
     try {
-      const rzId = paymentDetails.rz_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
-      if (!rzId) {
-        setStatus('Razorpay credentials not configured. Please contact your admin.');
-        return;
-      }
-
       const resScript = await loadRazorpayScript();
       if (!resScript || !window.Razorpay) {
         setStatus('Failed to load Razorpay SDK. Please check your connection.');
@@ -138,11 +132,7 @@ function UserBillingPage() {
           amount: amountPaise,
           currency: 'INR',
           receipt: `rcpt_plan_${plan.id}_${Date.now()}`,
-          notes: {
-            planId: plan.id,
-            planTitle: plan.title,
-            uid: user?.uid,
-          },
+          plan_id: plan.id,
         },
       });
 
@@ -152,6 +142,11 @@ function UserBillingPage() {
       }
 
       const orderId = orderRes.order_id || orderRes.id;
+      const rzId = orderRes.key_id || paymentDetails.rz_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!rzId) {
+        setStatus('Razorpay credentials not configured. Please contact your admin.');
+        return;
+      }
       setStatus('Opening Razorpay checkout modal...');
 
       // 2. Open Razorpay modal with order_id
