@@ -2,6 +2,10 @@
 
 A scalable, multi-tenant B2B SaaS CRM focusing on WhatsApp Automation, Omnichannel Inbox, Chatbots, and Agent Management.
 
+## Hosted Project
+
+- **Live application:** [https://omnicrms.app/](https://omnicrms.app/)
+
 ## Project Documentation
 
 - [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md): Setup and deployment guidelines.
@@ -33,7 +37,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-PostgreSQL is started by the `postgres` service in `docker-compose.yml`. On the first run it loads `database/postgres-local-schema.sql`. The app connects to that database through environment variables read by `env.js` and used by `database/config.js`.
+PostgreSQL is started by the `postgres` service in `docker-compose.yml`. On the first run it loads `database/postgres-local-schema.sql`. The app connects to that database through environment variables.
 
 Access points after Docker starts:
 
@@ -82,8 +86,8 @@ Access points after Docker starts:
 |-- database/        PostgreSQL schema and connection helpers
 |-- functions/       Backend function handlers
 |-- helper/          Active helper modules for inbox, websockets, chatbots, and addons
-|-- loops/           Campaign and background loop logic
-|-- emails/          Email return helpers
+|-- loops/            Campaign and background loop logic
+|-- emails/           Email return helpers
 |-- languages/       Translation assets
 |-- flow-json/       Flow builder node and edge storage
 |-- server.js        Express application bootstrap
