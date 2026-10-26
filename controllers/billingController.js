@@ -88,23 +88,38 @@ async function createStripeSession(req, res, next) {
 
 async function payWithRazorpay(req, res, next) {
   try {
-    const { rz_payment_id, plan, amount } = req.body;
-    const result = await billingService.processRazorpayPayment({
-      uid: req.decode.uid,
+    const {
       rz_payment_id,
+      razorpay_payment_id,
+      rz_order_id,
+      razorpay_order_id,
+      razorpay_signature,
+      signature,
+      plan,
+      amount,
+    } = req.body;
+
+    const result = await billingService.processRazorpayPayment({
+      uid: req.decode?.uid,
+      rz_payment_id: razorpay_payment_id || rz_payment_id,
+      rz_order_id: razorpay_order_id || rz_order_id,
+      razorpay_signature: razorpay_signature || signature,
       plan,
       amount,
     });
+
     if (!result.success) {
-      return res.json({ success: false, msg: result.msg });
+      return res.status(400).json({ success: false, msg: result.msg, error: result.msg });
     }
-    return res.json({
+    return res.status(200).json({
       success: true,
       msg: result.msg,
+      order_id: result.order_id,
+      payment_id: result.payment_id,
     });
   } catch (err) {
     console.log(err);
-    return res.json({ msg: err.toString(), err });
+    return res.status(500).json({ success: false, msg: err.toString(), err });
   }
 }
 

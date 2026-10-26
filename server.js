@@ -146,6 +146,9 @@ app.use(
 const userRoute = require('./routes/user');
 app.use('/api/user', userRoute);
 
+const razorpayRoute = require('./routes/razorpay');
+app.use('/api', razorpayRoute);
+
 const inboxRouter = require('./routes/inbox');
 const qrRouter = require('./routes/qr');
 const adminRouter = require('./routes/admin');

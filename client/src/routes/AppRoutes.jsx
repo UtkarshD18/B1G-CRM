@@ -46,6 +46,7 @@ import UserWebsiteManagerPage from '../pages/user/WebsiteManager';
 import UserCrmPipelinePage from '../pages/user/CrmPipeline';
 import UserSupervisorDashboardPage from '../pages/user/SupervisorDashboard';
 import UserWebhookLogsPage from '../pages/user/WebhookLogs';
+import RazorpayCheckoutPage from '../pages/RazorpayCheckoutPage';
 
 export const ADMIN_REFERENCE_ROUTES = [
   { path: 'dashboard', component: 'dashboard' },
@@ -190,6 +191,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<PublicSite />} />
+      <Route path="/checkout" element={<RazorpayCheckoutPage />} />
       <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
       <Route path="/signin" element={<PortalChooser />} />
       <Route path="/login" element={<UnifiedLoginPage />} />
