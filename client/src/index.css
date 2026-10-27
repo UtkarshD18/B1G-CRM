@@ -35,19 +35,21 @@ body.dark-theme {
   --bg-canvas: #0a0a0a;
   --bg-primary: #0a0a0a;
   --bg-card: #121212;
-  --bg-panel: #171717;
-  --border-color: #242424;
-  --border-subtle: #1e1e1e;
-  --accent-primary: #ffffff;
-  --accent-emerald: #10B981;
-  --text-primary: #ededed;
-  --text-secondary: #888888;
-  --text-muted: #666666;
-  --header-bg: rgba(10, 10, 10, 0.85);
-  --header-border: rgba(255, 255, 255, 0.08);
+  --bg-panel: #1b1b1b;
+  --border-color: #343434;
+  --border-subtle: #292929;
+  --accent-primary: #f5f7fa;
+  --accent-emerald: #34d399;
+  --text-primary: #f5f7fa;
+  --text-secondary: #c4cbd3;
+  --text-muted: #9aa4af;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --header-bg: rgba(10, 10, 10, 0.92);
+  --header-border: rgba(255, 255, 255, 0.14);
   --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
 
-  color: #ededed;
+  color: #f5f7fa;
   background-color: #0a0a0a;
 }
 
@@ -72,14 +74,29 @@ body {
 
 body.dark-theme {
   background-color: #0a0a0a;
-  color: #ededed;
+  color: #f5f7fa;
 }
 
 body,
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent-emerald);
+  outline-offset: 2px;
 }
 
 a {
@@ -98,4 +115,108 @@ ul {
 img {
   max-width: 100%;
   display: block;
+}
+
+/* Portal dark-mode contrast fixes. These overrides also cover legacy hard-coded colors in App.css. */
+body.dark-theme .portal-shell,
+body.dark-theme .portal-main,
+body.dark-theme .page-stack {
+  color: var(--text-primary);
+}
+
+body.dark-theme .portal-main h1,
+body.dark-theme .portal-main h2,
+body.dark-theme .portal-main h3,
+body.dark-theme .portal-main h4,
+body.dark-theme .portal-main strong,
+body.dark-theme .portal-main label,
+body.dark-theme .portal-main .plan-name,
+body.dark-theme .portal-main .dashboard-card strong,
+body.dark-theme .portal-main .panel-header h2 {
+  color: var(--text-primary) !important;
+}
+
+body.dark-theme .portal-main p,
+body.dark-theme .portal-main span,
+body.dark-theme .portal-main .status-line,
+body.dark-theme .portal-main .muted-copy,
+body.dark-theme .portal-main .plan-period,
+body.dark-theme .portal-main .dashboard-label,
+body.dark-theme .portal-main .meta-block p {
+  color: var(--text-secondary) !important;
+}
+
+body.dark-theme .portal-main .panel,
+body.dark-theme .portal-main .table-panel,
+body.dark-theme .portal-main .dashboard-card,
+body.dark-theme .portal-main .pricing-card,
+body.dark-theme .portal-main .inbox-rail,
+body.dark-theme .portal-main .wa-conversation-panel,
+body.dark-theme .portal-main .inbox-context-panel,
+body.dark-theme .portal-main .chat-list-item,
+body.dark-theme .portal-main .wa-chat-row {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--card-shadow);
+}
+
+body.dark-theme .portal-main input,
+body.dark-theme .portal-main textarea,
+body.dark-theme .portal-main select,
+body.dark-theme .portal-main .copy-chip {
+  background: var(--bg-panel) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark-theme .portal-main input::placeholder,
+body.dark-theme .portal-main textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+
+body.dark-theme .portal-main .primary-button,
+body.dark-theme .portal-main .secondary-button,
+body.dark-theme .portal-main .mini-button,
+body.dark-theme .portal-main .danger-button,
+body.dark-theme .portal-main button {
+  visibility: visible;
+  opacity: 1;
+  text-shadow: none;
+}
+
+body.dark-theme .portal-main .primary-button {
+  background: #10b981 !important;
+  border: 1px solid #34d399 !important;
+  color: #06130f !important;
+}
+
+body.dark-theme .portal-main .primary-button:hover {
+  background: #34d399 !important;
+  color: #06130f !important;
+}
+
+body.dark-theme .portal-main .secondary-button,
+body.dark-theme .portal-main .mini-button {
+  background: #252525 !important;
+  border: 1px solid #4a4a4a !important;
+  color: #f5f7fa !important;
+}
+
+body.dark-theme .portal-main .secondary-button:hover,
+body.dark-theme .portal-main .mini-button:hover {
+  background: #333333 !important;
+  border-color: #707070 !important;
+  color: #ffffff !important;
+}
+
+body.dark-theme .portal-main .channel-tab,
+body.dark-theme .portal-main .status-chip,
+body.dark-theme .portal-main th {
+  color: var(--text-primary) !important;
+}
+
+body.dark-theme .portal-main th {
+  background: var(--bg-panel) !important;
 }
