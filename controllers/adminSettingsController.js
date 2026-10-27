@@ -30,7 +30,11 @@ async function updatePaymentGateway(req, res, next) {
     return res.json({ success: true, msg: result.msg });
   } catch (err) {
     console.log(err);
-    return res.json({ success: false, msg: 'something went wrong' });
+    return res.status(err.statusCode || 500).json({
+      success: false,
+      msg: err.message || 'Something went wrong',
+      code: err.code || 'PAYMENT_GATEWAY_UPDATE_FAILED',
+    });
   }
 }
 

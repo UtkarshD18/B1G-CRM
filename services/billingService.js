@@ -3,6 +3,7 @@ const env = require('../env.js');
 const Stripe = require('stripe');
 const randomstring = require('randomstring');
 const billingHelper = require('../functions/helpers/billingHelper');
+const razorpayService = require('./razorpayService');
 
 async function getPlanDetails(planId) {
   const data = await query(`SELECT * FROM plan WHERE id = ?`, [planId]);
@@ -15,12 +16,22 @@ async function getPlanDetails(planId) {
 
 async function getPaymentDetails(uid) {
   const resp = await query(`SELECT * FROM web_private`, []);
-  let data = resp[0];
+  let data = resp[0] || {};
   const [userData] = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
 
   if (data) {
+    // Mask sensitive gateway secret keys before sending to frontend
+    data.rz_key = '';
     data.pay_stripe_key = '';
     data.pay_mercadopago_key = '';
+    data.pay_paypal_key = '';
+    data.pay_paystack_key = '';
+
+    // If Razorpay is configured in environment, activate and expose public key
+    if (env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID) {
+      data.rz_id = data.rz_id || env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+      data.rz_active = data.rz_active || 1;
+    }
   }
 
   return { success: true, data, userData };
@@ -83,30 +94,71 @@ async function createStripeSession({ uid, planId }) {
   return { success: true, session };
 }
 
-async function processRazorpayPayment({ uid, rz_payment_id, plan, amount }) {
-  if (!rz_payment_id || !plan || !amount) {
+async function processRazorpayPayment({
+  uid,
+  rz_payment_id,
+  razorpay_payment_id,
+  rz_order_id,
+  razorpay_order_id,
+  razorpay_signature,
+  signature,
+  plan,
+  amount,
+}) {
+  const paymentId = razorpay_payment_id || rz_payment_id;
+  const orderId = razorpay_order_id || rz_order_id;
+  const sig = razorpay_signature || signature;
+
+  if (!paymentId || !plan) {
     return { success: false, msg: 'please send required fields' };
   }
 
-  const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan?.id]);
+  const getPlan = await query(`SELECT * FROM plan WHERE id = ?`, [plan?.id || plan]);
   if (getPlan.length < 1) {
     return { success: false, msg: 'Invalid plan found' };
   }
 
+  // Standard Checkout flow: verify HMAC-SHA256 signature when order_id and signature are present
+  if (orderId && sig) {
+    try {
+      const verifyResult = await razorpayService.verifyPayment({
+        order_id: orderId,
+        payment_id: paymentId,
+        signature: sig,
+        uid,
+        plan_id: getPlan[0].id,
+      });
+
+      return {
+        success: true,
+        msg: 'Thank you for your payment. You are good to go now.',
+        order_id: verifyResult.order_id,
+        payment_id: verifyResult.payment_id,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        msg: err.message || 'Payment signature verification failed',
+      };
+    }
+  }
+
+  // Fallback legacy capture flow (if order was not pre-created)
   const [webPrivate] = await query(`SELECT * from web_private`, []);
   const [webPublic] = await query(`SELECT * FROM web_public`, []);
 
-  const rzId = webPrivate?.rz_id;
-  const rzKeys = webPrivate?.rz_key;
+  const rzId = webPrivate?.rz_id || env.RAZORPAY_KEY_ID;
+  const rzKeys = webPrivate?.rz_key || env.RAZORPAY_KEY_SECRET;
 
   if (!rzId || !rzKeys) {
     return { success: false, msg: 'Please fill your razorpay credentials!' };
   }
 
-  const finalamt = (parseInt(amount) / parseInt(webPublic.exchange_rate || 1)) * 80;
+  const finalamt =
+    (parseInt(amount || getPlan[0]?.price || 0) / parseInt(webPublic?.exchange_rate || 1)) * 80;
 
   const resp = await billingHelper.rzCapturePayment(
-    rz_payment_id,
+    paymentId,
     Math.round(finalamt) * 100,
     rzId,
     rzKeys,
@@ -120,7 +172,7 @@ async function processRazorpayPayment({ uid, rz_payment_id, plan, amount }) {
   await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
     uid,
     'RAZORPAY',
-    plan?.price,
+    plan?.price || getPlan[0]?.price,
     JSON.stringify(resp),
   ]);
 

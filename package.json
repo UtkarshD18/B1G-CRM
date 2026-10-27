@@ -63,6 +63,7 @@
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "randomstring": "^1.2.3",
+    "razorpay": "^2.9.8",
     "socket.io": "^4.7.4",
     "stripe": "^12.13.0",
     "swagger-jsdoc": "^6.3.0",

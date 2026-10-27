@@ -91,6 +91,20 @@ function UserBillingPage() {
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const existingScript = document.querySelector(
+        'script[src="https://checkout.razorpay.com/v1/checkout.js"]',
+      );
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve(true), { once: true });
+        existingScript.addEventListener('error', () => resolve(false), { once: true });
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => resolve(true);
@@ -101,51 +115,85 @@ function UserBillingPage() {
 
   async function startRazorpayCheckout(plan) {
     setCheckoutPlanId(plan.id);
-    setStatus('Initializing Razorpay...');
+    setStatus('Initializing Razorpay checkout...');
     try {
-      const rzId = paymentDetails.rz_id;
-      if (!rzId) {
-        setStatus('Razorpay credentials not configured. Please contact your admin.');
-        return;
-      }
-
       const resScript = await loadRazorpayScript();
-      if (!resScript) {
+      if (!resScript || !window.Razorpay) {
         setStatus('Failed to load Razorpay SDK. Please check your connection.');
         return;
       }
 
+      // 1. Create order on backend (amount in paise, min 100 paise)
+      const amountPaise = Math.max(100, Math.round(Number(plan.price || 0) * 100));
+      const orderRes = await apiRequest('/api/create-order', {
+        method: 'POST',
+        token: tokens.user,
+        body: {
+          amount: amountPaise,
+          currency: 'INR',
+          receipt: `rcpt_plan_${plan.id}_${Date.now()}`,
+          plan_id: plan.id,
+        },
+      });
+
+      if (!orderRes || (!orderRes.order_id && !orderRes.id)) {
+        setStatus(orderRes?.error || 'Unable to create payment order. Please try again.');
+        return;
+      }
+
+      const orderId = orderRes.order_id || orderRes.id;
+      const rzId = orderRes.key_id || paymentDetails.rz_id || import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!rzId) {
+        setStatus('Razorpay credentials not configured. Please contact your admin.');
+        return;
+      }
+      setStatus('Opening Razorpay checkout modal...');
+
+      // 2. Open Razorpay modal with order_id
       const options = {
         key: rzId,
-        amount: Math.round(Number(plan.price || 0) * 100),
-        currency: 'INR',
+        amount: orderRes.amount || amountPaise,
+        currency: orderRes.currency || 'INR',
         name: 'OMNI CRM',
         description: plan.title,
+        order_id: orderId,
         handler: async function (response) {
-          setStatus('Verifying Razorpay payment...');
+          // 3. Receive razorpay_payment_id, razorpay_order_id, razorpay_signature
+          // Send all three to verify endpoint
+          setStatus('Verifying payment signature...');
           try {
-            const verifyRes = await apiRequest('/api/user/pay_with_rz', {
+            const verifyRes = await apiRequest('/api/verify-payment', {
               method: 'POST',
               token: tokens.user,
               body: {
-                rz_payment_id: response.razorpay_payment_id,
-                plan: plan,
-                amount: plan.price,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan: plan.id,
               },
             });
+
             if (verifyRes?.success) {
-              setStatus('Payment successful!');
+              setStatus('Payment verified successfully! Your plan is activated.');
               loadBilling();
             } else {
-              setStatus(verifyRes?.msg || 'Payment verification failed');
+              setStatus(
+                verifyRes?.error || verifyRes?.msg || 'Payment signature verification failed.',
+              );
             }
           } catch (err) {
-            setStatus('Payment verification failed');
+            setStatus('Payment verification failed. Please contact support.');
           }
+        },
+        modal: {
+          ondismiss: function () {
+            setStatus('Payment cancelled by user');
+          },
         },
         prefill: {
           name: user?.name || '',
           email: user?.email || '',
+          contact: user?.mobile_with_country_code || '',
         },
         theme: {
           color: '#1ea085',
@@ -153,8 +201,13 @@ function UserBillingPage() {
       };
 
       const rzp = new window.Razorpay(options);
+
+      rzp.on('payment.failed', function (resp) {
+        const desc = resp.error?.description || resp.error?.reason || 'Payment failed';
+        setStatus(`Payment failed: ${desc}`);
+      });
+
       rzp.open();
-      setStatus('');
     } catch (err) {
       setStatus('Unable to open Razorpay checkout window.');
     } finally {
@@ -271,7 +324,10 @@ function UserBillingPage() {
         {plans.map((plan) => {
           const isTrial = Number(plan.is_trial || 0) > 0 || Number(plan.price || 0) === 0;
           const isLoading = checkoutPlanId === plan.id;
-          const rzActive = Number(paymentDetails.rz_active || 0) > 0;
+          const rzActive =
+            Number(paymentDetails.rz_active || 0) > 0 ||
+            Boolean(paymentDetails.rz_id) ||
+            Boolean(import.meta.env.VITE_RAZORPAY_KEY_ID);
           const offlineActive = Number(paymentDetails.offline_active || 0) > 0;
 
           return (

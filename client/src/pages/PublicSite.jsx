@@ -346,6 +346,9 @@ function PublicSite() {
           <a href="#pricing" className="nav-link-item">
             Pricing
           </a>
+          <Link to="/checkout" className="nav-link-item">
+            Razorpay Pay
+          </Link>
           <Link to="/signin" className="nav-link-item">
             Sign in
           </Link>

@@ -36,6 +36,12 @@ services:
         value: https://omnicrms-api.onrender.com/api
       - key: CORS_ORIGINS
         value: https://omnicrms.app,https://www.omnicrms.app,https://omnicrms-app.web.app,https://omnicrms-app.firebaseapp.com
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
 databases:
   - name: omnicrms-db
     plan: free
