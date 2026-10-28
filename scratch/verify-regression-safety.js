@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../database/dbpromise.js');
 const env = require('../env');
 
-const BASE_URL = 'http://127.0.0.1:3010/api';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3010/api';
 
 async function runRegression() {
   console.log('=== PHASE 3 — SECURITY REGRESSION TEST ===\n');
@@ -137,6 +137,10 @@ async function runRegression() {
   } else {
     console.log('\n❌ SECURITY REGRESSION TESTS FAILED!');
   }
+  return passed;
 }
 
-runRegression();
+runRegression()
+  .then((passed) => { process.exitCode = passed ? 0 : 1; })
+  .catch((error) => { console.error(error); process.exitCode = 1; })
+  .finally(() => require('../database/config').end());

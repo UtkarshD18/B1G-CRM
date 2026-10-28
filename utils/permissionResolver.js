@@ -1,4 +1,5 @@
-const { query } = require("../database/dbpromise");
+const { query } = require('../database/dbpromise');
+const legacyMap = require('./legacyPermissions');
 
 // In-memory cache for user permissions
 // Structure: { [uid]: { permissions: Set<string>, expiresAt: number } }
@@ -30,9 +31,9 @@ async function loadPermissionsFromDB(uid) {
        JOIN role_permissions rp ON ur.role_id = rp.role_id
        JOIN permissions p ON rp.permission_id = p.id
        WHERE ur.uid = ?`,
-      [uid]
+      [uid],
     );
-    rolePermissions.forEach(row => permissions.add(row.key));
+    rolePermissions.forEach((row) => permissions.add(row.key));
 
     // 2. Get permission overrides from user_permissions overrides table
     const overridePermissions = await query(
@@ -40,43 +41,41 @@ async function loadPermissionsFromDB(uid) {
        FROM user_permissions up
        JOIN permissions p ON up.permission_id = p.id
        WHERE up.uid = ?`,
-      [uid]
+      [uid],
     );
-    overridePermissions.forEach(row => permissions.add(row.key));
+    overridePermissions.forEach((row) => permissions.add(row.key));
 
     // 3. Fallback/Backward Compatibility: If user is not yet mapped in user_roles,
     // look up from user or agents table directly to assign defaults
     if (permissions.size === 0) {
       // Check user table
-      const users = await query("SELECT role FROM \"user\" WHERE uid = ?", [uid]);
+      const users = await query('SELECT role FROM "user" WHERE uid = ?', [uid]);
       if (users.length > 0) {
         // Workspace Owner gets all system template permissions
         const systemOwnerPerms = await query(
           `SELECT p.key FROM role_permissions rp
            JOIN roles r ON rp.role_id = r.id
            JOIN permissions p ON rp.permission_id = p.id
-           WHERE r.uid IS NULL AND r.name = 'Owner'`
+           WHERE r.uid IS NULL AND r.name = 'Owner'`,
         );
-        systemOwnerPerms.forEach(row => permissions.add(row.key));
+        systemOwnerPerms.forEach((row) => permissions.add(row.key));
       } else {
         // Check agents table
-        const agents = await query("SELECT owner_uid, permissions FROM agents WHERE uid = ?", [uid]);
+        const agents = await query('SELECT owner_uid, permissions FROM agents WHERE uid = ?', [
+          uid,
+        ]);
         if (agents.length > 0) {
           // Parse legacy json array of permissions from agent profile
           try {
-            const legacyPerms = JSON.parse(agents[0].permissions || "[]");
-            legacyPerms.forEach(p => permissions.add(p));
+            const raw = agents[0].permissions;
+            const legacyPerms = Array.isArray(raw) ? raw : JSON.parse(raw || '[]');
+            if (!Array.isArray(legacyPerms)) throw new Error('Agent permissions must be an array');
+            legacyPerms.forEach((p) => permissions.add(legacyMap[p] || p));
           } catch (e) {
             console.error(`Failed to parse legacy permissions for agent ${uid}:`, e);
           }
-          // Also give Agent role default permissions
-          const systemAgentPerms = await query(
-            `SELECT p.key FROM role_permissions rp
-             JOIN roles r ON rp.role_id = r.id
-             JOIN permissions p ON rp.permission_id = p.id
-             WHERE r.uid IS NULL AND r.name = 'Agent'`
-          );
-          systemAgentPerms.forEach(row => permissions.add(row.key));
+          // Role grants must come from an explicit user_roles assignment above.
+          // Being an agent alone must not add undeclared permissions.
         }
       }
     }
@@ -103,10 +102,10 @@ async function hasPermission(uid, permission) {
 
   // Load from database if cache missed or expired
   const permissions = await loadPermissionsFromDB(uid);
-  
+
   permissionCache[uid] = {
     permissions,
-    expiresAt: now + CACHE_DURATION_MS
+    expiresAt: now + CACHE_DURATION_MS,
   };
 
   return permissions.has(permission);
@@ -115,5 +114,5 @@ async function hasPermission(uid, permission) {
 module.exports = {
   hasPermission,
   invalidatePermissionCache,
-  permissionCache
+  permissionCache,
 };

@@ -99,9 +99,9 @@ const runTest = async () => {
     const tempAgentUid = 'inactive-agent-uid-' + Date.now();
     const tempAgentEmail = 'inactive-agent@example.com';
     await query(
-      `INSERT INTO agents (owner_uid, uid, name, email, password, role, is_active)
-       VALUES (?, ?, ?, ?, ?, 'agent', 0)`,
-      [userUid, tempAgentUid, 'Inactive Agent', tempAgentEmail, 'hashedpassword']
+      `INSERT INTO agents (owner_uid, uid, name, email, password, role, is_active, permissions)
+       VALUES (?, ?, ?, ?, ?, 'agent', 0, ?)`,
+      [userUid, tempAgentUid, 'Inactive Agent', tempAgentEmail, 'hashedpassword', JSON.stringify(['inbox.read'])]
     );
 
     const inactiveAgentToken = jwt.sign(

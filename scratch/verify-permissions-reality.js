@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../database/dbpromise.js');
 const env = require('../env');
 
-const BASE_URL = 'http://127.0.0.1:3010/api';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:3010/api';
 
 const ALL_PERMISSIONS = [
   'inbox_access', 'task_access', 'contacts_access', 'kanban_access',
@@ -112,7 +112,8 @@ async function runAudit() {
       console.log(`  ❌ Agent A: Unexpectedly ALLOWED`);
       passed = false;
     } catch (err) {
-      console.log(`  ✅ Agent A: Denied as expected (Status: ${err.response?.status})`);
+      if (err.response?.status !== 403) passed = false;
+      console.log(`  Agent A denied request status: ${err.response?.status}`);
     }
 
     // Test Agent B (Deny)
@@ -123,7 +124,8 @@ async function runAudit() {
       console.log(`  ❌ Agent B: Unexpectedly ALLOWED`);
       passed = false;
     } catch (err) {
-      console.log(`  ✅ Agent B: Denied as expected (Status: ${err.response?.status})`);
+      if (err.response?.status !== 403) passed = false;
+      console.log(`  Agent B denied request status: ${err.response?.status}`);
     }
 
     // Test Agent C (Allow)
@@ -131,7 +133,8 @@ async function runAudit() {
       const res = await axios[tc.method](`${BASE_URL}${tc.endpoint}`, {
         headers: { Authorization: `Bearer ${tokenC}` }
       });
-      console.log(`  ✅ Agent C: Allowed as expected (Success: ${res.data?.success})`);
+      if (res.data?.success !== true) passed = false;
+      console.log(`  Agent C allowed response success: ${res.data?.success}`);
     } catch (err) {
       console.log(`  ❌ Agent C: Unexpectedly Denied (Status: ${err.response?.status}, Msg: ${err.response?.data?.msg})`);
       passed = false;
@@ -147,6 +150,10 @@ async function runAudit() {
   } else {
     console.log('\n❌ AGENT PERMISSION REALITY TESTS FAILED!');
   }
+  return passed;
 }
 
-runAudit();
+runAudit()
+  .then((passed) => { process.exitCode = passed ? 0 : 1; })
+  .catch((error) => { console.error(error); process.exitCode = 1; })
+  .finally(() => require('../database/config').end());
