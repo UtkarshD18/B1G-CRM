@@ -9,6 +9,8 @@ jobs:
     name: Security Scans & Regression Tests
     runs-on: ubuntu-latest
     env:
+      # These checks use HTTP clients, not Puppeteer/browser automation.
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
       CHANNEL_SECRET_KEY: test-channel-secret-key-at-least-32-chars-long
 
     services:
