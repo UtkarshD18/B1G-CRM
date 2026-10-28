@@ -3,7 +3,8 @@ const { query } = require('../database/dbpromise.js');
 const { validateUserOrAgent, verifyPermission } = require('../middlewares/auth.js');
 const fs = require('fs');
 const path = require('path');
-const { getIOInstance } = require('../socket.js');
+const { getConnectionsByUid, sendToSocketId } = require('../socket.js');
+const { loadChatList } = require('../helper/socket/chatList');
 const { metaChatbotInit } = require('../helper/chatbot/meta');
 
 // GET all website integrations
@@ -555,6 +556,11 @@ router.get('/widget/script', async (req, res) => {
     list.scrollTop = list.scrollHeight;
   }
 
+  // Refresh only while the visitor has the panel open; agent replies share history.
+  setInterval(() => {
+    if (panel.style.display === "flex" && !document.hidden) loadMessages();
+  }, 2000);
+
   async function loadMessages() {
     try {
       const res = await fetch(\`\${host}/api/website/widget/history?uid=\${uid}&sessionId=\${sessionId}\`);
@@ -563,7 +569,7 @@ router.get('/widget/script', async (req, res) => {
         const list = panel.querySelector(".b1g-widget-messages");
         list.innerHTML = \`<div class="b1g-msg outbound">\${greeting}</div>\`;
         payload.data.forEach(msg => {
-          appendMessage(msg.msgContext?.text?.body || msg.msgContext?.body || "", msg.route === "INCOMING" ? "outbound" : "inbound");
+          appendMessage(msg.msgContext?.text?.body || msg.msgContext?.body || "", msg.route === "INCOMING" ? "inbound" : "outbound");
         });
       }
     } catch(e) {}
@@ -733,24 +739,13 @@ router.post('/widget/message', async (req, res) => {
     convo.push(msgObj);
     fs.writeFileSync(filePath, JSON.stringify(convo, null, 2));
 
-    // Notify user operator inbox via Socket.io
-    const io = getIOInstance();
-    const sock = await query('SELECT * FROM rooms WHERE uid = ?', [uid]);
-    if (sock.length > 0) {
-      // Reload lists
-      const chatData = await query('SELECT * FROM chats WHERE uid = ?', [uid]);
-      io.to(sock[0].socket_id).emit('update_chat_list', chatData);
-
-      // Emit connection updates
-      io.to(sock[0].socket_id).emit('on_open_chat', {
-        chatinfo: {
-          chat_id: chatId,
-          sender_name: senderName,
-          sender_mobile: senderMobile,
-          origin: 'website',
-        },
-        conversation: convo,
-      });
+    // Notify every current owner/agent session without changing its selection.
+    for (const connection of getConnectionsByUid(uid) || []) {
+      const chatData = await loadChatList({ connectionInfo: connection });
+      sendToSocketId(connection.id, chatData, 'update_chat_list');
+      if (connection.data?.selectedChat?.chat_id === chatId) {
+        sendToSocketId(connection.id, { chatId }, 'update_conversation');
+      }
     }
 
     // Trigger AI Chatbot Autopilot if applicable

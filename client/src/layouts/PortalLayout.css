@@ -1,0 +1,66 @@
+/* The navigation keeps a stable width while its grid track closes, allowing
+   the workspace to use the reclaimed space without squeezing menu labels. */
+.portal-shell.portal-navigation-shell {
+  --portal-sidebar-width: 240px;
+  --portal-sidebar-duration: 220ms;
+  --portal-sidebar-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  grid-template-columns: var(--portal-sidebar-width) minmax(0, 1fr);
+  transition: grid-template-columns var(--portal-sidebar-duration) var(--portal-sidebar-ease);
+}
+.portal-shell.portal-navigation-shell.is-sidebar-collapsed { grid-template-columns: 0px minmax(0, 1fr); }
+.portal-shell.portal-navigation-shell > .portal-sidebar {
+  width: var(--portal-sidebar-width);
+  min-width: 0;
+  transform: translateX(0);
+  transition: transform var(--portal-sidebar-duration) var(--portal-sidebar-ease), opacity var(--portal-sidebar-duration) var(--portal-sidebar-ease);
+}
+.portal-shell.portal-navigation-shell.is-sidebar-collapsed > .portal-sidebar { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+.portal-shell.portal-navigation-shell > .portal-main { min-width: 0; }
+.portal-navigation-controls { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.portal-sidebar-toggle,
+.topbar-breadcrumb .topbar-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 18px;
+}
+.topbar-breadcrumb .topbar-home { border-color: transparent; background: transparent; }
+.portal-navigation-controls .topbar-breadcrumb { min-width: 0; gap: 6px; }
+.portal-navigation-controls .topbar-page { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) {
+  .portal-sidebar-toggle:hover,
+  .topbar-breadcrumb .topbar-home:hover { background: var(--bg-panel); }
+}
+@media (min-width: 721px) and (max-width: 1080px) {
+  .portal-shell.portal-navigation-shell { --portal-sidebar-width: 190px; }
+  .portal-shell.portal-navigation-shell > .portal-sidebar { height: 100dvh; position: sticky; }
+}
+@media (max-width: 720px) {
+  .portal-shell.portal-navigation-shell,
+  .portal-shell.portal-navigation-shell.is-sidebar-collapsed { grid-template-columns: minmax(0, 1fr); }
+  .portal-shell.portal-navigation-shell > .portal-sidebar { width: 100%; max-height: 45dvh; transform: none; }
+  .portal-shell.portal-navigation-shell.is-sidebar-collapsed > .portal-sidebar { display: none; }
+  .portal-navigation-controls { gap: 4px; }
+  .portal-shell.portal-navigation-shell .topbar-lang { display: none; }
+}
+.portal-shell.portal-navigation-shell.sidebar-instant,
+.portal-shell.portal-navigation-shell.sidebar-instant > .portal-sidebar { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell.portal-navigation-shell,
+  .portal-shell.portal-navigation-shell > .portal-sidebar { transition: none; }
+}
+
+/* Shared portal labels must follow the foreground and surface together. */
+.portal-shell .portal-main span.eyebrow {
+  background: var(--bg-panel);
+  border-color: var(--border-color);
+  color: var(--text-secondary) !important;
+}

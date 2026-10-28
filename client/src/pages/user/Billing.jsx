@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../../shared/api';
 import { useAuth } from '../../shared/auth';
 import { formatDateTime, formatMoney, summarizePlan } from '../../shared/format';
+import { getTrialUnavailableReason, isTrialAvailable } from '../../shared/billing';
 
 const gatewayLabels = [
   ['stripe', 'Stripe Checkout', 'stripe_active', 'pay_stripe_id'],
@@ -245,7 +246,7 @@ function UserBillingPage() {
         <div>
           <span className="eyebrow">billing</span>
           <h2>Your Plan & Subscription</h2>
-          <p>Manage your active plan, upgrade, or activate a free trial to access all features.</p>
+          <p>Manage your active subscription, review plans, and check trial eligibility.</p>
         </div>
         <button className="primary-button" type="button" onClick={loadBilling}>
           Refresh
@@ -300,11 +301,15 @@ function UserBillingPage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '1.3rem' }}>
-                {Number(user?.trial || 0) > 0 ? '✅' : '🔓'}
+                {Number(user?.trial || 0) > 0 ? '✅' : isTrialAvailable(user, plans) ? '🔓' : '🔒'}
               </span>
               <div>
                 <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {Number(user?.trial || 0) > 0 ? 'Trial has been used' : 'Free trial available'}
+                  {Number(user?.trial || 0) > 0
+                    ? 'Trial has been used'
+                    : isTrialAvailable(user, plans)
+                      ? 'Free trial available'
+                      : 'Unavailable while paid plan is active'}
                 </p>
                 <p style={{ margin: 0, fontSize: '0.82rem' }}>Trial status</p>
               </div>
@@ -387,7 +392,7 @@ function UserBillingPage() {
               </div>
 
               <div style={{ marginTop: 'auto', display: 'grid', gap: '8px' }}>
-                {isTrial ? (
+                {isTrial && isTrialAvailable(user, plans) ? (
                   <button
                     className="primary-button"
                     type="button"
@@ -397,6 +402,10 @@ function UserBillingPage() {
                   >
                     {isLoading ? 'Activating...' : 'Start trial'}
                   </button>
+                ) : isTrial ? (
+                  <p className="muted-copy" role="status">
+                    {getTrialUnavailableReason(user, plans)}
+                  </p>
                 ) : (
                   <>
                     {rzActive && (

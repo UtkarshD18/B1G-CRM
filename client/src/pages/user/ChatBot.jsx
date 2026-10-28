@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { apiRequest } from '../../shared/api'
-import { useAuth } from '../../shared/auth'
-import { formatDateTime, parseStoredJson } from '../../shared/format'
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { apiRequest } from '../../shared/api';
+import { useAuth } from '../../shared/auth';
+import { formatDateTime, parseStoredJson } from '../../shared/format';
+import TablePagination from '../../components/TablePagination';
 
 const emptyBot = {
   id: '',
@@ -10,106 +11,118 @@ const emptyBot = {
   chats: [],
   for_all: false,
   originCode: 'META',
-}
+};
 
 function getBotFlow(bot) {
-  return parseStoredJson(bot.flow, {})
+  return parseStoredJson(bot.flow, {});
 }
 
 function getBotOrigin(bot) {
-  return parseStoredJson(bot.origin, {})
+  return parseStoredJson(bot.origin, {});
 }
 
 function getBotChats(bot) {
-  return parseStoredJson(bot.chats, [])
+  return parseStoredJson(bot.chats, []);
 }
 
 function getBotScopeLabel(bot) {
   if (Number(bot.for_all) > 0) {
-    return 'All incoming chats'
+    return 'All incoming chats';
   }
 
-  const chats = getBotChats(bot)
-  return `${chats.length} selected`
+  const chats = getBotChats(bot);
+  return `${chats.length} selected`;
 }
 
 function summarizeLogDetail(detail) {
-  const parsed = parseStoredJson(detail, {})
+  const parsed = parseStoredJson(detail, {});
   if (parsed.reason) {
-    return parsed.reason
+    return parsed.reason;
   }
   if (parsed.error) {
-    return parsed.error
+    return parsed.error;
   }
   if (Number.isFinite(Number(parsed.reply_count))) {
-    return `${parsed.reply_count} replies`
+    return `${parsed.reply_count} replies`;
   }
-  return 'N/A'
+  return 'N/A';
 }
 
 function summarizeBots(bots) {
   return bots.reduce(
     (summary, bot) => {
-      const origin = getBotOrigin(bot)
-      const originCode = origin.code || 'META'
+      const origin = getBotOrigin(bot);
+      const originCode = origin.code || 'META';
       return {
         total: summary.total + 1,
         active: summary.active + (Number(bot.active) > 0 ? 1 : 0),
         meta: summary.meta + (originCode === 'META' ? 1 : 0),
         qr: summary.qr + (originCode === 'QR' ? 1 : 0),
-      }
+      };
     },
     { total: 0, active: 0, meta: 0, qr: 0 },
-  )
+  );
 }
 
 function UserChatBotPage() {
-  const { tokens } = useAuth()
-  const [bots, setBots] = useState([])
-  const [flows, setFlows] = useState([])
-  const [chats, setChats] = useState([])
-  const [logs, setLogs] = useState([])
-  const [status, setStatus] = useState('Loading chatbots...')
-  const [form, setForm] = useState(emptyBot)
-  const botSummary = useMemo(() => summarizeBots(bots), [bots])
+  const { tokens } = useAuth();
+  const [bots, setBots] = useState([]);
+  const [flows, setFlows] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [logPage, setLogPage] = useState(1);
+  const [logPageSize, setLogPageSize] = useState(10);
+  const [status, setStatus] = useState('Loading chatbots...');
+  const [form, setForm] = useState(emptyBot);
+  const botSummary = useMemo(() => summarizeBots(bots), [bots]);
   const selectedFlow = useMemo(
-    () => flows.find((item) => String(item.flow_id) === String(form.flowId) || String(item.id) === String(form.flowId)),
+    () =>
+      flows.find(
+        (item) =>
+          String(item.flow_id) === String(form.flowId) || String(item.id) === String(form.flowId),
+      ),
     [flows, form.flowId],
-  )
+  );
+  const safeLogPage = Math.min(logPage, Math.max(1, Math.ceil(logs.length / logPageSize)));
+  const visibleLogs = logs.slice((safeLogPage - 1) * logPageSize, safeLogPage * logPageSize);
 
-  const loadData = useCallback(async (options = {}) => {
-    const silent = options?.silent === true
-    const finalStatus = options?.finalStatus || ''
+  const loadData = useCallback(
+    async (options = {}) => {
+      const silent = options?.silent === true;
+      const finalStatus = options?.finalStatus || '';
 
-    if (!silent) {
-      setStatus('Loading chatbots...')
-    }
+      if (!silent) {
+        setStatus('Loading chatbots...');
+      }
 
-    try {
-      const [botResult, flowResult, chatResult, logResult] = await Promise.all([
-        apiRequest('/api/chatbot/get_chatbot', { token: tokens.user }),
-        apiRequest('/api/chat_flow/get_mine', { token: tokens.user }),
-        apiRequest('/api/inbox/get_chats', { token: tokens.user }),
-        apiRequest('/api/chatbot/get_logs?limit=25', { token: tokens.user }),
-      ])
+      try {
+        const [botResult, flowResult, chatResult, logResult] = await Promise.all([
+          apiRequest('/api/chatbot/get_chatbot', { token: tokens.user }),
+          apiRequest('/api/chat_flow/get_mine', { token: tokens.user }),
+          apiRequest('/api/inbox/get_chats', { token: tokens.user }),
+          apiRequest('/api/chatbot/get_logs?limit=100', { token: tokens.user }),
+        ]);
 
-      setBots(Array.isArray(botResult?.data) ? botResult.data : [])
-      setFlows(Array.isArray(flowResult?.data) ? flowResult.data : [])
-      setChats(Array.isArray(chatResult?.data) ? chatResult.data : [])
-      setLogs(Array.isArray(logResult?.data) ? logResult.data : [])
-      setStatus(finalStatus)
-    } catch (error) {
-      setStatus(error.message || 'Unable to load chatbots')
-    }
-  }, [tokens.user])
+        setBots(Array.isArray(botResult?.data) ? botResult.data : []);
+        setFlows(Array.isArray(flowResult?.data) ? flowResult.data : []);
+        setChats(Array.isArray(chatResult?.data) ? chatResult.data : []);
+        setLogs(Array.isArray(logResult?.data) ? logResult.data : []);
+        setLogPage(1);
+        setStatus(finalStatus);
+      } catch (error) {
+        setStatus(error.message || 'Unable to load chatbots');
+      }
+    },
+    [tokens.user],
+  );
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadData();
+  }, [loadData]);
 
   function editBot(bot) {
-    const flow = getBotFlow(bot)
-    const origin = getBotOrigin(bot)
+    const flow = getBotFlow(bot);
+    const origin = getBotOrigin(bot);
     setForm({
       id: bot.id,
       title: bot.title || '',
@@ -117,7 +130,7 @@ function UserChatBotPage() {
       chats: parseStoredJson(bot.chats, []),
       for_all: Number(bot.for_all) > 0,
       originCode: origin.code || 'META',
-    })
+    });
   }
 
   function toggleChat(chatId) {
@@ -126,95 +139,98 @@ function UserChatBotPage() {
       chats: current.chats.includes(chatId)
         ? current.chats.filter((item) => item !== chatId)
         : [...current.chats, chatId],
-    }))
+    }));
   }
 
   async function saveBot(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (!form.title.trim()) {
-      setStatus('Chatbot title is required.')
-      return
+      setStatus('Chatbot title is required.');
+      return;
     }
 
     if (!selectedFlow) {
-      setStatus('Select a saved flow first.')
-      return
+      setStatus('Select a saved flow first.');
+      return;
     }
 
     if (!form.for_all && form.chats.length < 1) {
-      setStatus('Select at least one chat target or enable all incoming chats.')
-      return
+      setStatus('Select at least one chat target or enable all incoming chats.');
+      return;
     }
 
-    setStatus(form.id ? 'Updating chatbot...' : 'Creating chatbot...')
+    setStatus(form.id ? 'Updating chatbot...' : 'Creating chatbot...');
     try {
-      const result = await apiRequest(form.id ? '/api/chatbot/update_chatbot' : '/api/chatbot/add_chatbot', {
-        method: 'POST',
-        token: tokens.user,
-        body: {
-          id: form.id,
-          title: form.title.trim(),
-          flow: selectedFlow,
-          chats: form.for_all ? [] : form.chats,
-          for_all: form.for_all,
-          origin: {
-            title: form.originCode === 'META' ? 'Meta' : 'QR',
-            code: form.originCode,
-            data: {},
+      const result = await apiRequest(
+        form.id ? '/api/chatbot/update_chatbot' : '/api/chatbot/add_chatbot',
+        {
+          method: 'POST',
+          token: tokens.user,
+          body: {
+            id: form.id,
+            title: form.title.trim(),
+            flow: selectedFlow,
+            chats: form.for_all ? [] : form.chats,
+            for_all: form.for_all,
+            origin: {
+              title: form.originCode === 'META' ? 'Meta' : 'QR',
+              code: form.originCode,
+              data: {},
+            },
           },
         },
-      })
+      );
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to save chatbot')
-        return
+        setStatus(result?.msg || 'Unable to save chatbot');
+        return;
       }
 
-      setForm(emptyBot)
-      await loadData({ silent: true, finalStatus: result.msg || 'Chatbot saved.' })
+      setForm(emptyBot);
+      await loadData({ silent: true, finalStatus: result.msg || 'Chatbot saved.' });
     } catch (error) {
-      setStatus(error.message || 'Unable to save chatbot')
+      setStatus(error.message || 'Unable to save chatbot');
     }
   }
 
   async function changeStatus(id, active) {
-    setStatus('Changing chatbot status...')
+    setStatus('Changing chatbot status...');
     try {
       const result = await apiRequest('/api/chatbot/change_bot_status', {
         method: 'POST',
         token: tokens.user,
         body: { id, status: active },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to change chatbot status')
-        return
+        setStatus(result?.msg || 'Unable to change chatbot status');
+        return;
       }
 
-      await loadData({ silent: true, finalStatus: 'Chatbot status changed.' })
+      await loadData({ silent: true, finalStatus: 'Chatbot status changed.' });
     } catch (error) {
-      setStatus(error.message || 'Unable to change chatbot status')
+      setStatus(error.message || 'Unable to change chatbot status');
     }
   }
 
   async function deleteBot(id) {
-    setStatus('Deleting chatbot...')
+    setStatus('Deleting chatbot...');
     try {
       const result = await apiRequest('/api/chatbot/del_chatbot', {
         method: 'POST',
         token: tokens.user,
         body: { id },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to delete chatbot')
-        return
+        setStatus(result?.msg || 'Unable to delete chatbot');
+        return;
       }
 
-      await loadData({ silent: true, finalStatus: 'Chatbot deleted.' })
+      await loadData({ silent: true, finalStatus: 'Chatbot deleted.' });
     } catch (error) {
-      setStatus(error.message || 'Unable to delete chatbot')
+      setStatus(error.message || 'Unable to delete chatbot');
     }
   }
 
@@ -261,11 +277,17 @@ function UserChatBotPage() {
         <div className="form-grid">
           <label>
             Title
-            <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+            <input
+              value={form.title}
+              onChange={(event) => setForm({ ...form, title: event.target.value })}
+            />
           </label>
           <label>
             Flow
-            <select value={form.flowId} onChange={(event) => setForm({ ...form, flowId: event.target.value })}>
+            <select
+              value={form.flowId}
+              onChange={(event) => setForm({ ...form, flowId: event.target.value })}
+            >
               <option value="">Select flow</option>
               {flows.map((flow) => (
                 <option key={flow.flow_id} value={flow.flow_id}>
@@ -276,7 +298,10 @@ function UserChatBotPage() {
           </label>
           <label>
             Origin
-            <select value={form.originCode} onChange={(event) => setForm({ ...form, originCode: event.target.value })}>
+            <select
+              value={form.originCode}
+              onChange={(event) => setForm({ ...form, originCode: event.target.value })}
+            >
               <option value="META">Meta</option>
               <option value="QR">QR</option>
             </select>
@@ -306,7 +331,9 @@ function UserChatBotPage() {
             <h2>Chat targets</h2>
           </div>
           {form.for_all ? (
-            <p className="muted-copy">This bot will run for every new incoming conversation on the selected origin.</p>
+            <p className="muted-copy">
+              This bot will run for every new incoming conversation on the selected origin.
+            </p>
           ) : (
             <div className="action-row">
               {chats.map((chat) => (
@@ -319,7 +346,9 @@ function UserChatBotPage() {
                   <span>{chat.sender_name || chat.sender_mobile || chat.chat_id}</span>
                 </label>
               ))}
-              {!chats.length ? <p className="muted-copy">No chats yet. Create/open inbox conversations first.</p> : null}
+              {!chats.length ? (
+                <p className="muted-copy">No chats yet. Create/open inbox conversations first.</p>
+              ) : null}
             </div>
           )}
         </div>
@@ -340,9 +369,16 @@ function UserChatBotPage() {
             <h3>No chatbots available</h3>
             <p>To automate replies using a chatbot, follow these steps:</p>
             <ol>
-              <li>Open <strong>Inbox</strong>, and receive or create a conversation.</li>
-              <li>Navigate to <strong>Automation Flows</strong>, and build your visual workflow logic.</li>
-              <li>Return here, describe the bot parameters, select your flow, and click Create chatbot.</li>
+              <li>
+                Open <strong>Inbox</strong>, and receive or create a conversation.
+              </li>
+              <li>
+                Navigate to <strong>Automation Flows</strong>, and build your visual workflow logic.
+              </li>
+              <li>
+                Return here, describe the bot parameters, select your flow, and click Create
+                chatbot.
+              </li>
             </ol>
           </div>
         ) : (
@@ -359,8 +395,8 @@ function UserChatBotPage() {
             </thead>
             <tbody>
               {bots.map((bot) => {
-                const origin = getBotOrigin(bot)
-                const flow = getBotFlow(bot)
+                const origin = getBotOrigin(bot);
+                const flow = getBotFlow(bot);
                 return (
                   <tr key={bot.id}>
                     <td>{bot.title}</td>
@@ -380,13 +416,17 @@ function UserChatBotPage() {
                         >
                           {Number(bot.active) > 0 ? 'Deactivate' : 'Activate'}
                         </button>
-                        <button className="mini-button subtle-danger" type="button" onClick={() => deleteBot(bot.id)}>
+                        <button
+                          className="mini-button subtle-danger"
+                          type="button"
+                          onClick={() => deleteBot(bot.id)}
+                        >
                           Delete
                         </button>
                       </div>
                     </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </table>
@@ -398,40 +438,53 @@ function UserChatBotPage() {
           <h2>Recent chatbot diagnostics</h2>
           <span className="status-chip">{logs.length} events</span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Bot</th>
-              <th>Status</th>
-              <th>Matched</th>
-              <th>Contact</th>
-              <th>Message</th>
-              <th>Detail</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((log) => (
-              <tr key={log.id}>
-                <td>{log.chatbot_title || log.chatbot_id || 'N/A'}</td>
-                <td>{log.status}</td>
-                <td>{Number(log.matched) > 0 ? 'Yes' : 'No'}</td>
-                <td>{log.sender_name || log.sender_number || 'N/A'}</td>
-                <td>{log.incoming_message || 'N/A'}</td>
-                <td>{summarizeLogDetail(log.detail)}</td>
-                <td>{formatDateTime(log.created_at || log.createdAt)}</td>
-              </tr>
-            ))}
-            {!logs.length ? (
+        <div className="diagnostics-table-scroll">
+          <table>
+            <thead>
               <tr>
-                <td colSpan="7">No chatbot diagnostics yet.</td>
+                <th>Bot</th>
+                <th>Status</th>
+                <th>Matched</th>
+                <th>Contact</th>
+                <th>Message</th>
+                <th>Detail</th>
+                <th>Time</th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visibleLogs.map((log) => (
+                <tr key={log.id}>
+                  <td>{log.chatbot_title || log.chatbot_id || 'N/A'}</td>
+                  <td>{log.status}</td>
+                  <td>{Number(log.matched) > 0 ? 'Yes' : 'No'}</td>
+                  <td>{log.sender_name || log.sender_number || 'N/A'}</td>
+                  <td>{log.incoming_message || 'N/A'}</td>
+                  <td>{summarizeLogDetail(log.detail)}</td>
+                  <td>{formatDateTime(log.created_at || log.createdAt)}</td>
+                </tr>
+              ))}
+              {!logs.length ? (
+                <tr>
+                  <td colSpan="7">No chatbot diagnostics yet.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+        <TablePagination
+          label="Chatbot diagnostics"
+          page={safeLogPage}
+          pageSize={logPageSize}
+          total={logs.length}
+          onPageChange={setLogPage}
+          onPageSizeChange={(size) => {
+            setLogPageSize(size);
+            setLogPage(1);
+          }}
+        />
       </div>
     </div>
-  )
+  );
 }
 
-export default UserChatBotPage
+export default UserChatBotPage;

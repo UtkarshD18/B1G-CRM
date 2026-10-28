@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { query } = require('../../database/dbpromise');
-const mime = require('mime-types');
 const env = require('../../env');
 const crypto = require('crypto');
 
@@ -219,7 +218,7 @@ function returnMsgObjAfterAddingKey(overrides = {}) {
   return { ...defaultObj, ...overrides };
 }
 
-async function sendMetaMsg({ uid, to, msgObj }) {
+async function sendMetaMsg({ uid, to, msgObj, chatId }) {
   try {
     if (env.MOCK_META_DELIVERY) {
       return { success: true, id: 'mock-msg-id-' + Math.random().toString(36).substring(2, 15) };
@@ -242,6 +241,7 @@ async function sendMetaMsg({ uid, to, msgObj }) {
       const toNumber = formatNumber(to);
 
       const normalizedOutgoing = {
+        chatId,
         channel: channelType,
         recipientId: toNumber,
         messageType: msgObj.type || 'text',
@@ -442,8 +442,32 @@ async function sendQrMsg({ uid, to, msgObj, chatInfo }) {
   }
 }
 
-async function sendInstagramMsg({ uid, to, msgObj }) {
+async function sendInstagramMsg({ uid, to, msgObj, chatId }) {
   try {
+    // Reuse the maintained channel adapter/outbox path when a new connection exists.
+    const [connection] = await query(
+      "SELECT * FROM channel_connections WHERE uid = ? AND channel_type = 'instagram'",
+      [uid],
+    );
+    if (connection) {
+      const correlationId = uuidv7();
+      const attachment = msgObj[msgObj.type] || msgObj.document || msgObj.file;
+      const payload = {
+        channel: 'instagram',
+        chatId,
+        recipientId: to,
+        messageType: msgObj.type || 'text',
+        text: msgObj.text?.body || msgObj.body || '',
+        attachments: attachment
+          ? [{ type: msgObj.type, url: attachment.link || attachment.url }]
+          : [],
+      };
+      await query(
+        "INSERT INTO channel_outgoing_queue (uid, channel_type, payload, state, correlation_id) VALUES (?, 'instagram', ?, 'pending', ?)",
+        [uid, JSON.stringify(payload), correlationId],
+      );
+      return { success: true, id: correlationId, correlation_id: correlationId, queued: true };
+    }
     const [api] = await query(`SELECT * FROM instagram_api WHERE uid = ?`, [uid]);
     if (!api || !api?.access_token || !api?.instagram_business_account_id) {
       return { success: false, msg: 'Please link your Instagram Business Account first.' };

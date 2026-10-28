@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { query, withTransaction } = require('../database/dbpromise.js');
 const randomstring = require('randomstring');
 const fs = require('fs');
+const path = require('path');
 const bcrypt = require('bcrypt');
 const {
   isValidEmail,

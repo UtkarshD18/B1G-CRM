@@ -1,9 +1,9 @@
 // socket.js
-const { Server } = require("socket.io");
-const jwt = require("jsonwebtoken"); // Make sure to install this package (npm install jsonwebtoken)
-const { processSocketEvent } = require("./helper/socket");
-const env = require("./env");
+const { Server } = require('socket.io');
+const { processSocketEvent } = require('./helper/socket');
+const env = require('./env');
 const { createCorsOptions } = require('./utils/corsConfig');
+const { subscribeInboxChanges } = require('./utils/channels/inboxNotifications');
 
 // Module-level variable to store the io instance.
 let ioInstance = null;
@@ -19,67 +19,84 @@ function initializeSocket(server) {
     cors: createCorsOptions(env.CORS_ORIGINS),
   });
 
-  // When a client connects...
-  ioInstance.on("connection", (socket) => {
-    // Retrieve uid, agent, and userToken from query parameters.
-    const { uid, agent, userToken } = socket.handshake.query;
-
-    // Decode userToken using jwt.decode (for verification, you might use jwt.verify with a secret)
-    let decodedValue = {};
-    if (userToken) {
-      try {
-        decodedValue = jwt.verify(userToken, env.JWT_SECRET);
-      } catch (error) {
-        console.error("Error verifying token:", error.message);
-      }
-    }
-
-    // Save connection info on the socket with the desired structure.
-    socket.connectionInfo = {
-      uid: uid || null, // The user identifier (may be common among multiple sockets).
-      id: socket.id, // The unique Socket.IO id.
-      data: {}, // Additional data if needed.
-      agent: agent === "true", // Convert agent to Boolean.
-      decodedValue: decodedValue, // The decoded token payload.
-      owner_uid: decodedValue?.owner_uid,
-      permissions: [], // Permissions will be fetched asynchronously
-    };
-
-    if (socket.connectionInfo.agent && socket.connectionInfo.uid) {
-      const { query } = require("./database/dbpromise");
-      query("SELECT permissions FROM agents WHERE uid = ?", [socket.connectionInfo.uid])
-        .then((rows) => {
-          if (rows.length > 0) {
-            try {
-              socket.connectionInfo.permissions = JSON.parse(rows[0].permissions || "[]");
-            } catch (err) {
-              console.error("Error parsing agent permissions in socket:", err);
+  const stopInboxNotifications = subscribeInboxChanges(
+    async ({ uid, chatId, assignmentChanged }) => {
+      for (const connection of getConnectionsByUid(uid)) {
+        if (
+          assignmentChanged &&
+          connection.agent &&
+          connection.data?.selectedChat?.chat_id === chatId
+        ) {
+          try {
+            const { query } = require('./database/dbpromise');
+            const assigned = await query(
+              'SELECT 1 FROM agent_chats WHERE uid = ? AND owner_uid = ? AND chat_id = ?',
+              [connection.uid, uid, chatId],
+            );
+            if (!assigned.length) {
+              connection.data.selectedChat = null;
+              sendToSocketId(connection.id, { chatId }, 'chat_access_revoked');
             }
+          } catch {
+            continue;
           }
-        })
-        .catch((err) => {
-          console.error("Error loading agent permissions for socket:", err);
-        });
-    }
+        }
+        sendToSocketId(connection.id, {}, 'update_chat_list');
+        if (connection.data?.selectedChat?.chat_id === chatId) {
+          sendToSocketId(connection.id, {}, 'update_conversation');
+        }
+      }
+    },
+  );
+  ioInstance.httpServer?.once('close', stopInboxNotifications);
 
-    console.log("New connection established:");
+  const { authenticateSocket } = require('./utils/socketAuth');
+  ioInstance.use(async (socket, next) => {
+    try {
+      socket.connectionInfo = await authenticateSocket(socket);
+      next();
+    } catch {
+      next(new Error('Authentication required or account unavailable'));
+    }
+  });
+  ioInstance.on('connection', (socket) => {
+    // Recheck account, expiration and permissions for every operation, not just login.
+    socket.use(async (_packet, next) => {
+      try {
+        const current = await authenticateSocket(socket);
+        if (
+          JSON.stringify(current.permissions) !== JSON.stringify(socket.connectionInfo.permissions)
+        )
+          socket.emit('permissions_updated', { permissions: current.permissions });
+        Object.assign(socket.connectionInfo, current);
+        next();
+      } catch {
+        socket.emit('error', { msg: 'Session expired or access revoked. Please sign in again.' });
+        socket.disconnect(true);
+      }
+    });
+    console.log('New connection established:');
     console.dir({ socket: socket.connectionInfo.id });
 
     // Immediately send an acknowledgement containing connection info.
-    socket.emit("connection_ack", socket.connectionInfo);
+    socket.emit('connection_ack', {
+      uid: socket.connectionInfo.uid,
+      agent: socket.connectionInfo.agent,
+      permissions: socket.connectionInfo.permissions,
+    });
 
     // Listen for generic "message" events.
-    socket.on("message", (message) => {
+    socket.on('message', (message) => {
       // Log the message along with the connectionInfo from the socket.
       console.log(`Received message from ${socket.id}:`, message);
-      console.log("Connection Info:", socket.connectionInfo);
+      console.log('Connection Info:', socket.connectionInfo);
     });
 
     // Listen for custom events from the client.
     // This will catch any event that is not specifically handled.
-    socket.onAny((event, ...args) => {
+    socket.onAny((event) => {
       // Optionally, filter out events that you want to ignore.
-      if (event !== "connection_ack" && event !== "message") {
+      if (event !== 'connection_ack' && event !== 'message') {
         // console.log(`Received event "${event}" from ${socket.id}:`, ...args);
       }
     });
@@ -96,7 +113,7 @@ function initializeSocket(server) {
     });
 
     // Handle disconnects.
-    socket.on("disconnect", () => {
+    socket.on('disconnect', () => {
       console.log(`Client disconnected: ${socket.id}`);
     });
   });
@@ -110,16 +127,14 @@ function initializeSocket(server) {
  * @param {*} data - The data to send.
  * @param {string} [eventName="message"] - The event name to emit.
  */
-function sendToUid(targetUid, data, eventName = "message") {
+function sendToUid(targetUid, data, eventName = 'message') {
   if (!ioInstance) {
-    console.error("Socket.IO instance is not initialized");
+    console.error('Socket.IO instance is not initialized');
     return;
   }
   ioInstance.sockets.sockets.forEach((socket) => {
     if (socket.connectionInfo && socket.connectionInfo.uid === targetUid) {
-      console.log(
-        `Emitting ${eventName} to socket ${socket.id} for uid ${targetUid}`
-      );
+      console.log(`Emitting ${eventName} to socket ${socket.id} for uid ${targetUid}`);
       socket.emit(eventName, data);
     }
   });
@@ -131,9 +146,9 @@ function sendToUid(targetUid, data, eventName = "message") {
  * @param {*} data - The data to send.
  * @param {string} [eventName="message"] - The event name to emit.
  */
-function sendToSocketId(socketId, data, eventName = "message") {
+function sendToSocketId(socketId, data, eventName = 'message') {
   if (!ioInstance) {
-    console.error("Socket.IO instance is not initialized");
+    console.error('Socket.IO instance is not initialized');
     return;
   }
   const targetSocket = ioInstance.sockets.sockets.get(socketId);
@@ -150,9 +165,9 @@ function sendToSocketId(socketId, data, eventName = "message") {
  * @param {*} data - The data to send.
  * @param {string} [eventName="message"] - The event name to emit.
  */
-function sendToAll(data, eventName = "message") {
+function sendToAll(data, eventName = 'message') {
   if (!ioInstance) {
-    console.error("Socket.IO instance is not initialized");
+    console.error('Socket.IO instance is not initialized');
     return;
   }
   ioInstance.sockets.sockets.forEach((socket) => {
@@ -167,16 +182,14 @@ function sendToAll(data, eventName = "message") {
  * @param {*} data - The data to send (default: { ring: true }).
  * @param {string} [eventName="ring"] - The event name to emit.
  */
-function sendRingToUid(targetUid, data = { ring: true }, eventName = "ring") {
+function sendRingToUid(targetUid, data = { ring: true }, eventName = 'ring') {
   if (!ioInstance) {
-    console.error("Socket.IO instance is not initialized");
+    console.error('Socket.IO instance is not initialized');
     return;
   }
   ioInstance.sockets.sockets.forEach((socket) => {
     if (socket.connectionInfo && socket.connectionInfo.uid === targetUid) {
-      console.log(
-        `Emitting ${eventName} to socket ${socket.id} for uid ${targetUid}`
-      );
+      console.log(`Emitting ${eventName} to socket ${socket.id} for uid ${targetUid}`);
       socket.emit(eventName, data);
     }
   });
@@ -189,7 +202,7 @@ function sendRingToUid(targetUid, data = { ring: true }, eventName = "ring") {
  */
 function getConnectionsByUid(targetUid) {
   if (!ioInstance) {
-    console.error("Socket.IO instance is not initialized");
+    console.error('Socket.IO instance is not initialized');
     return [];
   }
 
@@ -218,7 +231,7 @@ function getConnectionsByUid(targetUid) {
  */
 function updateConnectionDataBySocketId(socketId, newData) {
   if (!ioInstance) {
-    console.error("Socket.IO instance is not initialized");
+    console.error('Socket.IO instance is not initialized');
     return null;
   }
   const targetSocket = ioInstance.sockets.sockets.get(socketId);

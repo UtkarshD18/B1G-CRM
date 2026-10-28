@@ -796,6 +796,25 @@ describe('App routing shell', () => {
     );
   });
 
+  test('toggles portal navigation and links the home breadcrumb to the role dashboard', async () => {
+    await renderAtRoute('/user/inbox', { role: 'user' });
+    const hide = screen.getByRole('button', { name: 'Hide navigation menu' });
+    expect(hide).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(hide);
+    expect(screen.getByRole('button', { name: 'Show navigation menu' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(document.querySelector('#portal-navigation')).toHaveAttribute('inert');
+    expect(document.querySelector('.portal-shell')).toHaveClass('is-sidebar-collapsed');
+    fireEvent.click(screen.getByRole('button', { name: 'Show navigation menu' }));
+    expect(document.querySelector('#portal-navigation')).not.toHaveAttribute('inert');
+    const home = screen.getByRole('link', { name: 'Go to dashboard' });
+    expect(home).toHaveAttribute('href', '/user/dashboard');
+    fireEvent.click(home);
+    await waitFor(() => expect(window.location.pathname).toBe('/user/dashboard'));
+  });
+
   test('renders the WhatsApp-style inbox and opens a socket conversation', async () => {
     await renderAtRoute('/user/inbox', { role: 'user' });
 
@@ -804,8 +823,9 @@ describe('App routing shell', () => {
     fireEvent.click(chatRow);
 
     expect(await screen.findByText('Hello from customer')).toBeInTheDocument();
-    expect(await screen.findByText('Conversation context')).toBeInTheDocument();
-    expect(await screen.findByPlaceholderText(/Type a WhatsApp reply/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Conversation details' }));
+    expect(await screen.findByText('Conversation context')).toBeVisible();
+    expect(await screen.findByRole('textbox', { name: 'Reply message' })).toBeEnabled();
   });
 
   test('uploads and emits an inbox media reply through the socket composer', async () => {
@@ -847,6 +867,7 @@ describe('App routing shell', () => {
       const chatRow = await screen.findByText('Jordan Buyer');
       fireEvent.click(chatRow);
       expect(await screen.findByText('Hello from customer')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('Attachments'));
 
       const file = new File(['image-bytes'], 'quote.png', { type: 'image/png' });
       fireEvent.change(screen.getByLabelText('Media file'), {
@@ -911,7 +932,7 @@ describe('App routing shell', () => {
     expect(await screen.findByText('2 replies')).toBeInTheDocument();
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/chatbot/get_logs?limit=25'),
+        expect.stringContaining('/api/chatbot/get_logs?limit=100'),
         expect.any(Object),
       );
     });

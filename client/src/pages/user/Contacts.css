@@ -1,0 +1,25 @@
+.contacts-tables-grid { align-items: start; }
+.contacts-tables-grid .table-panel { min-width: 0; padding: 18px; }
+.contacts-table-panel { grid-column: 1 / -1; }
+.phonebooks-table-panel table { table-layout: fixed; }
+.phonebooks-table-panel th:first-child { width: 42%; }
+.phonebooks-table-panel th:nth-child(2) { width: 15%; }
+.phonebooks-table-panel th:last-child { width: 43%; }
+.contacts-table-scroll { width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.contacts-data-table { min-width: 760px; table-layout: fixed; font-size: .875rem; }
+.contacts-data-table th:first-child,
+.contacts-data-table td:first-child { width: 42px; padding-inline: 10px; }
+.contacts-data-table th:nth-child(2) { width: 16%; }
+.contacts-data-table th:nth-child(3) { width: 18%; }
+.contacts-data-table th:nth-child(4) { width: 19%; }
+.contacts-data-table th:nth-child(5) { width: 31%; }
+.contacts-data-table th:last-child { width: 90px; }
+.contacts-data-table td { overflow-wrap: anywhere; vertical-align: top; }
+.contacts-data-table .contact-name-cell { font-weight: 650; }
+.contacts-data-table .contact-mobile-cell { font-variant-numeric: tabular-nums; }
+.contacts-table-panel .panel-header { align-items: center; }
+
+@media (max-width: 900px) {
+  .contacts-tables-grid { grid-template-columns: minmax(0, 1fr); }
+  .contacts-table-panel { grid-column: auto; }
+}

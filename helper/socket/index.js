@@ -1,6 +1,5 @@
 const { query } = require('../../database/dbpromise');
 const {
-  mergeArraysWithPhonebook,
   deleteMediaFromConversation,
   returnMsgObjAfterAddingKey,
   sendMetaMsg,
@@ -11,50 +10,7 @@ const { readJSONFile } = require('../../functions/function.js');
 const { addObjectToFile } = require('../../functions/function.js');
 const moment = require('moment-timezone');
 
-async function updateChatListSocket({ connectionInfo }) {
-  try {
-    const limit = 10;
-    const { uid, agent } = connectionInfo;
-    let chats = [];
-
-    if (agent) {
-      const assignedChats = await query(`SELECT chat_id FROM agent_chats WHERE uid = ?`, [uid]);
-      if (assignedChats.length) {
-        const chatIds = assignedChats.map(({ chat_id }) => chat_id);
-        chats = await query(
-          `SELECT c.*, a.name AS agent_name, a.email AS agent_email
-           FROM chats c
-           LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
-           LEFT JOIN agents a ON ac.uid = a.uid
-           WHERE c.chat_id IN (?) AND c.uid = ? 
-           ORDER BY c.last_message_came DESC 
-           LIMIT ?`,
-          [chatIds, agent ? connectionInfo?.decodedValue?.owner_uid : uid, limit],
-        );
-      }
-    } else {
-      chats = await query(
-        `SELECT c.*, a.name AS agent_name, a.email AS agent_email
-         FROM chats c
-         LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
-         LEFT JOIN agents a ON ac.uid = a.uid
-         WHERE c.uid = ? 
-         ORDER BY c.last_message_came DESC 
-         LIMIT ?`,
-        [uid, limit],
-      );
-    }
-
-    const contacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
-      agent ? connectionInfo?.decodedValue?.owner_uid : uid,
-    ]);
-    const chatData = mergeArraysWithPhonebook(chats, contacts, '', agent);
-
-    return chatData || [];
-  } catch (err) {
-    console.log(err);
-  }
-}
+const { loadChatList: updateChatListSocket } = require('./chatList');
 
 function getCurrentTimestampInTimeZone(timezone) {
   const currentTimeInZone = moment.tz(timezone);
@@ -71,166 +27,55 @@ function processSocketEvent({
   updateConnectionDataBySocketId,
   getConnectionsByUid,
 }) {
-  // Register a specific handler for the "get_chat" event.
-  socket.on('get_chat', async (payload) => {
-    try {
-      const limit = payload?.data?.limit || 10;
-      const { uid, agent } = connectionInfo;
-      let chats = [];
-
-      if (
-        agent &&
-        !(connectionInfo.permissions || []).some(
-          (p) => p === 'inbox_access' || p === 'inbox.read' || p === 'inbox.reply',
-        )
-      ) {
-        return sendToSocketId(
-          socket.id,
-          { msg: 'Access Denied: inbox_access permission required' },
-          'error',
-        );
-      }
-
-      if (agent) {
-        const assignedChats = await query(`SELECT chat_id FROM agent_chats WHERE uid = ?`, [uid]);
-        if (assignedChats.length) {
-          const chatIds = assignedChats.map(({ chat_id }) => chat_id);
-          console.dir(
-            {
-              connectionInfo,
-            },
-            { depth: null },
-          );
-          chats = await query(
-            `SELECT c.*, a.name AS agent_name, a.email AS agent_email
-             FROM chats c
-             LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
-             LEFT JOIN agents a ON ac.uid = a.uid
-             WHERE c.chat_id IN (?) AND c.uid = ? 
-             ORDER BY c.last_message_came DESC 
-             LIMIT ?`,
-            [chatIds, agent ? connectionInfo?.decodedValue?.owner_uid : uid, limit],
-          );
-        }
-      } else {
-        chats = await query(
-          `SELECT c.*, a.name AS agent_name, a.email AS agent_email
-           FROM chats c
-           LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
-           LEFT JOIN agents a ON ac.uid = a.uid
-           WHERE c.uid = ? 
-           ORDER BY c.last_message_came DESC 
-           LIMIT ?`,
-          [uid, limit],
-        );
-      }
-
-      // console.log({ chats });
-
-      const contacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
-        agent ? connectionInfo?.decodedValue?.owner_uid : uid,
-      ]);
-      const chatData = mergeArraysWithPhonebook(chats, contacts, '', agent);
-
-      sendToUid(uid, chatData, 'get_chat');
-    } catch (err) {
-      console.error(err);
+  async function sendChatList(payload = {}, filtered = false) {
+    const { agent, id } = connectionInfo;
+    if (
+      agent &&
+      !(connectionInfo.permissions || []).some((p) =>
+        ['inbox_access', 'inbox.read', 'inbox.reply'].includes(p),
+      )
+    ) {
+      return sendToSocketId(
+        id,
+        { msg: 'Access Denied: inbox_access permission required' },
+        'error',
+      );
     }
-  });
-
-  socket.on('get_chat_filter', async (payload) => {
-    try {
-      const { search = '', filterType = 'all' } = payload?.data || {};
-      const { uid, agent } = connectionInfo;
-
-      // Build extra condition based on filterType
-      let extraCondition = '';
-      if (filterType === 'read') {
-        extraCondition = ' AND c.is_opened = 1 ';
-      } else if (filterType === 'unread') {
-        extraCondition = ' AND c.is_opened = 0 ';
-      }
-
-      // Build search condition if a search string is provided
-      let searchCondition = '';
-      let searchParams = [];
-      if (search.trim() !== '') {
-        searchCondition = ` AND (
-          c.sender_name LIKE ?
-          OR c.sender_mobile LIKE ?
-          OR c.last_message LIKE ?
-          OR c.chat_note LIKE ?
-          OR JSON_UNQUOTE(JSON_EXTRACT(c.chat_tags, '$.title')) LIKE ?
-        )`;
-        const likeSearch = `%${search}%`;
-        searchParams = [likeSearch, likeSearch, likeSearch, likeSearch, likeSearch];
-      }
-
-      let chats = [];
-      if (
-        agent &&
-        !(connectionInfo.permissions || []).some(
-          (p) => p === 'inbox_access' || p === 'inbox.read' || p === 'inbox.reply',
-        )
-      ) {
-        return sendToSocketId(
-          socket.id,
-          { msg: 'Access Denied: inbox_access permission required' },
-          'error',
-        );
-      }
-
-      if (agent) {
-        const assignedChats = await query('SELECT chat_id FROM agent_chats WHERE uid = ?', [uid]);
-
-        if (assignedChats.length) {
-          const chatIds = assignedChats.map(({ chat_id }) => chat_id);
-          chats = await query(
-            `SELECT c.*, a.name AS agent_name, a.email AS agent_email
-             FROM chats c
-             LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
-             LEFT JOIN agents a ON ac.uid = a.uid
-             WHERE c.chat_id IN (?)
-             AND c.uid = ? 
-             ${extraCondition}
-             ${searchCondition}
-             ORDER BY c.last_message_came DESC 
-             LIMIT 20`,
-            [chatIds, agent ? connectionInfo?.decodedValue?.owner_uid : uid, ...searchParams],
-          );
+    const data = payload.data || {};
+    const filters = filtered
+      ? {
+          search: String(data.search || '').trim(),
+          filterType: ['read', 'unread'].includes(data.filterType) ? data.filterType : 'all',
+          channel: ['whatsapp', 'instagram', 'website'].includes(data.channel)
+            ? data.channel
+            : 'all',
         }
-      } else {
-        chats = await query(
-          `SELECT c.*, a.name AS agent_name, a.email AS agent_email
-           FROM chats c
-           LEFT JOIN agent_chats ac ON c.chat_id = ac.chat_id AND c.uid = ac.owner_uid
-           LEFT JOIN agents a ON ac.uid = a.uid
-           WHERE c.uid = ?
-           ${extraCondition}
-           ${searchCondition}
-           ORDER BY c.last_message_came DESC 
-           LIMIT 20`,
-          [uid, ...searchParams],
-        );
-      }
-
-      console.log('Filtered Chats:', chats);
-
-      const contacts = await query('SELECT * FROM contact WHERE uid = ?', [
-        agent ? connectionInfo?.decodedValue?.owner_uid : uid,
-      ]);
-
-      const chatData = mergeArraysWithPhonebook(chats, contacts, search, agent);
-      sendToUid(uid, chatData, 'get_chat');
+      : { search: '', filterType: 'all', channel: 'all' };
+    connectionInfo.data = { ...connectionInfo.data, inboxFilters: filters };
+    try {
+      const chats = await updateChatListSocket({ connectionInfo, limit: data.limit });
+      // Search belongs to this socket; another tab may be using a different filter.
+      sendToSocketId(
+        id,
+        data.requestId == null ? chats : { chats, requestId: data.requestId },
+        'get_chat',
+      );
     } catch (err) {
-      console.error(err);
+      console.error('Inbox list failed:', err.message);
+      sendToSocketId(
+        id,
+        { msg: 'Unable to load chats. Please retry.', requestId: data.requestId },
+        'error',
+      );
     }
-  });
+  }
+  socket.on('get_chat', (payload) => sendChatList(payload));
+  socket.on('get_chat_filter', (payload) => sendChatList(payload, true));
 
   socket.on('delete_chat', async (payload) => {
     try {
-      const { chatId, type } = payload?.data;
-      const { uid, agent, id } = connectionInfo;
+      const { chatId, type } = payload?.data || {};
+      const { agent, id } = connectionInfo;
 
       // Agents must not delete chats — this is a supervisor/owner operation
       if (agent) {
@@ -238,8 +83,12 @@ function processSocketEvent({
       }
 
       if (chatId && type) {
-        const { uid, agent } = connectionInfo;
-        await query(`DELETE FROM chats WHERE chat_id = ?`, [chatId]);
+        const { uid, id, agent } = connectionInfo;
+        const [ownedChat] = await query('SELECT id FROM chats WHERE chat_id = ? AND uid = ?', [
+          chatId,
+          uid,
+        ]);
+        if (!ownedChat) return sendToSocketId(id, { msg: 'Conversation not found.' }, 'error');
 
         const convoPath = `${__dirname}/../../conversations/inbox/${
           agent ? connectionInfo?.decodedValue?.owner_uid : uid
@@ -258,13 +107,20 @@ function processSocketEvent({
 
   socket.on('on_open_chat', async (payload) => {
     try {
-      const { chatId, limit, chat } = payload?.data;
+      const { chatId, limit, chat, requestId } = payload?.data || {};
+      connectionInfo.data = { ...connectionInfo.data, openChatRequestId: requestId };
       const { uid, id, agent } = connectionInfo;
       if (chatId && limit) {
         let activeChatId = chatId;
         let activeChat = chat;
         let activeChatDbId = chat?.id;
 
+        if (agent && chatId.startsWith('contact-'))
+          return sendToSocketId(
+            id,
+            { msg: 'Agents can only open assigned conversations.', requestChatId: chatId },
+            'error',
+          );
         if (chatId.startsWith('contact-')) {
           const mobile = chatId.replace('contact-', '');
           const tenantUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
@@ -298,6 +154,21 @@ function processSocketEvent({
           activeChat = existing;
           activeChatDbId = existing.id;
         }
+
+        const tenantUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
+        const [storedChat] = await query('SELECT * FROM chats WHERE chat_id = ? AND uid = ?', [
+          activeChatId,
+          tenantUid,
+        ]);
+        if (!storedChat) {
+          return sendToSocketId(
+            id,
+            { msg: 'Conversation not found.', requestChatId: chatId },
+            'error',
+          );
+        }
+        activeChat = { ...activeChat, ...storedChat };
+        activeChatDbId = storedChat.id;
 
         // If agent, verify they have permission and are assigned to this chat
         if (agent) {
@@ -336,16 +207,14 @@ function processSocketEvent({
         const labelAdded = await query(`SELECT * FROM chat_tags WHERE uid = ?`, [
           agent ? connectionInfo?.decodedValue?.owner_uid : uid,
         ]);
-        const agents = await query(`SELECT * FROM agents WHERE owner_uid = ?`, [
+        const agents = await query(`SELECT uid, name, email FROM agents WHERE owner_uid = ?`, [
           agent ? connectionInfo?.decodedValue?.owner_uid : uid,
         ]);
 
         const [chatAssignAgent] = await query(
-          `SELECT * FROM agent_chats WHERE chat_id = ? AND owner_uid = ?`,
+          `SELECT ac.*, a.name, a.email FROM agent_chats ac LEFT JOIN agents a ON a.uid = ac.uid AND a.owner_uid = ac.owner_uid WHERE ac.chat_id = ? AND ac.owner_uid = ?`,
           [activeChatId, agent ? connectionInfo?.decodedValue?.owner_uid : uid],
         );
-
-        const tenantUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
 
         const [contactData] = await query(
           'SELECT auto_reply_disabled_until FROM contact WHERE uid = ? AND mobile = ? LIMIT 1',
@@ -353,6 +222,9 @@ function processSocketEvent({
         );
 
         const onChatSelectData = {
+          requestChatId: chatId,
+          requestId: payload?.data?.requestId,
+          background: Boolean(payload?.data?.background),
           conversation: conversation || [],
           chatinfo: {
             ...activeChat,
@@ -369,13 +241,22 @@ function processSocketEvent({
           chatAssignAgent: chatAssignAgent || {},
         };
 
+        if (requestId != null && connectionInfo.data?.openChatRequestId !== requestId) return;
         sendToSocketId(id, onChatSelectData, 'on_open_chat');
         updateConnectionDataBySocketId(connectionInfo.id, {
-          selectedChat: activeChat,
+          selectedChat: { ...activeChat, ...chatData },
         });
       }
     } catch (err) {
       console.error(err);
+      sendToSocketId(
+        connectionInfo.id,
+        {
+          msg: 'Unable to load this conversation. Please retry.',
+          requestChatId: payload?.data?.chatId,
+        },
+        'error',
+      );
     }
   });
 
@@ -388,32 +269,17 @@ function processSocketEvent({
         return sendToSocketId(id, { msg: 'Agents cannot reassign chats' }, 'error');
       }
 
-      const { chatId, agentUid, unAssign } = payload.data;
-      const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
-
-      console.log({ chatId, agentUid, unAssign });
-
-      // Clean up any existing assignments for this chat to prevent duplicate rows
-      await query(`DELETE FROM agent_chats WHERE chat_id = ? AND owner_uid = ?`, [
-        chatId,
-        ownerUid,
-      ]);
-
-      if (chatId && agentUid && !unAssign) {
-        await query(`INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)`, [
-          ownerUid,
-          agentUid,
-          chatId,
-        ]);
-      }
+      const { chatId, agentUid, unAssign } = payload.data || {};
+      const { assignChat } = require('../../services/chatAssignment');
+      await assignChat({ ownerUid: uid, chatId, agentUid: unAssign ? null : agentUid });
     } catch (err) {
-      console.error(err);
+      sendToSocketId(connectionInfo.id, { msg: err.message }, 'error');
     }
   });
 
   socket.on('save_chat_note', async (payload) => {
     try {
-      const { id: chatRowId, chatNote } = payload?.data;
+      const { id: chatRowId, chatNote } = payload?.data || {};
       const { uid, agent, id } = connectionInfo;
 
       // Agents must use the scoped REST endpoint /api/agent/save_note instead
@@ -422,7 +288,11 @@ function processSocketEvent({
       }
 
       if (chatRowId) {
-        await query(`UPDATE chats SET chat_note = ? WHERE id = ?`, [chatNote, chatRowId]);
+        await query(`UPDATE chats SET chat_note = ? WHERE id = ? AND uid = ?`, [
+          chatNote,
+          chatRowId,
+          uid,
+        ]);
       }
     } catch (err) {
       console.error(err);
@@ -431,7 +301,7 @@ function processSocketEvent({
 
   socket.on('add_label', async (payload) => {
     try {
-      const { label, hex } = payload?.data;
+      const { label, hex } = payload?.data || {};
       const { uid, id, agent } = connectionInfo;
 
       // Agents must not create labels — this is a supervisor/owner operation
@@ -466,7 +336,7 @@ function processSocketEvent({
 
   socket.on('on_label_delete', async (payload) => {
     try {
-      const { labelId } = payload?.data;
+      const { labelId } = payload?.data || {};
       const { uid, id, agent } = connectionInfo;
 
       // Agents must not delete labels — this is a supervisor/owner operation
@@ -475,7 +345,7 @@ function processSocketEvent({
       }
 
       const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
-      await query(`DELETE FROM chat_tags WHERE id = ?`, [labelId]);
+      await query(`DELETE FROM chat_tags WHERE id = ? AND uid = ?`, [labelId, ownerUid]);
 
       // updating label
       const labelsDataNew = await query(`SELECT * FROM chat_tags WHERE uid = ?`, [ownerUid]);
@@ -489,7 +359,7 @@ function processSocketEvent({
 
   socket.on('set_chat_label', async (payload) => {
     try {
-      const { labelData, chatIdRow } = payload?.data;
+      const { labelData, chatIdRow } = payload?.data || {};
       const { uid, id, agent } = connectionInfo;
 
       // Agents must not assign labels — this is a supervisor/owner operation
@@ -503,13 +373,17 @@ function processSocketEvent({
         return sendToSocketId(id, { msg: 'Invalid request' }, 'error');
       }
 
-      await query(`UPDATE chats SET chat_tags = ? WHERE id = ?`, [
+      await query(`UPDATE chats SET chat_tags = ? WHERE id = ? AND uid = ?`, [
         JSON.stringify(labelData),
         chatIdRow,
+        ownerUid,
       ]);
 
       // updating chat info
-      const [updatedChatData] = await query(`SELECT * FROM chats WHERE id = ?`, [chatIdRow]);
+      const [updatedChatData] = await query(`SELECT * FROM chats WHERE id = ? AND uid = ?`, [
+        chatIdRow,
+        ownerUid,
+      ]);
 
       if (updatedChatData?.chat_tags) {
         sendToSocketId(id, updatedChatData?.chat_tags, 'update_chat_info');
@@ -534,27 +408,29 @@ function processSocketEvent({
     }
   });
 
-  socket.on('send_chat_message', async (payload) => {
+  socket.on('send_chat_message', async (payload, acknowledge) => {
+    const respond = (result) => {
+      if (typeof acknowledge === 'function') acknowledge(result);
+      if (!result.success)
+        sendToSocketId(connectionInfo.id, { msg: result.msg, operation: 'send' }, 'error');
+      return result;
+    };
     try {
-      const { type, msgCon, chatInfo } = payload.data;
-      const { uid, id, agent } = connectionInfo;
+      const { type, msgCon } = payload?.data || {};
+      const { uid, agent } = connectionInfo;
       const { selectedChat } = connectionInfo?.data;
 
       if (!msgCon || !type) {
-        return sendToSocketId(id, { msg: 'Please add a message' }, 'error');
+        return respond({ success: false, msg: 'Please add a message' });
       }
 
       if (agent) {
         if (
           !(connectionInfo.permissions || []).some(
-            (p) => p === 'inbox_access' || p === 'inbox.read' || p === 'inbox.reply',
+            (p) => p === 'inbox_access' || p === 'inbox.reply',
           )
         ) {
-          return sendToSocketId(
-            id,
-            { msg: 'Access Denied: inbox_access permission required' },
-            'error',
-          );
+          return respond({ success: false, msg: 'Access Denied: inbox.reply permission required' });
         }
         if (selectedChat?.chat_id) {
           const assigned = await query('SELECT 1 FROM agent_chats WHERE uid = ? AND chat_id = ?', [
@@ -562,21 +438,23 @@ function processSocketEvent({
             selectedChat.chat_id,
           ]);
           if (!assigned.length) {
-            return sendToSocketId(id, { msg: 'Not assigned to this chat' }, 'error');
+            return respond({ success: false, msg: 'Not assigned to this chat' });
           }
         }
       }
 
       if (!selectedChat?.id) {
-        return sendToSocketId(
-          id,
-          { msg: 'Please open the chat again you server faced socket issue' },
-          'error',
-        );
+        return respond({ success: false, msg: 'Open an assigned conversation before replying.' });
       }
 
-      const senderName = selectedChat?.sender_name;
-      const senderMobile = selectedChat?.sender_mobile;
+      const ownerUid = agent ? connectionInfo.decodedValue.owner_uid : uid;
+      const [chatInfo] = await query('SELECT * FROM chats WHERE chat_id = ? AND uid = ?', [
+        selectedChat.chat_id,
+        ownerUid,
+      ]);
+      if (!chatInfo) return respond({ success: false, msg: 'Conversation not found.' });
+      const senderName = chatInfo.sender_name;
+      const senderMobile = chatInfo.sender_mobile;
 
       const [user] = await query(`SELECT * FROM user WHERE uid = ?`, [
         agent ? connectionInfo?.decodedValue?.owner_uid : uid,
@@ -605,30 +483,46 @@ function processSocketEvent({
         sendMsg = await sendInstagramMsg({
           msgObj: msgCon,
           to: senderMobile,
-          uid: agent ? connectionInfo?.decodedValue?.owner_uid : uid,
+          uid: ownerUid,
+          chatId: selectedChat.chat_id,
         });
-      } else {
+      } else if (['website', 'webchat'].includes(chatInfo.origin?.toLowerCase())) {
+        if (type !== 'text')
+          return respond({
+            success: false,
+            msg: 'Website chat currently supports text replies only.',
+          });
+        sendMsg = { success: true, id: require('crypto').randomUUID(), status: 'available' };
+      } else if (['meta', 'whatsapp', 'whatsapp_cloud'].includes(chatInfo.origin?.toLowerCase())) {
         sendMsg = await sendMetaMsg({
           msgObj: msgCon,
           to: senderMobile,
-          uid: agent ? connectionInfo?.decodedValue?.owner_uid : uid,
+          uid: ownerUid,
+          chatId: selectedChat.chat_id,
         });
       }
 
+      if (!sendMsg) return respond({ success: false, msg: 'Unsupported conversation channel.' });
       if (!sendMsg?.success) {
         console.log(sendMsg);
-        return sendToSocketId(id, { msg: sendMsg?.msg }, 'error');
+        return respond({ success: false, msg: sendMsg?.msg || 'Message could not be sent.' });
       }
 
       if (sendMsg?.id) {
         const ownerUid = agent ? connectionInfo?.decodedValue?.owner_uid : uid;
         const chatPath = `${__dirname}/../../conversations/inbox/${ownerUid}/${selectedChat?.chat_id}.json`;
-        const msgObjNew = { ...msgObj, metaChatId: sendMsg?.id };
+        const msgObjNew = {
+          ...msgObj,
+          metaChatId: sendMsg.id,
+          correlation_id: sendMsg.correlation_id || null,
+          origin: chatInfo.origin,
+          status: sendMsg.queued ? 'queued' : sendMsg.status || 'sent',
+        };
         addObjectToFile(msgObjNew, chatPath);
 
         const existingChat = await query(
-          `SELECT last_reply_by, last_incoming_time FROM chats WHERE chat_id = ?`,
-          [selectedChat?.chat_id],
+          `SELECT last_reply_by, last_incoming_time FROM chats WHERE chat_id = ? AND uid = ?`,
+          [selectedChat?.chat_id, ownerUid],
         );
         if (
           existingChat.length > 0 &&
@@ -655,8 +549,8 @@ function processSocketEvent({
         }
 
         await query(
-          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ?, last_reply_by = 'agent', last_outgoing_time = ?, sla_violated = 0, sla_expires_at = NULL WHERE chat_id = ?`,
-          [userTimezone, JSON.stringify(msgObjNew), 1, Date.now(), selectedChat?.chat_id],
+          `UPDATE chats SET last_message_came = ?, last_message = ?, is_opened = ?, last_reply_by = 'agent', last_outgoing_time = ?, sla_violated = 0, sla_expires_at = NULL WHERE chat_id = ? AND uid = ?`,
+          [userTimezone, JSON.stringify(msgObjNew), 1, Date.now(), selectedChat?.chat_id, ownerUid],
         );
 
         // Send the latest chat list to all sockets of the user.
@@ -665,18 +559,26 @@ function processSocketEvent({
           const updateChatSocketData = await updateChatListSocket({
             connectionInfo: socketConn,
           });
-          sendToUid(ownerUid, updateChatSocketData, 'update_chat_list');
+          sendToSocketId(socketConn.id, updateChatSocketData, 'update_chat_list');
+          if (socketConn.data?.selectedChat?.chat_id === selectedChat?.chat_id) {
+            sendToSocketId(socketConn.id, { chatId: selectedChat.chat_id }, 'update_conversation');
+          }
         });
       }
 
-      console.dir({ sendMsg }, { depth: null });
+      return respond({
+        success: true,
+        id: sendMsg.id,
+        queued: Boolean(sendMsg.queued),
+        status: sendMsg.queued ? 'queued' : sendMsg.status || 'sent',
+      });
     } catch (err) {
       console.error(err);
+      return respond({
+        success: false,
+        msg: 'Message could not be sent. Your draft has been kept.',
+      });
     }
-  });
-
-  socket.on('add', async (payload) => {
-    updateConnectionDataBySocketId(connectionInfo.id, payload);
   });
 }
 

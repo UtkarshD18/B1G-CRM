@@ -323,7 +323,34 @@ async function processOfflinePayment({ uid, planId }) {
 
 async function startFreeTrial(uid, planId) {
   const getUser = await query(`SELECT * FROM user WHERE uid = ?`, [uid]);
-  if (getUser[0]?.trial > 0) {
+  const currentUser = getUser[0];
+  const currentPlan = (() => {
+    if (currentUser?.plan && typeof currentUser.plan === 'object') return currentUser.plan;
+    try {
+      return JSON.parse(currentUser?.plan || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  const expirationValue = Number(currentUser?.plan_expire);
+  const expirationTime = Number.isFinite(expirationValue)
+    ? Math.abs(expirationValue) < 1e12
+      ? expirationValue * 1000
+      : expirationValue
+    : Date.parse(currentUser?.plan_expire || '');
+  const hasActivePaidPlan =
+    expirationTime > Date.now() &&
+    Number(currentPlan?.price || 0) > 0 &&
+    Number(currentPlan?.is_trial || 0) < 1;
+
+  if (hasActivePaidPlan) {
+    return {
+      success: false,
+      msg: 'A free trial is unavailable while a paid subscription is active.',
+    };
+  }
+
+  if (currentUser?.trial > 0) {
     return {
       success: false,
       msg: 'You have already taken Trial once. You can not enroll for trial again.',
@@ -346,7 +373,7 @@ async function startFreeTrial(uid, planId) {
     JSON.stringify({ plan: getPlan[0] }),
   ]);
 
-  await billingHelper.updateUserPlan(getPlan[0], getUser[0]?.uid);
+  await billingHelper.updateUserPlan(getPlan[0], currentUser?.uid);
   await query(`UPDATE user SET trial = ? WHERE uid = ?`, [1, uid]);
 
   return {

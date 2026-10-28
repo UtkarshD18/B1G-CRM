@@ -53,7 +53,7 @@ jobs:
         run: npm audit --audit-level=high || echo "Audit found vulnerabilities"
 
       - name: Run Migrations
-        run: npm run migrate || echo "No migration script or migrations already applied"
+        run: npm run db:migrate
         env:
           DATABASE_URL: postgres://b1gcrm@localhost:5432/b1gcrm
           NODE_ENV: test

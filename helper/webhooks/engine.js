@@ -1,17 +1,25 @@
-const axios = require("axios");
-const { query } = require("../../database/dbpromise.js");
+const axios = require('axios');
+const { query } = require('../../database/dbpromise.js');
 
-async function dispatchWebhookWithRetry(url, payload, ruleName, maxRetries = 3, initialDelay = 1000) {
+async function dispatchWebhookWithRetry(
+  url,
+  payload,
+  ruleName,
+  maxRetries = 3,
+  initialDelay = 1000,
+) {
   let attempt = 1;
   let delay = initialDelay;
 
   while (true) {
     try {
-      console.log(`Dispatching webhook rule "${ruleName}" payload to ${url} (Attempt ${attempt}/${maxRetries + 1})...`);
+      console.log(
+        `Dispatching webhook rule "${ruleName}" payload to ${url} (Attempt ${attempt}/${maxRetries + 1})...`,
+      );
       const res = await axios.post(url, payload, { timeout: 5000 });
       return {
         status: res.status,
-        body: typeof res.data === "string" ? res.data : JSON.stringify(res.data)
+        body: typeof res.data === 'string' ? res.data : JSON.stringify(res.data),
       };
     } catch (err) {
       const resStatus = err.response ? err.response.status : 500;
@@ -22,12 +30,12 @@ async function dispatchWebhookWithRetry(url, payload, ruleName, maxRetries = 3, 
       if (attempt > maxRetries) {
         return {
           status: resStatus,
-          body: resBody
+          body: resBody,
         };
       }
 
       console.log(`Retrying in ${delay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
       attempt += 1;
       delay *= 2; // Exponential backoff
     }
@@ -35,7 +43,7 @@ async function dispatchWebhookWithRetry(url, payload, ruleName, maxRetries = 3, 
 }
 
 function extractBodyText(newMessage) {
-  if (!newMessage) return "";
+  if (!newMessage) return '';
   const messageBody =
     newMessage?.msgContext?.text?.body ||
     newMessage?.msgContext?.interactive?.body?.text ||
@@ -48,7 +56,7 @@ function extractBodyText(newMessage) {
     newMessage?.msgContext?.location ||
     newMessage?.msgContext?.contact?.contacts?.[0]?.name?.formatted_name ||
     newMessage?.text ||
-    "";
+    '';
   return messageBody;
 }
 
@@ -66,10 +74,7 @@ async function processWebhookRules({ latestConversation, uid, origin }) {
     }
 
     // 1. Fetch active webhook rules for this user
-    const rules = await query(
-      `SELECT * FROM webhook_rules WHERE uid = ? AND active = ?`,
-      [uid, 1]
-    );
+    const rules = await query(`SELECT * FROM webhook_rules WHERE uid = ? AND active = ?`, [uid, 1]);
 
     if (!rules || rules.length === 0) {
       return;
@@ -79,23 +84,23 @@ async function processWebhookRules({ latestConversation, uid, origin }) {
 
     for (const rule of rules) {
       let matched = false;
-      const matchOperator = String(rule.match_operator || "contains").toLowerCase();
-      const matchValue = String(rule.match_value || "").toLowerCase();
+      const matchOperator = String(rule.match_operator || 'contains').toLowerCase();
+      const matchValue = String(rule.match_value || '').toLowerCase();
       const msgLower = incomingMsg.toLowerCase();
 
       // 2. Evaluate criteria match
       switch (matchOperator) {
-        case "contains":
+        case 'contains':
           matched = msgLower.includes(matchValue);
           break;
-        case "equals":
+        case 'equals':
           matched = msgLower === matchValue;
           break;
-        case "starts_with":
+        case 'starts_with':
           matched = msgLower.startsWith(matchValue);
           break;
-        case "exists":
-          matched = incomingMsg !== undefined && incomingMsg !== null && incomingMsg !== "";
+        case 'exists':
+          matched = incomingMsg !== undefined && incomingMsg !== null && incomingMsg !== '';
           break;
         default:
           break;
@@ -108,38 +113,45 @@ async function processWebhookRules({ latestConversation, uid, origin }) {
       console.log(`Webhook rule matched: "${rule.name}" (ID: ${rule.id})`);
 
       // 3. Execute matched action
-      const actionType = String(rule.action_type || "tag_chat").toLowerCase();
+      const actionType = String(rule.action_type || 'tag_chat').toLowerCase();
       let actionPayloadObj = {};
       try {
-        actionPayloadObj = JSON.parse(rule.action_payload || "{}");
+        actionPayloadObj = JSON.parse(rule.action_payload || '{}');
       } catch {
         actionPayloadObj = { value: rule.action_payload };
       }
 
-      const chatId = newMessage.chatId || latestConversation.newMessage.chatId || latestConversation.newMessage.senderMobile;
+      const chatId =
+        newMessage.chatId ||
+        latestConversation.newMessage.chatId ||
+        latestConversation.newMessage.senderMobile;
 
-      if (actionType === "send_webhook") {
+      if (actionType === 'send_webhook') {
         // Find target URL from payload or fallback to raw string
         const targetUrl = actionPayloadObj.url || rule.action_payload;
-        if (!targetUrl || !targetUrl.startsWith("http")) {
-          console.warn("Invalid webhook URL target specified:", targetUrl);
+        if (!targetUrl || !targetUrl.startsWith('http')) {
+          console.warn('Invalid webhook URL target specified:', targetUrl);
           continue;
         }
 
         const webhookBody = {
-          event: "message.received",
+          event: 'message.received',
           uid,
           chatId,
           origin,
           message: {
             senderMobile: senderNumber,
-            senderName: toName || "Unknown",
+            senderName: toName || 'Unknown',
             text: incomingMsg,
-            timestamp: newMessage.timestamp || Date.now()
-          }
+            timestamp: newMessage.timestamp || Date.now(),
+          },
         };
 
-        const { status: resStatus, body: resBody } = await dispatchWebhookWithRetry(targetUrl, webhookBody, rule.name);
+        const { status: resStatus, body: resBody } = await dispatchWebhookWithRetry(
+          targetUrl,
+          webhookBody,
+          rule.name,
+        );
 
         // Write to webhook_logs table
         await query(
@@ -152,61 +164,66 @@ async function processWebhookRules({ latestConversation, uid, origin }) {
             targetUrl,
             JSON.stringify(webhookBody),
             resStatus,
-            resBody.slice(0, 1000) // Keep response snippet safe from overflows
-          ]
+            resBody.slice(0, 1000), // Keep response snippet safe from overflows
+          ],
         );
-      } else if (actionType === "tag_chat") {
-        const tag = actionPayloadObj.tag || actionPayloadObj.value || "webhook-tagged";
-        const [chat] = await query("SELECT * FROM chats WHERE chat_id = ? AND uid = ?", [chatId, uid]);
+      } else if (actionType === 'tag_chat') {
+        const tag = actionPayloadObj.tag || actionPayloadObj.value || 'webhook-tagged';
+        const [chat] = await query('SELECT * FROM chats WHERE chat_id = ? AND uid = ?', [
+          chatId,
+          uid,
+        ]);
         if (chat) {
           let tags = [];
           try {
-            tags = JSON.parse(chat.chat_tags || "[]");
-            if (!Array.isArray(tags)) tags = String(chat.chat_tags).split(",").map(t => t.trim());
+            tags = JSON.parse(chat.chat_tags || '[]');
+            if (!Array.isArray(tags))
+              tags = String(chat.chat_tags)
+                .split(',')
+                .map((t) => t.trim());
           } catch {
             tags = chat.chat_tags ? [chat.chat_tags] : [];
           }
 
           if (!tags.includes(tag)) {
             tags.push(tag);
-            await query("UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ?", [
+            await query('UPDATE chats SET chat_tags = ? WHERE chat_id = ? AND uid = ?', [
               JSON.stringify(tags),
               chatId,
-              uid
+              uid,
             ]);
             console.log(`Webhook rule tagged chat ${chatId} with "${tag}"`);
           }
         }
-      } else if (actionType === "set_status") {
-        const status = actionPayloadObj.status || actionPayloadObj.value || "pending";
-        await query("UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ?", [
+      } else if (actionType === 'set_status') {
+        const status = actionPayloadObj.status || actionPayloadObj.value || 'pending';
+        await query('UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ?', [
           status,
           chatId,
-          uid
+          uid,
         ]);
         console.log(`Webhook rule updated chat ${chatId} status to "${status}"`);
-      } else if (actionType === "assign_agent") {
+      } else if (actionType === 'assign_agent') {
         const agentUid = actionPayloadObj.agentUid || actionPayloadObj.value;
         if (agentUid) {
-          const agentVerify = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [agentUid, uid]);
+          const agentVerify = await query(`SELECT * FROM agents WHERE uid = ? AND owner_uid = ?`, [
+            agentUid,
+            uid,
+          ]);
           if (agentVerify.length > 0) {
-            // Remove any existing assignment first
-            await query("DELETE FROM agent_chats WHERE chat_id = ? AND owner_uid = ?", [chatId, uid]);
-            // Insert new assignment
-            await query("INSERT INTO agent_chats (owner_uid, uid, chat_id) VALUES (?,?,?)", [
-              uid,
-              agentUid,
-              chatId
-            ]);
+            const { assignChat } = require('../../services/chatAssignment');
+            await assignChat({ ownerUid: uid, chatId, agentUid });
             console.log(`Webhook rule assigned chat ${chatId} to agent ${agentUid}`);
           } else {
-            console.warn(`Webhook rule assign_agent security block: Agent ${agentUid} does not belong to owner ${uid}`);
+            console.warn(
+              `Webhook rule assign_agent security block: Agent ${agentUid} does not belong to owner ${uid}`,
+            );
           }
         }
       }
     }
   } catch (err) {
-    console.error("Error evaluating webhook rules engine:", err.message);
+    console.error('Error evaluating webhook rules engine:', err.message);
   }
 }
 

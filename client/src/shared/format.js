@@ -86,13 +86,8 @@ export function formatRelativeTimestamp(value) {
     return 'N/A';
   }
 
-  const timestamp = Number(value);
-  if (!Number.isFinite(timestamp)) {
-    return String(value);
-  }
-
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleString();
+  const date = toMessageDate(value);
+  return date ? date.toLocaleString() : String(value);
 }
 
 export function formatDateTime(value) {
@@ -136,4 +131,21 @@ export function summarizePlan(value) {
     plan.title ||
     (plan.plan_duration_in_days ? `${plan.plan_duration_in_days} days` : 'Active Plan')
   );
+}
+
+export function toMessageDate(value) {
+  if (!value) return null;
+  const numeric = Number(value);
+  const date = new Date(
+    Number.isFinite(numeric) ? (Math.abs(numeric) < 1e12 ? numeric * 1000 : numeric) : value,
+  );
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function formatChatTimestamp(value) {
+  const date = toMessageDate(value);
+  if (!date) return '';
+  return date.toDateString() === new Date().toDateString()
+    ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : date.toLocaleDateString([], { day: 'numeric', month: 'short' });
 }

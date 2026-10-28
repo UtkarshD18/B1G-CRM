@@ -1,0 +1,43 @@
+/* Assignment labels need their own foreground: the portal's generic dark-mode
+   span color otherwise overrides the text while leaving a pale badge behind. */
+:root {
+  --inbox-assigned-bg: #dbeafe;
+  --inbox-assigned-fg: #1e40af;
+  --inbox-assigned-border: #93c5fd;
+  --inbox-unassigned-bg: #e2e8f0;
+  --inbox-unassigned-fg: #334155;
+  --inbox-unassigned-border: #94a3b8;
+}
+:root.dark-theme,
+body.dark-theme {
+  --inbox-assigned-bg: #172554;
+  --inbox-assigned-fg: #bfdbfe;
+  --inbox-assigned-border: #3b82f6;
+  --inbox-unassigned-bg: #1e293b;
+  --inbox-unassigned-fg: #e2e8f0;
+  --inbox-unassigned-border: #64748b;
+}
+.portal-shell .portal-main span.chat-card-agent-badge,
+.portal-shell .portal-main span.agent-badge {
+  background: var(--inbox-assigned-bg);
+  color: var(--inbox-assigned-fg) !important;
+  border: 1px solid var(--inbox-assigned-border);
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.45;
+  padding: 3px 7px;
+  margin-left: 0;
+}
+.portal-shell .portal-main span.agent-badge.unassigned {
+  background: var(--inbox-unassigned-bg);
+  color: var(--inbox-unassigned-fg) !important;
+  border-color: var(--inbox-unassigned-border);
+}
+.portal-shell .portal-main span.chat-card-agent-badge {
+  width: fit-content;
+  max-width: 100%;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  justify-self: start;
+}

@@ -1,0 +1,9 @@
+# The frontend has its own flat ESLint configuration and lint command.
+client/
+# Generated output and local audit harnesses are not application source.
+coverage/
+dist/
+scratch/
+.local/
+.private/
+docs/audits/

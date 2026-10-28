@@ -1,50 +1,12 @@
 const { query } = require('../../database/dbpromise');
 const fs = require('fs');
-const { getConnectionsByUid, sendToUid, sendRingToUid, sendToSocketId } = require('../../socket');
-const { mergeArraysWithPhonebook } = require('../socket/function');
+const { getConnectionsByUid, sendRingToUid, sendToSocketId } = require('../../socket');
 const { processMetaMessage } = require('./meta');
 const { metaChatbotInit } = require('../chatbot/meta');
 const { processMessageQr } = require('../addon/qr/processThings');
 const { processWebhookRules } = require('../webhooks/engine');
 
-async function updateChatListSocket({ connectionInfo }) {
-  try {
-    const limit = 10;
-    const { uid, agent } = connectionInfo;
-    let chats = [];
-
-    if (agent) {
-      const assignedChats = await query(`SELECT chat_id FROM agent_chats WHERE uid = ?`, [uid]);
-      if (assignedChats.length) {
-        const chatIds = assignedChats.map(({ chat_id }) => chat_id);
-        chats = await query(
-          `SELECT * FROM chats 
-           WHERE chat_id IN (?) AND uid = ? 
-           ORDER BY last_message_came DESC 
-           LIMIT ?`,
-          [chatIds, agent ? connectionInfo?.decodedValue?.owner_uid : uid, limit],
-        );
-      }
-    } else {
-      chats = await query(
-        `SELECT * FROM chats 
-         WHERE uid = ? 
-         ORDER BY last_message_came DESC 
-         LIMIT ?`,
-        [uid, limit],
-      );
-    }
-
-    const contacts = await query(`SELECT * FROM contact WHERE uid = ?`, [
-      agent ? connectionInfo?.decodedValue?.owner_uid : uid,
-    ]);
-    const chatData = mergeArraysWithPhonebook(chats, contacts);
-
-    return chatData || [];
-  } catch (err) {
-    console.log(err);
-  }
-}
+const { loadChatList: updateChatListSocket } = require('../socket/chatList');
 
 async function processMessage({ body, uid, origin, getSession, sessionId, qrType }) {
   try {
@@ -140,6 +102,7 @@ async function processMessage({ body, uid, origin, getSession, sessionId, qrType
 }
 
 const eventBus = require('../../utils/channels/eventBus');
+const { publishInboxChange } = require('../../utils/channels/inboxNotifications');
 const path = require('path');
 
 function convertNumberToRandomString(number) {
@@ -286,23 +249,8 @@ eventBus.on('incoming_message', async (normalizedMsg) => {
       );
     }
 
-    // 5. Socket updates
-    const socketConnections = getConnectionsByUid(uid) || [];
-    socketConnections.forEach(async (socket) => {
-      const chatListData = await updateChatListSocket({ connectionInfo: socket });
-      sendToSocketId(socket?.id, chatListData, 'update_chat_list');
-
-      const openedChat = socket?.data?.selectedChat || null;
-      if (openedChat?.chat_id === chatId || openedChat?.sender_mobile === senderId) {
-        sendToSocketId(
-          socket?.id,
-          { conversation: { newMessage, latestMessages: conversationHistory.slice(-10) } },
-          'update_conversation',
-        );
-      }
-    });
-
-    sendRingToUid(uid);
+    // 5. Notify API sockets across worker processes after history is persisted.
+    await publishInboxChange({ uid, chatId });
 
     // 6. Trigger chatbot and webhook rules
     metaChatbotInit({

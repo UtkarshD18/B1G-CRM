@@ -1173,6 +1173,88 @@
   max-height: 500px;
 }
 
+/* Keep the flow editor readable in the neutral near-black theme. */
+.af-btn-primary {
+  background: #10b981 !important;
+  color: #06130f !important;
+  border: 1px solid #34d399 !important;
+}
+
+.af-canvas-section-title {
+  margin: 0 0 10px;
+  color: var(--text-primary);
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.af-remove-selected { align-self: flex-start; }
+
+body.dark-theme .af-input,
+body.dark-theme .af-select,
+body.dark-theme .af-textarea {
+  background: #171717;
+  border-color: #383838;
+  color: #f4f4f5;
+}
+
+body.dark-theme .af-input::placeholder,
+body.dark-theme .af-textarea::placeholder { color: #a1a1aa; }
+body.dark-theme .af-input:disabled { background: #202020; color: #a1a1aa; }
+
+body.dark-theme .af-node-palette-btn {
+  background: #171717;
+  border-color: #383838;
+  color: #e4e4e7;
+}
+
+body.dark-theme .af-node-palette-btn:hover {
+  background: #202020;
+  border-color: #10b981;
+  color: #f4f4f5;
+}
+
+body.dark-theme .af-canvas-area {
+  background: #090909;
+  border-color: #303030;
+}
+
+body.dark-theme .af-canvas-area .react-flow__node {
+  background: #191919;
+  border: 1px solid #52525b;
+  color: #f4f4f5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .42);
+}
+
+body.dark-theme .af-canvas-area .react-flow__node.selected {
+  border-color: #34d399;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, .3);
+}
+
+body.dark-theme .af-canvas-area .react-flow__edge-textbg { fill: #171717; }
+body.dark-theme .af-canvas-area .react-flow__edge-text { fill: #e4e4e7; }
+body.dark-theme .af-canvas-area .react-flow__minimap {
+  background: #151515;
+  border: 1px solid #383838;
+}
+body.dark-theme .af-canvas-area .react-flow__minimap-node { fill: #52525b; stroke: #a1a1aa; }
+body.dark-theme .af-canvas-area .react-flow__minimap-mask { fill: rgba(9, 9, 9, .72); }
+body.dark-theme .af-canvas-area .react-flow__controls {
+  border: 1px solid #383838;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+}
+body.dark-theme .af-canvas-area .react-flow__controls-button {
+  background: #191919;
+  border-bottom-color: #383838;
+  fill: #e4e4e7;
+}
+body.dark-theme .af-canvas-area .react-flow__controls-button:hover { background: #292929; }
+body.dark-theme .af-canvas-area .react-flow__background pattern line { stroke: #252525; }
+
+.diagnostics-table-scroll { width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.diagnostics-table-scroll table { min-width: 900px; }
+
 .af-inspector h4 {
   margin: 0;
   font-size: 0.85rem;

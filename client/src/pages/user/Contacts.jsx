@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
-import { apiFormRequest, apiRequest } from '../../shared/api'
-import { useAuth } from '../../shared/auth'
-import { DashboardCard } from '../../components/Dashboard'
+import { useCallback, useEffect, useState } from 'react';
+import { apiFormRequest, apiRequest } from '../../shared/api';
+import { useAuth } from '../../shared/auth';
+import { DashboardCard } from '../../components/Dashboard';
+import TablePagination from '../../components/TablePagination';
+import './Contacts.css';
 
 const overlayStyle = {
   position: 'fixed',
@@ -30,20 +32,24 @@ const modalStyle = {
 };
 
 function UserContactsPage() {
-  const { tokens } = useAuth()
-  const [phonebooks, setPhonebooks] = useState([])
-  const [contacts, setContacts] = useState([])
-  const [status, setStatus] = useState('')
-  const [tableLoading, setTableLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [selectedIds, setSelectedIds] = useState([])
-  const [phonebookName, setPhonebookName] = useState('')
-  const [csvFile, setCsvFile] = useState(null)
-  
+  const { tokens } = useAuth();
+  const [phonebooks, setPhonebooks] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [status, setStatus] = useState('');
+  const [tableLoading, setTableLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [phonebookPage, setPhonebookPage] = useState(1);
+  const [phonebookPageSize, setPhonebookPageSize] = useState(10);
+  const [contactPage, setContactPage] = useState(1);
+  const [contactPageSize, setContactPageSize] = useState(10);
+  const [phonebookName, setPhonebookName] = useState('');
+  const [csvFile, setCsvFile] = useState(null);
+
   // Custom edit states
-  const [renamingPhonebook, setRenamingPhonebook] = useState(null)
-  const [renamedPhonebookName, setRenamedPhonebookName] = useState('')
-  const [editingContact, setEditingContact] = useState(null)
+  const [renamingPhonebook, setRenamingPhonebook] = useState(null);
+  const [renamedPhonebookName, setRenamedPhonebookName] = useState('');
+  const [editingContact, setEditingContact] = useState(null);
   const [editedContactForm, setEditedContactForm] = useState({
     id: '',
     name: '',
@@ -53,7 +59,7 @@ function UserContactsPage() {
     var3: '',
     var4: '',
     var5: '',
-  })
+  });
 
   const [contactForm, setContactForm] = useState({
     phonebookId: '',
@@ -64,115 +70,131 @@ function UserContactsPage() {
     var3: '',
     var4: '',
     var5: '',
-  })
+  });
 
   const loadContactsData = useCallback(async () => {
-    setTableLoading(true)
+    setTableLoading(true);
     try {
       const [phonebookResult, contactResult] = await Promise.all([
         apiRequest('/api/phonebook/get_by_uid', { token: tokens.user }),
         apiRequest('/api/phonebook/get_uid_contacts', { token: tokens.user }),
-      ])
+      ]);
 
-      setPhonebooks(Array.isArray(phonebookResult?.data) ? phonebookResult.data : [])
-      setContacts(Array.isArray(contactResult?.data) ? contactResult.data : [])
+      setPhonebooks(Array.isArray(phonebookResult?.data) ? phonebookResult.data : []);
+      setContacts(Array.isArray(contactResult?.data) ? contactResult.data : []);
     } catch (error) {
-      setStatus(error.message || 'Unable to load contacts')
+      setStatus(error.message || 'Unable to load contacts');
     } finally {
-      setTableLoading(false)
+      setTableLoading(false);
     }
-  }, [tokens.user])
+  }, [tokens.user]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      loadContactsData()
-    }, 0)
+      loadContactsData();
+    }, 0);
 
     return () => {
-      window.clearTimeout(timer)
-    }
-  }, [loadContactsData])
+      window.clearTimeout(timer);
+    };
+  }, [loadContactsData]);
 
   const selectedPhonebook = phonebooks.find(
     (phonebook) => String(phonebook.id) === String(contactForm.phonebookId),
-  )
+  );
+  const safePhonebookPage = Math.min(
+    phonebookPage,
+    Math.max(1, Math.ceil(phonebooks.length / phonebookPageSize)),
+  );
+  const safeContactPage = Math.min(
+    contactPage,
+    Math.max(1, Math.ceil(contacts.length / contactPageSize)),
+  );
+  const visiblePhonebooks = phonebooks.slice(
+    (safePhonebookPage - 1) * phonebookPageSize,
+    safePhonebookPage * phonebookPageSize,
+  );
+  const visibleContacts = contacts.slice(
+    (safeContactPage - 1) * contactPageSize,
+    safeContactPage * contactPageSize,
+  );
 
   async function createPhonebook(event) {
-    event.preventDefault()
+    event.preventDefault();
     if (!phonebookName.trim()) {
-      setStatus('Phonebook name is required.')
-      return
+      setStatus('Phonebook name is required.');
+      return;
     }
 
-    setSaving(true)
-    setStatus('Creating phonebook...')
+    setSaving(true);
+    setStatus('Creating phonebook...');
 
     try {
       const result = await apiRequest('/api/phonebook/add', {
         method: 'POST',
         token: tokens.user,
         body: { name: phonebookName.trim() },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to create phonebook')
-        return
+        setStatus(result?.msg || 'Unable to create phonebook');
+        return;
       }
 
-      setPhonebookName('')
-      setStatus('Phonebook created.')
+      setPhonebookName('');
+      setStatus('Phonebook created.');
       if (result?.data) {
-        setPhonebooks((current) => [result.data, ...current])
+        setPhonebooks((current) => [result.data, ...current]);
       }
-      loadContactsData()
-      window.setTimeout(() => setStatus(''), 3000)
+      loadContactsData();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch (error) {
-      setStatus(error.message || 'Unable to create phonebook')
+      setStatus(error.message || 'Unable to create phonebook');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function deletePhonebook(id) {
-    setSaving(true)
-    setStatus('Deleting phonebook and its contacts...')
+    setSaving(true);
+    setStatus('Deleting phonebook and its contacts...');
 
     try {
       const result = await apiRequest('/api/phonebook/del_phonebook', {
         method: 'POST',
         token: tokens.user,
         body: { id },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to delete phonebook')
-        return
+        setStatus(result?.msg || 'Unable to delete phonebook');
+        return;
       }
 
-      setStatus('Phonebook deleted.')
-      loadContactsData()
-      window.setTimeout(() => setStatus(''), 3000)
+      setStatus('Phonebook deleted.');
+      loadContactsData();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch (error) {
-      setStatus(error.message || 'Unable to delete phonebook')
+      setStatus(error.message || 'Unable to delete phonebook');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function createContact(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (!selectedPhonebook) {
-      setStatus('Select a phonebook before adding a contact.')
-      return
+      setStatus('Select a phonebook before adding a contact.');
+      return;
     }
     if (!contactForm.mobile.trim()) {
-      setStatus('Mobile number is required.')
-      return
+      setStatus('Mobile number is required.');
+      return;
     }
 
-    setSaving(true)
-    setStatus('Creating contact...')
+    setSaving(true);
+    setStatus('Creating contact...');
 
     try {
       const result = await apiRequest('/api/phonebook/add_single_contact', {
@@ -189,11 +211,11 @@ function UserContactsPage() {
           var4: contactForm.var4.trim(),
           var5: contactForm.var5.trim(),
         },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to create contact')
-        return
+        setStatus(result?.msg || 'Unable to create contact');
+        return;
       }
 
       setContactForm({
@@ -205,133 +227,133 @@ function UserContactsPage() {
         var3: '',
         var4: '',
         var5: '',
-      })
-      setStatus('Contact created.')
-      loadContactsData()
-      window.setTimeout(() => setStatus(''), 3000)
+      });
+      setStatus('Contact created.');
+      loadContactsData();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch (error) {
-      setStatus(error.message || 'Unable to create contact')
+      setStatus(error.message || 'Unable to create contact');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function importContacts(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     if (!selectedPhonebook || !csvFile) {
-      setStatus('Select a phonebook and CSV file before importing.')
-      return
+      setStatus('Select a phonebook and CSV file before importing.');
+      return;
     }
 
-    const formData = new FormData()
-    formData.append('id', selectedPhonebook.id)
-    formData.append('phonebook_name', selectedPhonebook.name)
-    formData.append('file', csvFile)
+    const formData = new FormData();
+    formData.append('id', selectedPhonebook.id);
+    formData.append('phonebook_name', selectedPhonebook.name);
+    formData.append('file', csvFile);
 
-    setSaving(true)
-    setStatus('Importing CSV contacts...')
+    setSaving(true);
+    setStatus('Importing CSV contacts...');
 
     try {
       const result = await apiFormRequest('/api/phonebook/import_contacts', {
         token: tokens.user,
         formData,
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to import contacts')
-        return
+        setStatus(result?.msg || 'Unable to import contacts');
+        return;
       }
 
-      setCsvFile(null)
-      setStatus('Contacts imported.')
-      loadContactsData()
-      window.setTimeout(() => setStatus(''), 3000)
+      setCsvFile(null);
+      setStatus('Contacts imported.');
+      loadContactsData();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch (error) {
-      setStatus(error.message || 'Unable to import contacts')
+      setStatus(error.message || 'Unable to import contacts');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function deleteSelectedContacts() {
     if (!selectedIds.length) {
-      setStatus('Select at least one contact to delete.')
-      return
+      setStatus('Select at least one contact to delete.');
+      return;
     }
 
-    setSaving(true)
-    setStatus('Deleting selected contacts...')
+    setSaving(true);
+    setStatus('Deleting selected contacts...');
 
     try {
       const result = await apiRequest('/api/phonebook/del_contacts', {
         method: 'POST',
         token: tokens.user,
         body: { selected: selectedIds },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to delete contacts')
-        return
+        setStatus(result?.msg || 'Unable to delete contacts');
+        return;
       }
 
-      setSelectedIds([])
-      setStatus('Contacts deleted.')
-      loadContactsData()
-      window.setTimeout(() => setStatus(''), 3000)
+      setSelectedIds([]);
+      setStatus('Contacts deleted.');
+      loadContactsData();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch (error) {
-      setStatus(error.message || 'Unable to delete contacts')
+      setStatus(error.message || 'Unable to delete contacts');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   function toggleContact(id) {
     setSelectedIds((current) =>
       current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id],
-    )
+    );
   }
 
   // custom actions
   function startRenamePhonebook(phonebook) {
-    setRenamingPhonebook(phonebook)
-    setRenamedPhonebookName(phonebook.name)
+    setRenamingPhonebook(phonebook);
+    setRenamedPhonebookName(phonebook.name);
   }
 
   async function renamePhonebook(event) {
-    event.preventDefault()
+    event.preventDefault();
     if (!renamedPhonebookName.trim()) {
-      setStatus('Phonebook name is required.')
-      return
+      setStatus('Phonebook name is required.');
+      return;
     }
-    setSaving(true)
-    setStatus('Renaming phonebook...')
+    setSaving(true);
+    setStatus('Renaming phonebook...');
     try {
       const result = await apiRequest('/api/phonebook/update', {
         method: 'POST',
         token: tokens.user,
         body: { id: renamingPhonebook.id, name: renamedPhonebookName.trim() },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to rename phonebook')
-        return
+        setStatus(result?.msg || 'Unable to rename phonebook');
+        return;
       }
 
-      setRenamingPhonebook(null)
-      setRenamedPhonebookName('')
-      setStatus('Phonebook renamed.')
-      loadContactsData()
-      window.setTimeout(() => setStatus(''), 3000)
+      setRenamingPhonebook(null);
+      setRenamedPhonebookName('');
+      setStatus('Phonebook renamed.');
+      loadContactsData();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch (error) {
-      setStatus(error.message || 'Unable to rename phonebook')
+      setStatus(error.message || 'Unable to rename phonebook');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   function startEditContact(contact) {
-    setEditingContact(contact)
+    setEditingContact(contact);
     setEditedContactForm({
       id: contact.id,
       name: contact.name || '',
@@ -341,17 +363,17 @@ function UserContactsPage() {
       var3: contact.var3 || '',
       var4: contact.var4 || '',
       var5: contact.var5 || '',
-    })
+    });
   }
 
   async function editContact(event) {
-    event.preventDefault()
+    event.preventDefault();
     if (!editedContactForm.mobile.trim()) {
-      setStatus('Contact mobile number is required.')
-      return
+      setStatus('Contact mobile number is required.');
+      return;
     }
-    setSaving(true)
-    setStatus('Updating contact...')
+    setSaving(true);
+    setStatus('Updating contact...');
     try {
       const result = await apiRequest('/api/phonebook/update_contact', {
         method: 'POST',
@@ -366,21 +388,21 @@ function UserContactsPage() {
           var4: editedContactForm.var4.trim(),
           var5: editedContactForm.var5.trim(),
         },
-      })
+      });
 
       if (!result?.success) {
-        setStatus(result?.msg || 'Unable to update contact')
-        return
+        setStatus(result?.msg || 'Unable to update contact');
+        return;
       }
 
-      setEditingContact(null)
-      setStatus('Contact updated.')
-      loadContactsData()
-      window.setTimeout(() => setStatus(''), 3000)
+      setEditingContact(null);
+      setStatus('Contact updated.');
+      loadContactsData();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch (error) {
-      setStatus(error.message || 'Unable to update contact')
+      setStatus(error.message || 'Unable to update contact');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
@@ -392,7 +414,12 @@ function UserContactsPage() {
           <h2>Phonebooks and contact records</h2>
           <p>Core CRM database for segmentation, inbox context, and broadcast targeting.</p>
         </div>
-        <button className="primary-button" type="button" disabled={saving || tableLoading} onClick={loadContactsData}>
+        <button
+          className="primary-button"
+          type="button"
+          disabled={saving || tableLoading}
+          onClick={loadContactsData}
+        >
           {tableLoading ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
@@ -507,7 +534,9 @@ function UserContactsPage() {
               <input
                 disabled={saving}
                 value={contactForm[field]}
-                onChange={(event) => setContactForm({ ...contactForm, [field]: event.target.value })}
+                onChange={(event) =>
+                  setContactForm({ ...contactForm, [field]: event.target.value })
+                }
                 placeholder={`Optional ${field}`}
               />
             </label>
@@ -523,14 +552,22 @@ function UserContactsPage() {
           <h3>No phonebooks or contacts available</h3>
           <p>To start organizing your audience for campaigns and inbox customer context:</p>
           <ol>
-            <li>Use the <strong>Create phonebook</strong> form above to initialize a contact list.</li>
-            <li>Select the phonebook in the <strong>Import CSV</strong> panel to bulk import contacts, or use the <strong>Add single contact</strong> form below.</li>
-            <li>CSV uploads should use the header structure: <code>name, mobile, var1, var2, var3, var4, var5</code>.</li>
+            <li>
+              Use the <strong>Create phonebook</strong> form above to initialize a contact list.
+            </li>
+            <li>
+              Select the phonebook in the <strong>Import CSV</strong> panel to bulk import contacts,
+              or use the <strong>Add single contact</strong> form below.
+            </li>
+            <li>
+              CSV uploads should use the header structure:{' '}
+              <code>name, mobile, var1, var2, var3, var4, var5</code>.
+            </li>
           </ol>
         </div>
       ) : (
-        <div className="two-column-grid">
-          <div className="panel table-panel">
+        <div className="two-column-grid contacts-tables-grid">
+          <div className="panel table-panel phonebooks-table-panel">
             <div className="panel-header">
               <h2>Phonebooks</h2>
             </div>
@@ -543,7 +580,7 @@ function UserContactsPage() {
                 </tr>
               </thead>
               <tbody>
-                {phonebooks.map((phonebook) => (
+                {visiblePhonebooks.map((phonebook) => (
                   <tr key={phonebook.id}>
                     <td>{phonebook.name}</td>
                     <td>{phonebook.id}</td>
@@ -569,57 +606,85 @@ function UserContactsPage() {
                 ))}
               </tbody>
             </table>
+            <TablePagination
+              label="Phonebooks"
+              page={safePhonebookPage}
+              pageSize={phonebookPageSize}
+              total={phonebooks.length}
+              onPageChange={setPhonebookPage}
+              onPageSizeChange={(size) => {
+                setPhonebookPageSize(size);
+                setPhonebookPage(1);
+              }}
+            />
           </div>
 
-          <div className="panel table-panel">
+          <div className="panel table-panel contacts-table-panel">
             <div className="panel-header">
               <h2>Contacts</h2>
-              <button className="mini-button subtle-danger" type="button" onClick={deleteSelectedContacts}>
+              <button
+                className="mini-button subtle-danger"
+                type="button"
+                onClick={deleteSelectedContacts}
+              >
                 Delete selected
               </button>
             </div>
-            <table>
-              <thead>
-                <tr>
-                  <th />
-                  <th>Name</th>
-                  <th>Mobile</th>
-                  <th>Phonebook</th>
-                  <th>Variables</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.map((contact) => (
-                  <tr key={contact.id}>
-                    <td>
-                      <input
-                        checked={selectedIds.includes(contact.id)}
-                        type="checkbox"
-                        onChange={() => toggleContact(contact.id)}
-                      />
-                    </td>
-                    <td>{contact.name || 'N/A'}</td>
-                    <td>{contact.mobile}</td>
-                    <td>{contact.phonebook_name || contact.phonebook_id}</td>
-                    <td>
-                      {[contact.var1, contact.var2, contact.var3, contact.var4, contact.var5]
-                        .filter(Boolean)
-                        .join(', ') || 'None'}
-                    </td>
-                    <td>
-                      <button
-                        className="mini-button dark-text"
-                        type="button"
-                        onClick={() => startEditContact(contact)}
-                      >
-                        Edit
-                      </button>
-                    </td>
+            <div className="contacts-table-scroll">
+              <table className="contacts-data-table">
+                <thead>
+                  <tr>
+                    <th />
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Phonebook</th>
+                    <th>Variables</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {visibleContacts.map((contact) => (
+                    <tr key={contact.id}>
+                      <td>
+                        <input
+                          checked={selectedIds.includes(contact.id)}
+                          type="checkbox"
+                          onChange={() => toggleContact(contact.id)}
+                        />
+                      </td>
+                      <td className="contact-name-cell">{contact.name || 'N/A'}</td>
+                      <td className="contact-mobile-cell">{contact.mobile || 'N/A'}</td>
+                      <td>{contact.phonebook_name || contact.phonebook_id}</td>
+                      <td>
+                        {[contact.var1, contact.var2, contact.var3, contact.var4, contact.var5]
+                          .filter(Boolean)
+                          .join(', ') || 'None'}
+                      </td>
+                      <td>
+                        <button
+                          className="mini-button dark-text"
+                          type="button"
+                          onClick={() => startEditContact(contact)}
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <TablePagination
+              label="Contacts"
+              page={safeContactPage}
+              pageSize={contactPageSize}
+              total={contacts.length}
+              onPageChange={setContactPage}
+              onPageSizeChange={(size) => {
+                setContactPageSize(size);
+                setContactPage(1);
+              }}
+            />
           </div>
         </div>
       )}
@@ -630,7 +695,13 @@ function UserContactsPage() {
           <div style={modalStyle}>
             <div className="panel-header">
               <h2>Rename Phonebook</h2>
-              <button className="mini-button" type="button" onClick={() => setRenamingPhonebook(null)}>Close</button>
+              <button
+                className="mini-button"
+                type="button"
+                onClick={() => setRenamingPhonebook(null)}
+              >
+                Close
+              </button>
             </div>
             <form onSubmit={renamePhonebook} className="form-panel">
               <label>
@@ -656,7 +727,9 @@ function UserContactsPage() {
           <div style={modalStyle}>
             <div className="panel-header">
               <h2>Edit Contact Details</h2>
-              <button className="mini-button" type="button" onClick={() => setEditingContact(null)}>Close</button>
+              <button className="mini-button" type="button" onClick={() => setEditingContact(null)}>
+                Close
+              </button>
             </div>
             <form onSubmit={editContact} className="form-panel">
               <label>
@@ -664,7 +737,9 @@ function UserContactsPage() {
                 <input
                   disabled={saving}
                   value={editedContactForm.name}
-                  onChange={(event) => setEditedContactForm({ ...editedContactForm, name: event.target.value })}
+                  onChange={(event) =>
+                    setEditedContactForm({ ...editedContactForm, name: event.target.value })
+                  }
                 />
               </label>
               <label>
@@ -672,7 +747,9 @@ function UserContactsPage() {
                 <input
                   disabled={saving}
                   value={editedContactForm.mobile}
-                  onChange={(event) => setEditedContactForm({ ...editedContactForm, mobile: event.target.value })}
+                  onChange={(event) =>
+                    setEditedContactForm({ ...editedContactForm, mobile: event.target.value })
+                  }
                 />
               </label>
               {['var1', 'var2', 'var3', 'var4', 'var5'].map((field) => (
@@ -681,7 +758,9 @@ function UserContactsPage() {
                   <input
                     disabled={saving}
                     value={editedContactForm[field]}
-                    onChange={(event) => setEditedContactForm({ ...editedContactForm, [field]: event.target.value })}
+                    onChange={(event) =>
+                      setEditedContactForm({ ...editedContactForm, [field]: event.target.value })
+                    }
                   />
                 </label>
               ))}
@@ -693,7 +772,7 @@ function UserContactsPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default UserContactsPage
+export default UserContactsPage;
