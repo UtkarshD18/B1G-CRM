@@ -1169,7 +1169,8 @@ tr:hover td {
   padding: 12px 14px;
   box-sizing: border-box;
   font: inherit;
-  background: #ffffff;
+  background: var(--bg-panel);
+  color: var(--text-primary);
 }
 
 .media-composer input[type="file"] {
@@ -1180,7 +1181,8 @@ tr:hover td {
   padding: 10px 12px;
   box-sizing: border-box;
   font: inherit;
-  background: #ffffff;
+  background: var(--bg-panel);
+  color: var(--text-primary);
 }
 
 .media-composer input[type="text"] {
@@ -1191,7 +1193,8 @@ tr:hover td {
   padding: 12px 14px;
   box-sizing: border-box;
   font: inherit;
-  background: #ffffff;
+  background: var(--bg-panel);
+  color: var(--text-primary);
 }
 
 .media-composer button {
@@ -1219,15 +1222,15 @@ tr:hover td {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  border: 1px solid #d9e1e4;
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: #ffffff;
-  color: #365261;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
   padding: 12px 14px;
 }
 
 .gateway-row strong {
-  color: #10212d;
+  color: var(--text-primary);
 }
 
 .endpoint-row {
@@ -1235,10 +1238,10 @@ tr:hover td {
   grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  border: 1px solid #d9e1e4;
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: #ffffff;
-  color: #365261;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
   padding: 12px 14px;
 }
 
@@ -1276,9 +1279,9 @@ tr:hover td {
 
 .kanban-column {
   min-width: 0;
-  border: 2px solid rgba(16, 33, 45, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: 24px;
-  background: rgba(248, 243, 235, 0.72);
+  background: var(--bg-panel);
   padding: 18px;
   transition: all 0.2s ease;
 }
@@ -1296,9 +1299,10 @@ tr:hover td {
 .kanban-card {
   display: grid;
   gap: 8px;
-  border: 1px solid #d9e1e4;
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--bg-card);
+  color: var(--text-primary);
   padding: 16px;
   cursor: grab;
   transition: opacity 0.15s ease;
@@ -1313,13 +1317,13 @@ tr:hover td {
 }
 
 .kanban-card strong {
-  color: #10212d;
+  color: var(--text-primary);
 }
 
 .kanban-card span,
 .kanban-card p,
 .kanban-card small {
-  color: #5d7280;
+  color: var(--text-secondary);
 }
 
 .form-grid {
@@ -1358,10 +1362,10 @@ tr:hover td {
 }
 
 .tab-button {
-  border: 1px solid #c5d0d6;
+  border: 1px solid var(--border-color);
   border-radius: 999px;
-  background: #ffffff;
-  color: #365261;
+  background: var(--bg-panel);
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 10px 16px;
 }
@@ -1373,10 +1377,10 @@ tr:hover td {
 }
 
 .copy-chip {
-  border: 1px solid #d9e1e4;
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: #ffffff;
-  color: #365261;
+  background: var(--bg-panel);
+  color: var(--text-primary);
   padding: 12px 14px;
   overflow-wrap: anywhere;
 }
@@ -1498,10 +1502,10 @@ tr:hover td {
   grid-template-columns: auto minmax(100px, 0.5fr) minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  border: 1px solid #d9e1e4;
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: #ffffff;
-  color: #365261;
+  background: var(--bg-panel);
+  color: var(--text-primary);
   padding: 12px 14px;
 }
 
@@ -1523,11 +1527,11 @@ tr:hover td {
 }
 
 .readiness-row strong {
-  color: #10212d;
+  color: var(--text-primary);
 }
 
 .readiness-row small {
-  color: #5d7280;
+  color: var(--text-secondary);
   overflow-wrap: anywhere;
 }
 

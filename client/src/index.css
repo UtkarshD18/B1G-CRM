@@ -220,3 +220,37 @@ body.dark-theme .portal-main th {
 body.dark-theme .portal-main th {
   background: var(--bg-panel) !important;
 }
+
+body.dark-theme .portal-main {
+  color-scheme: dark;
+}
+
+body.dark-theme .portal-main input:-webkit-autofill,
+body.dark-theme .portal-main input:-webkit-autofill:hover,
+body.dark-theme .portal-main input:-webkit-autofill:focus,
+body.dark-theme .portal-main textarea:-webkit-autofill,
+body.dark-theme .portal-main select:-webkit-autofill {
+  -webkit-text-fill-color: var(--text-primary) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-panel) inset !important;
+  caret-color: var(--text-primary);
+}
+
+body.dark-theme .portal-main .readiness-row.ready span {
+  background: #12392f !important;
+  color: #8ce7bd !important;
+}
+
+body.dark-theme .portal-main .readiness-row.blocked span {
+  background: #472327 !important;
+  color: #ffc1c1 !important;
+}
+
+body.dark-theme .portal-main .status-chip.task-status-chip--completed {
+  background: #0f766e !important;
+  color: #f0fdfa !important;
+}
+
+body.dark-theme .portal-main .status-chip.task-status-chip--pending {
+  background: #92400e !important;
+  color: #fff7ed !important;
+}

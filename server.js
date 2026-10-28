@@ -298,7 +298,11 @@ async function startServer() {
       await seedDevCredentials({ logger });
     }
 
-    runtime.server = app.listen(env.PORT, () => {
+    const listenOptions = env.NODE_ENV === 'production'
+      ? { port: env.PORT }
+      : { port: env.PORT, host: '127.0.0.1' };
+
+    runtime.server = app.listen(listenOptions, () => {
       logger.info('B1G CRM server started', {
         port: env.PORT,
         environment: env.NODE_ENV,

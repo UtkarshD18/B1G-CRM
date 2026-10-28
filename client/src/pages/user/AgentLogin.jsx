@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiRequest } from '../../shared/api';
 import { useAuth } from '../../shared/auth';
+import './AgentLogin.css';
 
 const PERMISSION_GROUPS = {
   'CRM Core': [
@@ -190,6 +191,58 @@ function UserAgentPage() {
     }
   };
 
+  const renderPermissionSection = (selectedPermissions = [], isEdit = false) => (
+    <section className="permissions-section" aria-label="Agent permissions">
+      <div className="permissions-heading">
+        <div>
+          <h3>{isEdit ? 'Modify permissions' : 'Assign permissions'}</h3>
+          <p>Choose what this agent can access. Expand a group to review its permissions.</p>
+        </div>
+        <span className="permissions-selected-count">{selectedPermissions.length} selected</span>
+      </div>
+      <div
+        className="permission-groups"
+        role="group"
+        aria-label="Permission categories"
+      >
+        {Object.entries(PERMISSION_GROUPS).map(([groupName, permissions], groupIndex) => (
+          <details
+            key={groupName}
+            className="permission-group"
+            open={groupIndex === 0 ? true : undefined}
+          >
+            <summary>
+              <span>{groupName}</span>
+              <span className="permission-group-count">{permissions.length}</span>
+            </summary>
+            <div
+              className="permission-options"
+              role="region"
+              aria-label={`${groupName} permissions`}
+              tabIndex={0}
+            >
+              {permissions.map((permission) => (
+                <label className="permission-option" key={permission.key}>
+                  <input
+                    type="checkbox"
+                    checked={selectedPermissions.includes(permission.key)}
+                    onChange={(event) =>
+                      handlePermissionChange(permission.key, event.target.checked, isEdit)
+                    }
+                  />
+                  <span>
+                    {permission.label}
+                    <code>{permission.key}</code>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+
   return (
     <div className="page-stack">
       <div className="page-header">
@@ -251,58 +304,7 @@ function UserAgentPage() {
               />
             </label>
 
-            <div className="permissions-section" style={{ marginTop: '1.5rem' }}>
-              <h3
-                style={{
-                  marginBottom: '0.75rem',
-                  fontWeight: 600,
-                  borderBottom: '1px solid rgba(0,0,0,0.06)',
-                  paddingBottom: '4px',
-                }}
-              >
-                Assign Permissions
-              </h3>
-              {Object.keys(PERMISSION_GROUPS).map((groupName) => (
-                <div key={groupName} style={{ marginBottom: '1rem' }}>
-                  <h4
-                    style={{
-                      margin: '8px 0 4px 0',
-                      fontSize: '0.8rem',
-                      textTransform: 'uppercase',
-                      color: '#6b7280',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    {groupName}
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
-                    {PERMISSION_GROUPS[groupName].map((p) => (
-                      <label
-                        key={p.key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.85rem',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={form.permissions.includes(p.key)}
-                          onChange={(e) => handlePermissionChange(p.key, e.target.checked, false)}
-                          style={{ marginTop: '3px' }}
-                        />
-                        <span>
-                          {p.label}{' '}
-                          <code style={{ fontSize: '0.7rem', color: '#9ca3af' }}>({p.key})</code>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {renderPermissionSection(form.permissions)}
 
             <button className="primary-button" type="submit" style={{ marginTop: '1.5rem' }}>
               Create agent
@@ -360,58 +362,7 @@ function UserAgentPage() {
               />
             </label>
 
-            <div className="permissions-section" style={{ marginTop: '1.5rem' }}>
-              <h3
-                style={{
-                  marginBottom: '0.75rem',
-                  fontWeight: 600,
-                  borderBottom: '1px solid rgba(0,0,0,0.06)',
-                  paddingBottom: '4px',
-                }}
-              >
-                Modify Permissions
-              </h3>
-              {Object.keys(PERMISSION_GROUPS).map((groupName) => (
-                <div key={groupName} style={{ marginBottom: '1rem' }}>
-                  <h4
-                    style={{
-                      margin: '8px 0 4px 0',
-                      fontSize: '0.8rem',
-                      textTransform: 'uppercase',
-                      color: '#6b7280',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    {groupName}
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
-                    {PERMISSION_GROUPS[groupName].map((p) => (
-                      <label
-                        key={p.key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.85rem',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={(editingAgent.permissions || []).includes(p.key)}
-                          onChange={(e) => handlePermissionChange(p.key, e.target.checked, true)}
-                          style={{ marginTop: '3px' }}
-                        />
-                        <span>
-                          {p.label}{' '}
-                          <code style={{ fontSize: '0.7rem', color: '#9ca3af' }}>({p.key})</code>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {renderPermissionSection(editingAgent.permissions || [], true)}
 
             <button className="primary-button" type="submit" style={{ marginTop: '1.5rem' }}>
               Save Changes
