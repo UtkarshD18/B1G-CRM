@@ -21,7 +21,7 @@ describe('LangGraph Agentic Autopilot Integration Tests', () => {
       embeddingKey: 'mock_embedding',
     });
 
-    expect(result).toContain('Mock synthesized reply');
+    expect(result).toBe('An agent can help with your order after verifying your account.');
   });
 
   it('should triage and route SALES queries correctly', async () => {
@@ -71,7 +71,7 @@ describe('LangGraph Agentic Autopilot Integration Tests', () => {
       embeddingKey: 'mock_embedding',
     });
 
-    expect(result).toContain('Mock synthesized reply');
+    expect(result).toBe('An agent can help with your order after verifying your account.');
   });
 
   it('should apply tie-breaker rules for ambiguous queries without order references', async () => {

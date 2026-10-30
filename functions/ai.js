@@ -111,6 +111,11 @@ async function singleReplyAi({
     }
 
     const { provider, api_key, model, temperature, custom_endpoint } = providers[0];
+    if (process.env.NODE_ENV === 'production' &&
+        (env.MOCK_META_DELIVERY || !api_key || String(api_key).startsWith('mock_') || api_key === 'CHANGE_ME')) {
+      console.error('[AI Autopilot] Production AI provider is unavailable. Human review required.');
+      return;
+    }
 
     // 2. Fetch Gemini API key for embeddings (tries tenant first, then global config)
     let embeddingKey = '';
@@ -189,84 +194,49 @@ async function singleReplyAi({
       }
     }
 
-    // Fetch order information if message mentions "order", "track", "status", "awb", or "where is"
-    let orderContext = '';
-    const lowerMsg = (incomingMsg || '').toLowerCase();
-    if (
-      lowerMsg.includes('order') ||
-      lowerMsg.includes('track') ||
-      lowerMsg.includes('status') ||
-      lowerMsg.includes('awb') ||
-      lowerMsg.includes('where is')
-    ) {
-      try {
-        const { getOrderTrackingContext } = require('./orderTracker');
-        const storefrontOrderContext = await getOrderTrackingContext(senderNumber, incomingMsg);
-        if (storefrontOrderContext) {
-          orderContext = storefrontOrderContext;
-        }
-      } catch (err) {
-        console.error('[AI Autopilot] Failed to fetch storefront order context:', err);
-      }
+    // Order ownership cannot be inferred from a sender number or order text.
+    // Use a fixed verification handoff until the storefront has a tenant-scoped
+    // customer authorization contract.
+    const orderRequest = /\b(order|track|tracking|awb|delivery status)\b/i.test(incomingMsg || '');
+    const orderContext = '';
 
-      if (!orderContext) {
-        const cleanNumber = (senderNumber || '').replace(/\D/g, '');
-        const shortNumber = cleanNumber.length > 10 ? cleanNumber.slice(-10) : cleanNumber;
-
-        const orders = await query(
-          `SELECT id, amount, payment_mode, data, createdat 
-           FROM orders 
-           WHERE uid = ? AND (data LIKE ? OR data LIKE ?) 
-           ORDER BY createdat DESC 
-           LIMIT 5`,
-          [uid, `%${cleanNumber}%`, `%${shortNumber}%`],
-        );
-
-        if (orders.length > 0) {
-          orderContext =
-            "Customer's Recent CRM Plan Orders:\n" +
-            orders
-              .map((o) => {
-                let details = o.data;
-                try {
-                  const parsed = JSON.parse(o.data);
-                  details = JSON.stringify(parsed);
-                } catch (e) {
-                  // ignore JSON parse issues
-                }
-                return `- Order ID: ${o.id}, Amount: ${o.amount}, Date: ${o.createdat}, Payment Mode: ${o.payment_mode}, Details: ${details}`;
-              })
-              .join('\n');
-        } else {
-          orderContext = 'No orders found for this customer phone number in the database.';
-        }
-      }
+    if (process.env.NODE_ENV === 'production' && !orderRequest && !context) {
+      console.error('[AI Autopilot] No verified company context. Human review required.');
+      return;
     }
 
-    let replyText = '';
+    let replyText = orderRequest
+      ? 'An agent can help with your order after verifying your account.'
+      : '';
     const startTime = Date.now();
 
     // Call the new LangGraph-based agentic autopilot
     try {
-      const { runAgenticAutopilot } = require('./agenticAutopilot');
-      const history = getRecentHistory(uid, chatId);
-      replyText = await runAgenticAutopilot({
-        uid,
-        provider,
-        api_key,
-        model,
-        custom_endpoint,
-        temperature,
-        incomingMsg,
-        senderNumber,
-        embeddingKey,
-        history,
-      });
+      if (!replyText) {
+        const { runAgenticAutopilot } = require('./agenticAutopilot');
+        const history = getRecentHistory(uid, chatId);
+        replyText = await runAgenticAutopilot({
+          uid,
+          provider,
+          api_key,
+          model,
+          custom_endpoint,
+          temperature,
+          incomingMsg,
+          senderNumber,
+          embeddingKey,
+          history,
+        });
+      }
     } catch (graphErr) {
       console.error('[AI Autopilot] Agentic autopilot graph invocation failed:', graphErr);
     }
 
     if (!replyText) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[AI Autopilot] Graph unavailable. Human review required.');
+        return;
+      }
       console.log(
         '[AI Autopilot] Agentic autopilot bypassed or failed. Falling back to naive completions.',
       );

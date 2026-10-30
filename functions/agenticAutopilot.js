@@ -42,6 +42,10 @@ async function callLLM({ systemPrompt, userPrompt, config }) {
     api_key === 'CHANGE_ME' ||
     process.env.NODE_ENV === 'test';
 
+  if (process.env.NODE_ENV === 'production' && isMock) {
+    throw new Error('AI provider is not configured for production');
+  }
+
   if (isMock) {
     // Simulate network latency
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -359,87 +363,20 @@ async function supportNode(state) {
 }
 
 /**
- * 3. Order Node - Queries database directly for order metrics
+ * 3. Order Node - Requires verified customer ownership before retrieval
  */
 async function orderNode(state) {
-  const start = Date.now();
-  const { uid, rawQuery, customerId } = state;
-
-  try {
-    let orderContext = '';
-
-    // A. Attempt orderTracker context lookup
-    try {
-      const { getOrderTrackingContext } = require('./orderTracker');
-      orderContext = await getOrderTrackingContext(customerId, rawQuery);
-    } catch (err) {
-      console.error('[Agentic Autopilot] orderTracker failure:', err);
-    }
-
-    // B. Fallback to direct DB query matching customer metadata
-    if (!orderContext) {
-      const cleanNumber = (customerId || '').replace(/\D/g, '');
-      const shortNumber = cleanNumber.length > 10 ? cleanNumber.slice(-10) : cleanNumber;
-
-      const orders = await query(
-        `SELECT id, amount, payment_mode, data, createdat 
-         FROM orders 
-         WHERE uid = ? AND (data LIKE ? OR data LIKE ?) 
-         ORDER BY createdat DESC 
-         LIMIT 5`,
-        [uid, `%${cleanNumber}%`, `%${shortNumber}%`],
-      );
-
-      if (orders.length > 0) {
-        orderContext =
-          "Customer's Recent CRM Plan Orders:\n" +
-          orders
-            .map((o) => {
-              let details = o.data;
-              try {
-                const parsed = JSON.parse(o.data);
-                details = JSON.stringify(parsed);
-              } catch (e) {
-                // ignore JSON parsing issues
-              }
-              return `- Order ID: ${o.id}, Amount: ${o.amount}, Date: ${o.createdat}, Payment Mode: ${o.payment_mode}, Details: ${details}`;
-            })
-            .join('\n');
-      } else {
-        orderContext = 'No orders found for this customer phone number in the database.';
-      }
-    }
-
-    return {
-      agentResult: {
-        source: 'ORDER',
-        content: orderContext,
-        orderData: { rawContext: orderContext },
-      },
-      meta: {
-        ...state.meta,
-        nodeLatencies: {
-          ...state.meta.nodeLatencies,
-          order: Date.now() - start,
-        },
-      },
-    };
-  } catch (err) {
-    return {
-      agentResult: {
-        source: 'ORDER',
-        content: '',
-        error: err.message,
-      },
-      meta: {
-        ...state.meta,
-        nodeLatencies: {
-          ...state.meta.nodeLatencies,
-          order: Date.now() - start,
-        },
-      },
-    };
-  }
+  return {
+    agentResult: {
+      source: 'ORDER',
+      content: 'An agent must verify the customer before sharing order details.',
+      requiresVerification: true,
+    },
+    meta: {
+      ...state.meta,
+      nodeLatencies: { ...state.meta.nodeLatencies, order: 0 },
+    },
+  };
 }
 
 /**
@@ -491,6 +428,10 @@ async function salesNode(state) {
 async function synthesisNode(state) {
   const start = Date.now();
   const { rawQuery, triageLabel, agentResult, config } = state;
+
+  if (agentResult.requiresVerification) {
+    return { finalReply: 'An agent can help with your order after verifying your account.', meta: state.meta };
+  }
 
   const synthesisPrompt = `You are a helpful CRM AI assistant. 
 Synthesize a polite, helpful response to the customer's query based on the retrieved context below:
