@@ -11,6 +11,7 @@ import AdminDashboardPage from '../pages/admin/Dashboard';
 import AdminPlansPage from '../pages/admin/Plans';
 import AdminUsersPage from '../pages/admin/Users';
 import AdminOrdersPage from '../pages/admin/Orders';
+import AdminOfflinePaymentsPage from '../pages/admin/OfflinePayments';
 import AdminSettingsPage from '../pages/admin/Settings';
 import AdminFrontPartnerPage from '../pages/admin/FrontPartner';
 import AdminFaqPage from '../pages/admin/Faq';
@@ -53,6 +54,7 @@ export const ADMIN_REFERENCE_ROUTES = [
   { path: 'manage-plans', component: 'plans' },
   { path: 'manage-users', component: 'users' },
   { path: 'orders', component: 'orders' },
+  { path: 'offline-payments', component: 'offlinePayments' },
   { path: 'settings', component: 'settings' },
   { path: 'front-partner', component: 'frontPartner' },
   { path: 'faq', component: 'faq' },
@@ -127,6 +129,7 @@ const adminRouteComponents = {
   plans: AdminPlansPage,
   users: AdminUsersPage,
   orders: AdminOrdersPage,
+  offlinePayments: AdminOfflinePaymentsPage,
   settings: AdminSettingsPage,
   frontPartner: AdminFrontPartnerPage,
   faq: AdminFaqPage,

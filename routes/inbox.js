@@ -23,6 +23,7 @@ const { getIOInstance } = require('../socket.js');
 const { checkPlan } = require('../middlewares/plan.js');
 const { processMessage } = require('../helper/inbox/inbox.js');
 const crypto = require('crypto');
+const { hasValidMetaSignature } = require('../utils/metaWebhookSignature');
 
 function uuidv7() {
   const value = crypto.randomBytes(16);
@@ -42,6 +43,9 @@ function uuidv7() {
 // handle post webhook
 router.post('/webhook/:uid', async (req, res) => {
   try {
+    if (!hasValidMetaSignature(req.rawBody, req.headers['x-hub-signature-256'], process.env.META_APP_SECRET)) {
+      return res.sendStatus(401);
+    }
     const body = req.body;
     const userUID = req.params.uid;
 
@@ -131,16 +135,20 @@ router.post('/webhook/:uid', async (req, res) => {
 // getting chat lists
 router.get('/get_chats', validateUserOrAgent, async (req, res) => {
   try {
-    let data = [];
-    data = await query(
+    const agentUid = req.agent?.uid;
+    if (agentUid && !(req.decode.permissions || []).some((p) => ['inbox.read', 'inbox.reply', 'inbox_access'].includes(p))) {
+      return res.status(403).json({ success: false, msg: 'Inbox access denied' });
+    }
+    let data = await query(
       `SELECT c.*, a.name AS agent_name, a.email AS agent_email 
        FROM chats c 
        LEFT JOIN agents a ON c.assigned_agent_uid = a.uid 
        WHERE c.uid = ?
+       ${agentUid ? 'AND EXISTS (SELECT 1 FROM agent_chats ac WHERE ac.owner_uid = c.uid AND ac.chat_id = c.chat_id AND ac.uid = ?)' : ''}
        ORDER BY c.kanban_order ASC, c.last_message_came DESC`,
-      [req.decode.uid],
+      agentUid ? [req.decode.uid, agentUid] : [req.decode.uid],
     );
-    const getContacts = await query(`SELECT * FROM contact WHERE uid = ?`, [req.decode.uid]);
+    const getContacts = agentUid ? [] : await query(`SELECT * FROM contact WHERE uid = ?`, [req.decode.uid]);
 
     if (getContacts.length > 0) {
       data = mergeArrays(getContacts, data);
@@ -158,8 +166,17 @@ router.post('/get_convo', validateUserOrAgent, async (req, res) => {
   try {
     const { chatId } = req.body;
     if (!chatId) {
-      return res.json({ success: false, msg: 'chatId is required' });
+      return res.status(400).json({ success: false, msg: 'chatId is required' });
     }
+    if (req.agent && !(req.decode.permissions || []).some((p) => ['inbox.read', 'inbox.reply', 'inbox_access'].includes(p))) {
+      return res.status(403).json({ success: false, msg: 'Inbox access denied' });
+    }
+    const [chat] = await query(
+      `SELECT 1 FROM chats c WHERE c.uid = ? AND c.chat_id = ?
+       ${req.agent ? 'AND EXISTS (SELECT 1 FROM agent_chats ac WHERE ac.owner_uid = c.uid AND ac.chat_id = c.chat_id AND ac.uid = ?)' : ''}`,
+      req.agent ? [req.decode.uid, chatId, req.agent.uid] : [req.decode.uid, chatId],
+    );
+    if (!chat) return res.status(403).json({ success: false, msg: 'Conversation access denied' });
 
     const { validatePath } = require('../utils/pathSafe');
     const rootInboxDir = path.resolve(__dirname, '../conversations/inbox');
@@ -182,12 +199,17 @@ router.post('/change_chat_ticket_status', validateUserOrAgent, async (req, res) 
     const allowedStatuses = ['open', 'pending', 'solved'];
 
     if (!chatId || !allowedStatuses.includes(status)) {
-      return res.json({ success: false, msg: 'Invalid chat status request' });
+      return res.status(400).json({ success: false, msg: 'Invalid chat status request' });
+    }
+    if (req.agent && !(req.decode.permissions || []).some((p) => ['inbox.reply', 'inbox_access'].includes(p))) {
+      return res.status(403).json({ success: false, msg: 'Inbox update denied' });
     }
 
     const result = await query(
-      `UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ? RETURNING chat_id`,
-      [status, chatId, req.decode.uid],
+      `UPDATE chats SET chat_status = ? WHERE chat_id = ? AND uid = ?
+       ${req.agent ? 'AND EXISTS (SELECT 1 FROM agent_chats ac WHERE ac.owner_uid = chats.uid AND ac.chat_id = chats.chat_id AND ac.uid = ?)' : ''}
+       RETURNING chat_id`,
+      req.agent ? [status, chatId, req.decode.uid, req.agent.uid] : [status, chatId, req.decode.uid],
     );
 
     if (result.length < 1) {
@@ -215,6 +237,7 @@ router.post(
       if (orderedChatIds.length > 1000) {
         return res.json({ success: false, msg: 'orderedChatIds exceeds maximum allowed limit' });
       }
+      if (req.agent) return res.status(403).json({ success: false, msg: 'Only the owner can reorder the tenant inbox' });
 
       await withTransaction(async (txQuery) => {
         for (let i = 0; i < orderedChatIds.length; i++) {

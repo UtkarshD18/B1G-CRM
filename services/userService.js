@@ -13,9 +13,10 @@ async function getMeData(uid) {
   // getting phonebook
   const contact = await query(`SELECT * FROM contact WHERE uid = ?`, [uid]);
 
+  const { password, ...safeUser } = data[0] || {};
   return {
     success: true,
-    data: { ...data[0], contact: contact.length },
+    data: { ...safeUser, contact: contact.length },
     addon: finalAddon,
   };
 }

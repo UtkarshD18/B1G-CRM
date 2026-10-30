@@ -303,21 +303,19 @@ async function processOfflinePayment({ uid, planId }) {
     return { success: false, msg: 'Invalid plan found' };
   }
 
-  await query(`INSERT INTO orders (uid, payment_mode, amount, data) VALUES (?,?,?,?)`, [
+  const [request] = await query(`INSERT INTO offline_payment_requests (uid, plan_id, plan_snapshot, amount)
+    VALUES (?, ?, ?::jsonb, ?) RETURNING id`, [
     uid,
-    'OFFLINE',
+    planId,
+    JSON.stringify(getPlan[0]),
     getPlan[0].price,
-    JSON.stringify({
-      plan: getPlan[0],
-      note: 'Manual offline/custom transaction initiated by user.',
-    }),
   ]);
-
-  await billingHelper.updateUserPlan(getPlan[0], uid);
 
   return {
     success: true,
-    msg: 'Your offline/custom payment was recorded successfully. Plan updated!',
+    pending: true,
+    requestId: request.id,
+    msg: 'Your offline payment request is pending verification. Your plan has not changed.',
   };
 }
 

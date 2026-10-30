@@ -9,51 +9,6 @@ const {
 const { checkPlan } = require("../middlewares/plan.js");
 const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.js");
 
-router.get("/create", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
-  try {
-    const { id } = req.query;
-    // Kick off session creation (which returns immediately)
-    await createSession(id || "ID");
-    res.json({
-      success: true,
-      msg: "Session generated",
-    });
-  } catch (err) {
-    console.error(err);
-    res.json({
-      success: false,
-      msg: "Something went wrong",
-      err: err.message,
-    });
-  }
-});
-
-router.get("/send", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
-  try {
-    const number = req.query;
-    const session = await getSession("chullii");
-    console.log(session);
-
-    if (session) {
-      const esn = await session.sendMessage("918430088300@s.whatsapp.net", {
-        text: "Hello",
-      });
-      console.log({ esn });
-    } else {
-      console.log("Session not found");
-    }
-
-    res.json("DONE");
-  } catch (err) {
-    console.error(err);
-    res.json({
-      success: false,
-      msg: "Something went wrong",
-      err: err.message,
-    });
-  }
-});
-
 router.post("/gen_qr", validateUserOrAgent, verifyPermission("settings_access"), checkPlan, async (req, res) => {
   try {
     const { title, uniqueId } = req.body;
@@ -64,10 +19,13 @@ router.post("/gen_qr", validateUserOrAgent, verifyPermission("settings_access"),
       });
     }
 
+    if (!/^[A-Za-z0-9_-]{1,100}$/.test(uniqueId)) {
+      return res.status(400).json({ success: false, msg: "Invalid instance ID" });
+    }
     const [existing] = await query("SELECT * FROM instance WHERE uniqueId = ?", [uniqueId]);
     if (existing) {
       if (existing.uid !== req.decode.uid) {
-        return res.json({
+        return res.status(403).json({
           success: false,
           msg: "This instance ID is already in use by another user.",
         });
@@ -158,6 +116,12 @@ router.post("/del_instance", validateUserOrAgent, verifyPermission("settings_acc
         msg: "Please provide the all fields! uniqueId is required",
       });
     }
+
+    const [owned] = await query(`SELECT id FROM instance WHERE uniqueId = ? AND uid = ?`, [
+      uniqueId,
+      req.decode.uid,
+    ]);
+    if (!owned) return res.status(404).json({ success: false, msg: "QR instance not found" });
 
     const session = getSession(uniqueId);
 

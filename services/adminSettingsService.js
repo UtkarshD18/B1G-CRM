@@ -6,7 +6,8 @@ const razorpayService = require('./razorpayService.js');
 
 async function getWebPublic() {
   const data = await query(`SELECT * FROM web_public`, []);
-  return { success: true, data: data[0] };
+  const { fb_login_app_sec, ...safeConfig } = data[0] || {};
+  return { success: true, data: safeConfig };
 }
 
 // ─── Payment Gateway Configuration ───────────────────────────────────────────

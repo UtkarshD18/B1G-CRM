@@ -28,6 +28,10 @@ services:
         generateValue: true
       - key: CHANNEL_SECRET_KEY
         generateValue: true
+      - key: META_APP_SECRET
+        sync: false
+      - key: INSTAGRAM_APP_SECRET
+        sync: false
       - key: FRONTEND_URL
         value: https://omnicrms.app
       - key: BACKEND_URL

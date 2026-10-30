@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment-timezone');
@@ -12,6 +11,7 @@ const { updateChatListSocket } = require('../helper/inbox/inbox');
 const { metaChatbotInit } = require('../helper/chatbot/meta/index');
 const { processWebhookRules } = require('../helper/webhooks/engine');
 const { addObjectToFile } = require('../functions/function');
+const { hasValidMetaSignature } = require('../utils/metaWebhookSignature');
 
 // Helper to calculate user timezone timestamp
 function getCurrentTimestampInTimeZone(timezone) {
@@ -141,23 +141,9 @@ router.get('/webhook/:uid', async (req, res) => {
 router.post('/webhook/:uid', async (req, res) => {
   try {
     const { uid } = req.params;
-    const signature = req.headers['x-hub-signature-256'];
-
-    // Validate Signature if App Secret is set
-    const appSecret = process.env.INSTAGRAM_APP_SECRET || 'example-secret';
-    if (signature) {
-      const parts = signature.split('=');
-      const hash = parts[1];
-      const rawBody = req.rawBody ? req.rawBody.toString() : JSON.stringify(req.body);
-      const expectedHash = crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
-
-      if (hash !== expectedHash) {
-        console.warn('Instagram Webhook signature validation failed.');
-        // We can allow bypassing signature check in mock mode to make testing easy
-        if (!env.MOCK_META_DELIVERY) {
-          return res.status(401).send('Invalid signature');
-        }
-      }
+    const appSecret = process.env.INSTAGRAM_APP_SECRET || process.env.META_APP_SECRET;
+    if (!hasValidMetaSignature(req.rawBody, req.headers['x-hub-signature-256'], appSecret)) {
+      return res.status(401).send('Invalid signature');
     }
 
     // Acknowledge Meta Hook quickly

@@ -384,8 +384,9 @@ router.get('/get_me', validateAgent, async (req, res) => {
       [req.decode.uid],
     );
 
+    const { password, ...safeAgent } = data[0];
     const agentData = {
-      ...data[0],
+      ...safeAgent,
       assignedChatsCount: chatsCountResult?.count || 0,
       pendingTasksCount: tasksCountResult?.count || 0,
       resolvedConversationsCount: resolvedCountResult?.count || 0,
