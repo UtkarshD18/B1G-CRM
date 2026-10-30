@@ -4,7 +4,7 @@ const legacyMap = require('./legacyPermissions');
 // In-memory cache for user permissions
 // Structure: { [uid]: { permissions: Set<string>, expiresAt: number } }
 const permissionCache = {};
-const CACHE_DURATION_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_DURATION_MS = 0; // Revocations take effect on the next request.
 
 /**
  * Invalidate the permission cache for a specific user/agent UID

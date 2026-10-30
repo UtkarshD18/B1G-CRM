@@ -50,3 +50,15 @@ test('malformed grants fail closed', async () => {
     error.mockRestore();
   }
 });
+
+test('permission revocation is effective on the next request', async () => {
+  let grants = JSON.stringify(['contacts.write']);
+  mockQuery.mockImplementation(async (sql) =>
+    sql.includes('SELECT owner_uid, permissions FROM agents')
+      ? [{ owner_uid: 'owner', permissions: grants }]
+      : [],
+  );
+  expect(await hasPermission('agent', 'contacts.write')).toBe(true);
+  grants = '[]';
+  expect(await hasPermission('agent', 'contacts.write')).toBe(false);
+});

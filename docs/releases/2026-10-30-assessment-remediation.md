@@ -5,6 +5,7 @@ This change addresses selected findings from the 28 October assessment. It does 
 ## Implemented
 
 - **S01:** Generic REST inbox list and history now enforce tenant and agent assignment. Agent contact placeholders are removed from the generic list. Chat status changes require reply permission and assignment; tenant-wide reordering is owner-only.
+- **S02 (partial):** Contact and lead write routes now require `contacts.write`, including imports and deletes. The permission resolver no longer grants a ten-minute cache window after revocation. Legacy flow writes and other permission surfaces still need a full role matrix audit.
 - **S03:** WhatsApp Cloud and Instagram POST webhooks require a valid HMAC-SHA256 signature over the exact request body before querying connections or enqueuing. Configure `META_APP_SECRET` and, if distinct, `INSTAGRAM_APP_SECRET` on the API host before Meta deliveries.
 - **S04 (partial):** Owner and agent profile responses omit password hashes, public website settings omit the Facebook app secret, and AI provider GET returns key-configured metadata instead of the stored key. A blank AI key on update retains the current value.
 - **S13 (partial):** QR instance deletion checks tenant ownership before touching its in-memory session. Debug GET creation and send routes were removed; generated instance IDs are validated.
