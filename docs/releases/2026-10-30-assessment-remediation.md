@@ -14,6 +14,7 @@ This change addresses selected findings from the 28 October assessment. It does 
 - **D03 (partial):** The queue awaits its inbox listener before acknowledging, propagates persistence errors for retry, and uses tenant/channel/provider-scoped idempotency with a non-aborting conflict path. JSON remains a projection outside the queue transaction, so crash recovery still needs an end-to-end reconciliation contract.
 - **S10 (partial):** PostgreSQL TLS now verifies the server certificate when `PGSSL=true`; an optional `PGSSL_CA` PEM value supports private certificate authorities. Runtime database role privilege reduction remains open.
 - **S12:** Production requests to legacy installer and updater endpoints now return 404 before any password or database handling.
+- **S07 (partial):** Knowledge-base URL fetching and webhook dispatch now reject private DNS answers, pin the validated address for the request, disable redirects and proxies, and limit time and response size. Other dynamic outbound paths still need the same treatment.
 - **A01 (partial):** Production AI refuses mock or missing provider credentials and does not fall back to ungrounded completions after a graph failure. Queries without retrieved company context require human review.
 - **A02 (protective handoff):** Automated order paths no longer search global storefront records or match order data by phone digits. They give a fixed account-verification handoff until tenant-scoped customer-to-order authorization is designed and tested.
 
@@ -21,4 +22,4 @@ This change addresses selected findings from the 28 October assessment. It does 
 
 Focused synthetic tests cover signature failures, agent inbox scoping and offline approval/replay. The client builds and its test suite passes. Browser screenshots use synthetic API responses and demonstrate the UI only. A live database, real Meta delivery and actual payment settlement were not available in this workspace, so those integrations still require isolated end-to-end checks.
 
-Other findings remain open, including chat ID collisions, complete message-store migration, purchase binding for online payments, consent enforcement, SSRF, and outbound delivery reconciliation. A real authorized order lookup also remains to be built. Track them as release gates; this branch is not a production-ready certification.
+Other findings remain open, including chat ID collisions, complete message-store migration, purchase binding for online payments, consent enforcement, remaining dynamic outbound requests, and outbound delivery reconciliation. A real authorized order lookup also remains to be built. Track them as release gates; this branch is not a production-ready certification.

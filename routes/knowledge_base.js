@@ -6,6 +6,7 @@ const mammoth = require('mammoth');
 const { decryptKey } = require('../utils/crypto');
 const { indexDocument } = require('../utils/ragHelper');
 const { logActivity } = require('../utils/activityLogger');
+const { safeHttpRequest } = require('../utils/ssrfFilter');
 
 // GET all knowledge base articles
 router.get('/get_all', validateUserOrAgent, verifyPermission('kb.read'), async (req, res) => {
@@ -88,24 +89,12 @@ router.post('/url', validateUserOrAgent, verifyPermission('kb.write'), async (re
     const cleanHost = hostMatch[1];
     const safeUrl = `${parsed.protocol}//${cleanHost}${parsed.pathname || ''}${parsed.search || ''}`;
 
-    const { isSafeUrl } = require('../utils/ssrfFilter');
-    if (!(await isSafeUrl(safeUrl))) {
-      return res.json({ success: false, msg: 'URL is invalid or resolves to a private IP space' });
-    }
-
-    const cleanUrl = safeUrl
-      .split('')
-      .map((c) => String.fromCharCode(c.charCodeAt(0)))
-      .join('');
-    const response = await fetch(cleanUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-      timeout: 15000,
+    const response = await safeHttpRequest(safeUrl, {
+      method: 'GET',
+      headers: { 'User-Agent': 'B1GCRM Knowledge Base Fetcher' },
+      responseType: 'text',
     });
-    if (!response.ok) {
-      return res.json({ success: false, msg: `Failed to fetch URL: HTTP ${response.status}` });
-    }
-
-    const html = await response.text();
+    const html = response.data;
     const bodyHtml = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || html;
 
     const xss = require('xss');

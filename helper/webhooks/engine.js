@@ -1,4 +1,4 @@
-const axios = require('axios');
+const { safeHttpRequest } = require('../../utils/ssrfFilter');
 const { query } = require('../../database/dbpromise.js');
 
 async function dispatchWebhookWithRetry(
@@ -16,7 +16,7 @@ async function dispatchWebhookWithRetry(
       console.log(
         `Dispatching webhook rule "${ruleName}" payload to ${url} (Attempt ${attempt}/${maxRetries + 1})...`,
       );
-      const res = await axios.post(url, payload, { timeout: 5000 });
+      const res = await safeHttpRequest(url, { method: 'POST', data: payload });
       return {
         status: res.status,
         body: typeof res.data === 'string' ? res.data : JSON.stringify(res.data),
