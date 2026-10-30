@@ -5,6 +5,7 @@ const adminUserController = require('../controllers/adminUserController.js');
 const adminPlanController = require('../controllers/adminPlanController.js');
 const adminCmsController = require('../controllers/adminCmsController.js');
 const adminSettingsController = require('../controllers/adminSettingsController.js');
+const offlinePaymentReview = require('../services/offlinePaymentReviewService.js');
 
 router.post('/login', adminAuthController.login);
 router.post('/reset_account_password', adminValidator, async (req, res, next) => {
@@ -38,6 +39,23 @@ router.post('/update_user', adminValidator, adminUserController.updateUser);
 
 // update plan (assign plan to user — owned by plan domain)
 router.post('/update_plan', adminValidator, adminPlanController.assignPlanToUser);
+
+router.get('/offline_payment_requests', adminValidator, async (req, res, next) => {
+  try { res.json({ success: true, data: await offlinePaymentReview.listPending() }); }
+  catch (error) { next(error); }
+});
+
+router.post('/review_offline_payment', adminValidator, async (req, res, next) => {
+  try {
+    const result = await offlinePaymentReview.review({
+      id: req.body.id,
+      adminUid: req.decode.uid,
+      decision: req.body.decision,
+      note: req.body.note,
+    });
+    res.status(result.status).json(result);
+  } catch (error) { next(error); }
+});
 
 // get payment gateway admin
 router.get('/get_payment_gateway_admin', adminValidator, adminSettingsController.getPaymentGateway);

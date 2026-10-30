@@ -4,6 +4,7 @@ export const ADMIN_NAV = [
   { label: 'Manage Plans', path: '/admin/manage-plans', icon: '💎' },
   { label: 'Manage Users', path: '/admin/manage-users', icon: '👥' },
   { label: 'Orders', path: '/admin/orders', icon: '🛒' },
+  { label: 'Offline Payment Review', path: '/admin/offline-payments', icon: '🧾' },
   { section: 'FRONT-END CONTENT' },
   { label: 'Front Partners', path: '/admin/front-partner', icon: '🤝' },
   { label: 'FAQ', path: '/admin/faq', icon: '❓' },

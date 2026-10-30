@@ -1,0 +1,27 @@
+.task-status-chip {
+  min-width: 88px;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-transform: capitalize;
+}
+
+.task-status-chip--completed {
+  background: #0f766e !important;
+  color: #f0fdfa !important;
+}
+
+.task-status-chip--pending {
+  background: #92400e !important;
+  color: #fff7ed !important;
+}
+
+body.dark-theme .portal-main .task-status-chip--completed {
+  background: #0f766e !important;
+  color: #f0fdfa !important;
+}
+
+body.dark-theme .portal-main .task-status-chip--pending {
+  background: #92400e !important;
+  color: #fff7ed !important;
+}

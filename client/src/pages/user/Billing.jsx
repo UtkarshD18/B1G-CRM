@@ -231,8 +231,7 @@ function UserBillingPage() {
         return;
       }
 
-      setStatus(result.msg || 'Custom payment succeeded!');
-      loadBilling();
+      setStatus(result.msg || 'Offline payment request is pending verification.');
     } catch (error) {
       setStatus(error.message || 'Unable to record manual payment');
     } finally {
@@ -439,7 +438,7 @@ function UserBillingPage() {
                         onClick={() => startOfflineCheckout(plan.id)}
                         disabled={isLoading}
                       >
-                        {isLoading ? 'Processing...' : 'Custom / Manual Payment'}
+                        {isLoading ? 'Processing...' : 'Request manual payment verification'}
                       </button>
                     )}
                     {!rzActive && !offlineActive && (

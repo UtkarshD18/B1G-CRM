@@ -2,35 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../../shared/api';
 import { useAuth } from '../../shared/auth';
 import { formatMoney } from '../../shared/format';
+import './CrmPipeline.css';
 
 const STAGES = ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
-
-const overlayStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.4)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-};
-
-const modalStyle = {
-  backgroundColor: '#f8f3eb',
-  padding: '24px',
-  borderRadius: '24px',
-  border: '1px solid rgba(10, 25, 37, 0.12)',
-  boxShadow: '0 24px 70px rgba(7, 19, 29, 0.14)',
-  width: 'min(900px, 95%)',
-  maxHeight: '90vh',
-  overflowY: 'auto',
-  display: 'grid',
-  gridTemplateColumns: 'minmax(300px, 1fr) minmax(300px, 1.2fr)',
-  gap: '24px',
-};
 
 function UserCrmPipelinePage() {
   const { tokens } = useAuth();
@@ -514,47 +488,18 @@ function UserCrmPipelinePage() {
       </div>
 
       {/* Search & Filter Controls */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          background: '#fcfcfc',
-          padding: '12px 16px',
-          borderRadius: '16px',
-          border: '1px solid rgba(10,25,37,0.06)',
-          marginBottom: '16px',
-        }}
-      >
+      <div className="crm-pipeline-filter">
         <input
+          className="crm-pipeline-filter__search"
           type="text"
           placeholder="Search name, mobile, or notes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{
-            flex: '1',
-            minWidth: '200px',
-            fontSize: '13px',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid rgba(10,25,37,0.12)',
-            background: '#fff',
-            color: '#333',
-          }}
         />
         <select
+          className="crm-pipeline-filter__agent"
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
-          style={{
-            fontSize: '13px',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid rgba(10,25,37,0.12)',
-            minWidth: '150px',
-            background: '#fff',
-            color: '#333',
-          }}
         >
           <option value="all">All Agents</option>
           <option value="unassigned">Unassigned</option>
@@ -569,15 +514,7 @@ function UserCrmPipelinePage() {
       {status && <div className="status-line">{status}</div>}
 
       {/* Kanban Board Container */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '16px',
-          overflowX: 'auto',
-          paddingBottom: '16px',
-        }}
-      >
+      <div className="crm-pipeline-board">
         {STAGES.map((stage) => {
           const stageLeads = filteredLeads.filter((l) => l.stage === stage);
           const totalValue = getStageTotal(stage);
@@ -588,62 +525,26 @@ function UserCrmPipelinePage() {
               onDragOver={(e) => handleDragOver(e, stage)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, stage)}
-              style={{
-                background: draggedOverStage === stage ? 'rgba(30, 160, 133, 0.08)' : '#fcfcfc',
-                borderRadius: '16px',
-                border:
-                  draggedOverStage === stage
-                    ? '2px dashed #1ea085'
-                    : '1px solid rgba(10,25,37,0.06)',
-                padding: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: '500px',
-                transition: 'all 0.2s ease',
-              }}
+              className={`crm-pipeline-column${draggedOverStage === stage ? ' is-drag-over' : ''}`}
             >
               {/* Column Header */}
               <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '12px',
-                  paddingBottom: '8px',
-                  borderBottom: '2px solid rgba(10,25,37,0.04)',
-                }}
+                className="crm-pipeline-column__header"
               >
                 <div>
-                  <h3 style={{ fontSize: '15px', margin: 0, color: '#10212d' }}>{stage}</h3>
-                  <span className="muted-copy" style={{ fontSize: '11px' }}>
+                  <h3 className="crm-pipeline-column__title">{stage}</h3>
+                  <span className="muted-copy crm-pipeline-column__count">
                     {stageLeads.length} leads
                   </span>
                 </div>
-                <div
-                  style={{
-                    background: 'rgba(30, 160, 133, 0.1)',
-                    color: '#1ea085',
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                  }}
-                >
+                <div className="crm-pipeline-column__value">
                   {formatMoney(totalValue)}
                 </div>
               </div>
 
               {/* Cards List */}
               <div
-                style={{
-                  display: 'grid',
-                  gap: '10px',
-                  flex: 1,
-                  alignContent: 'start',
-                  maxHeight: '70vh',
-                  overflowY: 'auto',
-                  paddingRight: '4px',
-                }}
+                className="crm-pipeline-column__list"
               >
                 {stageLeads.map((lead) => (
                   <div
@@ -654,70 +555,27 @@ function UserCrmPipelinePage() {
                     onDragEnd={handleDragEnd}
                     onDragOver={handleCardDragOver}
                     onDrop={(e) => handleCardDrop(e, lead, stage)}
-                    style={{
-                      background: '#ffffff',
-                      padding: '12px',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(10,25,37,0.08)',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-                      cursor: 'grab',
-                      opacity: draggedLead?.id === lead.id ? 0.4 : 1,
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease, opacity 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.06)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'none';
-                      e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
-                    }}
+                    className={`crm-lead-card${draggedLead?.id === lead.id ? ' is-dragging' : ''}`}
                   >
-                    <div style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                    <div className="crm-lead-card__name">
                       {lead.name}
                     </div>
-                    <div className="muted-copy" style={{ fontSize: '12px', marginBottom: '8px' }}>
+                    <div className="muted-copy crm-lead-card__mobile">
                       {lead.mobile}
                     </div>
 
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: '6px',
-                      }}
-                    >
-                      <span
-                        className="muted-copy"
-                        style={{
-                          fontSize: '11px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                        }}
-                      >
-                        👤 {getOwnerName(lead) || <em style={{ color: '#aaa' }}>Unassigned</em>}
+                    <div className="crm-lead-card__meta">
+                      <span className="muted-copy crm-lead-card__owner">
+                        👤 {getOwnerName(lead) || <em>Unassigned</em>}
                       </span>
-                      <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#1ea085' }}>
+                      <span className="crm-lead-card__amount">
                         {formatMoney(Number(lead.value || 0))}
                       </span>
                     </div>
 
                     {/* Quick stage switch actions */}
-                    <div
-                      style={{
-                        marginTop: '8px',
-                        paddingTop: '8px',
-                        borderTop: '1px solid rgba(10,25,37,0.04)',
-                        display: 'flex',
-                        gap: '4px',
-                        overflowX: 'auto',
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span style={{ fontSize: '10px' }} className="muted-copy">
+                    <div className="crm-lead-card__actions" onClick={(e) => e.stopPropagation()}>
+                      <span className="muted-copy crm-lead-card__move-label">
                         Move:
                       </span>
                       {STAGES.filter((s) => s !== stage)
@@ -726,8 +584,7 @@ function UserCrmPipelinePage() {
                           <button
                             key={st}
                             type="button"
-                            className="mini-button"
-                            style={{ fontSize: '9px', padding: '2px 4px' }}
+                            className="mini-button crm-lead-card__move-button"
                             onClick={() => handleMoveLead(lead.id, st)}
                           >
                             {st}
@@ -741,16 +598,7 @@ function UserCrmPipelinePage() {
                 {stagePages[stage]?.hasMore && (
                   <button
                     type="button"
-                    className="secondary-button"
-                    style={{
-                      fontSize: '11px',
-                      padding: '6px 12px',
-                      width: '100%',
-                      borderRadius: '8px',
-                      marginTop: '4px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      color: 'var(--text-secondary)',
-                    }}
+                    className="secondary-button crm-pipeline-load-more"
                     onClick={() => loadMoreLeads(stage)}
                   >
                     Load More...
@@ -764,13 +612,13 @@ function UserCrmPipelinePage() {
 
       {/* CREATE LEAD MODAL */}
       {showAddModal && (
-        <div style={overlayStyle} onClick={() => setShowAddModal(false)}>
+        <div className="crm-pipeline-overlay" onClick={() => setShowAddModal(false)}>
           <div
-            style={{ ...modalStyle, gridTemplateColumns: '1fr', width: 'min(500px, 95%)' }}
+            className="crm-lead-modal crm-lead-modal--create"
             onClick={(e) => e.stopPropagation()}
           >
             <form
-              className="panel form-panel"
+              className="panel form-panel crm-pipeline-modal-form"
               onSubmit={handleAddLead}
               style={{ border: 'none', padding: 0, boxShadow: 'none', background: 'transparent' }}
             >
@@ -873,10 +721,10 @@ function UserCrmPipelinePage() {
 
       {/* LEAD DETAILS & ACTIONS MODAL */}
       {selectedLead && (
-        <div style={overlayStyle} onClick={() => setSelectedLead(null)}>
-          <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+        <div className="crm-pipeline-overlay" onClick={() => setSelectedLead(null)}>
+          <div className="crm-lead-modal" onClick={(e) => e.stopPropagation()}>
             {/* Left: Lead Details / Edit form */}
-            <div style={{ borderRight: '1px solid rgba(10, 25, 37, 0.08)', paddingRight: '20px' }}>
+            <div className="crm-lead-modal__details">
               <div
                 style={{
                   display: 'flex',
@@ -1000,9 +848,9 @@ function UserCrmPipelinePage() {
             {/* Right: Reminders & Activity Timeline */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Reminders section */}
-              <div
+                <div
+                className="crm-lead-modal__reminders"
                 style={{
-                  background: '#ffffff',
                   padding: '16px',
                   borderRadius: '16px',
                   border: '1px solid rgba(10,25,37,0.06)',
@@ -1058,10 +906,10 @@ function UserCrmPipelinePage() {
                     reminders.map((rem) => (
                       <div
                         key={rem.id}
+                        className="crm-lead-modal__reminder"
                         style={{
                           display: 'flex',
                           justifyContent: 'space-between',
-                          background: '#fafafa',
                           padding: '6px 10px',
                           borderRadius: '8px',
                           border: '1px solid rgba(0,0,0,0.03)',

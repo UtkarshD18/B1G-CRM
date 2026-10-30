@@ -10,7 +10,7 @@ const fs = require('fs');
 const { checkPlan, checkContactLimit } = require('../middlewares/plan.js')
 
 // add phonebook name 
-router.post('/add', validateUserOrAgent, verifyPermission('contacts_access'), checkPlan, checkContactLimit, async (req, res) => {
+router.post('/add', validateUserOrAgent, verifyPermission('contacts.write'), checkPlan, checkContactLimit, async (req, res) => {
     try {
         const { name } = req.body
 
@@ -55,7 +55,7 @@ router.get('/get_by_uid', validateUserOrAgent, verifyPermission('contacts_access
 })
 
 // del a phonebook 
-router.post('/del_phonebook', validateUserOrAgent, verifyPermission('contacts_access'), async (req, res) => {
+router.post('/del_phonebook', validateUserOrAgent, verifyPermission('contacts.write'), async (req, res) => {
     try {
         const { id } = req.body
 
@@ -107,7 +107,7 @@ function parseCSVFile(fileData) {
 }
 
 
-router.post('/import_contacts', validateUserOrAgent, verifyPermission('contacts_access'), checkPlan, checkContactLimit, async (req, res) => {
+router.post('/import_contacts', validateUserOrAgent, verifyPermission('contacts.write'), checkPlan, checkContactLimit, async (req, res) => {
     try {
         const { id, phonebook_name } = req.body
 
@@ -161,7 +161,7 @@ router.post('/import_contacts', validateUserOrAgent, verifyPermission('contacts_
 })
 
 // add single contact 
-router.post('/add_single_contact', validateUserOrAgent, verifyPermission('contacts_access'), checkPlan, checkContactLimit, async (req, res) => {
+router.post('/add_single_contact', validateUserOrAgent, verifyPermission('contacts.write'), checkPlan, checkContactLimit, async (req, res) => {
     try {
         const { id, phonebook_name, mobile, name, var1, var2, var3, var4, var5 } = req.body
 
@@ -214,7 +214,7 @@ router.get('/get_uid_contacts', validateUserOrAgent, verifyPermission('contacts_
 
 
 // dele contcats 
-router.post('/del_contacts', validateUserOrAgent, verifyPermission('contacts_access'), async (req, res) => {
+router.post('/del_contacts', validateUserOrAgent, verifyPermission('contacts.write'), async (req, res) => {
     try {
 
         await query(`DELETE FROM contact WHERE id IN (?) AND uid = ?`, [req.body.selected, req.decode.uid])
@@ -227,7 +227,7 @@ router.post('/del_contacts', validateUserOrAgent, verifyPermission('contacts_acc
 })
 
 // rename phonebook
-router.post('/update', validateUserOrAgent, verifyPermission('contacts_access'), async (req, res) => {
+router.post('/update', validateUserOrAgent, verifyPermission('contacts.write'), async (req, res) => {
     try {
         const { id, name } = req.body
 
@@ -258,7 +258,7 @@ router.post('/update', validateUserOrAgent, verifyPermission('contacts_access'),
 })
 
 // edit contact
-router.post('/update_contact', validateUserOrAgent, verifyPermission('contacts_access'), async (req, res) => {
+router.post('/update_contact', validateUserOrAgent, verifyPermission('contacts.write'), async (req, res) => {
     try {
         const { id, name, mobile, var1, var2, var3, var4, var5 } = req.body
 

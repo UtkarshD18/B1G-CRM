@@ -108,7 +108,7 @@ router.get('/leads', validateUserOrAgent, verifyPermission('leads_access'), asyn
 router.post(
   '/leads/add',
   validateUserOrAgent,
-  verifyPermission('leads_access'),
+  verifyPermission('contacts.write'),
   async (req, res) => {
     try {
       const { name, mobile, stage, owner_agent_uid, notes, value } = req.body;
@@ -162,7 +162,7 @@ router.post(
 router.post(
   '/leads/move',
   validateUserOrAgent,
-  verifyPermission('kanban_access'),
+  verifyPermission('contacts.write'),
   async (req, res) => {
     try {
       const { id, stage } = req.body;
@@ -203,7 +203,7 @@ router.post(
 router.post(
   '/leads/update',
   validateUserOrAgent,
-  verifyPermission('leads_access'),
+  verifyPermission('contacts.write'),
   async (req, res) => {
     try {
       const { id, name, mobile, stage, owner_agent_uid, notes, value } = req.body;
@@ -274,7 +274,7 @@ router.post(
 router.post(
   '/leads/delete',
   validateUserOrAgent,
-  verifyPermission('leads_access'),
+  verifyPermission('contacts.write'),
   async (req, res) => {
     try {
       const { id } = req.body;
@@ -360,7 +360,7 @@ router.get(
 router.post(
   '/leads/add_reminder',
   validateUserOrAgent,
-  verifyPermission('leads_access'),
+  verifyPermission('contacts.write'),
   async (req, res) => {
     try {
       const { lead_id, title, remind_at } = req.body;
@@ -439,7 +439,7 @@ router.get(
 router.post(
   '/leads/add_activity',
   validateUserOrAgent,
-  verifyPermission('leads_access'),
+  verifyPermission('contacts.write'),
   async (req, res) => {
     try {
       const { lead_id, activity_type, description, agent_uid } = req.body;
@@ -472,7 +472,7 @@ router.post(
 router.post(
   '/leads/update_pipeline_order',
   validateUserOrAgent,
-  verifyPermission('kanban_access'),
+  verifyPermission('contacts.write'),
   async (req, res) => {
     try {
       const { orderedLeadIds } = req.body;

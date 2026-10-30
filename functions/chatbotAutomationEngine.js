@@ -8,6 +8,7 @@ const { decryptKey } = require('../utils/crypto');
 const { executeAIProvider } = require('./aiProviders');
 const env = require('../env');
 const config = require('../utils/ragConfig');
+const { safeHttpRequest } = require('../utils/ssrfFilter');
 
 // Helper to resolve nested keys in objects (e.g., apiResponses.node_1.data.status)
 function getNestedValue(obj, path) {
@@ -946,16 +947,12 @@ async function executeFlowStep(
             }
 
             try {
-              const { isSafeUrl } = require('../utils/ssrfFilter');
-              if (!(await isSafeUrl(url))) {
-                throw new Error('Blocked potential SSRF attack vector');
-              }
-              const cleanUrl = url
-                .split('')
-                .map((c) => String.fromCharCode(c.charCodeAt(0)))
-                .join('');
-              const res = await fetch(cleanUrl, fetchOptions);
-              const text = await res.text();
+              const res = await safeHttpRequest(url, {
+                method: fetchOptions.method,
+                headers: fetchOptions.headers,
+                data: fetchOptions.body,
+              });
+              const text = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
               let json = {};
               try {
                 json = JSON.parse(text);
@@ -1577,23 +1574,10 @@ async function executeFlowStep(
             const webhookUrl = replacePlaceholders(nodeData.webhookUrl || '', context);
             if (webhookUrl) {
               try {
-                const { isSafeUrl } = require('../utils/ssrfFilter');
-                if (!(await isSafeUrl(webhookUrl))) {
-                  console.error('Blocked potential SSRF on Webhook Node');
-                  context.variables[node_id] = {
-                    status: 'failed',
-                    error: 'Blocked potential SSRF',
-                  };
-                  break;
-                }
-                const cleanWebhookUrl = webhookUrl
-                  .split('')
-                  .map((c) => String.fromCharCode(c.charCodeAt(0)))
-                  .join('');
-                await fetch(cleanWebhookUrl, {
+                await safeHttpRequest(webhookUrl, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
+                  data: JSON.stringify({
                     senderName: context.senderName,
                     senderMobile: context.senderMobile,
                     variables: context.variables,

@@ -6,7 +6,7 @@ const { validateUserOrAgent, verifyPermission } = require("../middlewares/auth.j
 router.get("/get_all", validateUserOrAgent, verifyPermission("settings_access"), async (req, res) => {
   try {
     const data = await query(
-      "SELECT id, provider, api_key, model, temperature, enabled, custom_endpoint FROM tenant_ai_providers WHERE uid = ?",
+      "SELECT id, provider, (api_key IS NOT NULL AND api_key <> '') AS key_configured, model, temperature, enabled, custom_endpoint FROM tenant_ai_providers WHERE uid = ?",
       [req.decode.uid]
     );
     res.json({ success: true, data });
@@ -29,18 +29,19 @@ router.post("/save", validateUserOrAgent, verifyPermission("settings_access"), a
       return res.json({ success: false, msg: "Invalid AI provider name" });
     }
 
-    // Upsert the provider config
+    // A blank key means keep the existing secret. It must never be returned by GET.
     const existing = await query(
       "SELECT * FROM tenant_ai_providers WHERE uid = ? AND provider = ?",
       [req.decode.uid, provider]
     );
 
     if (existing.length > 0) {
+      const replacementKey = String(api_key || '').trim();
       await query(
         `UPDATE tenant_ai_providers 
-         SET api_key = ?, model = ?, temperature = ?, enabled = ?, custom_endpoint = ?, updated_at = CURRENT_TIMESTAMP 
+         SET api_key = COALESCE(NULLIF(?, ''), api_key), model = ?, temperature = ?, enabled = ?, custom_endpoint = ?, updated_at = CURRENT_TIMESTAMP
          WHERE uid = ? AND provider = ?`,
-        [api_key || "", model || "", temperature || 0.7, enabled !== undefined ? enabled : 1, custom_endpoint || "", req.decode.uid, provider]
+        [replacementKey, model || "", temperature || 0.7, enabled !== undefined ? enabled : 1, custom_endpoint || "", req.decode.uid, provider]
       );
     } else {
       await query(

@@ -368,6 +368,7 @@ router.get('/get_app_version', async (req, res) => {
 
 // install app
 router.post('/install_app', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') return res.sendStatus(404);
   try {
     const { password } = req.body;
 
@@ -409,6 +410,7 @@ router.post('/install_app', async (req, res) => {
 
 // update app
 router.post('/update_app', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') return res.sendStatus(404);
   try {
     const { password, queries, newQueries } = req.body;
 
@@ -474,7 +476,8 @@ router.get('/update_to_be_shown', async (req, res) => {
 router.get('/get_web_public', async (req, res) => {
   try {
     const data = await query(`SELECT * FROM web_public`, []);
-    res.json({ data: data[0], success: true });
+    const { fb_login_app_sec, ...safeConfig } = data[0] || {};
+    res.json({ data: safeConfig, success: true });
   } catch (err) {
     res.json({ success: false, error: err, msg: 'Server error', err });
     console.log(err);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../shared/api'
 import { useAuth } from '../../shared/auth'
 import { formatDateTime } from '../../shared/format'
+import './AgentTask.css'
 
 function UserTaskPage() {
   const { tokens } = useAuth()
@@ -188,11 +189,9 @@ function UserTaskPage() {
                     <td><strong>{task.title}</strong></td>
                     <td className="muted-copy">{task.agent_email}</td>
                     <td>
-                      <span className="status-chip" style={{
-                        backgroundColor: task.status === 'completed' ? '#d1fae5' : '#fef9c3',
-                        color: task.status === 'completed' ? '#065f46' : '#854d0e',
-                        fontSize: '11px'
-                      }}>
+                      <span
+                        className={`status-chip task-status-chip task-status-chip--${String(task.status || 'pending').toLowerCase()}`}
+                      >
                         {task.status || 'pending'}
                       </span>
                     </td>

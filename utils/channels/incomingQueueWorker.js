@@ -52,7 +52,10 @@ async function startIncomingQueueWorker() {
         password: process.env.PGPASSWORD,
         database: process.env.PGDATABASE,
       };
-  if (process.env.PGSSL) clientConfig.ssl = { rejectUnauthorized: false };
+  if (process.env.PGSSL === 'true') clientConfig.ssl = {
+    rejectUnauthorized: true,
+    ...(process.env.PGSSL_CA ? { ca: process.env.PGSSL_CA } : {}),
+  };
 
   dedicatedClient = new Client(clientConfig);
 
@@ -239,12 +242,12 @@ async function processQueueRow(id) {
         item.provider_message_id ||
         'incoming-mock-id-' + item.id;
 
-      try {
-        await txQuery(`INSERT INTO webhook_idempotency (provider_message_id) VALUES (?)`, [
-          providerMsgId,
-        ]);
-      } catch (dbErr) {
-        if (dbErr.code === '23505' || dbErr.message.includes('unique')) {
+      const inserted = await txQuery(
+        `INSERT INTO channel_inbound_idempotency (uid, channel_type, provider_message_id)
+         VALUES (?, ?, ?) ON CONFLICT DO NOTHING RETURNING provider_message_id`,
+        [item.uid, item.channel_type, providerMsgId],
+      );
+      if (!inserted.length) {
           console.log(
             JSON.stringify({
               event: 'inbound_message_idempotency_skip',
@@ -260,14 +263,12 @@ async function processQueueRow(id) {
             `UPDATE channel_incoming_queue SET state = 'processed', last_error = 'Duplicate webhook message skipped', provider_message_id = ? WHERE id = ?`,
             [providerMsgId, item.id],
           );
-          return;
-        } else {
-          throw dbErr;
-        }
+        return;
       }
 
-      eventBus.emit('incoming_message', {
+      await eventBus.emitAsync('incoming_message', {
         ...normalizedMsg,
+        metadata: { ...normalizedMsg.metadata, message_id: providerMsgId },
         uid: item.uid,
         correlation_id: item.correlation_id,
       });
@@ -330,4 +331,5 @@ module.exports = {
   startIncomingQueueWorker,
   stopIncomingQueueWorker,
   processIncomingQueue: runRecoveryScan,
+  processQueueRow,
 };

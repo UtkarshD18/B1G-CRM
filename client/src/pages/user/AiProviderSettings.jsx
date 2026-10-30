@@ -35,7 +35,7 @@ function UserAiProvidersPage() {
         const active = result.data.find(p => p.provider === selectedProvider)
         if (active) {
           setForm({
-            api_key: active.api_key || '',
+            api_key: '',
             model: active.model || '',
             temperature: Number(active.temperature) || 0.7,
             enabled: Number(active.enabled),
@@ -60,7 +60,7 @@ function UserAiProvidersPage() {
     const existing = providers.find(p => p.provider === provKey)
     if (existing) {
       setForm({
-        api_key: existing.api_key || '',
+        api_key: '',
         model: existing.model || '',
         temperature: Number(existing.temperature) || 0.7,
         enabled: Number(existing.enabled),
@@ -156,13 +156,13 @@ function UserAiProvidersPage() {
 
           {selectedProvider !== 'ollama' && (
             <label>
-              API Key
+              API Key {providers.find(p => p.provider === selectedProvider)?.key_configured ? '(configured; leave blank to keep)' : ''}
               <input
                 type="password"
                 value={form.api_key}
                 onChange={e => setForm({ ...form, api_key: e.target.value })}
-                placeholder="sk-..."
-                required={selectedProvider !== 'custom'}
+                placeholder={providers.find(p => p.provider === selectedProvider)?.key_configured ? 'Enter a new key to replace' : 'Enter API key'}
+                required={selectedProvider !== 'custom' && !providers.find(p => p.provider === selectedProvider)?.key_configured}
               />
             </label>
           )}
