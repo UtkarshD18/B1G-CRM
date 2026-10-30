@@ -6,6 +6,7 @@ const path = require('path');
 const { getConnectionsByUid, sendToSocketId } = require('../socket.js');
 const { loadChatList } = require('../helper/socket/chatList');
 const { metaChatbotInit } = require('../helper/chatbot/meta');
+const { safeHttpRequest } = require('../utils/ssrfFilter');
 
 // GET all website integrations
 router.get(
@@ -115,27 +116,19 @@ router.post(
 
       console.log(`Verifying domain: ${url} for token: ${token}`);
 
-      const { isSafeUrl } = require('../utils/ssrfFilter');
-      if (!(await isSafeUrl(url)) || !(await isSafeUrl(httpUrl))) {
-        return res.json({
-          success: false,
-          msg: 'Domain is invalid or resolves to a private IP space',
-        });
-      }
-
       let html = '';
       try {
-        const response = await fetch(String(url), { timeout: 10000 });
-        html = await response.text();
+        const response = await safeHttpRequest(url, { method: 'GET', responseType: 'text' });
+        html = response.data;
       } catch (e) {
         // Fallback to HTTP if HTTPS fails
         try {
-          const responseHttp = await fetch(String(httpUrl), { timeout: 10000 });
-          html = await responseHttp.text();
+          const responseHttp = await safeHttpRequest(httpUrl, { method: 'GET', responseType: 'text' });
+          html = responseHttp.data;
         } catch (err2) {
           return res.json({
             success: false,
-            msg: `Unable to connect to website. Check DNS or server. Error: ${err2.message}`,
+            msg: 'Unable to connect to website. Check DNS or server.',
           });
         }
       }
