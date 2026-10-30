@@ -122,6 +122,10 @@ async function executeRetentionPolicies(config) {
       [Number(webhookIdempotencyRetentionDays)],
     );
     await query(
+      `DELETE FROM channel_inbound_idempotency WHERE processed_at < NOW() - CAST(? || ' days' AS INTERVAL)`,
+      [Number(webhookIdempotencyRetentionDays)],
+    );
+    await query(
       `DELETE FROM transport_workers WHERE last_seen < NOW() - CAST(? || ' minutes' AS INTERVAL)`,
       [Number(workerHeartbeatStaleMinutes)],
     );

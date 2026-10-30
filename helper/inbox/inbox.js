@@ -1,5 +1,5 @@
 const { query } = require('../../database/dbpromise');
-const fs = require('fs');
+const { addObjectToFile } = require('../../functions/helpers/fileHelper');
 const { getConnectionsByUid, sendRingToUid, sendToSocketId } = require('../../socket');
 const { processMetaMessage } = require('./meta');
 const { metaChatbotInit } = require('../chatbot/meta');
@@ -193,20 +193,8 @@ eventBus.on('incoming_message', async (normalizedMsg) => {
 
     // 3. Save to conversation history file
     const conversationsDir = path.resolve(__dirname, `../../conversations/inbox/${uid}`);
-    if (!fs.existsSync(conversationsDir)) {
-      fs.mkdirSync(conversationsDir, { recursive: true });
-    }
     const chatFilePath = path.join(conversationsDir, `${chatId}.json`);
-    let conversationHistory = [];
-    if (fs.existsSync(chatFilePath)) {
-      try {
-        conversationHistory = JSON.parse(fs.readFileSync(chatFilePath, 'utf8'));
-      } catch (e) {
-        console.error('JSON parse error for chat file:', e);
-      }
-    }
-    conversationHistory.push(newMessage);
-    fs.writeFileSync(chatFilePath, JSON.stringify(conversationHistory, null, 2));
+    const conversationHistory = addObjectToFile(newMessage, chatFilePath);
 
     // 4. Update or insert into chats table
     const [existingChat] = await query('SELECT * FROM chats WHERE chat_id = ? AND uid = ?', [
@@ -266,6 +254,7 @@ eventBus.on('incoming_message', async (normalizedMsg) => {
     });
   } catch (err) {
     console.error('Error processing incoming Event Bus message:', err.message);
+    throw err;
   }
 });
 

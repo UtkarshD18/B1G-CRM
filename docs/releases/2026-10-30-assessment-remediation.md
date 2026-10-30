@@ -10,6 +10,8 @@ This change addresses selected findings from the 28 October assessment. It does 
 - **S04 (partial):** Owner and agent profile responses omit password hashes, public website settings omit the Facebook app secret, and AI provider GET returns key-configured metadata instead of the stored key. A blank AI key on update retains the current value.
 - **S13 (partial):** QR instance deletion checks tenant ownership before touching its in-memory session. Debug GET creation and send routes were removed; generated instance IDs are validated.
 - **D04:** Offline checkout creates a pending request without activating a plan. An admin review screen requires a settlement reference before approval. A row lock and transaction bind approval, entitlement update and order insertion. Rejected or repeated requests cannot activate the plan.
+- **D02 (partial):** The shared JSON append helper now locks across processes and uses atomic replacement with disk sync. The incoming channel path uses it, and provider message replay does not append twice. Other legacy read/modify/write paths still need migration to one authoritative message store.
+- **D03 (partial):** The queue awaits its inbox listener before acknowledging, propagates persistence errors for retry, and uses tenant/channel/provider-scoped idempotency with a non-aborting conflict path. JSON remains a projection outside the queue transaction, so crash recovery still needs an end-to-end reconciliation contract.
 - **S10 (partial):** PostgreSQL TLS now verifies the server certificate when `PGSSL=true`; an optional `PGSSL_CA` PEM value supports private certificate authorities. Runtime database role privilege reduction remains open.
 - **S12:** Production requests to legacy installer and updater endpoints now return 404 before any password or database handling.
 
@@ -17,4 +19,4 @@ This change addresses selected findings from the 28 October assessment. It does 
 
 Focused synthetic tests cover signature failures, agent inbox scoping and offline approval/replay. The client builds and its test suite passes. Browser screenshots use synthetic API responses and demonstrate the UI only. A live database, real Meta delivery and actual payment settlement were not available in this workspace, so those integrations still require isolated end-to-end checks.
 
-Other findings remain open, including chat ID collisions, concurrent JSON persistence, queue commit semantics, purchase binding for online payments, consent enforcement, SSRF, and outbound delivery reconciliation. Track them as release gates; this branch is not a production-ready certification.
+Other findings remain open, including chat ID collisions, complete message-store migration, purchase binding for online payments, consent enforcement, SSRF, and outbound delivery reconciliation. Track them as release gates; this branch is not a production-ready certification.

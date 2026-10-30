@@ -147,26 +147,13 @@ function readJsonFromFile(filePath) {
 function addObjectToFile(object, filePath) {
   const { validatePath } = require('../../utils/pathSafe');
   const cleanPath = validatePath(process.cwd(), filePath);
-  if (!cleanPath) return;
-  const parentDir = path.dirname(cleanPath);
-
-  // Check if the parent directory exists
-  if (!fs.existsSync(parentDir)) {
-    // Create the parent directory if it doesn't exist
-    fs.mkdirSync(parentDir, { recursive: true });
-  }
-
-  if (fs.existsSync(cleanPath)) {
-    const existingData = JSON.parse(fs.readFileSync(cleanPath));
-    if (Array.isArray(existingData)) {
-      existingData.push(object);
-      fs.writeFileSync(cleanPath, JSON.stringify(existingData, null, 2));
-    } else {
-      console.error('File does not contain an array.');
-    }
-  } else {
-    fs.writeFileSync(cleanPath, JSON.stringify([object], null, 2));
-  }
+  if (!cleanPath) throw new Error('Invalid conversation path');
+  const { updateConversationFile } = require('../../utils/conversationFile');
+  return updateConversationFile(cleanPath, (messages) => {
+    if (object.metaChatId && messages.some((message) => message.metaChatId === object.metaChatId)) return messages;
+    messages.push(object);
+    return messages;
+  });
 }
 
 // ==========================================
