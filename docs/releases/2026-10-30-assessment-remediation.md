@@ -9,6 +9,8 @@ This change addresses selected findings from the 28 October assessment. It does 
 - **S04 (partial):** Owner and agent profile responses omit password hashes, public website settings omit the Facebook app secret, and AI provider GET returns key-configured metadata instead of the stored key. A blank AI key on update retains the current value.
 - **S13 (partial):** QR instance deletion checks tenant ownership before touching its in-memory session. Debug GET creation and send routes were removed; generated instance IDs are validated.
 - **D04:** Offline checkout creates a pending request without activating a plan. An admin review screen requires a settlement reference before approval. A row lock and transaction bind approval, entitlement update and order insertion. Rejected or repeated requests cannot activate the plan.
+- **S10 (partial):** PostgreSQL TLS now verifies the server certificate when `PGSSL=true`; an optional `PGSSL_CA` PEM value supports private certificate authorities. Runtime database role privilege reduction remains open.
+- **S12:** Production requests to legacy installer and updater endpoints now return 404 before any password or database handling.
 
 ## Verification and remaining release gates
 

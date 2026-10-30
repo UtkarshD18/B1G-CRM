@@ -17,7 +17,8 @@ const poolConfig = env.DATABASE_URL
 
 if (env.PGSSL) {
   poolConfig.ssl = {
-    rejectUnauthorized: false,
+    rejectUnauthorized: true,
+    ...(process.env.PGSSL_CA ? { ca: process.env.PGSSL_CA } : {}),
   };
 }
 

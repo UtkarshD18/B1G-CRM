@@ -368,6 +368,7 @@ router.get('/get_app_version', async (req, res) => {
 
 // install app
 router.post('/install_app', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') return res.sendStatus(404);
   try {
     const { password } = req.body;
 
@@ -409,6 +410,7 @@ router.post('/install_app', async (req, res) => {
 
 // update app
 router.post('/update_app', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') return res.sendStatus(404);
   try {
     const { password, queries, newQueries } = req.body;
 
